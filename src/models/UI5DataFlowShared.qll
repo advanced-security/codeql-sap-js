@@ -117,7 +117,16 @@ module UI5Shared {
       // direct read access to a binding path
       this.getCalleeName() = ["getProperty", "getObject"] and
       bind.getBindingPath().getAbsolutePath() = this.getArgument(0).getStringValue() and
-      bind.getBindingPath().getModel() = this.getReceiver().getALocalSource()
+      exists(DataFlow::SourceNode receiverSource, UI5Model model |
+        receiverSource = this.getReceiver().getALocalSource()
+      |
+        model = bind.getBindingPath().getModel() and
+        (
+          model = receiverSource
+          or
+          model.getController().getAModelReference() = receiverSource
+        )
+      )
     }
 
     UI5BoundNode getBind() { result = bind }
@@ -135,7 +144,16 @@ module UI5Shared {
         this = setProp.getArgument(1) and
         setProp.getCalleeName() = ["setProperty", "setObject"] and
         bind.getBindingPath().getAbsolutePath() = setProp.getArgument(0).getStringValue() and
-        bind.getBindingPath().getModel() = setProp.getReceiver().getALocalSource()
+        exists(DataFlow::SourceNode receiverSource, UI5Model model |
+          receiverSource = setProp.getReceiver().getALocalSource()
+        |
+          model = bind.getBindingPath().getModel() and
+          (
+            model = receiverSource
+            or
+            model.getController().getAModelReference() = receiverSource
+          )
+        )
       )
     }
 

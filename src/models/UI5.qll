@@ -143,7 +143,7 @@ module UI5 {
 
   class CustomControl extends Extension {
     CustomControl() {
-      this.getReceiver().getALocalSource() = sapControl() or 
+      this.getReceiver().getALocalSource() = sapControl() or
       this.getDefine() = any(SapDefineModule sapModule).getExtendingDefine()
     }
 
@@ -241,10 +241,17 @@ module UI5 {
         result.flowsTo(setModelCall.getAnArgument())
       )
     }
+
+    MethodCallNode getAModelReference() {
+      result.getMethodName() = "getModel" and
+      this.getAViewReference().flowsTo(result.getReceiver())
+    }
   }
 
   abstract class UI5Model extends SapElement {
     abstract string getPathString();
+
+    CustomController getController() { result.asExpr() = this.asExpr().getParent+() }
   }
 
   private string constructPathStringInner(Expr object) {
@@ -514,12 +521,13 @@ module UI5 {
     ObjectLiteralNode getContent() { result = this.getArgument(1) }
 
     Metadata getMetadata() {
-       result = this.getContent().getAPropertySource("metadata") or
-       exists(Extension baseExtension |
-         baseExtension.getDefine().getExtendingDefine() = this.getDefine() and
-         result = baseExtension.getMetadata()
-       )
-      }
+      result = this.getContent().getAPropertySource("metadata")
+      or
+      exists(Extension baseExtension |
+        baseExtension.getDefine().getExtendingDefine() = this.getDefine() and
+        result = baseExtension.getMetadata()
+      )
+    }
 
     /** Gets the `sap.ui.define` call that wraps this extension. */
     SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1).asExpr() }
@@ -617,9 +625,9 @@ module UI5 {
     UnsafeHtmlXssSource() {
       this = valueFromElement()
       or
-      exists(XmlView xmlView |
-        exists(xmlView.getASource()) and
-        this = xmlView.getController().getModel()
+      exists(UI5View ui5View |
+        exists(ui5View.getASource()) and
+        this = ui5View.getController().getModel()
       )
     }
   }
