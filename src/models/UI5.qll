@@ -615,8 +615,11 @@ module UI5 {
   abstract class SapElement extends InvokeNode { }
 
   MethodCallNode valueFromElement() {
-    exists(CustomController controller |
-      result = controller.getAnElementReference().getAMethodCall() and
+    exists(CustomController controller, XmlControl control, MethodCallNode controlRef |
+      control.isXssSource() and
+      controlRef = controller.getAnElementReference() and
+      control.getAReference() = controlRef and
+      result = controlRef.getAMethodCall() and
       result.getMethodName().substring(0, 3) = "get"
     )
   }
