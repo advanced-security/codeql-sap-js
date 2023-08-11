@@ -69,6 +69,18 @@ module PathGraph {
   }
 
   class UI5XssConfiguration extends DomBasedXss::Configuration {
+    override predicate isSource(DataFlow::Node node) {
+      node instanceof UnsafeHtmlXssSource
+      or
+      node.(UI5ModelSource).getBindingPath() = any(UI5View view).getASource()
+    }
+
+    override predicate isSink(DataFlow::Node node) {
+      node instanceof UnsafeHtmlXssSink
+      or
+      node.(UI5ModelSink).getBindingPath() = any(UI5View view).getAnHtmlISink()
+    }
+
     override predicate isAdditionalFlowStep(
       DataFlow::Node start, DataFlow::Node end, DataFlow::FlowLabel inLabel,
       DataFlow::FlowLabel outLabel
