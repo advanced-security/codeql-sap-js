@@ -434,66 +434,89 @@ class XmlView extends UI5View, XmlFile {
   }
 }
 
-class XmlControl extends XmlElement {
+abstract class UI5Control extends Locatable {
+  /** Get the qualified type string, e.g. `sap.m.SearchField` */
+  abstract string getQualifiedType();
+
+  /** Get the JS Control definition if this is a custom control. */
+  abstract Extension getJSDefinition();
+
+  /** Get a reference to this control in the controller code. Currently supports only such references made through `byId`. */
+  abstract MethodCallNode getAReference();
+
+  abstract CustomControl getDefinition();
+
+  abstract predicate accessesModel(UI5Model model);
+
+  abstract predicate accessesModel(UI5Model model, XmlBindingPath bindingPath);
+
+  abstract predicate isXssSource();
+
+  abstract predicate isXssSink();
+}
+
+class XmlControl extends UI5Control instanceof XmlElement {
   XmlControl() { this.getParent+() = any(XmlView view) }
 
   /** Get the qualified type string, e.g. `sap.m.SearchField` */
-  string getQualifiedType() { result = this.getNamespace().getUri() + "." + this.getName() }
+  override string getQualifiedType() {
+    result = XmlElement.super.getNamespace().getUri() + "." + XmlElement.super.getName()
+  }
 
   /** Get the JS Control definition if this is a custom control. */
-  Extension getJSDefinition() {
+  override Extension getJSDefinition() {
     result = any(CustomControl control | control.getName() = this.getQualifiedType())
   }
 
   /** Get a reference to this control in the controller code. Currently supports only such references made through `byId`. */
-  MethodCallNode getAReference() {
+  override MethodCallNode getAReference() {
     result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
     result.getMethodName() = "byId" and
-    result.getArgument(0).asExpr().(StringLiteral).getValue() = this.getAttributeValue("id")
+    result.getArgument(0).asExpr().(StringLiteral).getValue() = XmlElement.super.getAttributeValue("id")
   }
 
-  CustomControl getDefinition() {
+  override CustomControl getDefinition() {
     result.getName() = this.getQualifiedType() and
     exists(Project project |
       project.isInThisProject(this.getFile()) and project.isInThisProject(result.getFile())
     )
   }
 
-  predicate accessesModel(UI5Model model) {
+  override predicate accessesModel(UI5Model model) {
     // Verify that the controller's model has the referenced property
     exists(XmlView view |
       // Both this control and the model belong to the same view
       this = view.getXmlControl() and
       model = view.getController().getModel() and
-      model.getPathString() = this.getAnAttribute().(XmlBindingPath).getPath()
+      model.getPathString() = XmlElement.super.getAnAttribute().(XmlBindingPath).getPath()
     )
     // TODO: Add case where modelName is present
   }
 
-  predicate accessesModel(UI5Model model, XmlBindingPath bindingPath) {
+  override predicate accessesModel(UI5Model model, XmlBindingPath bindingPath) {
     // Verify that the controller's model has the referenced property
     exists(XmlView view |
       // Both this control and the model belong to the same view
       this = view.getXmlControl() and
       model = view.getController().getModel() and
       model.getPathString() = bindingPath.getPath() and
-      bindingPath.getPath() = this.getAnAttribute().(XmlBindingPath).getPath()
+      bindingPath.getPath() = XmlElement.super.getAnAttribute().(XmlBindingPath).getPath()
     )
     // TODO: Add case where modelName is present
   }
 
-  predicate isXssSource() {
+  override predicate isXssSource() {
     exists(XmlView view, string type, string path, string property |
-      view = this.getParent+() and
+      view = XmlElement.super.getParent+() and
       type = this.getQualifiedType().replaceAll(".", "/") and
       ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote") and
       property = path.regexpCapture("Instance\\.Member\\[([^\\]]+)\\]", 1)
     )
   }
 
-  predicate isXssSink() {
+  override predicate isXssSink() {
     exists(XmlView view, string type, string path, string property |
-      view = this.getParent+() and
+      view = XmlElement.super.getParent+() and
       type = this.getQualifiedType().replaceAll(".", "/") and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "html-injection") and
       property = path.regexpCapture("Instance\\.Member\\[([^\\]]+)\\]", 1)

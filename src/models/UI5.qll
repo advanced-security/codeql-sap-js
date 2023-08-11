@@ -615,12 +615,22 @@ module UI5 {
   abstract class SapElement extends InvokeNode { }
 
   MethodCallNode valueFromElement() {
-    exists(CustomController controller, XmlControl control, MethodCallNode controlRef |
+    exists(CustomController controller, UI5Control control, MethodCallNode controlRef |
       control.isXssSource() and
       controlRef = controller.getAnElementReference() and
       control.getAReference() = controlRef and
       result = controlRef.getAMethodCall() and
       result.getMethodName().substring(0, 3) = "get"
+    )
+  }
+
+  MethodCallNode valueToElement() {
+    exists(CustomController controller, UI5Control control, MethodCallNode controlRef |
+      control.isXssSink() and
+      controlRef = controller.getAnElementReference() and
+      control.getAReference() = controlRef and
+      result = controlRef.getAMethodCall() and
+      result.getMethodName().substring(0, 3) = "set"
     )
   }
 
@@ -636,6 +646,8 @@ module UI5 {
   }
 
   class UnsafeHtmlXssSink extends DomBasedXss::Sink {
-    UnsafeHtmlXssSink() { this = any(RenderManager rm).getAnUnsafeHtmlCall().getArgument(0) }
+    UnsafeHtmlXssSink() {
+      this = valueToElement() or this = any(RenderManager rm).getAnUnsafeHtmlCall().getArgument(0)
+    }
   }
 }
