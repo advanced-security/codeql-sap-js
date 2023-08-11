@@ -35,6 +35,7 @@ User input flows to XSS sinks via event handlers in 3 different ways:
 1. function `sap.ui.model.Model#getProperty` 
 2. model property passed as handler parameter
 3. function `sap.ui.base.Event#getSource#getValue`
+4. accessing properties byId
 
 ### [xss-html-control](xss/xss-html-control)
 - `sap.ui.core.HTML` Control

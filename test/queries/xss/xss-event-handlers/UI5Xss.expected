@@ -2,8 +2,8 @@ nodes
 | webapp/controller/app.controller.js:9:17:9:52 | input |
 | webapp/controller/app.controller.js:9:25:9:52 | oModel. ... input') |
 | webapp/controller/app.controller.js:10:44:10:48 | input |
-| webapp/controller/app.controller.js:23:17:23:27 | input: null |
-| webapp/controller/app.controller.js:24:17:24:29 | output1: null |
+| webapp/controller/app.controller.js:31:17:31:27 | input: null |
+| webapp/controller/app.controller.js:32:17:32:29 | output1: null |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
 | webapp/view/app.view.xml:9:5:9:38 | content={/output1} |
 | webapp/view/app.view.xml:12:5:12:38 | content={/output2} |
@@ -11,9 +11,9 @@ nodes
 edges
 | webapp/controller/app.controller.js:9:17:9:52 | input | webapp/controller/app.controller.js:10:44:10:48 | input |
 | webapp/controller/app.controller.js:9:25:9:52 | oModel. ... input') | webapp/controller/app.controller.js:9:17:9:52 | input |
-| webapp/controller/app.controller.js:10:44:10:48 | input | webapp/controller/app.controller.js:24:17:24:29 | output1: null |
-| webapp/controller/app.controller.js:23:17:23:27 | input: null | webapp/controller/app.controller.js:9:25:9:52 | oModel. ... input') |
-| webapp/controller/app.controller.js:24:17:24:29 | output1: null | webapp/view/app.view.xml:9:5:9:38 | content={/output1} |
-| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:23:17:23:27 | input: null |
+| webapp/controller/app.controller.js:10:44:10:48 | input | webapp/controller/app.controller.js:32:17:32:29 | output1: null |
+| webapp/controller/app.controller.js:31:17:31:27 | input: null | webapp/controller/app.controller.js:9:25:9:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:32:17:32:29 | output1: null | webapp/view/app.view.xml:9:5:9:38 | content={/output1} |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:31:17:31:27 | input: null |
 #select
 | webapp/view/app.view.xml:9:5:9:38 | content={/output1} | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/view/app.view.xml:9:5:9:38 | content={/output1} | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |

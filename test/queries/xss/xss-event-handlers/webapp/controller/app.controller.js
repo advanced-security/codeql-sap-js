@@ -15,8 +15,16 @@ sap.ui.define([
         },
         doSomething3: function (oEvent) {
             var oModel = this.getView().getModel();
-            var sInputValue = oEvent.getSource().getValue(); // User input source sap.m.Input.getValue()
+            var sInputValue = oEvent.getSource().getValue(); // User input source sap.m.Input#getValue
             oModel.setProperty('/output3', sInputValue);
+        },
+        doSomething4: function () {
+            var oView = this.getView();
+            var oInput = oView.byId("input");
+            var oHtmlOutput = oView.byId("htmlOutput");
+
+            var value = oInput.getValue() // User input source sap.m.Input#getValue
+            oHtmlOutput.setContent(value) // XSS sink sap.ui.core.HTML#setContent
         },
         onInit: function () {
             var oData = {

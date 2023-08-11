@@ -7,7 +7,7 @@
         value="{/input}" />  <!--User input source sap.m.Input.value -->
     <Button text="Press Me XSS1" press=".doSomething1"/>
     <core:HTML content="{/output1}"/> <!--XSS sink sap.ui.core.HTML.content -->
-    
+
     <Button text="Press Me XSS2" press=".doSomething2(${/input})"/>
     <core:HTML content="{/output2}"/> <!--XSS sink sap.ui.core.HTML.content -->
 
@@ -15,4 +15,10 @@
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
 	    liveChange=".doSomething3" />
     <core:HTML content="{/output3}"/> <!--XSS sink sap.ui.core.HTML.content -->
+
+    <Input id="input"
+		placeholder="Enter Payload"
+		description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+		liveChange=".doSomething4" />
+	<core:HTML id="htmlOutput" />
 </mvc:View>
