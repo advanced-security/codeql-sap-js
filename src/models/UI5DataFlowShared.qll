@@ -42,29 +42,40 @@ module UI5Shared {
       bidiModelControl(start, end)
       or
       /* 1. Control metadata property being the intermediate flow node */
-      exists(string propName, Metadata metadata |
+      exists(string propName, XmlControl control |
         // writing site -> control metadata
-        start = metadata.getAWrite(propName).getArgument(1) and
-        end = metadata.getProperty(propName)
+        start = control.getWrite(propName).getArgument(1) and
+        (
+          /* Custom control */
+          end = control.getDefinition().getMetadata().getARead()
+          or
+          /* Library control */
+          not exists(control.getDefinition()) and
+          end = control.getRead(propName)
+        )
         or
         // control metadata -> reading site
-        start = metadata.getProperty(propName) and
-        end = metadata.getARead(propName)
+        (
+          start = control.getDefinition().getMetadata().getARead()
+          or
+          /* Library control */
+          not exists(control.getDefinition()) and
+          start = control.getRead(propName)
+        ) and
+        end = control.getRead(propName)
       )
       or
       /* 2. Model property being the intermediate flow node */
       // JS object property (corresponding to binding path) -> getProperty('/path')
-      exists(UI5BoundNode p, GetBoundValue getP |
-        start = p and
-        end = getP and
-        p = getP.getBind()
+      exists(GetBoundValue getP |
+        start = getP.getBind() and
+        end = getP
       )
       or
       // setProperty('/path') -> JS object property (corresponding to binding path)
-      exists(UI5BoundNode p, SetBoundValue setP |
+      exists(SetBoundValue setP |
         start = setP and
-        end = p and
-        p = setP.getBind()
+        end = setP.getBind()
       )
       // or
       /* 3. Argument to JSONModel constructor being the intermediate flow node */
