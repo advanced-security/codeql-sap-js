@@ -96,6 +96,10 @@ abstract class UI5BindingPath extends Locatable {
     }
 }
 
+abstract class UI5ControlProperty extends Locatable {
+  abstract UI5Control getControl();
+}
+
 /**
  * Models a UI5 View that might include
  * XSS sources and sinks in standard controls
@@ -444,14 +448,22 @@ abstract class UI5Control extends Locatable {
   /** Get a reference to this control in the controller code. Currently supports only such references made through `byId`. */
   abstract MethodCallNode getAReference();
 
+  /** Get a property of this control. */
+  abstract UI5ControlProperty getProperty();
+
+  /** Get the definition of this control, given that it's a user-defined one. */
   abstract CustomControl getDefinition();
 
+  /** Holds if this control reads from or writes to a model. */
   abstract predicate accessesModel(UI5Model model);
 
+  /** Holds if this control reads from or writes to a model with regards to a binding path. */
   abstract predicate accessesModel(UI5Model model, XmlBindingPath bindingPath);
 
+  /** Holds if this control is a source of XSS. */
   abstract predicate isXssSource();
 
+  /** Holds if this control is a sink of XSS. */
   abstract predicate isXssSink();
 }
 
