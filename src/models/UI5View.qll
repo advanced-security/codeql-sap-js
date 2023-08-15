@@ -474,11 +474,11 @@ abstract class UI5Control extends Locatable {
 
   abstract MethodCallNode getARead();
 
-  abstract MethodCallNode getRead(string propName);
+  abstract MethodCallNode getARead(UI5ControlProperty property);
 
   abstract MethodCallNode getAWrite();
 
-  abstract MethodCallNode getWrite(string propName);
+  abstract MethodCallNode getAWrite(UI5ControlProperty property);
 
   /** Holds if this control reads from or writes to a model. */
   abstract predicate accessesModel(UI5Model model);
@@ -527,39 +527,25 @@ class XmlControl extends UI5Control instanceof XmlElement {
     )
   }
 
-  override MethodCallNode getRead(string propName) {
-    propName = this.getAProperty().getName() and
-    (
-      result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
-      (
-        result.getMethodName() = "getProperty" and
-        exists(UI5ControlProperty property | property.getName() = propName |
-          result.getArgument(0).asExpr().(StringLiteral).getValue() = propName
-        )
-      )
-      or
-      result.getMethodName() = "get" + capitalize(propName)
-    )
+  override MethodCallNode getARead(UI5ControlProperty property) {
+    result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
+    result.getMethodName() = "getProperty" and
+    result.getArgument(0).asExpr().(StringLiteral).getValue() = property.getName()
+    or
+    result.getMethodName() = "get" + capitalize(property.getName())
   }
 
-  override MethodCallNode getARead() { result = this.getRead(_) }
+  override MethodCallNode getARead() { result = this.getARead(_) }
 
-  override MethodCallNode getWrite(string propName) {
-    propName = this.getAProperty().getName() and
-    (
-      result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
-      (
-        result.getMethodName() = "setProperty" and
-        exists(UI5ControlProperty property | property.getName() = propName |
-          result.getArgument(0).asExpr().(StringLiteral).getValue() = propName
-        )
-      )
-      or
-      result.getMethodName() = "set" + capitalize(propName)
-    )
+  override MethodCallNode getAWrite(UI5ControlProperty property) {
+    result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
+    result.getMethodName() = "setProperty" and
+    result.getArgument(0).asExpr().(StringLiteral).getValue() = property.getName()
+    or
+    result.getMethodName() = "set" + capitalize(property.getName())
   }
 
-  override MethodCallNode getAWrite() { result = this.getWrite(_) }
+  override MethodCallNode getAWrite() { result = this.getAWrite(_) }
 
   override predicate accessesModel(UI5Model model) {
     // Verify that the controller's model has the referenced property

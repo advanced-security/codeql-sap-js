@@ -44,25 +44,26 @@ module UI5Shared {
       /* 1. Control metadata property being the intermediate flow node */
       exists(string propName, XmlControl control |
         // writing site -> control metadata
-        start = control.getWrite(propName).getArgument(1) and
+        start = control.getAWrite(propName).getArgument(1) and
         (
           /* Custom control */
           end = control.getDefinition().getMetadata().getARead()
           or
           /* Library control */
           not exists(control.getDefinition()) and
-          end = control.getRead(propName)
+          end = control.getARead(propName)
         )
         or
         // control metadata -> reading site
         (
+          /* Custom control */
           start = control.getDefinition().getMetadata().getARead()
           or
           /* Library control */
           not exists(control.getDefinition()) and
-          start = control.getRead(propName)
+          start = control.getARead(propName)
         ) and
-        end = control.getRead(propName)
+        end = control.getARead(propName)
       )
       or
       /* 2. Model property being the intermediate flow node */
