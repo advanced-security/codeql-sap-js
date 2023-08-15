@@ -100,6 +100,12 @@ abstract class UI5ControlProperty extends Locatable {
   abstract UI5Control getControl();
 }
 
+class XmlControlProperty extends UI5ControlProperty instanceof XmlAttribute {
+  XmlControlProperty() { this.getElement() = any(XmlControl control) }
+
+  override UI5Control getControl() { result = XmlAttribute.super.getElement() }
+}
+
 /**
  * Models a UI5 View that might include
  * XSS sources and sinks in standard controls
@@ -449,7 +455,10 @@ abstract class UI5Control extends Locatable {
   abstract MethodCallNode getAReference();
 
   /** Get a property of this control. */
-  abstract UI5ControlProperty getProperty();
+  abstract UI5ControlProperty getAProperty();
+
+  /** Get a property of this control having the name. */
+  abstract UI5ControlProperty getProperty(string name);
 
   /** Get the definition of this control, given that it's a user-defined one. */
   abstract CustomControl getDefinition();
@@ -484,7 +493,14 @@ class XmlControl extends UI5Control instanceof XmlElement {
   override MethodCallNode getAReference() {
     result.getEnclosingFunction() = any(CustomController controller).getAMethod().asExpr() and
     result.getMethodName() = "byId" and
-    result.getArgument(0).asExpr().(StringLiteral).getValue() = XmlElement.super.getAttributeValue("id")
+    result.getArgument(0).asExpr().(StringLiteral).getValue() =
+      XmlElement.super.getAttributeValue("id")
+  }
+
+  override UI5ControlProperty getAProperty() { result = XmlElement.super.getAnAttribute() }
+
+  override UI5ControlProperty getProperty(string name) {
+    result = XmlElement.super.getAttribute(name)
   }
 
   override CustomControl getDefinition() {
