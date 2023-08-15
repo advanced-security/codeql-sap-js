@@ -567,16 +567,6 @@ module UI5 {
       )
     }
 
-    MethodCallNode getAWrite() {
-      exists(string propName, Project project |
-        result.getMethodName() = "setProperty" and
-        result.getArgument(0).asExpr().(StringLiteral).getValue() = propName and
-        exists(this.getProperty(propName)) and
-        project.isInThisProject(this.getFile()) and
-        project.isInThisProject(result.getFile())
-      )
-    }
-
     MethodCallNode getAWrite(string propName) {
       result.getMethodName() = "setProperty" and
       result.getArgument(0).asExpr().(StringLiteral).getValue() = propName and
@@ -587,15 +577,7 @@ module UI5 {
       )
     }
 
-    MethodCallNode getARead() {
-      exists(string propName, Project project |
-        result.getMethodName() = "get" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
-        exists(this.getProperty(propName)) and
-        /* Make sure that the resulting node is in the same project as this */
-        project.isInThisProject(this.getFile()) and
-        project.isInThisProject(result.getFile())
-      )
-    }
+    MethodCallNode getAWrite() { result = getAWrite(_) }
 
     MethodCallNode getARead(string propName) {
       result.getMethodName() = "get" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
@@ -605,6 +587,8 @@ module UI5 {
         project.isInThisProject(result.getFile())
       )
     }
+
+    MethodCallNode getARead() { result = getARead(_) }
   }
 
   /**
