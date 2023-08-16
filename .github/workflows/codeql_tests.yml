@@ -39,3 +39,4 @@ jobs:
       run: |
         $CODEQL_PATH test run --no-show-extractor-output --format=json --threads=0 --verbosity=errors ./test | 
         jq -r '.|sort_by(.pass)|.[]|"\(if .pass then "✅" else "❌" end) \(.test)<br/>"' >> $GITHUB_STEP_SUMMARY
+        if grep -q "❌" <<< $GITHUB_STEP_SUMMARY; then exit 1; fi
