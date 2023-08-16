@@ -623,7 +623,7 @@ abstract class UI5Handler extends Locatable {
  */
 bindingset[notation]
 private string handlerNotationCapture(string notation) {
-  result = notation.regexpCapture("\\.([a-zA-Z]+)(\\(.*\\))?", 1)
+  result = notation.regexpCapture("\\.([a-zA-Z0-9]+)(\\(.*\\))?", 1)
 }
 
 class XmlHandler extends UI5Handler instanceof XmlAttribute {
@@ -647,4 +647,6 @@ class XmlHandler extends UI5Handler instanceof XmlAttribute {
       result.getName() = handlerName
     )
   }
+
+  override string toString() { result = XmlAttribute.super.toString() }
 }
