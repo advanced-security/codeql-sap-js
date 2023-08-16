@@ -491,6 +491,15 @@ abstract class UI5Control extends Locatable {
 
   /** Holds if this control is a sink of XSS. */
   abstract predicate isXssSink();
+
+  /** Get the view that this control is part of. */
+  abstract UI5View getView();
+
+  /** If any, get the handler that this control accesses. */
+  abstract FunctionNode getHandler();
+
+  /** Get the controller that manages this control. */
+  CustomController getController() { result = this.getView().getController() }
 }
 
 class XmlControl extends UI5Control instanceof XmlElement {
@@ -585,6 +594,57 @@ class XmlControl extends UI5Control instanceof XmlElement {
       type = this.getQualifiedType().replaceAll(".", "/") and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "html-injection") and
       property = path.regexpCapture("Instance\\.Member\\[([^\\]]+)\\]", 1)
+    )
+  }
+
+  override UI5View getView() { result = XmlElement.super.getParent+().(XmlView) }
+
+  override FunctionNode getHandler() {
+    result = XmlElement.super.getAnAttribute().(XmlHandler).getDefinition()
+  }
+
+  override string toString() { result = XmlElement.super.toString() }
+}
+
+abstract class UI5Handler extends Locatable {
+  /** Get the control that this handler notation is part of. */
+  abstract string getPath();
+
+  abstract UI5Control getControl();
+
+  CustomController getController() { result = this.getControl().getController() }
+
+  /** Get the definition of the handler being referred to. */
+  abstract FunctionNode getDefinition();
+}
+
+/**
+ *  Utility predicate capturing the handler name.
+ */
+bindingset[notation]
+private string handlerNotationCapture(string notation) {
+  result = notation.regexpCapture("\\.([a-zA-Z]+)(\\(.*\\))?", 1)
+}
+
+class XmlHandler extends UI5Handler instanceof XmlAttribute {
+  string handlerName;
+  string notation;
+
+  XmlHandler() {
+    notation = XmlAttribute.super.getValue() and
+    handlerName = handlerNotationCapture(notation) and
+    XmlAttribute.super.getElement() instanceof XmlControl
+  }
+
+  override string getPath() { result = notation }
+
+  override UI5Control getControl() { result = XmlAttribute.super.getElement().(XmlControl) }
+
+  override FunctionNode getDefinition() {
+    exists(CustomController controller |
+      controller = this.getControl().getController() and
+      result = controller.getAMethod() and
+      result.getName() = handlerName
     )
   }
 }
