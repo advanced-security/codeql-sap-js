@@ -641,11 +641,8 @@ class XmlHandler extends UI5Handler instanceof XmlAttribute {
   override UI5Control getControl() { result = XmlAttribute.super.getElement().(XmlControl) }
 
   override FunctionNode getDefinition() {
-    exists(CustomController controller |
-      controller = this.getControl().getController() and
-      result = controller.getAMethod() and
-      result.getName() = handlerName
-    )
+    result = this.getControl().getController().getAMethod() and
+    result.getName() = handlerName
   }
 
   override string toString() { result = XmlAttribute.super.toString() }
