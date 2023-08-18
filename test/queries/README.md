@@ -80,5 +80,5 @@ User input flows to XSS sinks via event handlers in 3 different ways:
 ### [clickjacking-default-all](clickjacking/clickjacking-default-all)
 - `frameOptions` not set
 
-### [clickjacking-deny-all](clickjacking-deny-all)
+### [clickjacking-deny-all](clickjacking/clickjacking-deny-all)
 - frameOptions = `deny`
