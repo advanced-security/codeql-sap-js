@@ -1,2 +1,2 @@
-| index.html:9:9:9:31 | index.html:9 | Possible clickjacking vulnerability due to window[ ... onfig"] being set to `allow`. |
-| index.html:28:34:28:65 | index.html:28 | Possible clickjacking vulnerability due to data-sap-ui-frameOptions=allow being set to `allow`. |
+| index.html:9:9:9:31 | window[ ... onfig"] | Possible clickjacking vulnerability due to window[ ... onfig"] being set to `allow`. |
+| index.html:28:34:28:65 | data-sap-ui-frameOptions=allow | Possible clickjacking vulnerability due to data-sap-ui-frameOptions=allow being set to `allow`. |
