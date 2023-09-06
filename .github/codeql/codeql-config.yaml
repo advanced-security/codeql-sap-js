@@ -3,7 +3,7 @@ name: "My CodeQL config"
 disable-default-queries: true
 
 queries:
-  - uses: ./src
+  - uses: ./javascript
 
 paths:
   - "**/*.xml"
