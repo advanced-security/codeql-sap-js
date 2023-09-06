@@ -14,6 +14,11 @@ inputs:
     required: false
     default: 'true'
 
+  token:
+    description: |
+      Token to use for auth
+    required: true
+
 outputs:
   qlt-home:
     description: 'The directory containing the QLT installation'
