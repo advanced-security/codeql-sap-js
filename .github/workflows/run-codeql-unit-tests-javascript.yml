@@ -122,8 +122,8 @@ jobs:
         with:
           qlt-version: 'latest'
           add-to-path: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
+        
 
       - name: Collect test results
         uses: actions/download-artifact@v2
