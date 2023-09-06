@@ -1,0 +1,9 @@
+name: advanced-security/javascript-sap-ui5-models-tests
+version: 0.0.0
+description: Default description
+suites: 
+license: 
+extractor: javascript
+dependencies:
+  advanced-security/javascript-sap-ui5-models: '*'
+  advanced-security/javascript-sap-ui5-extensions: "^0.1.0"

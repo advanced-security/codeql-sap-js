@@ -1,0 +1,8 @@
+name: advanced-security/javascript-sap-ui5-models
+version: 0.0.0
+description: Default description
+suites: 
+license: 
+dependencies:
+  codeql/javascript-all: "^0.6.3"
+  advanced-security/javascript-sap-ui5-extensions: "^0.1.0"
