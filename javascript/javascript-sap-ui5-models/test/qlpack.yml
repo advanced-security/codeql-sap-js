@@ -7,3 +7,5 @@ extractor: javascript
 dependencies:
   advanced-security/javascript-sap-ui5-models: '*'
   advanced-security/javascript-sap-ui5-extensions: "^0.1.0"
+  advanced-security/javascript-sap-ui5-queries: "*"
+  

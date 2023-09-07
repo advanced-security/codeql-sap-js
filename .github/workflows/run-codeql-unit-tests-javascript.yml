@@ -86,15 +86,15 @@ jobs:
           CODEQL_STDLIB: ${{ matrix.codeql_standard_library }}
           CODEQL_STDLIB_IDENT: ${{matrix.codeql_standard_library_ident}}
           RUNNER_TMP: ${{ runner.temp }}
+          LGTM_INDEX_XML_MODE: all
+
         shell: bash
         run: >
-
           qlt test run execute-unit-tests  
+          -codeql-args "--threads=0 --strict-test-discovery"
           --num-threads 4 
           --language javascript 
           --runner-os $RUNNER_OS 
-          --cli-version $CODEQL_CLI
-          --stdlib-ident $CODEQL_STDLIB_IDENT 
           --work-dir $RUNNER_TMP
             
       - name: Upload test results
@@ -129,3 +129,4 @@ jobs:
       - name: Validate test results
         run: |
           qlt test run validate-unit-tests --results-directory . 
+          qlt test run validate-unit-tests --pretty-print --results-directory . >> $GITHUB_STEP_SUMMARY
