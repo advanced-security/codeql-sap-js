@@ -92,7 +92,7 @@ jobs:
         run: >
           qlt test run execute-unit-tests  
           --codeql-args "--threads=0 --strict-test-discovery"
-          --num-threads 1 
+          --num-threads 2 
           --language javascript 
           --runner-os $RUNNER_OS 
           --work-dir $RUNNER_TMP
