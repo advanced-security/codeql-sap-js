@@ -127,6 +127,6 @@ jobs:
         uses: actions/download-artifact@v2
 
       - name: Validate test results
-        run: |
-          # qlt test run validate-unit-tests --results-directory . 
+        run: |          
           qlt test run validate-unit-tests --pretty-print --results-directory . >> $GITHUB_STEP_SUMMARY
+          qlt test run validate-unit-tests --results-directory . 
