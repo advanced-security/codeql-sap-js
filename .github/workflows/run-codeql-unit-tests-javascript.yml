@@ -1,6 +1,5 @@
 name: ⚙️ CodeQL - Run Unit Tests (javascript)
 
-
 on:
   push:
     branches:
