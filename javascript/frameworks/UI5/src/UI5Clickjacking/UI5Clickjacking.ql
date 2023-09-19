@@ -11,9 +11,9 @@
  */
 
 import javascript
-import models.UI5HTML
+import UI5HTML
 import semmle.javascript.RestrictedLocations
-private import models.UI5
+private import UI5
 
 class FirstLineOfMainHtml extends HTML::DocumentElement, FirstLineOf {
   FirstLineOfMainHtml() {

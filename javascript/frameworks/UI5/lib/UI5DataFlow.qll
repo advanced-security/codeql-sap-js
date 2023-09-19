@@ -1,7 +1,7 @@
 import javascript
-import models.UI5::UI5
-import models.UI5View
-import models.UI5AMDModule
+import UI5::UI5
+import UI5View
+import UI5AMDModule
 private import DataFlow::PathGraph as DataFlowPathGraph
 
 module UI5DataFlow {

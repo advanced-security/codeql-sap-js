@@ -13,8 +13,8 @@
  */
 
 import javascript
-import models.UI5DataFlow 
-import models.UI5DataFlow::UI5PathGraph
+import UI5DataFlow 
+import UI5DataFlow::UI5PathGraph
 import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 class UI5XssConfiguration extends DomBasedXss::Configuration {

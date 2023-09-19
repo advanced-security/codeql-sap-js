@@ -1,6 +1,6 @@
 private import javascript
 private import DataFlow
-private import models.UI5
+private import UI5
 
 newtype TFrameOptions =
   /*
