@@ -6,7 +6,7 @@
  */
 
 import javascript
-import models.UI5DataFlow
+import advanced_security.javascript.frameworks.UI5.UI5DataFlow
 import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 class UI5ExtHtmlISink extends DomBasedXss::Sink {

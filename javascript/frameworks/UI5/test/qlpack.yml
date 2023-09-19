@@ -6,3 +6,4 @@ dependencies:
   codeql/javascript-queries: "^0.6.3"
   advanced-security/javascript-sap-ui5-queries: "^0.2.0"
   advanced-security/javascript-sap-ui5-extensions: "^0.2.0"
+  advanced-security/javascript-sap-ui5-all: "^0.2.0"
