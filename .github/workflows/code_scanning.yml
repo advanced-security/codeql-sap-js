@@ -30,6 +30,7 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: javascript
+        db-location: ${{ runner.temp }}/temp-db
 
     - name: Resolved local query pack dependencies
       env:
