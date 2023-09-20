@@ -25,6 +25,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    - name: Initialize CodeQL to discover CodeQL path
+      id: resolve-codeql-path
+      uses: github/codeql-action/init@v2
+      with:
+        languages: javascript
+
+    - name: Resolved local query pack dependencies
+      env:
+        CODEQL_PATH: ${{ steps.resolve-codeql-path.outputs.codeql-path }}
+      run: |
+        find . -path '*/src/*' -a -name 'qlpack.yml' -exec $CODEQL_PATH pack install {} \;
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
