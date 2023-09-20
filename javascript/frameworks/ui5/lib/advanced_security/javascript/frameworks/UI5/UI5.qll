@@ -1,7 +1,7 @@
 private import javascript 
 private import DataFlow
 private import semmle.javascript.security.dataflow.DomBasedXssCustomizations
-private import UI5View
+private import advanced_security.javascript.frameworks.ui5.UI5View
 
 module UI5 {
   /**

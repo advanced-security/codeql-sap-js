@@ -1,6 +1,6 @@
 private import javascript
 private import DataFlow
-private import UI5::UI5
+private import advanced_security.javascript.frameworks.ui5.UI5::UI5
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 /**

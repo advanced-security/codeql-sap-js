@@ -13,8 +13,8 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.UI5.UI5DataFlow 
-import advanced_security.javascript.frameworks.UI5.UI5DataFlow::UI5PathGraph
+import advanced_security.javascript.frameworks.ui5.UI5DataFlow 
+import advanced_security.javascript.frameworks.ui5.UI5DataFlow::UI5PathGraph
 import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 class UI5XssConfiguration extends DomBasedXss::Configuration {

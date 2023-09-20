@@ -11,9 +11,9 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.UI5.UI5HTML
+import advanced_security.javascript.frameworks.ui5.UI5HTML
 import semmle.javascript.RestrictedLocations
-private import advanced_security.javascript.frameworks.UI5.UI5
+private import advanced_security.javascript.frameworks.ui5.UI5
 
 class FirstLineOfMainHtml extends HTML::DocumentElement, FirstLineOf {
   FirstLineOfMainHtml() {

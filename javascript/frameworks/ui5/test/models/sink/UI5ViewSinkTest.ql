@@ -7,7 +7,7 @@
 
 import javascript
 import semmle.javascript.security.dataflow.DomBasedXssQuery
-import advanced_security.javascript.frameworks.UI5.UI5View
+import advanced_security.javascript.frameworks.ui5.UI5View
 
 from UI5BindingPath bp
 where bp = any(UI5View ui5v).getAnHtmlISink()

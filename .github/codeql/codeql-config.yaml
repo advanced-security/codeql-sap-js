@@ -4,7 +4,7 @@ queries:
   # for log-injection
   - uses: security-and-quality
   # for ui5 queries
-  - uses: ./javascript/frameworks/UI5/src
+  - uses: ./javascript/frameworks/ui5/src
 
 paths:
   - "**/*.xml"

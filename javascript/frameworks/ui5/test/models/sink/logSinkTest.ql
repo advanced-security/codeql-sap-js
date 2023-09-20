@@ -6,7 +6,7 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.UI5.UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.UI5DataFlow
 import semmle.javascript.security.dataflow.LogInjectionQuery as LogInjectionQuery
 
 class UI5ExtLogISink extends LogInjectionQuery::Sink {
