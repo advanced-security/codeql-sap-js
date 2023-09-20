@@ -32,7 +32,7 @@ jobs:
         languages: javascript
         db-location: ${{ runner.temp }}/temp-db
 
-    - name: Resolved local query pack dependencies
+    - name: Resolve local query pack dependencies
       env:
         CODEQL_PATH: ${{ steps.resolve-codeql-path.outputs.codeql-path }}
       run: |
