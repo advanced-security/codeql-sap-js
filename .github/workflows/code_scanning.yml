@@ -11,6 +11,7 @@ on:
     
 env:
   LGTM_INDEX_XML_MODE: all
+  CODEQL_ACTION_EXTRA_OPTIONS: '{"database": {"run-queries": ["--additional-packs=${{ github.workspace }}/javascript/frameworks/ui5/lib"]}}'
 
 jobs:
   analyze:
