@@ -11,7 +11,6 @@ on:
     
 env:
   LGTM_INDEX_XML_MODE: all
-  CODEQL_ACTION_EXTRA_OPTIONS: '{"database": {"run-queries": ["--additional-packs=${{ github.workspace }}/javascript/frameworks/ui5/lib"]}}'
 
 jobs:
   analyze:
@@ -25,19 +24,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-
-    - name: Initialize CodeQL to discover CodeQL path
-      id: resolve-codeql-path
-      uses: github/codeql-action/init@v2
-      with:
-        languages: javascript
-        db-location: ${{ runner.temp }}/temp-db
-
-    - name: Resolve local pack dependencies
-      env:
-        CODEQL_PATH: ${{ steps.resolve-codeql-path.outputs.codeql-path }}
-      run: |
-        find . -name 'qlpack.yml' -exec $CODEQL_PATH pack install {} \;
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
