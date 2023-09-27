@@ -6,4 +6,4 @@ extensionTargets:
   codeql/javascript-all: "^0.6.3"
   codeql/javascript-queries: "^0.6.3"
 dataExtensions:
-  - ui5-models.yml
+  - "*.model.yml"
