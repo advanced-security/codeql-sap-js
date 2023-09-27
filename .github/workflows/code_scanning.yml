@@ -25,6 +25,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Prepare local CodeQL model packs
+      run: |
+        mkdir -p .github/codeql/extensions
+        for ext in $(find . -name 'qlpack.yml' -exec fgrep -l dataExtensions {} \;); do
+          dir=$(dirname $ext)
+          echo "Moving $ext to .github/codeql/extensions/$dir"
+          mkdir -p .github/codeql/extensions/$dir
+          mv $dir .github/codeql/extensions/$dir
+        done
+
+
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v2
