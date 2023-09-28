@@ -43,9 +43,24 @@ jobs:
         cache: 'pip'
         
     - name: Validate results
+      continue-on-error: true
+      id: validate
       run: |
         pip install sarif-tools
         sarif --version
-        sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected -o diff.json
-        ! grep -q "[1-9]" diff.json
-        cat diff.json
+        sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected -o sarif-diff.json
+        ! grep -q "[1-9]" sarif-diff.json
+        
+    - name: Upload sarif-diff
+      if: steps.validate.outcome != 'success'
+      uses: actions/upload-artifact@v3
+      with:
+        name: sarif-diff.json
+        path: sarif-diff.json
+    
+    - name: Fail workflow
+      if: steps.validate.outcome != 'success'
+      run: |
+        cat sarif-diff.json
+        echo "::error"
+      
