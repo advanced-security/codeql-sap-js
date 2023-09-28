@@ -58,7 +58,7 @@ jobs:
         name: sarif-diff.json
         path: sarif-diff.json
     
-    - name: Fail workflow
+    - name: Unexpected Code Scanning results
       if: steps.validate.outcome != 'success'
       run: |
         cat sarif-diff.json
