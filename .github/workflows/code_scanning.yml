@@ -46,5 +46,6 @@ jobs:
       run: |
         pip install sarif-tools
         sarif --version
-        sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected | grep "all levels: +0 +0"
-        
+        sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected -o diff.json
+        ! grep -q "[1-9]" diff.json
+        cat diff.json
