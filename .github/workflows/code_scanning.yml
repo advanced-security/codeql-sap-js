@@ -62,5 +62,5 @@ jobs:
       if: steps.validate.outcome != 'success'
       run: |
         cat sarif-diff.json
-        echo "::error"
+        echo "::error::Unexpected Code Scanning results!" && exit 1
       
