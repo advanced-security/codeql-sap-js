@@ -98,8 +98,10 @@ abstract class UI5BindingPath extends Locatable {
       // The property bound to an UI5View source
       result.getPropertyNameExpr() = p.getNameExpr() and
       this.getAbsolutePath() = model.getPathString(p) and
-      //restrict search inside the same project
-      inSameUI5Project(this.getFile(), result.getFile())
+      //restrict search inside the same webapp
+      exists(WebApp webApp |
+        webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+      )
     )
     // TODO
     /*
@@ -142,8 +144,10 @@ abstract class UI5View extends File {
   CustomController getController() {
     // The controller name should match
     result.getName() = this.getControllerName() and
-    // The View and the Controller are in a same project
-    inSameUI5Project(this, result.getFile())
+    // The View and the Controller are in a same webapp
+    exists(WebApp webApp |
+      webApp.getAResource() = this and webApp.getAResource() = result.getFile()
+    )
   }
 
   abstract UI5BindingPath getASource();
@@ -490,10 +494,13 @@ class XmlView extends UI5View, XmlFile {
         (
           builtInControl(element.getNamespace())
           or
-          // or a custom control with implementation code found in the project
+          // or a custom control with implementation code found in the webapp
           exists(CustomControl control |
             control.getName() = element.getNamespace().getUri() + "." + element.getName() and
-            inSameUI5Project(control.getFile(), element.getFile())
+            exists(WebApp webApp |
+              webApp.getAResource() = control.getFile() and
+              webApp.getAResource() = element.getFile()
+            )
           )
         )
       )
@@ -563,20 +570,26 @@ class XmlControl extends UI5Control instanceof XmlElement  {
 
   override CustomControl getDefinition() {
     result.getName() = this.getQualifiedType() and
-    inSameUI5Project(this.getFile(), result.getFile())
+    exists(WebApp webApp |
+      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+    )
   }
 
   bindingset[propName]
   override MethodCallNode getARead(string propName) {
     // TODO: in same view
-    inSameUI5Project(this.getFile(), result.getFile()) and
+    exists(WebApp webApp |
+      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+    ) and
     result.getMethodName() = "get" + capitalize(propName)
   }
 
   bindingset[propName]
   override MethodCallNode getAWrite(string propName) {
     // TODO: in same view
-    inSameUI5Project(this.getFile(), result.getFile()) and
+    exists(WebApp webApp |
+      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+    ) and
     result.getMethodName() = "set" + capitalize(propName)
   }
 

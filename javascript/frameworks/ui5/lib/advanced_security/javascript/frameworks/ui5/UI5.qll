@@ -1,38 +1,139 @@
-private import javascript 
+private import javascript
 private import DataFlow
+private import advanced_security.javascript.frameworks.ui5.JsonParser
 private import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 private import advanced_security.javascript.frameworks.ui5.UI5View
+private import advanced_security.javascript.frameworks.ui5.UI5HTML
 
 module UI5 {
-  /**
-   * Helper predicate checking if two elements are in the same Project
-   */
-  predicate inSameUI5Project(File f1, File f2) {
-    exists(Project p | p.isInThisProject(f1) and p.isInThisProject(f2))
+  private class ResourceRootPathString extends PathString {
+    SapUiCoreScriptElement coreScript;
+
+    ResourceRootPathString() { this = coreScript.getAResourceRoot().getRoot() }
+
+    override Folder getARootFolder() { result = coreScript.getFile().getParentContainer() }
   }
 
-  class Project extends Folder {
-    /**
-     * An UI5 project root folder.
-     */
-    Project() { exists(File yamlFile | yamlFile = this.getFile("ui5.yaml")) }
-
-    /**
-     * The `ui5.yaml` file that declares a UI5 application.
-     */
-    File getProjectYaml() { result = this.getFile("ui5.yaml") }
-
-    predicate isInThisProject(File file) { this = file.getParentContainer*() }
-
-    private HTML::HtmlFile getSapUICoreScript() {
-      exists(HTML::ScriptElement script |
-        result = script.getFile() and
-        this.isInThisProject(result) and
-        script.getSourcePath().matches("%/sap-ui-core.js")
+  private newtype TResourceRoot =
+    MkResourceRoot(string name, string root, string source) {
+      exists(
+        JsonParser<getAResourceRootConfig/0>::JsonObject config,
+        JsonParser<getAResourceRootConfig/0>::JsonMember configEntry, SapUiCoreScriptElement coreScript
+      |
+        source = coreScript.getAttributeByName("data-sap-ui-resourceroots").getValue() and
+        source = config.getSource() and
+        config.getAMember() = configEntry
+      |
+        name = configEntry.getKey() and
+        root = configEntry.getValue().asString()
       )
     }
 
-    HTML::HtmlFile getMainHTML() { result = this.getSapUICoreScript() }
+  class ResourceRoot extends TResourceRoot, MkResourceRoot {
+    string getName() { this = MkResourceRoot(result, _, _) }
+
+    string getRoot() { this = MkResourceRoot(_, result, _) }
+
+    string getSource() { this = MkResourceRoot(_, _, result) }
+
+    string toString() { result = this.getName() + ": " + this.getRoot() }
+  }
+
+  class ResolvedResourceRoot extends Container {
+    ResourceRoot unresolvedRoot;
+    ResolvedResourceRoot() {
+      exists(ResourceRootPathString resourceRootPathString | unresolvedRoot.getRoot() = resourceRootPathString |
+      this = resourceRootPathString.resolve(resourceRootPathString.getARootFolder()).getContainer())
+    }
+
+    string getName() {
+      result = unresolvedRoot.getName()
+    }
+
+    string getSource() {
+      result = unresolvedRoot.getSource()
+    }
+
+    predicate contains(File file) {
+      file.getParentContainer+() = this
+    }
+  }
+
+  private string getAResourceRootConfig() {
+    result = any(SapUiCoreScriptElement script).getAttributeByName("data-sap-ui-resourceroots").getValue()
+  }
+
+  class SapUiCoreScriptElement extends HTML::ScriptElement {
+    SapUiCoreScriptElement() {
+      this.getSourcePath().matches(["%sap-ui-core.js", "%sap-ui-core-nojQuery.js"])
+    }
+
+    ResourceRoot getAResourceRoot() {
+      result.getSource() = this.getAttributeByName("data-sap-ui-resourceroots").getValue()
+    }
+
+    ResolvedResourceRoot getAResolvedResourceRoot() {
+      result.getSource() = this.getAttributeByName("data-sap-ui-resourceroots").getValue()
+    }
+  }
+
+  /** A UI5 web application manifest associated with a bootstrapped UI5 web application. */
+  class WebAppManifest extends File {
+    WebApp webapp;
+
+    WebAppManifest() {
+      this.getBaseName() = "manifest.json" and
+      this.getParentContainer() = webapp.getWebAppFolder()
+    }
+
+    WebApp getWebapp() { result = webapp }
+  }
+
+  /** A UI5 bootstrapped web application. */
+  class WebApp extends HTML::HtmlFile {
+    SapUiCoreScriptElement coreScript;
+
+    WebApp() { coreScript.getFile() = this }
+
+    File getAResource() { coreScript.getAResolvedResourceRoot().contains(result) }
+
+    File getResource(string path) {
+      getWebAppFolder().getAbsolutePath() + "/" + path = result.getAbsolutePath()
+    }
+
+    Folder getWebAppFolder() { result = this.getParentContainer() }
+
+    WebAppManifest getManifest() { result.getWebapp() = this }
+
+    /**
+     * Gets the JavaScript module that serves as an entrypoint to this webapp.
+     */
+    File getInitialModule() {
+      exists(
+        string initialModuleResourcePath, string resolvedModulePath,
+        ResolvedResourceRoot resourceRoot
+      |
+        initialModuleResourcePath = coreScript.getAttributeByName("data-sap-ui-onInit").getValue() and
+        coreScript.getAResolvedResourceRoot() = resourceRoot and
+        resolvedModulePath =
+          initialModuleResourcePath
+              .regexpReplaceAll("^module\\s*:\\s*", "")
+              .replaceAll(resourceRoot.getName(), resourceRoot.getAbsolutePath()) and
+        result.getAbsolutePath() = resolvedModulePath + ".js"
+      )
+    }
+
+    FrameOptions getFrameOptions() {
+      exists(HTML::DocumentElement doc | doc.getFile() = this |
+        result.asHtmlFrameOptions() = coreScript.getAnAttribute()
+      )
+      or
+      result.asJsFrameOptions().getFile() = this
+    }
+
+    HTML::DocumentElement getDocument() {
+      result.getFile() = this
+    }
   }
 
   /**
@@ -76,7 +177,7 @@ module UI5 {
       )
     }
 
-    Project getProject() { result = this.getFile().getParentContainer*() }
+    WebApp getWebApp() { this.getFile() = result.getAResource() }
 
     SapDefineModule getExtendingDefine() {
       exists(Extension baseExtension, Extension subclassExtension, SapDefineModule subclassDefine |
@@ -291,13 +392,7 @@ module UI5 {
    */
   bindingset[path]
   JsonObject resolveDirectPath(string path) {
-    exists(Project project, File jsonFile |
-      // project contains this file
-      project.isInThisProject(jsonFile) and
-      jsonFile.getExtension() = "json" and
-      jsonFile.getAbsolutePath() = project.getASubFolder().getAbsolutePath() + "/" + path and
-      result.getJsonFile() = jsonFile
-    )
+    exists(WebApp webApp | result.getJsonFile() = webApp.getResource(path))
   }
 
   /**
@@ -502,14 +597,18 @@ module UI5 {
       result.getMethodName() = "setProperty" and
       result.getArgument(0).asExpr().(StringLiteral).getValue() = propName and
       // TODO: in same controller
-      inSameUI5Project(this.getFile(), result.getFile())
+      exists(WebApp webApp |
+        webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+      )
     }
 
     bindingset[propName]
     MethodCallNode getARead(string propName) {
       result.getMethodName() = "get" + capitalize(propName) and
       // TODO: in same controller
-      inSameUI5Project(this.getFile(), result.getFile())
+      exists(WebApp webApp |
+        webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
+      )
     }
   }
 }

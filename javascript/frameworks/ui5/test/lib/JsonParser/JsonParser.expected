@@ -1,0 +1,21 @@
+| test.js:1:15:1:17 | '3' | 3 | number |
+| test.js:2:15:2:18 | '-1' | -1 | number |
+| test.js:3:15:3:19 | '1.0' | 1 | number |
+| test.js:4:15:4:20 | '-1.0' | -1 | number |
+| test.js:5:15:5:22 | '1.0e+1' | 10 | number |
+| test.js:6:15:6:23 | '-1.0e+1' | -10 | number |
+| test.js:7:15:7:22 | '1.0e-1' | 0.1 | number |
+| test.js:9:15:9:29 | '"hello world"' | "hello world" | string |
+| test.js:10:15:10:35 | '"hello ... ld\\\\""' | "hello \\"world\\"" | string |
+| test.js:11:16:11:33 | '"hello\\nworld\\n"' | "hello\nworld\n" | string |
+| test.js:13:16:13:21 | 'true' | true | true |
+| test.js:14:16:14:22 | 'false' | false | false |
+| test.js:15:16:15:21 | 'null' | null | null |
+| test.js:17:16:17:19 | '[]' | [] | array |
+| test.js:18:16:18:20 | '[1]' | [1] | array |
+| test.js:19:16:19:22 | '[1,2]' | [1, 2] | array |
+| test.js:20:16:20:25 | '["1", 2]' | ["1", 2] | array |
+| test.js:22:16:22:19 | '{}' | {} | object |
+| test.js:23:16:23:24 | '{"a":1}' | {a : 1} | object |
+| test.js:24:16:24:31 | '{"a":1,"b":-1}' | {a : 1, b : -1} | object |
+| test.js:25:16:25:90 | '{"a":  ... : 2}]}' | {a : {b : 1, c : true}, e : [1, "2", false], f : [{g : 1, h : 2}]} | object |

@@ -85,10 +85,10 @@ class FrameOptions extends TFrameOptions {
 }
 
 /**
- * Holds if the frame options are left untouched as the default value `trusted`.
+ * Holds if there are no frame options specified to prevent click jacking.
  */
-predicate thereIsNoFrameOptionSet(UI5::Project p) {
-  not exists(FrameOptions frameOptions | p.isInThisProject(frameOptions.getLocation().getFile()) |
+predicate isMissingFrameOptionsToPreventClickjacking(UI5::WebApp webapp) {
+  not exists(FrameOptions frameOptions | webapp.getFrameOptions() = frameOptions |
     frameOptions.allowsSharedOriginEmbedding() or
     frameOptions.deniesEmbedding() or
     frameOptions.allowsAllOriginEmbedding()

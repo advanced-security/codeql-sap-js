@@ -15,44 +15,46 @@ import advanced_security.javascript.frameworks.ui5.UI5HTML
 import semmle.javascript.RestrictedLocations
 private import advanced_security.javascript.frameworks.ui5.UI5
 
-class FirstLineOfMainHtml extends HTML::DocumentElement, FirstLineOf {
-  FirstLineOfMainHtml() {
-    exists(UI5::Project p | this.getFile().(FirstLineOf).getFile() = p.getMainHTML())
+class FirstLineOfDocumentElementWebApp extends HTML::DocumentElement, FirstLineOf {
+  FirstLineOfDocumentElementWebApp() {
+    exists(UI5::WebApp app | app.getDocument() = this)
   }
 }
 
 newtype TAlertLocation =
   TFrameOptions(FrameOptions frameOptions) or
-  TFirstLineOfMainHtml(FirstLineOfMainHtml htmlStartTag)
+  TFirstLineOfDocumentElementWebApp(FirstLineOfDocumentElementWebApp htmlStartTag)
 
 class AlertLocation extends TAlertLocation {
   FrameOptions asFrameOptions() { this = TFrameOptions(result) }
 
-  FirstLineOfMainHtml asFirstLineOfMainHtml() { this = TFirstLineOfMainHtml(result) }
+  FirstLineOfDocumentElementWebApp asFirstLineOfDocumentElementWebApp() { this = TFirstLineOfDocumentElementWebApp(result) }
 
   string toString() {
     result = this.asFrameOptions().toString() or
-    result = this.asFirstLineOfMainHtml().toString()
+    result = this.asFirstLineOfDocumentElementWebApp().toString()
   }
 
   predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
     this.asFrameOptions().getLocation().hasLocationInfo(path, sl, sc, el, ec)
     or
-    this.asFirstLineOfMainHtml().hasLocationInfo(path, sl, sc, el, ec)
+    this.asFirstLineOfDocumentElementWebApp().hasLocationInfo(path, sl, sc, el, ec)
   }
 }
 
-from AlertLocation alert, string message
+from AlertLocation alertLocation, string message
 where
-  exists(FrameOptions frameOptions | frameOptions.allowsAllOriginEmbedding() |
-    alert.asFrameOptions() = frameOptions and
-    message =
-      "Possible clickjacking vulnerability due to " + frameOptions.toString() +
-        " being set to `allow`."
-  )
-  or
-  exists(UI5::Project p | thereIsNoFrameOptionSet(p) |
-    alert.asFirstLineOfMainHtml().getFile() = p.getMainHTML() and
+  exists(UI5::WebApp app |
+    exists(FrameOptions frameOptions | app.getFrameOptions() = frameOptions |
+    frameOptions.allowsAllOriginEmbedding() and
+      alertLocation.asFrameOptions() = frameOptions and
+      message =
+        "Possible clickjacking vulnerability due to " + frameOptions.toString() +
+          " being set to `allow`."
+    )
+    or
+    isMissingFrameOptionsToPreventClickjacking(app) and
+    alertLocation.asFirstLineOfDocumentElementWebApp() = app.getDocument() and
     message = "Possible clickjacking vulnerability due to missing frame options."
   )
-select alert, message
+select alertLocation, message
