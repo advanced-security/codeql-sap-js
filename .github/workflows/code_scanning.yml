@@ -8,6 +8,7 @@ on:
     branches: [ "main" ]
   schedule:
     - cron: '39 12 * * 2'
+  workflow_dispatch:
 
 env:
   LGTM_INDEX_XML_MODE: all
