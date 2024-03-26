@@ -46,20 +46,12 @@ jobs:
     # Compile .cds files to .cds.json files.
     - name: Compile CAP CDS files
       run: |
-        cd javascript/frameworks/cap/test/queries/
-        TEST_DIR=$(pwd)
-        for dir in */
+        for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
         do
-          cd $dir
-          echo "I am in $dir"
-          for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
-          do
-            echo "I am compiling $cds_file"
-            cds compile $cds_file \
-              -2 json \
-              -o "$(dirname $cds_file)/$cds_file.json"
-          done
-          cd $TEST_DIR
+          echo "I am compiling $cds_file"
+          cds compile $cds_file \
+            -2 json \
+            -o "$cds_file.json"
         done
 
     # Initializes the CodeQL tools for scanning.
