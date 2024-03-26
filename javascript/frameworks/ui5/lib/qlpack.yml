@@ -1,9 +1,9 @@
 ---
 library: true
 name: advanced-security/javascript-sap-ui5-all
-version: 0.5.0
+version: 0.6.0
 suites: codeql-suites
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^0.8.7"
-  advanced-security/javascript-sap-ui5-models: "^0.5.0"
+  advanced-security/javascript-sap-ui5-models: "^0.6.0"
