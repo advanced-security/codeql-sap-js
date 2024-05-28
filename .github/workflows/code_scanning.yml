@@ -12,6 +12,7 @@ on:
 
 env:
   LGTM_INDEX_XML_MODE: all
+  LGTM_INDEX_FILTERS: "include:**/*.json"
 
 jobs:
   analyze:
