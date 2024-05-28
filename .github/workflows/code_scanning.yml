@@ -37,12 +37,13 @@ jobs:
           mv $dir .github/codeql/extensions/$dir
         done
 
+
+    - uses: actions/setup-node@v4
+      with:
+        cache: 'npm'
+        
     - name: Ensure presence of cds shell command
-      run: |
-        if ! command -v cds &> /dev/null
-        then
-          npm install -g @sap/cds-dk
-        fi
+      run: npm install -g @sap/cds-dk
 
     # Compile .cds files to .cds.json files.
     - name: Compile CAP CDS files
@@ -75,11 +76,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-
-    - uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip
+        cache: 'pip'
 
     - name: Validate results
       continue-on-error: true
