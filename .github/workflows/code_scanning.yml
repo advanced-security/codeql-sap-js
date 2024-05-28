@@ -38,12 +38,12 @@ jobs:
         done
 
 
-    - uses: actions/setup-node@v4
-      with:
-        cache: 'npm'
-        
     - name: Ensure presence of cds shell command
-      run: npm install -g @sap/cds-dk
+      run: |
+        if ! command -v cds &> /dev/null
+        then
+          npm install -g @sap/cds-dk
+        fi
 
     # Compile .cds files to .cds.json files.
     - name: Compile CAP CDS files
