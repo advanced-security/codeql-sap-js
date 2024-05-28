@@ -1,0 +1,4 @@
+{
+    "codeQL.cli.executablePath": "/Users/mauro/Desktop/CodeQL/bundles/codeql-2.17.3/codeql",
+    "sarif-viewer.connectToGithubCodeScanning": "on"
+}
