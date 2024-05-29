@@ -8,6 +8,7 @@ queries:
 
 paths:
   - "**/*.js"
+  - "**/*.html"
   - "**/*.xml"
   - "**/*.json"
 paths-ignore:
