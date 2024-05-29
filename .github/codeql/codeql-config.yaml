@@ -7,9 +7,7 @@ queries:
   - uses: ./javascript/frameworks/cap/src/codeql-suites/javascript-security-extended.qls
 
 paths:
-  - "**/*.js"
-  - "**/*.html"
-  - "**/*.xml"
-  - "**/*.json"
+  - "**/*"
 paths-ignore:
+  - "**/node_modules"
   - "**/frameworks/*/test/models"
