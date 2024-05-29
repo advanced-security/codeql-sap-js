@@ -54,19 +54,16 @@ jobs:
             -o "$cds_file.json"
         done
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Extract version from qlt.conf.json
-      uses: sergeysova/jq-action@v2
-      id: version
-      with:
-        cmd: 'jq .CodeQLCLIBundle qlt.conf.json -r'
+    - name: Extract CodeQL bundle version from qlt.conf.json
+      run: |
+        echo "BUNDLE_VERSION=$(jq .CodeQLCLIBundle qlt.conf.json -r)" >> $GITHUB_ENV
             
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v3
       with:
         languages: javascript
         config-file: ./.github/codeql/codeql-config.yaml
-        tools: https://github.com/github/codeql-action/releases/download/${{steps.version.outputs.value}}/codeql-bundle-linux64.tar.gz
+        tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
         debug: true
 
     - name: Perform CodeQL Analysis
