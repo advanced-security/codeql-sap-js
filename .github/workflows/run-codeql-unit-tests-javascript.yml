@@ -104,7 +104,7 @@ jobs:
           CODEQL_STDLIB_IDENT: ${{matrix.codeql_standard_library_ident}}
           RUNNER_TMP: ${{ runner.temp }}
           LGTM_INDEX_XML_MODE: all
-          LGTM_INDEX_FILTERS: "include:**/*.json"
+          LGTM_INDEX_FILETYPES: ".json:JSON"
 
         shell: bash
         run: >
