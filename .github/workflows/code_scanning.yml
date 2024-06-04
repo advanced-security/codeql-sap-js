@@ -15,7 +15,7 @@ env:
   LGTM_INDEX_FILETYPES: ".json:JSON"
 
 jobs:
-  analyze:
+  analyze-javascript:
     name: Analyze
     runs-on: 'ubuntu-latest'
     permissions:
