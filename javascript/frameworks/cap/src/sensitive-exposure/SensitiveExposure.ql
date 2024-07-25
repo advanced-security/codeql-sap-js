@@ -33,6 +33,21 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
   override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }
 
-from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on a potentially sensitive piece of information."
+class PersonalElement extends TreeSitterXmlElement {
+  PersonalElement() {
+    this.getName() = "annotate_element" and
+    this.getAChild("annotation").getAChild("annotation_path").getAChild("identifier").getTextValue() =
+      "PersonalData"
+  }
+
+  string getIdentifier() { this.getAChild("identifier").getTextValue() = result }
+}
+
+from
+  SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink,
+  PersonalElement annotation
+where
+  config.hasFlowPath(source, sink) and
+  source.getNode().(PropRead).getPropertyName() = annotation.getIdentifier()
+select sink, source, sink, "Log entry depends on a potentially $@.", annotation,
+  "sensitive piece of information"

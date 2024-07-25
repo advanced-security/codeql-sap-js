@@ -5,4 +5,4 @@ nodes
 edges
 | sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name |
 #select
-| sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | Log entry depends on a potentially sensitive piece of information. |
+| sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | Log entry depends on a potentially $@. | sensitive-exposure.cds:12:3:12:46 | annotate_element | sensitive piece of information |

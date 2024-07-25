@@ -1,13 +1,12 @@
 name: ⚙️ CodeQL - Run Unit Tests (javascript)
 
-
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
     branches:
-      - 'main'
+      - "main"
   workflow_dispatch:
 
 jobs:
@@ -22,9 +21,9 @@ jobs:
 
       - name: Install QLT
         id: install-qlt
-        uses: ./.github/actions/install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
 
       - name: Export unit test matrix
@@ -47,9 +46,9 @@ jobs:
 
       - name: Install QLT
         id: install-qlt
-        uses: ./.github/actions/install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
 
       - name: Install CodeQL
@@ -77,22 +76,19 @@ jobs:
         run: |
           qlt query run install-packs
 
-      - name: Ensure presence of cds shell command
+      - name: Install tree-sitter-cli locally
         run: |
-          if ! command -v cds &> /dev/null
-          then
-            npm install -g @sap/cds-dk
-          fi
+          npm i tree-sitter-cli @cap-js-community/tree-sitter-cds
 
-      # Compile .cds files to .cds.json files.
-      - name: Compile CAP CDS files
+      # Parse .cds files to .cds.json files.
+      - name: Parse CAP CDS files
         run: |
           for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
           do
             echo "I am compiling $cds_file"
-            cds compile $cds_file \
-              -2 json \
-              -o "$cds_file.json"
+            node_modules/tree-sitter-cli/tree-sitter parse -x \
+              --config-path .github/workflows/tree-sitter-config.json $cds_file \
+              > "$cds_file.t-s.xml"
           done
 
       - name: Run test suites
@@ -128,17 +124,15 @@ jobs:
     needs: [run-test-suites]
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install QLT
         id: install-qlt
-        uses: ./.github/actions/install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
-
 
       - name: Collect test results
         uses: actions/download-artifact@v4
@@ -147,4 +141,3 @@ jobs:
         run: |
           qlt test run validate-unit-tests --pretty-print --results-directory . >> $GITHUB_STEP_SUMMARY
           qlt test run validate-unit-tests --results-directory .
-          

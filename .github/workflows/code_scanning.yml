@@ -2,12 +2,12 @@ name: "Code Scanning"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
     # The branches below must be a subset of the branches above
-    branches: [ "main" ]
+    branches: ["main"]
   schedule:
-    - cron: '39 12 * * 2'
+    - cron: "39 12 * * 2"
   workflow_dispatch:
 
 env:
@@ -17,91 +17,88 @@ env:
 jobs:
   analyze-javascript:
     name: Analyze
-    runs-on: 'ubuntu-latest'
+    runs-on: "ubuntu-latest"
     permissions:
       actions: read
       contents: read
       security-events: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Prepare local CodeQL model packs
-      run: |
-        mkdir -p .github/codeql/extensions
-        for ext in $(find . -name 'qlpack.yml' -exec fgrep -l dataExtensions {} \;); do
-          dir=$(dirname $ext)
-          echo "Moving $ext to .github/codeql/extensions/$dir"
-          mkdir -p .github/codeql/extensions/$dir
-          mv $dir .github/codeql/extensions/$dir
-        done
+      - name: Prepare local CodeQL model packs
+        run: |
+          mkdir -p .github/codeql/extensions
+          for ext in $(find . -name 'qlpack.yml' -exec fgrep -l dataExtensions {} \;); do
+            dir=$(dirname $ext)
+            echo "Moving $ext to .github/codeql/extensions/$dir"
+            mkdir -p .github/codeql/extensions/$dir
+            mv $dir .github/codeql/extensions/$dir
+          done
 
-    - name: Ensure presence of cds shell command
-      run: |
-        if ! command -v cds &> /dev/null
-        then
-          npm install -g @sap/cds-dk
-        fi
+      - name: Install tree-sitter-cli locally
+        run: |
+          npm i tree-sitter-cli @cap-js-community/tree-sitter-cds
 
-    # Compile .cds files to .cds.json files.
-    - name: Compile CAP CDS files
-      run: |
-        for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
-        do
-          echo "I am compiling $cds_file"
-          cds compile $cds_file \
-            -2 json \
-            -o "$cds_file.json"
-        done
+      # Parse .cds files to .cds.json files.
+      - name: Parse CAP CDS files
+        run: |
+          for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
+          do
+            echo "I am compiling $cds_file"
+            node_modules/tree-sitter-cli/tree-sitter parse -x \
+              --config-path .github/workflows/tree-sitter-config.json $cds_file \
+              > "$cds_file.t-s.xml"
+          done
 
-    - name: Extract CodeQL bundle version from qlt.conf.json
-      run: |
-        echo "BUNDLE_VERSION=$(jq .CodeQLCLIBundle qlt.conf.json -r)" >> $GITHUB_ENV
-            
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
-      with:
-        languages: javascript
-        config-file: ./.github/codeql/codeql-config.yaml
-        tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
-        debug: true
+      - name: Extract CodeQL bundle version from qlt.conf.json
+        run: |
+          echo "BUNDLE_VERSION=$(jq .CodeQLCLIBundle qlt.conf.json -r)" >> $GITHUB_ENV
 
-    - name: Perform CodeQL Analysis
-      id: analyze
-      uses: github/codeql-action/analyze@v3
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+          config-file: ./.github/codeql/codeql-config.yaml
+          tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
+          debug: true
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Perform CodeQL Analysis
+        id: analyze
+        uses: github/codeql-action/analyze@v3
 
-    - uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Validate results
-      continue-on-error: true
-      id: validate
-      run: |
-        pip install sarif-tools
-        sarif --version
-        sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected -o sarif-diff.json
-        cat sarif-diff.json
-        ! grep -q "[1-9]" sarif-diff.json
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip
 
-    - name: Upload sarif change
-      if: steps.validate.outcome != 'success'
-      uses: actions/upload-artifact@v4
-      with:
-        name: sarif
-        path: |
-          sarif-diff.json
-          ${{ steps.analyze.outputs.sarif-output }}
+      - name: Validate results
+        continue-on-error: true
+        id: validate
+        run: |
+          pip install sarif-tools
+          sarif --version
+          sarif diff ${{ steps.analyze.outputs.sarif-output }} .github/workflows/javascript.sarif.expected -o sarif-diff.json
+          cat sarif-diff.json
+          ! grep -q "[1-9]" sarif-diff.json
 
-    - name: Unexpected Code Scanning results
-      if: steps.validate.outcome != 'success'
-      run: |
-        cat sarif-diff.json
-        echo "::error::Unexpected Code Scanning results!" && exit 1
+      - name: Upload sarif change
+        if: steps.validate.outcome != 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif
+          path: |
+            sarif-diff.json
+            ${{ steps.analyze.outputs.sarif-output }}
+
+      - name: Unexpected Code Scanning results
+        if: steps.validate.outcome != 'success'
+        run: |
+          cat sarif-diff.json
+          echo "::error::Unexpected Code Scanning results!" && exit 1
