@@ -3,6 +3,7 @@ import semmle.javascript.dataflow.DataFlow
 import advanced_security.javascript.frameworks.cap.PackageJson
 import advanced_security.javascript.frameworks.cap.CDL
 import advanced_security.javascript.frameworks.cap.CQL
+import TreeSitterXml
 
 /**
  * ```js
