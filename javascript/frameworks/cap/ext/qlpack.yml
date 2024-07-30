@@ -3,7 +3,5 @@ library: true
 name: advanced-security/javascript-sap-cap-models
 version: 0.2.0
 extensionTargets:
-  codeql/javascript-all: "^1.1.0"
-  codeql/javascript-queries: "^1.0.3"
-dataExtensions:
-  - "*.model.yml"
+  codeql/javascript-all: "^1.1.1"
+  codeql/javascript-queries: "^1.1.0"

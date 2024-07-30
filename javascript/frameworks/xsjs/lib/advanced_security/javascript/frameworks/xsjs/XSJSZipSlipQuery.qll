@@ -61,7 +61,8 @@ class ZipEntryPathIndexOfCallEqualsZeroGuard extends TaintTracking::SanitizerGua
       receiver = targetFilePath.asExpr() and
       targetFilePath = indexOfCall.getReceiver() and
       forLoopVariable = forLoop.getAnIterationVariable().getAnAccess().flow() and
-      TaintedPath::isAdditionalTaintedPathFlowStep(forLoopVariable, targetFilePath.getALocalSource(), _, _) and
+      TaintedPath::isAdditionalTaintedPathFlowStep(forLoopVariable,
+        targetFilePath.getALocalSource(), _, _) and
       outcome = equalityTest.getPolarity()
     )
   }

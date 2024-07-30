@@ -956,8 +956,6 @@ class UI5Handler extends FunctionNode {
  * Models controller references in event handlers as types
  */
 class ControlTypeInHandlerModel extends ModelInput::TypeModel {
-  // TODO (see https://github.com/github/codeql/pull/14120)
-  // override predicate isTypeUsed(string type) { type = any(UI5Control c).getImportPath() }
   override DataFlow::CallNode getASource(string type) {
     // oEvent.getSource() is of the type of the Control calling the handler
     exists(UI5Handler h |
@@ -972,14 +970,10 @@ class ControlTypeInHandlerModel extends ModelInput::TypeModel {
       result = c.getAReference()
     )
   }
-}
 
-/**
- * A workaround for the interfearence of pruning with TypeModel
- * TODO remove after https://github.com/github/codeql/pull/14120
- */
-class DisablePruning extends ModelInput::TypeModelCsv {
-  override predicate row(string row) {
-    row = any(UI5Control c).getImportPath() + ";global;DummyAccessPathForPruning"
-  }
+  /**
+   * Prevents model pruning for `ControlType`types
+   */
+  bindingset[type]
+  override predicate isTypeUsed(string type) { any() }
 }
