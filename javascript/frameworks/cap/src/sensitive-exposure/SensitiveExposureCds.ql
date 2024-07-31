@@ -6,7 +6,7 @@
  * @problem.severity warning
  * @security-severity 7.5
  * @precision medium
- * @id javascript/sensitive-log
+ * @id javascript/sensitive-log-cds
  * @tags security
  *       external/cwe/cwe-532
  */
@@ -15,6 +15,7 @@ import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
 import DataFlow::PathGraph
+import CdsTreeSitterXml
 
 class SensitiveExposureSource extends DataFlow::Node {
   SensitiveExposureSource() {
@@ -33,6 +34,16 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
   override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }
 
-from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on a sensitive piece of information."
+CdsAnnotateElement getSensitiveAnnotation(PropRead s) {
+  result.getAnnotation().getAnnotationPath().getIdentifier().getTextValue() = "PersonalData" and
+  result.getIdentifier().getTextValue() = s.getPropertyName()
+}
+
+from
+  SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink,
+  TreeSitterXmlElement annotation
+where
+  config.hasFlowPath(source, sink) and
+  annotation = getSensitiveAnnotation(source.getNode())
+select sink, source, sink, "Log entry depends on a $@ piece of information.", annotation,
+  "sensitive"
