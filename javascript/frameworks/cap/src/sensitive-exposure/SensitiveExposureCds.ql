@@ -44,6 +44,8 @@ from
   TreeSitterXmlElement annotation
 where
   config.hasFlowPath(source, sink) and
+  annotation.getFile().getRelativePath().regexpCapture("^(.*)\\.cds\\.ts\\.xml$", 1) =
+    source.getNode().asExpr().getFile().getRelativePath().regexpCapture("^(.*)\\.js$", 1) and
   annotation = getSensitiveAnnotation(source.getNode())
 select sink, source, sink, "Log entry depends on a $@ piece of information.", annotation,
   "potentially sensitive"

@@ -5,7 +5,7 @@ class TreeSitterXmlElement extends XmlElement {
 
   string getURL() {
     result =
-      "file://" + this.getFile().getName().splitAt(".ts.xml") + ":" +
+      "file://" + this.getFile().getName().regexpCapture("^(.*)\\.ts\\.xml$", 1) + ":" +
         (this.getAttributeValue("srow").toInt() + 1) + ":" +
         (this.getAttributeValue("scol").toInt() + 1) + ":" +
         (this.getAttributeValue("erow").toInt() + 1) + ":" + this.getAttributeValue("ecol").toInt()
