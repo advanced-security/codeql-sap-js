@@ -6,7 +6,7 @@
  * @problem.severity warning
  * @security-severity 7.5
  * @precision medium
- * @id javascript/sensitive-log
+ * @id javascript/sensitive-log-cds
  * @tags security
  *       external/cwe/cwe-532
  */
@@ -33,6 +33,32 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
   override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }
 
-from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on a potentially sensitive piece of information."
+class TreeSitterXmlElement extends XmlElement {
+  TreeSitterXmlElement() { this.getFile().getName().matches("%.ts.xml") }
+
+  string getURL() {
+    result =
+      "file://" + this.getFile().getName().splitAt(".ts.xml") + ":" +
+        (this.getAttributeValue("srow").toInt() + 1) + ":" +
+        (this.getAttributeValue("scol").toInt() + 1) + ":" +
+        (this.getAttributeValue("erow").toInt() + 1) + ":" + this.getAttributeValue("ecol").toInt()
+  }
+}
+
+TreeSitterXmlElement sensitiveAnnotation(SensitiveExposureSource s) {
+  result.hasName("annotate_element") and
+  exists(TreeSitterXmlElement name |
+    name = result.getAChild() and
+    name.hasName("identifier") and
+    name.getTextValue() = s.(PropRead).getPropertyName()
+  )
+}
+
+from
+  SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink,
+  TreeSitterXmlElement annotation
+where
+  config.hasFlowPath(source, sink) and
+  annotation = sensitiveAnnotation(source.getNode())
+select sink, source, sink, "Log entry depends on a $@ piece of information.", annotation,
+  "sensitive"

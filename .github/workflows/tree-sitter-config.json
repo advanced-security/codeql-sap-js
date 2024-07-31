@@ -1,0 +1,5 @@
+{
+  "parser-directories": [
+    "node_modules/@cap-js-community"
+  ]
+}
