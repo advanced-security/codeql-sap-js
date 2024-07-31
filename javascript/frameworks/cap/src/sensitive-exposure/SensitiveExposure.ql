@@ -35,4 +35,4 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
 
 from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
 where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on a sensitive piece of information."
+select sink, source, sink, "Log entry depends on a potentially sensitive piece of information."

@@ -46,4 +46,4 @@ where
   config.hasFlowPath(source, sink) and
   annotation = getSensitiveAnnotation(source.getNode())
 select sink, source, sink, "Log entry depends on a $@ piece of information.", annotation,
-  "sensitive"
+  "potentially sensitive"
