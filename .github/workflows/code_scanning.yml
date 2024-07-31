@@ -63,12 +63,12 @@ jobs:
     # for cds_file in $(find . -type f \( -iname "*.cds" -o -iname "*.htm" -o -iname "*.html" -o -iname "*.js" -o -iname "*.xml" -o -iname "*.json" \) -not -iname "*.ts.xml" )
     - name: Parse CAP CDS files
       run: |
-          for cds_file in $(find . -type f -iname "*.cds"
-          do
-          echo "I am compiling $cds_file"
-          node_modules/tree-sitter-cli/tree-sitter parse --scope source.cds -x \
-            --config-path .github/workflows/tree-sitter-config.json $cds_file \
-            > "$cds_file.ts.xml"
+        for cds_file in $(find . -type f -iname "*.cds")
+        do
+        echo "I am parsing $cds_file to xml"
+        node_modules/tree-sitter-cli/tree-sitter parse --scope source.cds -x \
+          --config-path .github/workflows/tree-sitter-config.json $cds_file \
+          > "$cds_file.ts.xml"
         done
 
     - name: Extract CodeQL bundle version from qlt.conf.json
