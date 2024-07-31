@@ -15,6 +15,7 @@ import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
 import DataFlow::PathGraph
+import CdsTreeSitterXml
 
 class SensitiveExposureSource extends DataFlow::Node {
   SensitiveExposureSource() {
@@ -33,25 +34,9 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
   override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }
 
-class TreeSitterXmlElement extends XmlElement {
-  TreeSitterXmlElement() { this.getFile().getName().matches("%.ts.xml") }
-
-  string getURL() {
-    result =
-      "file://" + this.getFile().getName().splitAt(".ts.xml") + ":" +
-        (this.getAttributeValue("srow").toInt() + 1) + ":" +
-        (this.getAttributeValue("scol").toInt() + 1) + ":" +
-        (this.getAttributeValue("erow").toInt() + 1) + ":" + this.getAttributeValue("ecol").toInt()
-  }
-}
-
-TreeSitterXmlElement sensitiveAnnotation(SensitiveExposureSource s) {
-  result.hasName("annotate_element") and
-  exists(TreeSitterXmlElement name |
-    name = result.getAChild() and
-    name.hasName("identifier") and
-    name.getTextValue() = s.(PropRead).getPropertyName()
-  )
+CdsAnnotateElement getSensitiveAnnotation(PropRead s) {
+  result.getAnnotation().getAnnotationPath().getIdentifier().getTextValue() = "PersonalData" and
+  result.getIdentifier().getTextValue() = s.getPropertyName()
 }
 
 from
@@ -59,6 +44,6 @@ from
   TreeSitterXmlElement annotation
 where
   config.hasFlowPath(source, sink) and
-  annotation = sensitiveAnnotation(source.getNode())
+  annotation = getSensitiveAnnotation(source.getNode())
 select sink, source, sink, "Log entry depends on a $@ piece of information.", annotation,
   "sensitive"
