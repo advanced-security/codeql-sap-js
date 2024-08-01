@@ -76,6 +76,12 @@ module UI5PathGraph {
       result = this.asUI5BindingPathNode().toString()
     }
 
+    File getFile() {
+      result = this.asDataFlowNode().getFile()
+      or
+      result = this.asUI5BindingPathNode().getView()
+    }
+
     predicate hasLocationInfo(
       string filepath, int startline, int startcolumn, int endline, int endcolumn
     ) {

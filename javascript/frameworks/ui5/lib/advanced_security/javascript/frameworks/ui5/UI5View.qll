@@ -136,9 +136,7 @@ abstract class UI5BindingPath extends BindingPath {
     )
     // and
     // /* This binding path and the resulting model should live inside the same webapp */
-    // exists(WebApp webApp |
-    //   webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
-    // )
+    // inSameWebApp(this.getFile(), result.getFile())
   }
 
   /**
@@ -151,10 +149,7 @@ abstract class UI5BindingPath extends BindingPath {
       result.(DataFlow::PropWrite).getPropertyNameExpr() = p.getNameExpr() and
       this.getAbsolutePath() = model.getPathString(p) and
       /* Restrict search to inside the same webapp. */
-      exists(WebApp webApp |
-        webApp.getAResource() = this.getLocation().getFile() and
-        webApp.getAResource() = result.getFile()
-      )
+      inSameWebApp(this.getLocation().getFile(), result.getFile())
     )
     or
     /* 1-2. Internal (Client-side) model, model loaded from JSON file */
@@ -164,19 +159,13 @@ abstract class UI5BindingPath extends BindingPath {
       this.getPath() = model.getPathStringPropName(propName) and
       exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
       /* Restrict search to inside the same webapp. */
-      exists(WebApp webApp |
-        webApp.getAResource() = this.getLocation().getFile() and
-        webApp.getAResource() = result.getFile()
-      )
+      inSameWebApp(this.getLocation().getFile(), result.getFile())
     )
     or
     /* 2. External (Server-side) model */
     result = this.getModel().(UI5ExternalModel) and
     /* Restrict search to inside the same webapp. */
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getLocation().getFile() and
-      webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getLocation().getFile(), result.getFile())
   }
 }
 
@@ -212,9 +201,7 @@ abstract class UI5View extends File {
     /* The controller name should match between the view and the controller definition. */
     result.getName() = this.getControllerName() and
     /* The View and the Controller are in a same webapp. */
-    exists(WebApp webApp |
-      webApp.getAResource() = this and webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this, result.getFile())
   }
 
   abstract UI5Control getControl();
@@ -304,10 +291,7 @@ class JsView extends UI5View {
         /* 2. A custom control with implementation code found in the webapp */
         exists(CustomControl control |
           control.getName() = node.asExpr().getAChildExpr().(DotExpr).getQualifiedName() and
-          exists(WebApp webApp |
-            webApp.getAResource() = control.getFile() and
-            webApp.getAResource() = node.getFile()
-          )
+          inSameWebApp(control.getFile(), node.getFile())
         )
       )
     )
@@ -367,10 +351,7 @@ class JsonView extends UI5View {
         /* 2. A custom control with implementation code found in the webapp */
         exists(CustomControl control |
           control.getName() = object.getPropStringValue("Type") and
-          exists(WebApp webApp |
-            webApp.getAResource() = control.getFile() and
-            webApp.getAResource() = object.getFile()
-          )
+          inSameWebApp(control.getFile(), object.getFile())
         )
       )
     )
@@ -516,10 +497,7 @@ class HtmlView extends UI5View, HTML::HtmlFile {
         /* 2. A custom control with implementation code found in the webapp */
         exists(CustomControl control |
           control.getName() = element.getAttributeByName("sap-ui-type").getValue() and
-          exists(WebApp webApp |
-            webApp.getAResource() = control.getFile() and
-            webApp.getAResource() = element.getFile()
-          )
+          inSameWebApp(control.getFile(), element.getFile())
         )
       )
     )
@@ -699,10 +677,7 @@ class XmlView extends UI5View instanceof XmlFile {
         /* 2. A custom control with implementation code found in the webapp */
         exists(CustomControl control |
           control.getName() = element.getNamespace().getUri() + "." + element.getName() and
-          exists(WebApp webApp |
-            webApp.getAResource() = control.getFile() and
-            webApp.getAResource() = element.getFile()
-          )
+          inSameWebApp(control.getFile(), element.getFile())
         )
       )
     )
@@ -801,10 +776,7 @@ class UI5Control extends TUI5Control {
    */
   CustomControl getDefinition() {
     result.getName() = this.getQualifiedType() and
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and
-      webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getFile(), result.getFile())
   }
 
   /**
@@ -840,20 +812,14 @@ class UI5Control extends TUI5Control {
   bindingset[propName]
   MethodCallNode getARead(string propName) {
     // TODO: in same view
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and
-      webApp.getAResource() = result.getFile()
-    ) and
+    inSameWebApp(this.getFile(), result.getFile()) and
     result.getMethodName() = "get" + capitalize(propName)
   }
 
   bindingset[propName]
   MethodCallNode getAWrite(string propName) {
     // TODO: in same view
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and
-      webApp.getAResource() = result.getFile()
-    ) and
+    inSameWebApp(this.getFile(), result.getFile()) and
     result.getMethodName() = "set" + capitalize(propName)
   }
 

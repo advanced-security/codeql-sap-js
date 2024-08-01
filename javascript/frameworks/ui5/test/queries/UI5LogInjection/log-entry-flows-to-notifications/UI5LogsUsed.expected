@@ -12,4 +12,4 @@ edges
 | webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 | webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
 #select
-| webapp/view/app.view.xml:5:9:24:9 | UI5 control Notifications | webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:17:34:17:38 | input | Processing UI5 log entries that depend on $@. | webapp/view/app.view.xml:6:5:8:28 | value={/input} | user-provided data | webapp/view/app.view.xml:5:9:24:9 | UI5 control Notifications | UI5 control Notifications |
+| webapp/view/app.view.xml:5:9:24:9 | Notifications | webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:17:34:17:38 | input | Processing UI5 log entries that depend on $@. | webapp/view/app.view.xml:6:5:8:28 | value={/input} | user-provided data |

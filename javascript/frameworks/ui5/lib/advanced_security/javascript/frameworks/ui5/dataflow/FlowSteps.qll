@@ -350,9 +350,7 @@ class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlow
  */
 class LogArgumentToListener extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
-    exists(WebApp webApp |
-      webApp.getAResource() = start.getFile() and webApp.getAResource() = end.getFile()
-    ) and
+    inSameWebApp(start.getFile(), end.getFile()) and
     start =
       ModelOutput::getATypeNode("SapLogger")
           .getMember(["debug", "error", "fatal", "info", "trace", "warning"])

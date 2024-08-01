@@ -38,10 +38,16 @@ class LogEntriesNode extends TLogEntriesNode {
     result.getImportPath() = "sap/ui/vk/Notifications"
   }
 
+  File getFile() {
+    result = this.asDataFlowNode().getFile()
+    or
+    result = this.asUI5ControlNode().getView()
+  }
+
   string toString() {
     result = this.asDataFlowNode().toString()
     or
-    result = "UI5 control " + this.asUI5ControlNode().toString()
+    result = this.asUI5ControlNode().toString()
   }
 
   predicate hasLocationInfo(
@@ -58,6 +64,7 @@ from
   LogEntriesNode logEntries
 where
   cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
-  primarySource = source.getAPrimarySource()
+  primarySource = source.getAPrimarySource() and
+  inSameWebApp(source.getFile(), logEntries.getFile())
 select logEntries, primarySource, sink, "Processing UI5 log entries that depend on $@.",
-  primarySource, "user-provided data", logEntries, logEntries.toString()
+  primarySource, "user-provided data"
