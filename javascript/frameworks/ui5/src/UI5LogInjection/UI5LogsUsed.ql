@@ -1,11 +1,12 @@
 /**
- * @name UI5 client-side Log injection
- * @description Log entries should not include user-controlled data.
+ * @name Access to user-controlled UI5 Logs
+ * @description Building log entries from user-controlled sources is vulnerable to
+ *              insertion of forged log entries by a malicious user.
  * @kind path-problem
- * @problem.severity recommendation
+ * @problem.severity warning
  * @security-severity 7.8
  * @precision medium
- * @id js/ui5-log-injection
+ * @id js/ui5-unsafe-log-access
  * @tags security
  *       external/cwe/cwe-117
  */
@@ -24,8 +25,11 @@ class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfigurati
 }
 
 from
-  UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource
+  UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource,
+  API::Node logListener
 where
   cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
-  primarySource = source.getAPrimarySource()
-select sink, primarySource, sink, "Log entry depends on a $@.", primarySource, "user-provided value"
+  primarySource = source.getAPrimarySource() and
+  logListener = ModelOutput::getATypeNode("SapLogEntries")
+select sink, primarySource, sink, "Log entry depends on a $@ and is $@.",
+  primarySource, "user-provided value", logListener, "further accessed"

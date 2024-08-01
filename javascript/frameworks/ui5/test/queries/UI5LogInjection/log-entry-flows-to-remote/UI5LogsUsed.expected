@@ -1,0 +1,20 @@
+nodes
+| webapp/controller/app.controller.js:8:11:8:21 | input: null |
+| webapp/controller/app.controller.js:14:13:14:48 | input |
+| webapp/controller/app.controller.js:14:21:14:48 | oModel. ... input") |
+| webapp/controller/app.controller.js:16:30:16:34 | input |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+edges
+| webapp/controller/app.controller.js:8:11:8:21 | input: null | webapp/controller/app.controller.js:14:21:14:48 | oModel. ... input") |
+| webapp/controller/app.controller.js:8:11:8:21 | input: null | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| webapp/controller/app.controller.js:9:11:9:22 | output: null | webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+| webapp/controller/app.controller.js:11:22:11:41 | new JSONModel(oData) | webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+| webapp/controller/app.controller.js:14:13:14:48 | input | webapp/controller/app.controller.js:16:30:16:34 | input |
+| webapp/controller/app.controller.js:14:21:14:48 | oModel. ... input") | webapp/controller/app.controller.js:14:13:14:48 | input |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:8:11:8:21 | input: null |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:11:22:11:41 | new JSONModel(oData) |
+| webapp/view/app.view.xml:8:5:8:37 | content={/output} | webapp/controller/app.controller.js:9:11:9:22 | output: null |
+#select
+| webapp/controller/app.controller.js:16:30:16:34 | input | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:16:30:16:34 | input | Log entry depends on a $@ and is $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value | webapp/utils/CustomLogListener.js:9:29:9:34 | use moduleImport("sap/base/Log").getMember("exports").getMember("addLogListener").getParameter(0).getMember("onLogEntry").getParameter(0) | further accessed |
+| webapp/controller/app.controller.js:16:30:16:34 | input | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:16:30:16:34 | input | Log entry depends on a $@ and is $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value | webapp/utils/LogEntriesToHttp.js:7:23:7:41 | use moduleImport("sap/base/Log").getMember("exports").getMember("getLogEntries").getReturn() | further accessed |

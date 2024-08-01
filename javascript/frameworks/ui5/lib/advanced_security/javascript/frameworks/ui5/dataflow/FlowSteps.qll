@@ -1,5 +1,6 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 /**
  * Step from a part of internal model to a relevant control property.
@@ -25,7 +26,8 @@ class InternalModelContentToCustomMetadataPropertyStep extends DataFlow::SharedF
 }
 
 /**
- * This is a step in the opposite direction of the `InternalModelContentToCustomMetadataPropertyStep` above. In order to ensure that this indeed holds, we check if the internal model is set to a two-way binding mode.
+ * This is a step in the opposite direction of the `InternalModelContentToCustomMetadataPropertyStep` above.
+ * In order to ensure that this indeed holds, we check if the internal model is set to a two-way binding mode.
  */
 class CustomMetadataPropertyStepToInternalModelContent extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
@@ -81,7 +83,8 @@ class CustomMetadataPropertyReadStep extends DataFlow::SharedFlowStep {
 }
 
 /**
- * Step from the second argument of `setProperty` method call on a local model or a reference to that model, that is, the receiver. If the contents of the model is statically visible, then get the relevant portion of the content instead.
+ * Step from the second argument of `setProperty` method call on a local model or a reference to that model, that is, the receiver.
+ * If the contents of the model is statically visible, then get the relevant portion of the content instead.
  *
  * e.g. Given these methods in a same controller,
  *
@@ -96,7 +99,8 @@ class CustomMetadataPropertyReadStep extends DataFlow::SharedFlowStep {
  * }
  * ```
  *
- * Create an edge from `someValue` to `this.getView().getModel()`. As the content of `oModel` can be statically determined, also create an edge from `someValue` to `x: null`.
+ * Create an edge from `someValue` to `this.getView().getModel()`.
+ * As the content of `oModel` can be statically determined, also create an edge from `someValue` to `x: null`.
  */
 class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
@@ -170,7 +174,9 @@ class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
  * }
  * ```
  *
- * Establish an edge from `this.getView().getModel("someModel")` in `someHandler2` to the entire `getProperty` call in `someHandler1`. Note that `modelRefFrom` and `modelRefTo` may refer to the same `ModelReference`.
+ * Establish an edge from `this.getView().getModel("someModel")` in `someHandler2` to
+ * the entire `getProperty` call in `someHandler1`.
+ * Note that `modelRefFrom` and `modelRefTo` may refer to the same `ModelReference`.
  *
  * This is a dual of `LocalModelSetPropertyStep` above.
  */
@@ -232,7 +238,8 @@ class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
 }
 
 /**
- * Step from a local model or a reference to it, to a `getProperty` method call on it. This assumes a corresponding `setProperty` call exists on the same model and its same property.
+ * Step from a local model or a reference to it, to a `getProperty` method call on it.
+ * This assumes a corresponding `setProperty` call exists on the same model and its same property.
  *
  * e.g. Given these methods in a same controller,
  * ```javascript
@@ -250,7 +257,9 @@ class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
  * }
  * ```
  *
- * Establish an edge from `this.getView().getModel("someModel")` in `someHandler2` to the entire `getProperty` call in `someHandler1`. Note that `modelRefFrom` and `modelRefTo` may refer to the same `ModelReference`.
+ * Establish an edge from `this.getView().getModel("someModel")` in `someHandler2` to
+ * the entire `getProperty` call in `someHandler1`.
+ * Note that `modelRefFrom` and `modelRefTo` may refer to the same `ModelReference`.
  */
 /*
  * TODO:
@@ -332,5 +341,23 @@ class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlow
       start = getTextCall.getArgument(1) and
       end = getTextCall
     )
+  }
+}
+
+/**
+ * A step from any argument of a SAP logging function to the `onLogEntry`
+ * method of a custom log listener in the same application.
+ */
+class LogArgumentToListener extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(WebApp webApp |
+      webApp.getAResource() = start.getFile() and webApp.getAResource() = end.getFile()
+    ) and
+    start =
+      ModelOutput::getATypeNode("SapLogger")
+          .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
+          .getACall()
+          .getAnArgument() and
+    end = ModelOutput::getATypeNode("SapLogEntries").asSource()
   }
 }
