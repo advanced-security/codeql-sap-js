@@ -1,10 +1,9 @@
 /**
  * @name Access to user-controlled UI5 Logs
- * @description Building log entries from user-controlled sources is vulnerable to
- *              insertion of forged log entries by a malicious user.
+ * @description Log entries from user-controlled sources should not be further processed.
  * @kind path-problem
  * @problem.severity warning
- * @security-severity 7.8
+ * @security-severity 5
  * @precision medium
  * @id js/ui5-unsafe-log-access
  * @tags security
@@ -24,12 +23,41 @@ class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfigurati
   }
 }
 
+newtype TLogEntriesNode =
+  TDataFlowNode(DataFlow::Node node) or
+  TUI5ControlNode(UI5Control node)
+
+class LogEntriesNode extends TLogEntriesNode {
+  DataFlow::Node asDataFlowNode() {
+    this = TDataFlowNode(result) and
+    result = ModelOutput::getATypeNode("SapLogEntries").getInducingNode()
+  }
+
+  UI5Control asUI5ControlNode() {
+    this = TUI5ControlNode(result) and
+    result.getImportPath() = "sap/ui/vk/Notifications"
+  }
+
+  string toString() {
+    result = this.asDataFlowNode().toString()
+    or
+    result = "UI5 control " + this.asUI5ControlNode().toString()
+  }
+
+  predicate hasLocationInfo(
+    string filepath, int startline, int startcolumn, int endline, int endcolumn
+  ) {
+    this.asDataFlowNode().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
+    or
+    this.asUI5ControlNode().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
+  }
+}
+
 from
   UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource,
-  API::Node logListener
+  LogEntriesNode logEntries
 where
   cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
-  primarySource = source.getAPrimarySource() and
-  logListener = ModelOutput::getATypeNode("SapLogEntries")
-select sink, primarySource, sink, "Log entry depends on a $@ and is $@.",
-  primarySource, "user-provided value", logListener, "further accessed"
+  primarySource = source.getAPrimarySource()
+select logEntries, primarySource, sink, "Processing UI5 log entries that depend on $@.",
+  primarySource, "user-provided data", logEntries, logEntries.toString()

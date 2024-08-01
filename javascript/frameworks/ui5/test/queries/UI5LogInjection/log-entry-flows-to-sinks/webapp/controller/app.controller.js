@@ -12,7 +12,6 @@ sap.ui.define(
         this.getView().setModel(oModel);
 
         var input = oModel.getProperty("/input");
-
         jQuery.sap.log.debug(input); //log-injection sink
       },
     });

@@ -32,5 +32,5 @@ from
 where
   cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource()
-select sink, primarySource, sink, "Outbound network request depends on $@ log data.",
-  primarySource, "user-provided"
+select sink, primarySource, sink, "Outbound network request depends on $@ log data.", primarySource,
+  "user-provided"
