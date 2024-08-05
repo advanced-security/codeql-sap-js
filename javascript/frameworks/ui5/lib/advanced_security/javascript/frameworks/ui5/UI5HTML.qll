@@ -2,7 +2,7 @@ import javascript
 import DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 
-newtype TFrameOptions =
+private newtype TFrameOptions =
   /*
    *  <script id='sap-ui-bootstrap'
    * 	  src='resources/sap-ui-core.js'

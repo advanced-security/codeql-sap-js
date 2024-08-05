@@ -61,7 +61,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
 }
 
 module UI5PathGraph {
-  newtype TNode =
+  private newtype TNode =
     TUI5BindingPathNode(UI5BindingPath path) or
     TDataFlowNode(DataFlow::Node node)
 

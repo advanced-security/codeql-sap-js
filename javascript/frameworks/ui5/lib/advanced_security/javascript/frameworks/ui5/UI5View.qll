@@ -684,7 +684,7 @@ class XmlView extends UI5View instanceof XmlFile {
   }
 }
 
-newtype TUI5Control =
+private newtype TUI5Control =
   TXmlControl(XmlElement control) or
   TJsonControl(JsonObject control) {
     exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
@@ -845,7 +845,7 @@ class UI5Control extends TUI5Control {
   CustomController getController() { result = this.getView().getController() }
 }
 
-newtype TUI5ControlProperty =
+private newtype TUI5ControlProperty =
   TXmlControlProperty(XmlAttribute property) or
   TJsonControlProperty(JsonValue property) or
   TJsControlProperty(ValueNode property)

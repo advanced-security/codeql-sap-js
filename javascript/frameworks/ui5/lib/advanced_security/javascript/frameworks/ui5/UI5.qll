@@ -1297,7 +1297,7 @@ class Extension extends InvokeNode, MethodCallNode {
   SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1).asExpr() }
 }
 
-newtype TSapElement =
+private newtype TSapElement =
   DefinitionOfElement(Extension extension) or
   ReferenceOfElement(Reference reference)
 

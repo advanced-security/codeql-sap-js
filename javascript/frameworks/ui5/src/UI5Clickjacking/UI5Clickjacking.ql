@@ -22,7 +22,7 @@ class FirstLineOfDocumentElementWebApp extends HTML::DocumentElement, FirstLineO
   }
 }
 
-newtype TAlertLocation =
+private newtype TAlertLocation =
   TFrameOptions(FrameOptions frameOptions) or
   TFirstLineOfDocumentElementWebApp(FirstLineOfDocumentElementWebApp htmlStartTag)
 

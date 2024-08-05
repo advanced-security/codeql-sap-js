@@ -4,7 +4,7 @@
 
 import javascript
 
-newtype CdlKind =
+private newtype CdlKind =
   Service(string value) { value = "service" } or
   Entity(string value) { value = "entity" } or
   Event(string value) { value = "event" } or

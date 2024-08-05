@@ -23,7 +23,7 @@ class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfigurati
   }
 }
 
-newtype TLogEntriesNode =
+private newtype TLogEntriesNode =
   TDataFlowNode(DataFlow::Node node) or
   TUI5ControlNode(UI5Control node)
 
