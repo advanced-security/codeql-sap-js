@@ -24,19 +24,15 @@ class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfigurati
 }
 
 private newtype TLogEntriesNode =
-  TDataFlowNode(DataFlow::Node node) or
-  TUI5ControlNode(UI5Control node)
+  TDataFlowNode(DataFlow::Node node) {
+    node = ModelOutput::getATypeNode("SapLogEntries").getInducingNode()
+  } or
+  TUI5ControlNode(UI5Control control) { control.getImportPath() = "sap/ui/vk/Notifications" }
 
 class LogEntriesNode extends TLogEntriesNode {
-  DataFlow::Node asDataFlowNode() {
-    this = TDataFlowNode(result) and
-    result = ModelOutput::getATypeNode("SapLogEntries").getInducingNode()
-  }
+  DataFlow::Node asDataFlowNode() { this = TDataFlowNode(result) }
 
-  UI5Control asUI5ControlNode() {
-    this = TUI5ControlNode(result) and
-    result.getImportPath() = "sap/ui/vk/Notifications"
-  }
+  UI5Control asUI5ControlNode() { this = TUI5ControlNode(result) }
 
   File getFile() {
     result = this.asDataFlowNode().getFile()
@@ -66,5 +62,5 @@ where
   cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource() and
   inSameWebApp(source.getFile(), logEntries.getFile())
-select logEntries, primarySource, sink, "Processing UI5 log entries that depend on $@.",
-  primarySource, "user-provided data"
+select logEntries, primarySource, sink, "Accessed log entries depend on $@.", primarySource,
+  "user-provided data"
