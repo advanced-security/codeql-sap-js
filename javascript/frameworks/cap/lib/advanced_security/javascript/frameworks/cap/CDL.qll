@@ -143,6 +143,17 @@ class CdlAttribute extends JsonObject {
 }
 
 /**
+ * a `CdlEntity` that is declared in a namespace
+ */
+class NamespacedEntity extends JsonObject instanceof CdlEntity {
+  string namespace;
+
+  NamespacedEntity() { this.getParent+().getPropValue("namespace").getStringValue() = namespace }
+
+  string getNamespace() { result = namespace }
+}
+
+/**
  * any `JsonValue` that has a `PersonalData` like annotation above it
  */
 abstract class SensitiveAnnotatedElement extends JsonValue {

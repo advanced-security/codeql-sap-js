@@ -16,6 +16,32 @@ class CdsFacade extends API::Node {
 }
 
 /**
+ * A call to `entities` on a CDS facade.
+ */
+class CdsEntitiesCall extends API::Node {
+  CdsEntitiesCall() { exists(CdsFacade cds | this = cds.getMember("entities")) }
+}
+
+/**
+ * An entity instance obtained by the entity's namespace,
+ * via `cds.entities`
+ * ```javascript
+ * // Obtained through `cds.entities`
+ * const { Service1 } = cds.entities("sample.application.namespace");
+ * ```
+ */
+class EntityEntry extends DataFlow::CallNode {
+  EntityEntry() { exists(CdsEntitiesCall c | c.getACall() = this) }
+
+  /**
+   * Gets the namespace that this entity belongs to.
+   */
+  string getNamespace() {
+    result = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+  }
+}
+
+/**
  * A call to `serve` on a CDS facade.
  */
 class CdsServeCall extends API::Node {
