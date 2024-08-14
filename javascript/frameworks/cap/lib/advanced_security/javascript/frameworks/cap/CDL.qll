@@ -35,6 +35,15 @@ abstract class CdlElement extends JsonObject {
   string getName() { result = name }
 
   /**
+   * Gets the unqualified name of this CDL element without the leading namespace.
+   */
+  string getUnqualifiedName() {
+    exists(string qualifiedName | qualifiedName = this.getName() |
+      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
+    )
+  }
+
+  /**
    * Gets the kind of this CDL element.
    */
   CdlKind getKind() { result = kind }
@@ -128,12 +137,6 @@ class CdlService extends CdlElement {
 class CdlEntity extends CdlElement {
   CdlEntity() { kind = CdlEntityKind(this.getPropStringValue("kind")) }
 
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
-
   predicate isSelectFrom(CdlEntity otherEntity) {
     otherEntity.getName() =
       this.getPropValue("query")
@@ -166,23 +169,11 @@ class CdlEntity extends CdlElement {
 class CdlEvent extends CdlElement {
   CdlEvent() { kind = CdlEventKind(this.getPropStringValue("kind")) }
 
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
-
   string getBasename() { result = name.splitAt(".", count(name.indexOf("."))) }
 }
 
 class CdlAction extends CdlElement {
   CdlAction() { kind = CdlActionKind(this.getPropStringValue("kind")) }
-
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
 
   predicate belongsToServiceWithNoAuthn() {
     exists(CdlService service | service.hasNoCdsAccessControl() | this = service.getAnAction())
@@ -193,12 +184,6 @@ class CdlFunction extends CdlElement {
   CdlFunction() { kind = CdlFunctionKind(this.getPropStringValue("kind")) }
 
   JsonObject getReturns() { result = this.getPropValue("returns") }
-
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
 
   predicate belongsToServiceWithNoAuthn() {
     exists(CdlService service | service.hasNoCdsAccessControl() | this = service.getAFunction())

@@ -112,8 +112,10 @@ class AsyncStyleCommunication extends InterServiceCommunication {
       /* 1. match by their event name. */
       srvEmit.getEmittedEvent() = orchestratingRegistration.getAnEventName() and
       /* 2. match by their service name in cds.connect().to(). */
-      srvEmit.getEmitter().getDefinition().getManifestName() =
-        orchestratingRegistration.getReceiver().(ServiceInstanceFromCdsConnectTo).getServiceName() and
+      [
+        srvEmit.getEmitter().getDefinition().getManifestName(),
+        srvEmit.getEmitter().getDefinition().getUnqualifiedName()
+      ] = orchestratingRegistration.getReceiver().(ServiceInstanceFromCdsConnectTo).getServiceName() and
       recipient = methodCallOnReceiver.getReceiver() and
       methodCallOnReceiver.getEnclosingFunction() = orchestratingRegistration.getHandler().asExpr()
     )

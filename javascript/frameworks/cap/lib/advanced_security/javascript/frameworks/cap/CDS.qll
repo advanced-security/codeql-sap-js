@@ -59,13 +59,16 @@ class CdsServeCall extends DataFlow::CallNode {
     this.getServiceRepresentation().getStringValue() = "all" and
     result = any(UserDefinedApplicationService service)
     or
-    /* 2. The argument to cds.serve is a name by which the service is required */
+    /* 2. The argument to cds.serve is a name of the service */
+    result.getUnqualifiedName() = this.getServiceRepresentation().getStringValue()
+    or
+    /* 3. The argument to cds.serve is a name by which the service is required */
     exists(RequiredService requiredService |
       requiredService.getName() = this.getServiceRepresentation().getStringValue() and
       result.getFile() = requiredService.getImplementationFile()
     )
     or
-    /* 3. The argument to cds.serve is a service instance */
+    /* 4. The argument to cds.serve is a service instance */
     exists(ServiceInstance serviceInstance |
       this.getServiceRepresentation() = serviceInstance.asExpr() and
       result = serviceInstance.getDefinition()
@@ -152,11 +155,13 @@ class ServiceInstanceFromCdsConnectTo extends ServiceInstance, SourceNode {
   ServiceInstanceFromCdsConnectTo() { this = serviceInstanceFromCdsConnectTo(serviceName) }
 
   override UserDefinedApplicationService getDefinition() {
-    exists(RequiredService serviceDecl, string abspath |
+    /* 1. The service  */
+    exists(RequiredService serviceDecl |
       serviceDecl.getName() = serviceName and
-      abspath = serviceDecl.getImplementationFile().getAbsolutePath() and
-      result.hasLocationInfo(abspath, _, _, _, _)
+      result.hasLocationInfo(serviceDecl.getImplementationFile().getAbsolutePath(), _, _, _, _)
     )
+    or
+    result.getUnqualifiedName() = serviceName
   }
 
   string getServiceName() { result = serviceName }
@@ -275,6 +280,8 @@ class ServiceInstanceFromServeWithParameter extends ServiceInstance {
       requiredService.getName() = cdsServe.getServiceRepresentation().getStringValue() and
       result.getFile() = requiredService.getImplementationFile()
     )
+    or
+    result.getUnqualifiedName() = cdsServe.getServiceRepresentation().getStringValue()
     or
     /* 3. The argument to cds.serve is a service instance */
     exists(ServiceInstance serviceInstance |
@@ -459,6 +466,16 @@ abstract class UserDefinedApplicationService extends UserDefinedService {
     exists(RequiredService serviceManifest |
       this.hasLocationInfo(serviceManifest.getImplementationFile().getAbsolutePath(), _, _, _, _) and
       result = serviceManifest.getName()
+    )
+  }
+
+  /**
+   * Gets the name of this service as declared in the `package.json`.
+   */
+  string getUnqualifiedName() {
+    exists(CdlService cdlService |
+      this = cdlService.getImplementation() and
+      result = cdlService.getUnqualifiedName()
     )
   }
 
