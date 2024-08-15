@@ -10,5 +10,9 @@
     "start": "cds-serve",
     "watch": "cds watch"
   },
-  "cds": {}
+  "cds": {
+    "requires": {
+      "auth": "dummy"
+    }
+  }
 }
