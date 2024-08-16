@@ -3,7 +3,7 @@ const app = require("express")();
 
 cds.serve("all").in(app);
 
-cds.serve("service-1").with(function () {
+cds.serve("Service1").with(function () {
   /*
    * Protect the whole service using `before`.
    * Translation of @(requires: [ "authenticated-user" ]).
