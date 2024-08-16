@@ -10,5 +10,15 @@
     "start": "cds-serve",
     "watch": "cds watch"
   },
-  "cds": {}
+  "cds": {
+    "requires": {
+      "service-1": {
+        "impl": "srv/service1.js"
+      },
+      "service-2": {
+        "impl": "srv/service2.js"
+      },
+      "auth": "mocked"
+    }
+  }
 }
