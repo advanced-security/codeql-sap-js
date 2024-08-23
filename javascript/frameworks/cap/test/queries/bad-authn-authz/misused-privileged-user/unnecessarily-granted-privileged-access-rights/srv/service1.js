@@ -56,7 +56,7 @@ class Service1 extends cds.ApplicationService {
      * requires authorization, with a privileged user.
      */
     this.on("send4", async (req) => {
-      const Service2 = await cds.connect.to("service-2");
+      const Service2 = await cds.connect.to("Service2");
       const { Service2Entity1 } = Service2.entities;
       return this.tx(
         { user: new cds.User.Privileged("privileged-user-4") },
