@@ -57,12 +57,12 @@ class Service1 extends cds.ApplicationService {
      */
     this.on("send4", async (req) => {
       const Service2 = await cds.connect.to("Service2");
-      const { Service2Entity1 } = Service2.entities;
+      const { Service2Entity2 } = Service2.entities;
       return this.tx(
         { user: new cds.User.Privileged("privileged-user-4") },
         (tx) =>
           tx.run(
-            SELECT.from(Service2Entity1) // Declared in service2.cds
+            SELECT.from(Service2Entity2) // Declared in service2.cds
               .where`Attribute4=${req.data.messageToPass}`
           )
       );
