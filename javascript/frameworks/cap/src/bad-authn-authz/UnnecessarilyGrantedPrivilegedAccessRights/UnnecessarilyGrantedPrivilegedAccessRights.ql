@@ -1,11 +1,11 @@
 /**
- * @name Privileged user is dynamically generated
- * @description TODO
+ * @name Access rights to an entity is unnecessarily elevated to privileged
+ * @description An entity requiring authorization is being accessed with privileged rights.
  * @kind problem
  * @problem.severity error
  * @security-severity 6
  * @precision high
- * @id js/dynamically-generated-privileged
+ * @id js/unnecessarily-granted-privileged-access-rights
  * @tags security
  */
 
