@@ -78,7 +78,7 @@ class Service1 extends cds.ApplicationService {
         { user: new cds.User.Privileged("privileged-user-5") },
         (tx) =>
           tx.run(
-            SELECT.from`RemoteEntity` // Assume that it's declared in @example/sample
+            SELECT.from`RemoteEntity` // Assume that it's declared in @advanced-security/remote-service
               .where`SomeAttribute=${req.data.messageToPass}`
           )
       );
