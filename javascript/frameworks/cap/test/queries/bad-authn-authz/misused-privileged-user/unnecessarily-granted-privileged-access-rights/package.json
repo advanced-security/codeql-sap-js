@@ -12,9 +12,9 @@
   },
   "cds": {
     "requires": {
-      "service-3": {
+      "RemoteService": {
         "kind": "odata",
-        "model": "@example/sample"
+        "model": "@advanced-security/remote-service"
       },
       "auth": {
         "impl": "srv/privileged-user.js"

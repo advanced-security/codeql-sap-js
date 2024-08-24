@@ -73,7 +73,8 @@ class Service1 extends cds.ApplicationService {
      * authorization requirements are unknown.
      */
     this.on("send5", async (req) => {
-      return this.tx(
+      const RemoteService = await cds.connect.to("RemoteService");
+      return RemoteService.tx(
         { user: new cds.User.Privileged("privileged-user-5") },
         (tx) =>
           tx.run(
