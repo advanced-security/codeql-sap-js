@@ -278,9 +278,14 @@ class CqlClause extends TCqlClause {
   }
 
   CdlEntity getAccessingEntityDefinition() {
+    /* 1. String literals or template strings */
     result.getName() =
-      this.getAccessingEntityReference().(EntityReferenceFromTemplateOrString).getStringValue() or
-    result = this.getAccessingEntityReference().(EntityReferenceFromEntities).getCqlDefinition()
+      this.getAccessingEntityReference().(EntityReferenceFromCqlClause).getStringValue()
+    or
+    /* 2. Variable whose value is a reference to an entity */
+    exists(ExprNode entityReference | entityReference = this.getAccessingEntityReference() |
+      result = entityReference.getALocalSource().(EntityReferenceFromEntities).getCqlDefinition()
+    )
   }
 }
 

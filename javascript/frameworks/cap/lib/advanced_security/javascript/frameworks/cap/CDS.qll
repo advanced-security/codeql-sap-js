@@ -656,7 +656,9 @@ class CdsTransaction extends MethodCallNode {
 
 abstract class CdsReference extends DataFlow::Node { }
 
-abstract class EntityReference extends CdsReference { }
+abstract class EntityReference extends CdsReference {
+  abstract CdlEntity getCqlDefinition();
+}
 
 class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
   DataFlow::SourceNode entities;
@@ -685,9 +687,12 @@ class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
 
   string getEntityName() { result = entityName }
 
-  abstract CdlEntity getCqlDefinition();
+  abstract override CdlEntity getCqlDefinition();
 }
 
+/**
+ * srv.entities or srv.entities(...) where the receiver is a ServiceInstance
+ */
 class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromEntities instanceof PropRead
 {
   ServiceInstance service;
@@ -717,6 +722,9 @@ class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromE
   }
 }
 
+/**
+ * db.entities, db.entities(...), cds.entities, cds.entities(...)
+ */
 class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
   EntityReferenceFromDbOrCdsEntities() {
     exists(DBServiceInstanceFromCdsConnectTo db |
@@ -736,8 +744,10 @@ class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
   }
 }
 
-class EntityReferenceFromTemplateOrString extends EntityReference, ExprNode {
-  EntityReferenceFromTemplateOrString() {
-    exists(CqlClause cql | this = cql.getAccessingEntityReference())
-  }
+class EntityReferenceFromCqlClause extends EntityReference, ExprNode {
+  CqlClause cql;
+
+  EntityReferenceFromCqlClause() { this = cql.getAccessingEntityReference() }
+
+  override CdlEntity getCqlDefinition() { result = cql.getAccessingEntityDefinition() }
 }
