@@ -25,6 +25,8 @@ extensions:
       - ["SapLogger", "global", "Member[jQuery].Member[sap].Member[log]"]
       # Logging functions as well as `getLogger` also serves as a constructor
       - ["SapLogger", "SapLogger", "Member[debug,error,fatal,info,setLevel,trace,warning,getLogger].ReturnValue"]
+      - ["SapLogEntries", "SapLogger", "Member[addLogListener].Parameter[0].Member[onLogEntry].Argument[0]"]
+      - ["SapLogEntries", "SapLogger", "Member[getLogEntries].ReturnValue"]
       - ["ResourceBundle", "ResourceBundle", "Instance"]
       - ["ResourceBundle", "sap/base/i18n/ResourceBundle", ""]
       - ["Properties", "Properties", "Instance"]
@@ -63,7 +65,6 @@ extensions:
       - ["UI5ClientStorage", "global", "Member[jQuery].Member[sap].Member[storage]"]
       - ["UI5ClientStorage", "sap/ui/core/util/File", ""]
       - ["UI5ClientStorage", "global", "Member[sap].Member[ui].Member[core].Member[util].Member[File]"]
-
 
   - addsTo:
       pack: codeql/javascript-all

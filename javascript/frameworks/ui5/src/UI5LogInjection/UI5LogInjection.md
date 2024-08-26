@@ -4,7 +4,7 @@ If an untrusted input, possibly through a UI5 control, is not sanitized and pass
 
 ## Recommendation
 
-Avoid directly logging untrusted input from a remote source and sanitize it by replaceing characters so that the input no longer contains control characters and substrings that may be interpreted as HTML.
+Avoid directly logging untrusted input from a remote source and sanitize it by replacing characters so that the input no longer contains control characters and substrings that may be interpreted as HTML.
 
 ## Examples
 

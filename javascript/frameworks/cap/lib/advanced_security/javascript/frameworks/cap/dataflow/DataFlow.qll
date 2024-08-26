@@ -80,7 +80,7 @@ class RestStyleCommunication extends InterServiceCommunication {
     exists(SrvSend srvSend |
       methodCall = srvSend and
       sender = this.getReceiver() and
-      recipient = srvSend.getReceiver() and
+      srvSend = recipient.(SourceNode).getAMemberCall("send") and
       srvSend.asExpr().getEnclosingFunction+() = this.getHandler().asExpr()
     )
   }

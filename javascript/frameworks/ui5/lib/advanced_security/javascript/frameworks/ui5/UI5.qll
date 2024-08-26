@@ -78,6 +78,10 @@ class WebAppManifest extends File {
   WebApp getWebapp() { result = webapp }
 }
 
+predicate inSameWebApp(File f1, File f2) {
+  exists(WebApp webApp | webApp.getAResource() = f1 and webApp.getAResource() = f2)
+}
+
 /** A UI5 bootstrapped web application. */
 class WebApp extends HTML::HtmlFile {
   SapUiCoreScriptElement coreScript;
@@ -368,9 +372,7 @@ class ControlReference extends Reference {
         result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = propertyName
       )
     ) and
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getFile(), result.getFile())
   }
 
   MethodCallNode getAWrite(string propertyName) {
@@ -400,9 +402,7 @@ class ControlReference extends Reference {
         result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = propertyName
       )
     ) and
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getFile(), result.getFile())
   }
 }
 
@@ -1297,7 +1297,7 @@ class Extension extends InvokeNode, MethodCallNode {
   SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1).asExpr() }
 }
 
-newtype TSapElement =
+private newtype TSapElement =
   DefinitionOfElement(Extension extension) or
   ReferenceOfElement(Reference reference)
 
@@ -1437,9 +1437,7 @@ class PropertyMetadata extends ObjectLiteralNode {
       result.getMethodName() = "setProperty" and
       result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
     ) and
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getFile(), result.getFile())
   }
 
   MethodCallNode getARead() {
@@ -1474,8 +1472,6 @@ class PropertyMetadata extends ObjectLiteralNode {
       result.getMethodName() = "getProperty" and
       result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
     ) and
-    exists(WebApp webApp |
-      webApp.getAResource() = this.getFile() and webApp.getAResource() = result.getFile()
-    )
+    inSameWebApp(this.getFile(), result.getFile())
   }
 }

@@ -12,5 +12,7 @@
 | upsert.js:29:14:32:2 | upsert.js:29 | upsert.js:29:14:32:2 | UPSERT. ... " },\\n]) |
 | upsert.js:33:14:33:33 | upsert.js:33 | upsert.js:33:14:33:33 | UPSERT.into("Table") |
 | upsert.js:33:14:36:2 | upsert.js:33 | upsert.js:33:14:36:2 | UPSERT. ... " },\\n]) |
+| upsert.js:37:14:37:31 | upsert.js:37 | upsert.js:37:14:37:31 | UPSERT.into`Table` |
 | upsert.js:37:14:40:2 | upsert.js:37 | upsert.js:37:14:40:2 | UPSERT. ... " },\\n]) |
+| upsert.js:41:14:41:31 | upsert.js:41 | upsert.js:41:14:41:31 | UPSERT.into`Table` |
 | upsert.js:41:14:44:2 | upsert.js:41 | upsert.js:41:14:44:2 | UPSERT. ... " },\\n]) |

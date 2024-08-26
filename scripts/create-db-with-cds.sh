@@ -15,27 +15,29 @@ then
 fi
 
 # Loop over all the directories in the test directory
-for dir in *; do
-    # Change to the directory
-    cd $dir
+for dir in */; do
+    if [ -d "$dir" ]; then
+        # Change to the directory
+        cd $dir
 
-    # Remember this folder's name
-    FOLDER_NAME=$(basename $(pwd))
+        # Remember this folder's name
+        FOLDER_NAME=$(basename $(pwd))
 
-    # Enable XML extraction
-    export LGTM_INDEX_XML_MODE='ALL'
+        # Enable XML extraction
+        export LGTM_INDEX_XML_MODE='ALL'
 
-    # Enable JSON extraction
-    export LGTM_INDEX_FILTERS=include:**/*.json
+        # Enable JSON extraction
+        export LGTM_INDEX_FILTERS=include:**/*.json
 
-    # Compile all .cds files to .json
-    ./compile-all-cds-in-directory.sh
+        # Compile all .cds files to .json
+        ./compile-all-cds-in-directory.sh
 
-    # Create CodeQL database
-    codeql database create $FOLDER_NAME --language=javascript --overwrite
+        # Create CodeQL database
+        codeql database create ${FOLDER_NAME}-db --language=javascript --overwrite
 
-    # Change back to the test directory
-    cd $TEST_DIR
+        # Change back to the test directory
+        cd $TEST_DIR
+    fi
 done
 
 echo "Done!"

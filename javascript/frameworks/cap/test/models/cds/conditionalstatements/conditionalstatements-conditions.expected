@@ -1,0 +1,146 @@
+| conditionalstatements.js:1:1:1:18 | cond && thenBranch | conditionalstatements.js:1:1:1:4 | cond |
+| conditionalstatements.js:1:1:1:32 | cond && ... eBranch | conditionalstatements.js:1:1:1:4 | cond |
+| conditionalstatements.js:1:1:1:33 | cond && ... Branch; | conditionalstatements.js:1:1:1:4 | cond |
+| conditionalstatements.js:2:1:2:19 | !cond && thenBranch | conditionalstatements.js:2:1:2:5 | !cond |
+| conditionalstatements.js:2:1:2:33 | !cond & ... eBranch | conditionalstatements.js:2:1:2:5 | !cond |
+| conditionalstatements.js:2:1:2:34 | !cond & ... Branch; | conditionalstatements.js:2:1:2:5 | !cond |
+| conditionalstatements.js:4:1:4:34 | (cond & ... eBranch | conditionalstatements.js:4:1:4:20 | (cond && thenBranch) |
+| conditionalstatements.js:4:1:4:35 | (cond & ... Branch; | conditionalstatements.js:4:1:4:20 | (cond && thenBranch) |
+| conditionalstatements.js:4:2:4:19 | cond && thenBranch | conditionalstatements.js:4:2:4:5 | cond |
+| conditionalstatements.js:5:1:5:35 | (!cond  ... eBranch | conditionalstatements.js:5:1:5:21 | (!cond  ... Branch) |
+| conditionalstatements.js:5:1:5:36 | (!cond  ... Branch; | conditionalstatements.js:5:1:5:21 | (!cond  ... Branch) |
+| conditionalstatements.js:5:2:5:20 | !cond && thenBranch | conditionalstatements.js:5:2:5:6 | !cond |
+| conditionalstatements.js:7:1:7:18 | cond && thenBranch | conditionalstatements.js:7:1:7:4 | cond |
+| conditionalstatements.js:7:1:7:19 | cond && thenBranch; | conditionalstatements.js:7:1:7:4 | cond |
+| conditionalstatements.js:8:1:8:19 | !cond && thenBranch | conditionalstatements.js:8:1:8:5 | !cond |
+| conditionalstatements.js:8:1:8:20 | !cond && thenBranch; | conditionalstatements.js:8:1:8:5 | !cond |
+| conditionalstatements.js:10:1:10:18 | cond \|\| elseBranch | conditionalstatements.js:10:1:10:4 | cond |
+| conditionalstatements.js:10:1:10:19 | cond \|\| elseBranch; | conditionalstatements.js:10:1:10:4 | cond |
+| conditionalstatements.js:11:1:11:19 | !cond \|\| elseBranch | conditionalstatements.js:11:1:11:5 | !cond |
+| conditionalstatements.js:11:1:11:20 | !cond \|\| elseBranch; | conditionalstatements.js:11:1:11:5 | !cond |
+| conditionalstatements.js:13:1:13:14 | cond1 && cond2 | conditionalstatements.js:13:1:13:5 | cond1 |
+| conditionalstatements.js:13:1:13:23 | cond1 & ... & cond3 | conditionalstatements.js:13:1:13:14 | cond1 && cond2 |
+| conditionalstatements.js:13:1:13:37 | cond1 & ... nBranch | conditionalstatements.js:13:1:13:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:13:1:13:77 | cond1 & ... hPart2) | conditionalstatements.js:13:1:13:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:13:1:13:78 | cond1 & ... Part2); | conditionalstatements.js:13:1:13:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:13:43:13:76 | elseBra ... chPart2 | conditionalstatements.js:13:43:13:57 | elseBranchPart1 |
+| conditionalstatements.js:14:1:14:15 | !cond1 && cond2 | conditionalstatements.js:14:1:14:6 | !cond1 |
+| conditionalstatements.js:14:1:14:24 | !cond1  ... & cond3 | conditionalstatements.js:14:1:14:15 | !cond1 && cond2 |
+| conditionalstatements.js:14:1:14:38 | !cond1  ... nBranch | conditionalstatements.js:14:1:14:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:14:1:14:78 | !cond1  ... hPart2) | conditionalstatements.js:14:1:14:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:14:1:14:79 | !cond1  ... Part2); | conditionalstatements.js:14:1:14:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:14:44:14:77 | elseBra ... chPart2 | conditionalstatements.js:14:44:14:58 | elseBranchPart1 |
+| conditionalstatements.js:15:1:15:15 | cond1 && !cond2 | conditionalstatements.js:15:1:15:5 | cond1 |
+| conditionalstatements.js:15:1:15:24 | cond1 & ... & cond3 | conditionalstatements.js:15:1:15:15 | cond1 && !cond2 |
+| conditionalstatements.js:15:1:15:38 | cond1 & ... nBranch | conditionalstatements.js:15:1:15:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:15:1:15:78 | cond1 & ... hPart2) | conditionalstatements.js:15:1:15:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:15:1:15:79 | cond1 & ... Part2); | conditionalstatements.js:15:1:15:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:15:44:15:77 | elseBra ... chPart2 | conditionalstatements.js:15:44:15:58 | elseBranchPart1 |
+| conditionalstatements.js:16:1:16:14 | cond1 && cond2 | conditionalstatements.js:16:1:16:5 | cond1 |
+| conditionalstatements.js:16:1:16:24 | cond1 & ...  !cond3 | conditionalstatements.js:16:1:16:14 | cond1 && cond2 |
+| conditionalstatements.js:16:1:16:38 | cond1 & ... nBranch | conditionalstatements.js:16:1:16:24 | cond1 & ...  !cond3 |
+| conditionalstatements.js:16:1:16:78 | cond1 & ... hPart2) | conditionalstatements.js:16:1:16:24 | cond1 & ...  !cond3 |
+| conditionalstatements.js:16:1:16:79 | cond1 & ... Part2); | conditionalstatements.js:16:1:16:24 | cond1 & ...  !cond3 |
+| conditionalstatements.js:16:44:16:77 | elseBra ... chPart2 | conditionalstatements.js:16:44:16:58 | elseBranchPart1 |
+| conditionalstatements.js:18:1:18:39 | (cond1  ... nBranch | conditionalstatements.js:18:1:18:25 | (cond1  ...  cond3) |
+| conditionalstatements.js:18:1:18:79 | (cond1  ... hPart2) | conditionalstatements.js:18:1:18:25 | (cond1  ...  cond3) |
+| conditionalstatements.js:18:1:18:80 | (cond1  ... Part2); | conditionalstatements.js:18:1:18:25 | (cond1  ...  cond3) |
+| conditionalstatements.js:18:2:18:15 | cond1 && cond2 | conditionalstatements.js:18:2:18:6 | cond1 |
+| conditionalstatements.js:18:2:18:24 | cond1 & ... & cond3 | conditionalstatements.js:18:2:18:15 | cond1 && cond2 |
+| conditionalstatements.js:18:45:18:78 | elseBra ... chPart2 | conditionalstatements.js:18:45:18:59 | elseBranchPart1 |
+| conditionalstatements.js:19:1:19:40 | !(cond1 ... nBranch | conditionalstatements.js:19:1:19:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:19:1:19:80 | !(cond1 ... hPart2) | conditionalstatements.js:19:1:19:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:19:1:19:81 | !(cond1 ... Part2); | conditionalstatements.js:19:1:19:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:19:3:19:16 | cond1 && cond2 | conditionalstatements.js:19:3:19:7 | cond1 |
+| conditionalstatements.js:19:3:19:25 | cond1 & ... & cond3 | conditionalstatements.js:19:3:19:16 | cond1 && cond2 |
+| conditionalstatements.js:19:46:19:79 | elseBra ... chPart2 | conditionalstatements.js:19:46:19:60 | elseBranchPart1 |
+| conditionalstatements.js:21:1:21:58 | (cond1  ... chPart1 | conditionalstatements.js:21:1:21:39 | (cond1  ... Branch) |
+| conditionalstatements.js:21:1:21:77 | (cond1  ... chPart2 | conditionalstatements.js:21:1:21:39 | (cond1  ... Branch) |
+| conditionalstatements.js:21:1:21:78 | (cond1  ... hPart2; | conditionalstatements.js:21:1:21:39 | (cond1  ... Branch) |
+| conditionalstatements.js:21:2:21:15 | cond1 && cond2 | conditionalstatements.js:21:2:21:6 | cond1 |
+| conditionalstatements.js:21:2:21:24 | cond1 & ... & cond3 | conditionalstatements.js:21:2:21:15 | cond1 && cond2 |
+| conditionalstatements.js:21:2:21:38 | cond1 & ... nBranch | conditionalstatements.js:21:2:21:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:22:1:22:59 | (!cond1 ... chPart1 | conditionalstatements.js:22:1:22:40 | (!cond1 ... Branch) |
+| conditionalstatements.js:22:1:22:78 | (!cond1 ... chPart2 | conditionalstatements.js:22:1:22:40 | (!cond1 ... Branch) |
+| conditionalstatements.js:22:1:22:79 | (!cond1 ... hPart2; | conditionalstatements.js:22:1:22:40 | (!cond1 ... Branch) |
+| conditionalstatements.js:22:2:22:16 | !cond1 && cond2 | conditionalstatements.js:22:2:22:7 | !cond1 |
+| conditionalstatements.js:22:2:22:25 | !cond1  ... & cond3 | conditionalstatements.js:22:2:22:16 | !cond1 && cond2 |
+| conditionalstatements.js:22:2:22:39 | !cond1  ... nBranch | conditionalstatements.js:22:2:22:25 | !cond1  ... & cond3 |
+| conditionalstatements.js:23:1:23:59 | (cond1  ... chPart1 | conditionalstatements.js:23:1:23:40 | (cond1  ... Branch) |
+| conditionalstatements.js:23:1:23:78 | (cond1  ... chPart2 | conditionalstatements.js:23:1:23:40 | (cond1  ... Branch) |
+| conditionalstatements.js:23:1:23:79 | (cond1  ... hPart2; | conditionalstatements.js:23:1:23:40 | (cond1  ... Branch) |
+| conditionalstatements.js:23:2:23:16 | cond1 && !cond2 | conditionalstatements.js:23:2:23:6 | cond1 |
+| conditionalstatements.js:23:2:23:25 | cond1 & ... & cond3 | conditionalstatements.js:23:2:23:16 | cond1 && !cond2 |
+| conditionalstatements.js:23:2:23:39 | cond1 & ... nBranch | conditionalstatements.js:23:2:23:25 | cond1 & ... & cond3 |
+| conditionalstatements.js:24:1:24:59 | (cond1  ... chPart1 | conditionalstatements.js:24:1:24:40 | (cond1  ... Branch) |
+| conditionalstatements.js:24:1:24:78 | (cond1  ... chPart2 | conditionalstatements.js:24:1:24:40 | (cond1  ... Branch) |
+| conditionalstatements.js:24:1:24:79 | (cond1  ... hPart2; | conditionalstatements.js:24:1:24:40 | (cond1  ... Branch) |
+| conditionalstatements.js:24:2:24:15 | cond1 && cond2 | conditionalstatements.js:24:2:24:6 | cond1 |
+| conditionalstatements.js:24:2:24:25 | cond1 & ...  !cond3 | conditionalstatements.js:24:2:24:15 | cond1 && cond2 |
+| conditionalstatements.js:24:2:24:39 | cond1 & ... nBranch | conditionalstatements.js:24:2:24:25 | cond1 & ...  !cond3 |
+| conditionalstatements.js:25:1:25:60 | ((cond1 ... chPart1 | conditionalstatements.js:25:1:25:41 | ((cond1 ... Branch) |
+| conditionalstatements.js:25:1:25:79 | ((cond1 ... chPart2 | conditionalstatements.js:25:1:25:41 | ((cond1 ... Branch) |
+| conditionalstatements.js:25:1:25:80 | ((cond1 ... hPart2; | conditionalstatements.js:25:1:25:41 | ((cond1 ... Branch) |
+| conditionalstatements.js:25:2:25:40 | (cond1  ... nBranch | conditionalstatements.js:25:2:25:26 | (cond1  ...  cond3) |
+| conditionalstatements.js:25:3:25:16 | cond1 && cond2 | conditionalstatements.js:25:3:25:7 | cond1 |
+| conditionalstatements.js:25:3:25:25 | cond1 & ... & cond3 | conditionalstatements.js:25:3:25:16 | cond1 && cond2 |
+| conditionalstatements.js:27:1:27:14 | cond1 && cond2 | conditionalstatements.js:27:1:27:5 | cond1 |
+| conditionalstatements.js:27:1:27:23 | cond1 & ... & cond3 | conditionalstatements.js:27:1:27:14 | cond1 && cond2 |
+| conditionalstatements.js:27:1:27:37 | cond1 & ... nBranch | conditionalstatements.js:27:1:27:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:27:1:27:77 | cond1 & ... hPart2) | conditionalstatements.js:27:1:27:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:27:1:27:78 | cond1 & ... Part2); | conditionalstatements.js:27:1:27:23 | cond1 & ... & cond3 |
+| conditionalstatements.js:27:43:27:76 | elseBra ... chPart2 | conditionalstatements.js:27:43:27:57 | elseBranchPart1 |
+| conditionalstatements.js:28:1:28:15 | !cond1 && cond2 | conditionalstatements.js:28:1:28:6 | !cond1 |
+| conditionalstatements.js:28:1:28:24 | !cond1  ... & cond3 | conditionalstatements.js:28:1:28:15 | !cond1 && cond2 |
+| conditionalstatements.js:28:1:28:38 | !cond1  ... nBranch | conditionalstatements.js:28:1:28:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:28:1:28:78 | !cond1  ... hPart2) | conditionalstatements.js:28:1:28:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:28:1:28:79 | !cond1  ... Part2); | conditionalstatements.js:28:1:28:24 | !cond1  ... & cond3 |
+| conditionalstatements.js:28:44:28:77 | elseBra ... chPart2 | conditionalstatements.js:28:44:28:58 | elseBranchPart1 |
+| conditionalstatements.js:29:1:29:15 | cond1 && !cond2 | conditionalstatements.js:29:1:29:5 | cond1 |
+| conditionalstatements.js:29:1:29:24 | cond1 & ... & cond3 | conditionalstatements.js:29:1:29:15 | cond1 && !cond2 |
+| conditionalstatements.js:29:1:29:38 | cond1 & ... nBranch | conditionalstatements.js:29:1:29:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:29:1:29:78 | cond1 & ... hPart2) | conditionalstatements.js:29:1:29:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:29:1:29:79 | cond1 & ... Part2); | conditionalstatements.js:29:1:29:24 | cond1 & ... & cond3 |
+| conditionalstatements.js:29:44:29:77 | elseBra ... chPart2 | conditionalstatements.js:29:44:29:58 | elseBranchPart1 |
+| conditionalstatements.js:30:1:30:15 | cond1 && !cond2 | conditionalstatements.js:30:1:30:5 | cond1 |
+| conditionalstatements.js:30:1:30:25 | cond1 & ...  !cond3 | conditionalstatements.js:30:1:30:15 | cond1 && !cond2 |
+| conditionalstatements.js:30:1:30:39 | cond1 & ... nBranch | conditionalstatements.js:30:1:30:25 | cond1 & ...  !cond3 |
+| conditionalstatements.js:30:1:30:79 | cond1 & ... hPart2) | conditionalstatements.js:30:1:30:25 | cond1 & ...  !cond3 |
+| conditionalstatements.js:30:1:30:80 | cond1 & ... Part2); | conditionalstatements.js:30:1:30:25 | cond1 & ...  !cond3 |
+| conditionalstatements.js:30:45:30:78 | elseBra ... chPart2 | conditionalstatements.js:30:45:30:59 | elseBranchPart1 |
+| conditionalstatements.js:31:1:31:40 | !(cond1 ... nBranch | conditionalstatements.js:31:1:31:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:31:1:31:80 | !(cond1 ... hPart2) | conditionalstatements.js:31:1:31:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:31:1:31:81 | !(cond1 ... Part2); | conditionalstatements.js:31:1:31:26 | !(cond1 ...  cond3) |
+| conditionalstatements.js:31:3:31:16 | cond1 && cond2 | conditionalstatements.js:31:3:31:7 | cond1 |
+| conditionalstatements.js:31:3:31:25 | cond1 & ... & cond3 | conditionalstatements.js:31:3:31:16 | cond1 && cond2 |
+| conditionalstatements.js:31:46:31:79 | elseBra ... chPart2 | conditionalstatements.js:31:46:31:60 | elseBranchPart1 |
+| conditionalstatements.js:33:1:33:63 | (cond & ... eBranch | conditionalstatements.js:33:1:33:49 | (cond & ... anch1)) |
+| conditionalstatements.js:33:1:33:64 | (cond & ... Branch; | conditionalstatements.js:33:1:33:49 | (cond & ... anch1)) |
+| conditionalstatements.js:33:2:33:48 | cond && ... ranch1) | conditionalstatements.js:33:2:33:5 | cond |
+| conditionalstatements.js:33:11:33:47 | (cond1  ... Branch1 | conditionalstatements.js:33:11:33:32 | (cond1  ... ranch1) |
+| conditionalstatements.js:33:12:33:31 | cond1 && thenBranch1 | conditionalstatements.js:33:12:33:16 | cond1 |
+| conditionalstatements.js:34:1:34:64 | (!cond  ... eBranch | conditionalstatements.js:34:1:34:50 | (!cond  ... anch1)) |
+| conditionalstatements.js:34:1:34:65 | (!cond  ... Branch; | conditionalstatements.js:34:1:34:50 | (!cond  ... anch1)) |
+| conditionalstatements.js:34:2:34:49 | !cond & ... ranch1) | conditionalstatements.js:34:2:34:6 | !cond |
+| conditionalstatements.js:34:12:34:48 | (cond1  ... Branch1 | conditionalstatements.js:34:12:34:33 | (cond1  ... ranch1) |
+| conditionalstatements.js:34:13:34:32 | cond1 && thenBranch1 | conditionalstatements.js:34:13:34:17 | cond1 |
+| conditionalstatements.js:35:1:35:64 | !(cond  ... eBranch | conditionalstatements.js:35:1:35:50 | !(cond  ... anch1)) |
+| conditionalstatements.js:35:1:35:65 | !(cond  ... Branch; | conditionalstatements.js:35:1:35:50 | !(cond  ... anch1)) |
+| conditionalstatements.js:35:3:35:49 | cond && ... ranch1) | conditionalstatements.js:35:3:35:6 | cond |
+| conditionalstatements.js:35:12:35:48 | (cond1  ... Branch1 | conditionalstatements.js:35:12:35:33 | (cond1  ... ranch1) |
+| conditionalstatements.js:35:13:35:32 | cond1 && thenBranch1 | conditionalstatements.js:35:13:35:17 | cond1 |
+| conditionalstatements.js:37:1:37:61 | (cond & ... eBranch | conditionalstatements.js:37:1:37:47 | (cond & ... anch1)) |
+| conditionalstatements.js:37:1:37:62 | (cond & ... Branch; | conditionalstatements.js:37:1:37:47 | (cond & ... anch1)) |
+| conditionalstatements.js:37:2:37:46 | cond && ... ranch1) | conditionalstatements.js:37:2:37:5 | cond |
+| conditionalstatements.js:37:11:37:30 | cond1 && thenBranch1 | conditionalstatements.js:37:11:37:15 | cond1 |
+| conditionalstatements.js:37:11:37:45 | cond1 & ... Branch1 | conditionalstatements.js:37:11:37:15 | cond1 |
+| conditionalstatements.js:38:1:38:62 | (!cond  ... eBranch | conditionalstatements.js:38:1:38:48 | (!cond  ... anch1)) |
+| conditionalstatements.js:38:1:38:63 | (!cond  ... Branch; | conditionalstatements.js:38:1:38:48 | (!cond  ... anch1)) |
+| conditionalstatements.js:38:2:38:47 | !cond & ... ranch1) | conditionalstatements.js:38:2:38:6 | !cond |
+| conditionalstatements.js:38:12:38:31 | cond1 && thenBranch1 | conditionalstatements.js:38:12:38:16 | cond1 |
+| conditionalstatements.js:38:12:38:46 | cond1 & ... Branch1 | conditionalstatements.js:38:12:38:16 | cond1 |
+| conditionalstatements.js:39:1:39:62 | !(cond  ... eBranch | conditionalstatements.js:39:1:39:48 | !(cond  ... anch1)) |
+| conditionalstatements.js:39:1:39:63 | !(cond  ... Branch; | conditionalstatements.js:39:1:39:48 | !(cond  ... anch1)) |
+| conditionalstatements.js:39:3:39:47 | cond && ... ranch1) | conditionalstatements.js:39:3:39:6 | cond |
+| conditionalstatements.js:39:12:39:31 | cond1 && thenBranch1 | conditionalstatements.js:39:12:39:16 | cond1 |
+| conditionalstatements.js:39:12:39:46 | cond1 & ... Branch1 | conditionalstatements.js:39:12:39:16 | cond1 |

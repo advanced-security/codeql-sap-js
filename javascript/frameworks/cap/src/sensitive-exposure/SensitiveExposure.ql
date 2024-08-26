@@ -6,7 +6,7 @@
  * @problem.severity warning
  * @security-severity 7.5
  * @precision medium
- * @id javascript/sensitive-log
+ * @id js/sensitive-log
  * @tags security
  *       external/cwe/cwe-532
  */
@@ -16,19 +16,41 @@ import advanced_security.javascript.frameworks.cap.CDS
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
 import DataFlow::PathGraph
 
-class SensitiveExposureSource extends DataFlow::Node {
-  SensitiveExposureSource() {
-    exists(PropRead p, SensitiveAnnotatedElement c |
-      p.getPropertyName() = c.getName() and
-      this = p
-    )
+SourceNode entityAccesses(TypeTracker t, string entityNamespace) {
+  t.start() and
+  exists(EntityEntry e | result = e and entityNamespace = e.getNamespace())
+  or
+  exists(TypeTracker t2 | result = entityAccesses(t2, entityNamespace).track(t2, t))
+}
+
+SourceNode entityAccesses(string entityNamespace) {
+  result = entityAccesses(TypeTracker::end(), entityNamespace)
+}
+
+class SensitiveExposureFieldSource extends DataFlow::Node {
+  SensitiveAnnotatedAttribute cdsField;
+  SensitiveAnnotatedEntity entity;
+  string namespace;
+
+  SensitiveExposureFieldSource() {
+    this = entityAccesses(namespace).getAPropertyRead().getAPropertyRead() and
+    //field name is same as some cds declared field
+    this.(PropRead).getPropertyName() = cdsField.getName() and
+    //entity name is the same as some cds declared entity
+    entityAccesses(namespace).getAPropertyRead().toString() = entity.getShortName() and
+    //and that field belongs to that entity in the cds
+    entity.(CdlEntity).getAttribute(cdsField.getName()) = cdsField and
+    //and the namespace is the same (fully qualified id match)
+    entity.(NamespacedEntity).getNamespace() = namespace
   }
 }
 
 class SensitiveLogExposureConfig extends TaintTracking::Configuration {
   SensitiveLogExposureConfig() { this = "SensitiveLogExposure" }
 
-  override predicate isSource(DataFlow::Node source) { source instanceof SensitiveExposureSource }
+  override predicate isSource(DataFlow::Node source) {
+    source instanceof SensitiveExposureFieldSource
+  }
 
   override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }

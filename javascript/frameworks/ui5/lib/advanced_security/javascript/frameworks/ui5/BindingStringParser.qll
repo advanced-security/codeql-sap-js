@@ -848,7 +848,7 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
     )
   }
 
-  newtype TBindingPathComponentList =
+  private newtype TBindingPathComponentList =
     MkEmptyBindingPathComponentList() or
     MkConstBindingPathComponentList(NameToken headToken, BindingPathComponentList tail, Token source) {
       exists(Token nextToken | nextToken = getNextSkippingWhitespace(headToken) |
@@ -920,7 +920,7 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
     )
   }
 
-  newtype TBindingPath =
+  private newtype TBindingPath =
     MkAbsoluteBindingPath(BindingPathComponentList pathComponents, Token source) {
       source instanceof ForwardSlashToken and
       mkBindingPathComponentList(getNextSkippingWhitespace(source), pathComponents, _)
@@ -1038,7 +1038,7 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
     mkRelativeBindingPathWithModel(first, bindingPath, last)
   }
 
-  newtype TBinding =
+  private newtype TBinding =
     MkBindingPath(Token first, BindingPath bindingPath, Token last) {
       exists(
         LeftBracketToken leftBracketToken, RightBracketToken rightBracketToken,

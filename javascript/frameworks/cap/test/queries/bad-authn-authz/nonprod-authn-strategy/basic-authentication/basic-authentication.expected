@@ -1,0 +1,2 @@
+| package.json:22:17:22:23 | {\\n      ...       } | Non-production authentication strategy $@ is used. | package.json:22:17:22:23 | {\\n      ...       } | basic |
+| package.json:23:18:38:9 | {\\n      ...       } | Current authentication strategy contains $@. | package.json:23:18:38:9 | {\\n      ...       } | credentials of mocked users |

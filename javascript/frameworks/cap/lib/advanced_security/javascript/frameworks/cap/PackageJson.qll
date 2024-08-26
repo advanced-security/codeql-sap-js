@@ -51,3 +51,62 @@ class RequiredService extends JsonObject {
    */
   predicate isDatabase() { this.getPropStringValue("kind") = ["sql", "sqlite"] }
 }
+
+/**
+ * The authentication strategy that the application is opting to use. It can either be a simple string
+ * denoting a strategy preset or an object equipped with mocked users and their credentials. e.g.
+ * ``` json
+ * "cds": {
+ *   "requires": {
+ *     "auth": {
+ *       "kind": "basic",
+ *       "users": {
+ *          "JohnDoe": {
+ *            "password": "JohnDoe'sPassword",
+ *            "roles": [ "JohnDoe'sRole" ]
+ *          }
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ */
+class AuthenticationStrategy extends JsonValue {
+  AuthenticationStrategy() {
+    exists(RequiresSection requires | this = requires.getPropValue("auth"))
+  }
+
+  /**
+   * Gets the JSON string that holds the name of the authentication strategy.
+   */
+  JsonString getJsonString() {
+    this instanceof JsonObject and result = this.getPropValue("kind")
+    or
+    result = this
+  }
+
+  /**
+   * Gets the name of the authentication strategy.
+   */
+  string getName() { result = this.getJsonString().getStringValue() }
+
+  /**
+   * Gets mocked users declared in this section, if any.
+   */
+  JsonObject getHardcodedMockedUsers() { result = this.(JsonObject).getPropValue("users") }
+
+  /**
+   * Holds if this authentication strategy is a preset for production.
+   */
+  predicate isProdStrategy() { this.getName() = ["jwt", "xsuaa", "ias"] }
+
+  /**
+   * Holds if this authentication strategy is a preset for development.
+   */
+  predicate isDevStrategy() { this.getName() = ["basic", "mocked", "dummy"] }
+
+  /**
+   * Holds if this authentication strategy uses a custom authentication middleware.
+   */
+  predicate isCustomStrategy() { exists(this.(JsonObject).getPropStringValue("impl")) }
+}

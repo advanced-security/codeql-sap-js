@@ -1,0 +1,15 @@
+nodes
+| webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/controller/app.controller.js:15:17:15:52 | input |
+| webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:17:34:17:38 | input |
+| webapp/view/app.view.xml:6:5:8:28 | value={/input} |
+edges
+| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:6:5:8:28 | value={/input} |
+| webapp/controller/app.controller.js:15:17:15:52 | input | webapp/controller/app.controller.js:17:34:17:38 | input |
+| webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') | webapp/controller/app.controller.js:15:17:15:52 | input |
+| webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
+#select
+| webapp/view/app.view.xml:5:9:24:9 | Notifications | webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:17:34:17:38 | input | Accessed log entries depend on $@. | webapp/view/app.view.xml:6:5:8:28 | value={/input} | user-provided data |

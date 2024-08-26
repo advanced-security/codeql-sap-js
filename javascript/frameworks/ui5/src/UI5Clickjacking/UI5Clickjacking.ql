@@ -22,14 +22,16 @@ class FirstLineOfDocumentElementWebApp extends HTML::DocumentElement, FirstLineO
   }
 }
 
-newtype TAlertLocation =
+private newtype TAlertLocation =
   TFrameOptions(FrameOptions frameOptions) or
   TFirstLineOfDocumentElementWebApp(FirstLineOfDocumentElementWebApp htmlStartTag)
 
 class AlertLocation extends TAlertLocation {
   FrameOptions asFrameOptions() { this = TFrameOptions(result) }
 
-  FirstLineOfDocumentElementWebApp asFirstLineOfDocumentElementWebApp() { this = TFirstLineOfDocumentElementWebApp(result) }
+  FirstLineOfDocumentElementWebApp asFirstLineOfDocumentElementWebApp() {
+    this = TFirstLineOfDocumentElementWebApp(result)
+  }
 
   string toString() {
     result = this.asFrameOptions().toString() or
@@ -47,7 +49,7 @@ from AlertLocation alertLocation, string message
 where
   exists(WebApp app |
     exists(FrameOptions frameOptions | app.getFrameOptions() = frameOptions |
-    frameOptions.allowsAllOriginEmbedding() and
+      frameOptions.allowsAllOriginEmbedding() and
       alertLocation.asFrameOptions() = frameOptions and
       message =
         "Possible clickjacking vulnerability due to " + frameOptions.toString() +

@@ -1,0 +1,23 @@
+{
+  "name": "@advanced-security/entities-exposed-with-js-authz",
+  "version": "1.0.0",
+  "dependencies": {
+    "@sap/cds": "^7",
+    "express": "^4.17.1",
+    "@cap-js/sqlite": "*"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "cds": {
+    "requires": {
+      "service-1": {
+        "impl": "srv/service1.js"
+      },
+      "service-2": {
+        "impl": "srv/service2.js"
+      }
+    }
+  }
+}

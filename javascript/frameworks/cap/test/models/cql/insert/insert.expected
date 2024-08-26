@@ -12,7 +12,9 @@
 | insert.js:29:14:32:2 | insert.js:29 | insert.js:29:14:32:2 | INSERT. ... " },\\n]) |
 | insert.js:33:14:33:33 | insert.js:33 | insert.js:33:14:33:33 | INSERT.into("Table") |
 | insert.js:33:14:36:2 | insert.js:33 | insert.js:33:14:36:2 | INSERT. ... " },\\n]) |
+| insert.js:37:14:37:31 | insert.js:37 | insert.js:37:14:37:31 | INSERT.into`Table` |
 | insert.js:37:14:40:2 | insert.js:37 | insert.js:37:14:40:2 | INSERT. ... " },\\n]) |
+| insert.js:41:14:41:31 | insert.js:41 | insert.js:41:14:41:31 | INSERT.into`Table` |
 | insert.js:41:14:44:2 | insert.js:41 | insert.js:41:14:44:2 | INSERT. ... " },\\n]) |
 | insert.js:47:14:47:31 | insert.js:47 | insert.js:47:14:47:31 | INSERT.into(Table) |
 | insert.js:47:14:48:26 | insert.js:47 | insert.js:47:14:48:26 | INSERT. ... "col2") |
@@ -20,6 +22,7 @@
 | insert.js:50:14:50:33 | insert.js:50 | insert.js:50:14:50:33 | INSERT.into("Table") |
 | insert.js:50:14:51:26 | insert.js:50 | insert.js:50:14:51:26 | INSERT. ... "col2") |
 | insert.js:50:14:52:27 | insert.js:50 | insert.js:50:14:52:27 | INSERT. ... val12") |
+| insert.js:53:14:53:31 | insert.js:53 | insert.js:53:14:53:31 | INSERT.into`Table` |
 | insert.js:53:14:54:26 | insert.js:53 | insert.js:53:14:54:26 | INSERT. ... "col2") |
 | insert.js:53:14:55:27 | insert.js:53 | insert.js:53:14:55:27 | INSERT. ... val12") |
 | insert.js:58:14:58:31 | insert.js:58 | insert.js:58:14:58:31 | INSERT.into(Table) |
@@ -28,23 +31,45 @@
 | insert.js:64:14:64:33 | insert.js:64 | insert.js:64:14:64:33 | INSERT.into("Table") |
 | insert.js:64:14:65:26 | insert.js:64 | insert.js:64:14:65:26 | INSERT. ... "col2") |
 | insert.js:64:14:69:4 | insert.js:64 | insert.js:64:14:69:4 | INSERT. ... ],\\n  ]) |
+| insert.js:70:14:70:31 | insert.js:70 | insert.js:70:14:70:31 | INSERT.into`Table` |
 | insert.js:70:14:70:55 | insert.js:70 | insert.js:70:14:70:55 | INSERT. ... "col2") |
 | insert.js:70:14:73:2 | insert.js:70 | insert.js:70:14:73:2 | INSERT. ... 2"],\\n]) |
 | insert.js:76:14:76:31 | insert.js:76 | insert.js:76:14:76:31 | INSERT.into(Table) |
 | insert.js:76:14:76:74 | insert.js:76 | insert.js:76:14:76:74 | INSERT. ...  col2`) |
+| insert.js:76:36:76:53 | insert.js:76 | insert.js:76:36:76:53 | SELECT.from`Table` |
+| insert.js:76:36:76:73 | insert.js:76 | insert.js:76:36:76:73 | SELECT. ... , col2` |
 | insert.js:77:14:77:31 | insert.js:77 | insert.js:77:14:77:31 | INSERT.into(Table) |
 | insert.js:77:14:77:73 | insert.js:77 | insert.js:77:14:77:73 | INSERT. ... {"*"}`) |
+| insert.js:77:36:77:53 | insert.js:77 | insert.js:77:36:77:53 | SELECT.from`Table` |
+| insert.js:77:36:77:72 | insert.js:77 | insert.js:77:36:77:72 | SELECT. ... ${"*"}` |
 | insert.js:78:14:78:31 | insert.js:78 | insert.js:78:14:78:31 | INSERT.into(Table) |
 | insert.js:78:14:80:1 | insert.js:78 | insert.js:78:14:80:1 | INSERT. ... "*"}`\\n) |
+| insert.js:79:3:79:20 | insert.js:79 | insert.js:79:3:79:20 | SELECT.from`Table` |
 | insert.js:79:3:79:44 | insert.js:79 | insert.js:79:3:79:44 | SELECT. ... "col2") |
+| insert.js:79:3:79:64 | insert.js:79 | insert.js:79:3:79:64 | SELECT. ... ${"*"}` |
 | insert.js:82:14:82:33 | insert.js:82 | insert.js:82:14:82:33 | INSERT.into("Table") |
 | insert.js:82:14:82:76 | insert.js:82 | insert.js:82:14:82:76 | INSERT. ...  col2`) |
+| insert.js:82:38:82:55 | insert.js:82 | insert.js:82:38:82:55 | SELECT.from`Table` |
+| insert.js:82:38:82:75 | insert.js:82 | insert.js:82:38:82:75 | SELECT. ... , col2` |
 | insert.js:83:14:83:33 | insert.js:83 | insert.js:83:14:83:33 | INSERT.into("Table") |
 | insert.js:83:14:83:75 | insert.js:83 | insert.js:83:14:83:75 | INSERT. ... {"*"}`) |
+| insert.js:83:38:83:55 | insert.js:83 | insert.js:83:38:83:55 | SELECT.from`Table` |
+| insert.js:83:38:83:74 | insert.js:83 | insert.js:83:38:83:74 | SELECT. ... ${"*"}` |
 | insert.js:84:14:84:33 | insert.js:84 | insert.js:84:14:84:33 | INSERT.into("Table") |
 | insert.js:84:14:86:1 | insert.js:84 | insert.js:84:14:86:1 | INSERT. ... "*"}`\\n) |
+| insert.js:85:3:85:20 | insert.js:85 | insert.js:85:3:85:20 | SELECT.from`Table` |
 | insert.js:85:3:85:44 | insert.js:85 | insert.js:85:3:85:44 | SELECT. ... "col2") |
+| insert.js:85:3:85:64 | insert.js:85 | insert.js:85:3:85:64 | SELECT. ... ${"*"}` |
+| insert.js:88:14:88:31 | insert.js:88 | insert.js:88:14:88:31 | INSERT.into`Table` |
 | insert.js:88:14:88:74 | insert.js:88 | insert.js:88:14:88:74 | INSERT. ...  col2`) |
+| insert.js:88:36:88:53 | insert.js:88 | insert.js:88:36:88:53 | SELECT.from`Table` |
+| insert.js:88:36:88:73 | insert.js:88 | insert.js:88:36:88:73 | SELECT. ... , col2` |
+| insert.js:89:14:89:31 | insert.js:89 | insert.js:89:14:89:31 | INSERT.into`Table` |
 | insert.js:89:14:89:73 | insert.js:89 | insert.js:89:14:89:73 | INSERT. ... {"*"}`) |
+| insert.js:89:36:89:53 | insert.js:89 | insert.js:89:36:89:53 | SELECT.from`Table` |
+| insert.js:89:36:89:72 | insert.js:89 | insert.js:89:36:89:72 | SELECT. ... ${"*"}` |
+| insert.js:90:14:90:31 | insert.js:90 | insert.js:90:14:90:31 | INSERT.into`Table` |
 | insert.js:90:14:92:1 | insert.js:90 | insert.js:90:14:92:1 | INSERT. ... "*"}`\\n) |
+| insert.js:91:3:91:20 | insert.js:91 | insert.js:91:3:91:20 | SELECT.from`Table` |
 | insert.js:91:3:91:44 | insert.js:91 | insert.js:91:3:91:44 | SELECT. ... "col2") |
+| insert.js:91:3:91:64 | insert.js:91 | insert.js:91:3:91:64 | SELECT. ... ${"*"}` |

@@ -1,10 +1,10 @@
 /**
- * @name UI5 Log injection
+ * @name UI5 client-side Log injection
  * @description Building log entries from user-controlled sources is vulnerable to
  *              insertion of forged log entries by a malicious user.
  * @kind path-problem
- * @problem.severity error
- * @security-severity 7.8
+ * @problem.severity recommendation
+ * @security-severity 3.5
  * @precision medium
  * @id js/ui5-log-injection
  * @tags security

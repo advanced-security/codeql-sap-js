@@ -61,7 +61,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
 }
 
 module UI5PathGraph {
-  newtype TNode =
+  private newtype TNode =
     TUI5BindingPathNode(UI5BindingPath path) or
     TDataFlowNode(DataFlow::Node node)
 
@@ -74,6 +74,12 @@ module UI5PathGraph {
       result = this.asDataFlowNode().toString()
       or
       result = this.asUI5BindingPathNode().toString()
+    }
+
+    File getFile() {
+      result = this.asDataFlowNode().getFile()
+      or
+      result = this.asUI5BindingPathNode().getView()
     }
 
     predicate hasLocationInfo(

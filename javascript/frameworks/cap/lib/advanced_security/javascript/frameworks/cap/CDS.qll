@@ -16,33 +16,77 @@ class CdsFacade extends API::Node {
 }
 
 /**
+ * A call to `entities` on a CDS facade.
+ */
+class CdsEntitiesCall extends API::Node {
+  CdsEntitiesCall() { exists(CdsFacade cds | this = cds.getMember("entities")) }
+}
+
+/**
+ * An entity instance obtained by the entity's namespace,
+ * via `cds.entities`
+ * ```javascript
+ * // Obtained through `cds.entities`
+ * const { Service1 } = cds.entities("sample.application.namespace");
+ * ```
+ */
+class EntityEntry extends DataFlow::CallNode {
+  EntityEntry() { exists(CdsEntitiesCall c | c.getACall() = this) }
+
+  /**
+   * Gets the namespace that this entity belongs to.
+   */
+  string getNamespace() {
+    result = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+  }
+}
+
+/**
  * A call to `serve` on a CDS facade.
  */
-class CdsServeCall extends API::Node {
-  CdsServeCall() { exists(CdsFacade cds | this = cds.getMember("serve")) }
+class CdsServeCall extends DataFlow::CallNode {
+  Expr serviceRepresentation;
+
+  CdsServeCall() {
+    exists(CdsFacade cds | this = cds.getMember("serve").getACall()) and
+    serviceRepresentation = this.getArgument(0).asExpr()
+  }
+
+  Expr getServiceRepresentation() { result = serviceRepresentation }
+
+  UserDefinedApplicationService getServiceDefinition() {
+    /* 1. The argument to cds.serve is "all" */
+    this.getServiceRepresentation().getStringValue() = "all" and
+    result = any(UserDefinedApplicationService service)
+    or
+    /* 2. The argument to cds.serve is a name by which the service is required */
+    exists(RequiredService requiredService |
+      requiredService.getName() = this.getServiceRepresentation().getStringValue() and
+      result.getFile() = requiredService.getImplementationFile()
+    )
+    or
+    /* 3. The argument to cds.serve is a service instance */
+    exists(ServiceInstance serviceInstance |
+      this.getServiceRepresentation() = serviceInstance.asExpr() and
+      result = serviceInstance.getDefinition()
+    )
+  }
+
+  CdsServeWithCall getWithCall() { result = this.getAMemberCall("with") }
 }
 
 /**
  * A `cds.connect.to(serveName)` call to connect to a local or remote service.
  */
-class CdsConnectToCall extends API::Node {
-  CdsConnectToCall() { exists(CdsFacade cds | this = cds.getMember("connect").getMember("to")) }
-
-  /**
-   * Gets a variable definition using either `cds.connect.to(...)` or awaiting that at its RHS.
-   */
-  VarDef getVarDefUsingCdsConnect() {
-    result.getSource() = this.getACall().asExpr()
-    or
-    result.getSource().(AwaitExpr).getOperand() = this.getACall().asExpr()
+class CdsConnectToCall extends DataFlow::CallNode {
+  CdsConnectToCall() {
+    exists(CdsFacade cds | this = cds.getMember("connect").getMember("to").getACall())
   }
 
   /**
    * Gets the service name that this call connects to.
    */
-  string getServiceName() {
-    result = this.getACall().getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
-  }
+  string getServiceName() { result = this.getArgument(0).getALocalSource().getStringValue() }
 }
 
 /**
@@ -64,7 +108,7 @@ abstract class ServiceInstance extends DataFlow::Node {
  * ```
  */
 class ServiceInstanceFromCdsServe extends ServiceInstance {
-  ServiceInstanceFromCdsServe() { exists(CdsFacade cds | this = cds.getMember("serve").getACall()) }
+  ServiceInstanceFromCdsServe() { exists(CdsServeCall cdsServe | this = cdsServe) }
 
   override UserDefinedApplicationService getDefinition() {
     none() // TODO: how should we deal with serve("all")?
@@ -75,7 +119,24 @@ class ServiceInstanceFromCdsServe extends ServiceInstance {
   }
 }
 
-/* TODO: change `ServiceInstanceFromCdsConnectTo` to an VarAccess to the VarDef whose getSource() is CdsConnectToCall or an AwaitExpr wrapping it */
+private SourceNode serviceInstanceFromCdsConnectTo(TypeTracker t, string serviceName) {
+  t.start() and
+  exists(CdsConnectToCall cdsConnectToCall |
+    (
+      result = cdsConnectToCall
+      or
+      result.asExpr().(AwaitExpr).getOperand() = cdsConnectToCall.asExpr()
+    ) and
+    serviceName = cdsConnectToCall.getArgument(0).getStringValue()
+  )
+  or
+  exists(TypeTracker t2 | result = serviceInstanceFromCdsConnectTo(t2, serviceName).track(t2, t))
+}
+
+private SourceNode serviceInstanceFromCdsConnectTo(string serviceName) {
+  result = serviceInstanceFromCdsConnectTo(TypeTracker::end(), serviceName)
+}
+
 /**
  * A service instance obtained by the service's name, via connecting
  * to a service already being served and awaiting its promise. e.g.
@@ -85,18 +146,10 @@ class ServiceInstanceFromCdsServe extends ServiceInstance {
  * const Service1 = cds.connect.to("service-2");
  * ```
  */
-class ServiceInstanceFromCdsConnectTo extends ServiceInstance {
+class ServiceInstanceFromCdsConnectTo extends ServiceInstance, SourceNode {
   string serviceName;
 
-  ServiceInstanceFromCdsConnectTo() {
-    exists(CdsConnectToCall cdsConnectTo |
-      (
-        this = cdsConnectTo.getACall() or
-        this = cdsConnectTo.getVarDefUsingCdsConnect().getAVariable().getAnAccess().flow()
-      ) and
-      serviceName = cdsConnectTo.getServiceName()
-    )
-  }
+  ServiceInstanceFromCdsConnectTo() { this = serviceInstanceFromCdsConnectTo(serviceName) }
 
   override UserDefinedApplicationService getDefinition() {
     exists(RequiredService serviceDecl, string abspath |
@@ -111,7 +164,11 @@ class ServiceInstanceFromCdsConnectTo extends ServiceInstance {
   /**
    * Gets a method call on this service instance.
    */
-  override MethodCallNode getASrvMethodCall() { result.getReceiver() = this }
+  override MethodCallNode getASrvMethodCall() { result = this.getAMemberCall(_) }
+}
+
+class DBServiceInstanceFromCdsConnectTo extends ServiceInstanceFromCdsConnectTo {
+  DBServiceInstanceFromCdsConnectTo() { serviceName = "db" }
 }
 
 /**
@@ -142,7 +199,7 @@ class ServiceInstanceFromConstructor extends ServiceInstance {
 }
 
 /**
- * A service instance that represents an w
+ * A read to `this` variable which represents the service whose definition encloses this variable access.
  */
 class ServiceInstanceFromThisNode extends ServiceInstance {
   ServiceInstanceFromThisNode() {
@@ -159,32 +216,74 @@ class ServiceInstanceFromThisNode extends ServiceInstance {
   override MethodCallNode getASrvMethodCall() { result.getReceiver() = this }
 }
 
+class CdsServeWithCall extends MethodCallNode {
+  CdsServeCall cdsServe;
+
+  CdsServeWithCall() { this = cdsServe.getAMemberCall("with") }
+
+  Function getDecorator() { result = this.getArgument(0).(FunctionNode).getFunction() }
+
+  HandlerRegistration getAHandlerRegistration() {
+    result.getEnclosingFunction() = this.getDecorator()
+  }
+}
+
 /**
  * The parameter node representing the service being served, given to a
  * callback argument to the `cds.serve(...).with` call. e.g.
  * ```js
- * cds.serve('./srv/some-service').with ((srv) => {
- *   srv.on ('READ','SomeEntity', (req) => req.reply([...]))
+ * cds.serve('./srv/some-service1').with ((srv) => {  // Parameter `srv` is captured.
+ *   srv.on ('READ','SomeEntity1', (req) => req.reply([...]))
+ * })
+ *
+ * cds.serve('./srv/some-service2').with (function() {  // Parameter `this` is captured.
+ *   this.on ('READ','SomeEntity2', (req) => req.reply([...]))
  * })
  * ```
  * This is used to extend the given service's functionality.
  */
-class ServiceInstanceFromServeWithParameter extends ParameterNode, ServiceInstance {
+class ServiceInstanceFromServeWithParameter extends ServiceInstance {
+  CdsServeCall cdsServe;
+
   ServiceInstanceFromServeWithParameter() {
-    exists(MethodCallNode withCall, CdsServeCall cdsServe |
-      withCall.getMethodName() = "with" and
-      withCall.getReceiver() = cdsServe.getACall() and
-      this = withCall.getArgument(0).(FunctionNode).getParameter(0)
+    exists(CdsServeWithCall cdsServeWith |
+      /*
+       * cds.serve('./srv/some-service1').with ((srv) => {  // Parameter `srv` is captured.
+       *   srv.on ('READ','SomeEntity1', (req) => req.reply([...]))
+       * })
+       */
+
+      this.(ThisNode).getBinder().asExpr() = cdsServeWith.getDecorator().(FunctionExpr)
+      or
+      /*
+       * cds.serve('./srv/some-service2').with (function() {  // Parameter `this` is captured.
+       *   this.on ('READ','SomeEntity2', (req) => req.reply([...]))
+       * })
+       */
+
+      this = cdsServeWith.getDecorator().(ArrowFunctionExpr).getParameter(0).flow()
     )
   }
 
   override UserDefinedApplicationService getDefinition() {
-    none() // TODO
+    /* 1. The argument to cds.serve is "all" */
+    cdsServe.getServiceRepresentation().getStringValue() = "all" and
+    result = any(UserDefinedApplicationService service)
+    or
+    /* 2. The argument to cds.serve is a name by which the service is required */
+    exists(RequiredService requiredService |
+      requiredService.getName() = cdsServe.getServiceRepresentation().getStringValue() and
+      result.getFile() = requiredService.getImplementationFile()
+    )
+    or
+    /* 3. The argument to cds.serve is a service instance */
+    exists(ServiceInstance serviceInstance |
+      cdsServe.getServiceRepresentation() = serviceInstance.asExpr() and
+      result = serviceInstance.getDefinition()
+    )
   }
 
-  override MethodCallNode getASrvMethodCall() {
-    none() // TODO
-  }
+  override MethodCallNode getASrvMethodCall() { result.getReceiver().getALocalSource() = this }
 }
 
 /**
@@ -193,6 +292,8 @@ class ServiceInstanceFromServeWithParameter extends ParameterNode, ServiceInstan
  * to do something with the incoming request or event as its parameter.
  */
 class HandlerRegistration extends MethodCallNode {
+  string methodName;
+
   HandlerRegistration() {
     exists(ServiceInstance srv |
       (
@@ -201,9 +302,8 @@ class HandlerRegistration extends MethodCallNode {
         srv = this.getReceiver()
       ) and
       (
-        this.getMethodName() = "before" or
-        this.getMethodName() = "on" or
-        this.getMethodName() = "after"
+        methodName = this.getMethodName() and
+        methodName = ["before", "on", "after"]
       )
     )
   }
@@ -212,26 +312,35 @@ class HandlerRegistration extends MethodCallNode {
    * Get the name of the event that the handler is registered for.
    */
   string getAnEventName() {
-    exists(StringLiteral stringLiteral |
-      stringLiteral = this.getArgument(0).asExpr() and
-      result = stringLiteral.getValue()
-    )
+    result = this.getArgument(0).getStringValue()
     or
-    exists(ArrayLiteralNode arrayLiteral |
-      arrayLiteral = this.getArgument(0) and
-      result = arrayLiteral.getAnElement().asExpr().(StringLiteral).getValue()
-    )
+    result = this.getArgument(0).(ArrayLiteralNode).getAnElement().getStringValue()
   }
 
   /**
    * Get the name of the entity that the handler is registered for, if any.
    */
-  string getEntityName() { result = this.getArgument(1).asExpr().(StringLiteral).getValue() }
+  string getEntityName() { result = this.getArgument(1).getStringValue() }
 
   /**
    * Gets the handler that is being registrated to an event by this registering function call.
    */
   Handler getHandler() { result = this.getAnArgument() }
+
+  /**
+   * Holds if this is registering a handler to be run before some event.
+   */
+  predicate isBefore() { methodName = "before" }
+
+  /**
+   * Holds if this is registering a handler to be run on some event.
+   */
+  predicate isOn() { methodName = "on" }
+
+  /**
+   * Holds if this is registering a handler to be run after some event.
+   */
+  predicate isAfter() { methodName = "after" }
 }
 
 /**
@@ -242,14 +351,9 @@ class HandlerRegistration extends MethodCallNode {
  */
 class Handler extends FunctionNode {
   UserDefinedApplicationService srv;
-  string eventName;
+  HandlerRegistration handlerRegistration;
 
-  Handler() {
-    exists(HandlerRegistration handlerRegistration |
-      this = handlerRegistration.getAnArgument() and
-      eventName = handlerRegistration.getArgument(0).asExpr().(StringLiteral).getValue()
-    )
-  }
+  Handler() { this = handlerRegistration.getAnArgument() }
 
   /**
    * Gets the service registering this handler.
@@ -259,7 +363,23 @@ class Handler extends FunctionNode {
   /**
    * Gets a name of one of the event this handler is registered for.
    */
-  string getAnEventName() { result = eventName }
+  string getAnEventName() { result = handlerRegistration.getAnEventName() }
+
+  /**
+   * Gets a name of the entity this handler is registered for.
+   */
+  string getEntityName() { result = handlerRegistration.getEntityName() }
+
+  /**
+   * Gets the request that this handler is registered for, as represented as its first parameter.
+   */
+  CdsRequest getRequest() { result = this.getParameter(0) }
+}
+
+class CdsRequest extends ParameterNode {
+  CdsRequest() { exists(Handler handler | this = handler.getParameter(0)) }
+
+  MethodCallNode getARejectCall() { result = this.getAMemberCall("reject") }
 }
 
 /**
@@ -354,6 +474,11 @@ abstract class UserDefinedApplicationService extends UserDefinedService {
   }
 
   /**
+   * Gets the name of this service.
+   */
+  string getServiceName() { result = this.getCdsDeclaration().getName() }
+
+  /**
    * Holds if this service supports access from the outside through any kind of protocol.
    */
   predicate isExposed() { not this.isInternal() }
@@ -432,11 +557,170 @@ class SrvEmit extends InterServiceCommunicationMethodCall {
 
   ServiceInstance getEmitter() { result = emittingService }
 
-  string getEmittedEvent() {
-    result = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
-  }
+  string getEmittedEvent() { result = this.getArgument(0).getALocalSource().getStringValue() }
 }
 
 class SrvSend extends InterServiceCommunicationMethodCall {
   SrvSend() { this.getMethodName() = "send" }
+}
+
+class CdsUser extends API::Node {
+  CdsUser() { exists(CdsFacade c | this = c.getMember("User")) }
+
+  PropRef getDefaultUser() {
+    exists(PropRead cdsUser |
+      cdsUser = this.getInducingNode() and
+      cdsUser.flowsTo(result.getBase()) and
+      result.getPropertyName() = "default"
+    )
+  }
+
+  PropRef getPrivilegedUser() {
+    exists(PropRead cdsUser |
+      cdsUser = this.getInducingNode() and
+      cdsUser.flowsTo(result.getBase()) and
+      result.getPropertyName() = "Privileged"
+    )
+  }
+}
+
+class CustomPrivilegedUser extends ClassNode {
+  CustomPrivilegedUser() {
+    exists(CdsUser cdsUser | this.getASuperClassNode() = cdsUser.asSource()) and
+    exists(FunctionNode init |
+      init = this.getInstanceMethod("is") and
+      forall(Expr expr | expr = init.asExpr().(Function).getAReturnedExpr() |
+        expr.mayHaveBooleanValue(true)
+      )
+    )
+  }
+}
+
+class CdsTransaction extends MethodCallNode {
+  CdsTransaction() {
+    this.getReceiver() instanceof ServiceInstance and
+    this.getMethodName() = "tx"
+  }
+
+  DataFlow::Node getContextObject() {
+    result = this.getAnArgument().getALocalSource() and not result instanceof FunctionNode
+    or
+    exists(Stmt stmt, CdsFacade cds |
+      stmt = this.asExpr().getFirstControlFlowNode().getAPredecessor+() and
+      result = cds.getMember("context").asSink() and
+      stmt.getAChildExpr().(Assignment).getRhs().flow() = result
+    )
+  }
+
+  MethodCallNode getATransactionCall() {
+    exists(ControlFlowNode exprOrStmt |
+      exprOrStmt =
+        this.getAnArgument().(FunctionNode).getALocalSource().asExpr().(Function).getABodyStmt() and
+      exprOrStmt.(Stmt).getAChildExpr().flow().(MethodCallNode).getReceiver().getALocalSource() =
+        this.getAnArgument().(FunctionNode).getParameter(_) and
+      result = exprOrStmt.(Stmt).getAChildExpr().flow()
+      or
+      exprOrStmt =
+        this.getAnArgument().(FunctionNode).getALocalSource().asExpr().(Function).getAChildExpr() and
+      exprOrStmt.(Expr).flow().(MethodCallNode).getReceiver().getALocalSource() =
+        this.getAnArgument().(FunctionNode).getParameter(_) and
+      result = exprOrStmt.(MethodCallExpr).flow()
+      or
+      exprOrStmt = this.asExpr().getFirstControlFlowNode().getASuccessor+() and
+      exprOrStmt.(Expr).flow().(MethodCallNode).getReceiver().getALocalSource() = this and
+      result = exprOrStmt.(MethodCallExpr).flow()
+    )
+  }
+
+  CqlClause getAnExecutedCqlClause() {
+    result.asExpr() = this.getATransactionCall().getAnArgument().asExpr()
+  }
+}
+
+abstract class CdsReference extends DataFlow::Node { }
+
+abstract class EntityReference extends CdsReference { }
+
+class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
+  DataFlow::SourceNode entities;
+  DataFlow::Node receiver;
+  string entityName;
+
+  EntityReferenceFromEntities() {
+    exists(MethodCallNode entitiesCall |
+      entities = entitiesCall and
+      receiver = entitiesCall.getReceiver() and
+      entitiesCall.getMethodName() = "entities" and
+      this = entitiesCall.getAPropertyRead(entityName)
+    )
+    or
+    exists(PropRead entitiesRead |
+      entities = entitiesRead and
+      receiver = entitiesRead.getBase() and
+      entitiesRead.getPropertyName() = "entities" and
+      this = entitiesRead.getAPropertyRead(entityName)
+    )
+  }
+
+  DataFlow::SourceNode getEntities() { result = entities }
+
+  DataFlow::Node getReceiver() { result = receiver }
+
+  string getEntityName() { result = entityName }
+
+  abstract CdlEntity getCqlDefinition();
+}
+
+class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromEntities instanceof PropRead
+{
+  ServiceInstance service;
+
+  EntityReferenceFromUserDefinedServiceEntities() {
+    this.getReceiver() = service.(ServiceInstanceFromThisNode)
+    or
+    this.getEntities() = service.(ServiceInstanceFromCdsConnectTo).getAMemberCall("entities")
+    or
+    this.getEntities() = service.(ServiceInstanceFromCdsConnectTo).getAPropertyRead("entities")
+  }
+
+  override CdlEntity getCqlDefinition() {
+    this.getEntities() instanceof PropRead and
+    result =
+      service
+          .getDefinition()
+          .getCdsDeclaration()
+          .getEntity(service.getDefinition().getServiceName() + "." + entityName)
+    or
+    result =
+      service
+          .getDefinition()
+          .getCdsDeclaration()
+          .getEntity(this.getEntities().(MethodCallNode).getArgument(0).getStringValue() + "." +
+              entityName)
+  }
+}
+
+class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
+  EntityReferenceFromDbOrCdsEntities() {
+    exists(DBServiceInstanceFromCdsConnectTo db |
+      entities = db.getAMemberCall("entities") or entities = db.getAPropertyRead("entities")
+    )
+    or
+    exists(CdsFacade cds |
+      entities = cds.getMember("entities").getACall() or
+      entities = cds.getMember("entities").asSource()
+    )
+  }
+
+  override CdlEntity getCqlDefinition() {
+    /* NOTE: the result may be multiple; but they are all identical so we don't really care. */
+    result.getName() =
+      this.getEntities().(MethodCallNode).getArgument(0).getStringValue() + "." + entityName
+  }
+}
+
+class EntityReferenceFromTemplateOrString extends EntityReference, ExprNode {
+  EntityReferenceFromTemplateOrString() {
+    exists(CqlClause cql | this = cql.getAccessingEntityReference())
+  }
 }
