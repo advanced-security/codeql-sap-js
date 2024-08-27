@@ -13,7 +13,7 @@ module.exports = cds.service.impl(function () {
    */
   this.on("send1", async (msg) => {
     const user1 = new cds.User.Privileged("privileged1");
-    this.tx({ user1 }, (tx) =>
+    this.tx({ user: user1 }, (tx) =>
       tx.run(
         INSERT.into("Service2Entity2").entries({
           url: req._.req.url,
@@ -30,7 +30,7 @@ module.exports = cds.service.impl(function () {
    */
   this.on("send2", async (msg) => {
     const user2 = new CustomPrivilegedUser2("privileged2");
-    this.tx({ user2 }, (tx) =>
+    this.tx({ user: user2 }, (tx) =>
       tx.run(
         INSERT.into("Service2Entity2").entries({
           url: req._.req.url,
