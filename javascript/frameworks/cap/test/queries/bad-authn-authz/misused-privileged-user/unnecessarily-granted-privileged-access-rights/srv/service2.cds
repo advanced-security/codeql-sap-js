@@ -10,7 +10,12 @@ service Service2 @(path: '/service-2') {
   entity Service2Entity2 as projection on db_schema.Entity2 excluding { Attribute4 }
 
   /* API to talk to Service2. */
-  action send5 (
+  action send1 (
     messageToPass: String
   ) returns String;
+
+  /* API to talk to Service2. */
+  action send2 (
+    messageToPass: String
+  ) returns String; 
 }

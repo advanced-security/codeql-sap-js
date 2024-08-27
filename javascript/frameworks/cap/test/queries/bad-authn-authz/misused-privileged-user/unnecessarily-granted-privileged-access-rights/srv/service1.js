@@ -22,7 +22,7 @@ class Service1 extends cds.ApplicationService {
     });
 
     /*
-     * Error: Service1 accessing its own entity that requires
+     * ERROR: Service1 accessing its own entity that requires
      * authorization, with a privileged user.
      */
     this.on("send2", async (req) => {
@@ -54,7 +54,7 @@ class Service1 extends cds.ApplicationService {
     });
 
     /*
-     * Error: Service1 accessing a local service's entity that
+     * ERROR: Service1 accessing a local service's entity that
      * requires authorization, with a privileged user.
      */
     this.on("send4", async (req) => {
