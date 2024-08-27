@@ -571,7 +571,7 @@ class CdsTransaction extends MethodCallNode {
     )
   }
 
-  DataFlow::PropRef getUser() { result = this.getContextObject().getAPropertyReference("user") }
+  DataFlow::Node getUser() { result = this.getContextObject().getAPropertyWrite("user").getRhs() }
 
   MethodCallNode getATransactionCall() {
     exists(ControlFlowNode exprOrStmt |

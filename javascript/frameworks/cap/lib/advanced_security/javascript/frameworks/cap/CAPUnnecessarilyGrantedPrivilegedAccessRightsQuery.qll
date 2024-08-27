@@ -32,13 +32,36 @@ class RemoteEntityReference instanceof EntityReference {
   string toString() { result = super.toString() }
 
   Location getLocation() { result = super.getLocation() }
+}
 
-  predicate hasRestrictedAccessControl() {
-    exists(RestrictCondition restrict |
-      restrict =
-        this.(EntityReference).getCqlDefinition().getRestrictAnnotation().getARestrictCondition()
-    |
-      not restrict.grantsToAnyone(_)
+abstract class PrivilegedUserInstance extends DataFlow::Node { }
+
+class CdsUserPrivilegedProperty extends PrivilegedUserInstance instanceof PropRead {
+  CdsUserPrivilegedProperty() {
+    exists(CdsUser cdsUser, PropRead cdsUserRef |
+      cdsUserRef = cdsUser.getInducingNode() and
+      cdsUserRef.flowsTo(this.getBase()) and
+      this.getPropertyName() = "Privileged"
+    )
+  }
+}
+
+class CustomPrivilegedUser extends ClassNode {
+  CustomPrivilegedUser() {
+    exists(CdsUser cdsUser | this.getASuperClassNode() = cdsUser.asSource()) and
+    exists(FunctionNode init |
+      init = this.getInstanceMethod("is") and
+      forall(Expr expr | expr = init.asExpr().(Function).getAReturnedExpr() |
+        expr.mayHaveBooleanValue(true)
+      )
+    )
+  }
+}
+
+class CustomPrivilegedUserInstance extends PrivilegedUserInstance, NewNode {
+  CustomPrivilegedUserInstance() {
+    exists(CustomPrivilegedUser customPrivilegedUserClass |
+      this = customPrivilegedUserClass.getAnInstantiation()
     )
   }
 }

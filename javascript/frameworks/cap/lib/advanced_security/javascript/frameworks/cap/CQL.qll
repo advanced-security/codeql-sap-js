@@ -271,7 +271,7 @@ class CqlClause extends TCqlClause {
   abstract CqlClause getEntityAccessingClause();
 
   /**
-   * Gets the reference to the entity that this SELECT clause is accessing.
+   * Gets the reference to the entity that this clause is accessing.
    */
   ExprNode getAccessingEntityReference() {
     result = this.getEntityAccessingClause().getArgument().flow()
