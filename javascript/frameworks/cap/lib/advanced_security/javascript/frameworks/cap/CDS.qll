@@ -1,5 +1,6 @@
 import javascript
 import semmle.javascript.dataflow.DataFlow
+import advanced_security.javascript.frameworks.cap.TypeTrackers
 import advanced_security.javascript.frameworks.cap.PackageJson
 import advanced_security.javascript.frameworks.cap.CDL
 import advanced_security.javascript.frameworks.cap.CQL
@@ -95,7 +96,7 @@ class CdsConnectToCall extends DataFlow::CallNode {
 /**
  * A dataflow node that represents a service. Note that its definition is a `UserDefinedApplicationService`, not a `ServiceInstance`.
  */
-abstract class ServiceInstance extends DataFlow::Node {
+abstract class ServiceInstance extends SourceNode {
   abstract UserDefinedApplicationService getDefinition();
 
   abstract MethodCallNode getASrvMethodCall();
@@ -111,7 +112,7 @@ abstract class ServiceInstance extends DataFlow::Node {
  * ```
  */
 class ServiceInstanceFromCdsServe extends ServiceInstance {
-  ServiceInstanceFromCdsServe() { exists(CdsServeCall cdsServe | this = cdsServe) }
+  ServiceInstanceFromCdsServe() { this = cdsServeCall() }
 
   override UserDefinedApplicationService getDefinition() {
     none() // TODO: how should we deal with serve("all")?
@@ -120,24 +121,6 @@ class ServiceInstanceFromCdsServe extends ServiceInstance {
   override MethodCallNode getASrvMethodCall() {
     none() // TODO
   }
-}
-
-private SourceNode serviceInstanceFromCdsConnectTo(TypeTracker t, string serviceName) {
-  t.start() and
-  exists(CdsConnectToCall cdsConnectToCall |
-    (
-      result = cdsConnectToCall
-      or
-      result.asExpr().(AwaitExpr).getOperand() = cdsConnectToCall.asExpr()
-    ) and
-    serviceName = cdsConnectToCall.getArgument(0).getStringValue()
-  )
-  or
-  exists(TypeTracker t2 | result = serviceInstanceFromCdsConnectTo(t2, serviceName).track(t2, t))
-}
-
-private SourceNode serviceInstanceFromCdsConnectTo(string serviceName) {
-  result = serviceInstanceFromCdsConnectTo(TypeTracker::end(), serviceName)
 }
 
 /**
@@ -186,9 +169,7 @@ class DBServiceInstanceFromCdsConnectTo extends ServiceInstanceFromCdsConnectTo 
  * ```
  */
 class ServiceInstanceFromConstructor extends ServiceInstance {
-  ServiceInstanceFromConstructor() {
-    exists(CdsApplicationServiceClass cds | this = cds.getAnInstantiation())
-  }
+  ServiceInstanceFromConstructor() { this = cdsApplicationServiceInstantiation() }
 
   override UserDefinedApplicationService getDefinition() { none() }
 
@@ -430,7 +411,7 @@ private class CdsServiceClass extends API::Node {
   CdsServiceClass() { exists(CdsFacade c | this = c.getMember("Service")) }
 }
 
-private class CdsApplicationServiceClass extends API::Node {
+class CdsApplicationServiceClass extends API::Node {
   CdsApplicationServiceClass() { exists(CdsFacade c | this = c.getMember("ApplicationService")) }
 }
 
@@ -601,25 +582,16 @@ class CdsUser extends API::Node {
   }
 }
 
-class CustomPrivilegedUser extends ClassNode {
-  CustomPrivilegedUser() {
-    exists(CdsUser cdsUser | this.getASuperClassNode() = cdsUser.asSource()) and
-    exists(FunctionNode init |
-      init = this.getInstanceMethod("is") and
-      forall(Expr expr | expr = init.asExpr().(Function).getAReturnedExpr() |
-        expr.mayHaveBooleanValue(true)
-      )
-    )
-  }
-}
-
 class CdsTransaction extends MethodCallNode {
   CdsTransaction() {
-    this.getReceiver() instanceof ServiceInstance and
+    (
+      this.getReceiver() instanceof ServiceInstance or
+      this.getReceiver().getALocalSource() instanceof ServiceInstance // How can we generalize it to global variable? --> type trackers?
+    ) and
     this.getMethodName() = "tx"
   }
 
-  DataFlow::Node getContextObject() {
+  SourceNode getContextObject() {
     result = this.getAnArgument().getALocalSource() and not result instanceof FunctionNode
     or
     exists(Stmt stmt, CdsFacade cds |
@@ -628,6 +600,8 @@ class CdsTransaction extends MethodCallNode {
       stmt.getAChildExpr().(Assignment).getRhs().flow() = result
     )
   }
+
+  DataFlow::PropRef getUser() { result = this.getContextObject().getAPropertyReference("user") }
 
   MethodCallNode getATransactionCall() {
     exists(ControlFlowNode exprOrStmt |
