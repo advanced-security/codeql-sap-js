@@ -34,14 +34,13 @@ class RemoteEntityReference instanceof EntityReference {
   Location getLocation() { result = super.getLocation() }
 }
 
-abstract class PrivilegedUserInstance extends DataFlow::Node { }
+abstract class PrivilegedUserInstance extends DataFlow::NewNode { }
 
-class CdsUserPrivilegedProperty extends PrivilegedUserInstance instanceof PropRead {
+class CdsUserPrivilegedProperty extends PrivilegedUserInstance {
   CdsUserPrivilegedProperty() {
-    exists(CdsUser cdsUser, PropRead cdsUserRef |
-      cdsUserRef = cdsUser.getInducingNode() and
-      cdsUserRef.flowsTo(this.getBase()) and
-      this.getPropertyName() = "Privileged"
+    exists(CdsUser cdsUser |
+      this =
+        cdsUser.getInducingNode().(PropRead).getAPropertyRead("Privileged").getAnInstantiation()
     )
   }
 }

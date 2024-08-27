@@ -277,10 +277,24 @@ class CqlClause extends TCqlClause {
     result = this.getEntityAccessingClause().getArgument().flow()
   }
 
+  /**
+   * Gets the reference of the service that runs this CQL clause.
+   */
+  ServiceInstance getRunner() {
+    exists(CdsTransaction tx | this = tx.getAnExecutedCqlClause() and result = tx.getRunner())
+    or
+    exists(SrvRun srvRun | this = srvRun.getCql() and result = srvRun.getRecipient())
+  }
+
   CdlEntity getAccessingEntityDefinition() {
     /* 1. String literals or template strings */
     result.getName() =
       this.getAccessingEntityReference().(EntityReferenceFromCqlClause).getStringValue()
+    or
+    result.getUnqualifiedName() =
+      this.getAccessingEntityReference().(EntityReferenceFromCqlClause).getStringValue() and
+    /* The entity is accessed by its own service. */
+    result = this.getRunner().getDefinition().getCdsDeclaration().getAnEntity()
     or
     /* 2. Variable whose value is a reference to an entity */
     exists(ExprNode entityReference | entityReference = this.getAccessingEntityReference() |

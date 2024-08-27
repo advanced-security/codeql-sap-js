@@ -559,7 +559,11 @@ class CdsUser extends API::Node {
 }
 
 class CdsTransaction extends MethodCallNode {
-  CdsTransaction() { exists(ServiceInstance srv | this = srv.getAMemberCall("tx")) }
+  ServiceInstance srv;
+
+  CdsTransaction() { this = srv.getAMemberCall("tx") }
+
+  ServiceInstance getRunner() { result = srv }
 
   SourceNode getContextObject() {
     result = this.getAnArgument().getALocalSource() and not result instanceof FunctionNode
