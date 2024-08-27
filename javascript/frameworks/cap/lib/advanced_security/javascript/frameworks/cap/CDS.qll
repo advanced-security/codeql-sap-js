@@ -99,7 +99,15 @@ class CdsConnectToCall extends DataFlow::CallNode {
 abstract class ServiceInstance extends SourceNode {
   abstract UserDefinedApplicationService getDefinition();
 
-  abstract MethodCallNode getASrvMethodCall();
+  /**
+   * Gets a method call on this service instance.
+   */
+  MethodCallNode getASrvMethodCall() { result = this.getAMemberCall(_) }
+
+  /**
+   * Gets a method call on this service instance that has the given name.
+   */
+  MethodCallNode getASrvMethodCall(string methodName) { result = this.getAMemberCall(methodName) }
 }
 
 /**
@@ -116,10 +124,6 @@ class ServiceInstanceFromCdsServe extends ServiceInstance {
 
   override UserDefinedApplicationService getDefinition() {
     none() // TODO: how should we deal with serve("all")?
-  }
-
-  override MethodCallNode getASrvMethodCall() {
-    none() // TODO
   }
 }
 
@@ -148,11 +152,6 @@ class ServiceInstanceFromCdsConnectTo extends ServiceInstance, SourceNode {
   }
 
   string getServiceName() { result = serviceName }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() { result = this.getAMemberCall(_) }
 }
 
 class DBServiceInstanceFromCdsConnectTo extends ServiceInstanceFromCdsConnectTo {
@@ -172,34 +171,19 @@ class ServiceInstanceFromConstructor extends ServiceInstance {
   ServiceInstanceFromConstructor() { this = cdsApplicationServiceInstantiation() }
 
   override UserDefinedApplicationService getDefinition() { none() }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() {
-    exists(VarDef definition |
-      definition.getSource().flow() = this and
-      definition.getAVariable().getAnAccess() = result.getReceiver().asExpr()
-    )
-  }
 }
 
 /**
  * A read to `this` variable which represents the service whose definition encloses this variable access.
  */
-class ServiceInstanceFromThisNode extends ServiceInstance {
+class ServiceInstanceFromThisNode extends ServiceInstance, ThisNode {
+  UserDefinedApplicationService userDefinedApplicationService;
+
   ServiceInstanceFromThisNode() {
-    exists(ThisNode thisNode | thisNode.flowsTo(this) and this != thisNode)
+    this.getBinder() = userDefinedApplicationService.getInitFunction()
   }
 
-  override UserDefinedApplicationService getDefinition() {
-    result.getInitFunction().asExpr() = this.asExpr().getEnclosingFunction+()
-  }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() { result.getReceiver() = this }
+  override UserDefinedApplicationService getDefinition() { result = userDefinedApplicationService }
 }
 
 class CdsServeWithCall extends MethodCallNode {
@@ -270,8 +254,6 @@ class ServiceInstanceFromServeWithParameter extends ServiceInstance {
       result = serviceInstance.getDefinition()
     )
   }
-
-  override MethodCallNode getASrvMethodCall() { result.getReceiver().getALocalSource() = this }
 }
 
 /**
@@ -280,21 +262,15 @@ class ServiceInstanceFromServeWithParameter extends ServiceInstance {
  * to do something with the incoming request or event as its parameter.
  */
 class HandlerRegistration extends MethodCallNode {
+  ServiceInstance srv;
   string methodName;
 
   HandlerRegistration() {
-    exists(ServiceInstance srv |
-      (
-        srv.(SourceNode).flowsTo(this.getReceiver())
-        or
-        srv = this.getReceiver()
-      ) and
-      (
-        methodName = this.getMethodName() and
-        methodName = ["before", "on", "after"]
-      )
-    )
+    this = srv.getASrvMethodCall(methodName) and
+    methodName = ["before", "on", "after"]
   }
+
+  ServiceInstance getService() { result = srv }
 
   /**
    * Get the name of the event that the handler is registered for.
@@ -531,13 +507,16 @@ class ImplMethodCallApplicationServiceDefinition extends MethodCallNode,
 }
 
 abstract class InterServiceCommunicationMethodCall extends MethodCallNode {
-  InterServiceCommunicationMethodCall() {
-    exists(ServiceInstance srv | this = srv.getASrvMethodCall())
-  }
+  string name;
+  ServiceInstance recipient;
+
+  InterServiceCommunicationMethodCall() { this = recipient.getASrvMethodCall(name) }
+
+  ServiceInstance getRecipient() { result = recipient }
 }
 
 class SrvRun extends InterServiceCommunicationMethodCall {
-  SrvRun() { this.getMethodName() = "run" }
+  SrvRun() { name = "run" }
 
   CqlClause getCql() {
     result.asMethodCall() = this.getArgument(0).asExpr() or
@@ -548,10 +527,7 @@ class SrvRun extends InterServiceCommunicationMethodCall {
 class SrvEmit extends InterServiceCommunicationMethodCall {
   ServiceInstance emittingService;
 
-  SrvEmit() {
-    this.getMethodName() = "emit" and
-    emittingService = this.getReceiver()
-  }
+  SrvEmit() { name = "emit" }
 
   ServiceInstance getEmitter() { result = emittingService }
 
@@ -559,7 +535,7 @@ class SrvEmit extends InterServiceCommunicationMethodCall {
 }
 
 class SrvSend extends InterServiceCommunicationMethodCall {
-  SrvSend() { this.getMethodName() = "send" }
+  SrvSend() { name = "send" }
 }
 
 class CdsUser extends API::Node {
@@ -583,13 +559,7 @@ class CdsUser extends API::Node {
 }
 
 class CdsTransaction extends MethodCallNode {
-  CdsTransaction() {
-    (
-      this.getReceiver() instanceof ServiceInstance or
-      this.getReceiver().getALocalSource() instanceof ServiceInstance // How can we generalize it to global variable? --> type trackers?
-    ) and
-    this.getMethodName() = "tx"
-  }
+  CdsTransaction() { exists(ServiceInstance srv | this = srv.getAMemberCall("tx")) }
 
   SourceNode getContextObject() {
     result = this.getAnArgument().getALocalSource() and not result instanceof FunctionNode
