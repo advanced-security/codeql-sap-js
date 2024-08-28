@@ -36,3 +36,16 @@ function test3(requestParameters) {
 test1(requestParameters);
 test2(requestParameters);
 test3(requestParameters);
+
+/**
+ * False positive case: the value is sanitized
+ */
+var xssSecure = $.require('@sap/xss-secure');
+function test4(requestParameters) {
+  let someParameterValue4 = requestParameters.get("someParameter4");
+  $.response.contentType = "text/html";
+  $.response.setBody(requestParameterHandler(xssSecure.encodeHTML(someParameterValue4)));
+  $.response.status = $.net.http.OK;
+}
+
+test4(requestParameters);

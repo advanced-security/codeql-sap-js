@@ -35,4 +35,14 @@ class Configuration extends TaintTracking::Configuration {
       )
     )
   }
+
+  override predicate isSanitizer(DataFlow::Node node) {
+    super.isSanitizer(node)
+    or
+    node instanceof DomBasedXss::Sanitizer
+    or
+    node =
+      DataFlow::moduleMember("@sap/xss-secure",
+        ["encodeCSS", "encodeHTML", "encodeJS", "encodeURL", "encodeXML"]).getACall().getArgument(0)
+  }
 }

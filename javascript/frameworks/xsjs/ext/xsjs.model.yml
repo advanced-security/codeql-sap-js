@@ -69,3 +69,4 @@ extensions:
       extensible: summaryModel
     data:
       - [global, "Member[JSON].Member[parse]", "Argument[0]", "ReturnValue", taint]
+      - ["@sap/xss-secure", "Member[encodeCSS,encodeHTML,encodeJS,encodeURL,encodeXML]", "Argument[0]", "ReturnValue", "taint"]
