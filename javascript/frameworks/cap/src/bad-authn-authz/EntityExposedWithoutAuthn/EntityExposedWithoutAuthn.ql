@@ -27,4 +27,5 @@ where
   cdlElement instanceof CdlElementWithoutJsAuthn and
   cdlElement instanceof CdlElementWithoutCdsAuthn
 select cdlElement,
-  "This " + getClickableText(cdlElement) + " is exposed without any authentication."
+  "The " + getClickableText(cdlElement) + " `" + cdlElement.getName() +
+    "` is exposed without any authentication."
