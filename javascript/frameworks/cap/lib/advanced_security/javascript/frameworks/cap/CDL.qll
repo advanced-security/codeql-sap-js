@@ -26,7 +26,7 @@ class CdlDefinition extends JsonObject {
 abstract class CdlElement extends JsonObject {
   string getURL() {
     result =
-      "file://" + this.getFile().getAbsolutePath().regexpReplaceAll(".cds.json$", ".cds")
+      "file://" + this.getFile().getAbsolutePath().regexpReplaceAll(".cds.json$", ".cds:0:0:0:0")
   }
 
   CdlKind kind;
