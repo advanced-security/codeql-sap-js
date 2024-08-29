@@ -24,9 +24,14 @@ class CdlDefinition extends JsonObject {
 }
 
 abstract class CdlElement extends JsonObject {
-  string getURL() {
-    result =
-      "file://" + this.getFile().getAbsolutePath().regexpReplaceAll(".cds.json$", ".cds:0:0:0:0")
+  predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
+    exists(Location loc | loc = this.getLocation() |
+      path = loc.getFile().getAbsolutePath().regexpReplaceAll(".cds.json$", ".cds") and
+      sl = 0 and
+      sc = 0 and
+      el = 0 and
+      ec = 0
+    )
   }
 
   CdlKind kind;
