@@ -4,6 +4,5 @@ name: advanced-security/javascript-sap-async-xsjs-models
 version: 0.1.0
 extensionTargets:
   codeql/javascript-all: "^1.1.1"
-  codeql/javascript-queries: "^1.1.0"
 dataExtensions:
   - "*.model.yml"
