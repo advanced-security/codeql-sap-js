@@ -120,7 +120,9 @@ abstract class ServiceInstance extends SourceNode {
  * ```
  */
 class ServiceInstanceFromCdsServe extends ServiceInstance {
-  ServiceInstanceFromCdsServe() { this = cdsServeCall() }
+  string serviceName;
+
+  ServiceInstanceFromCdsServe() { this = cdsServeCall().getAPropertyRead(serviceName) }
 
   override UserDefinedApplicationService getDefinition() {
     none() // TODO: how should we deal with serve("all")?
