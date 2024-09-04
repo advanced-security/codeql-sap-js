@@ -42,4 +42,6 @@ where
     entity instanceof RemoteEntityReference and
     tx.getUser().getALocalSource() instanceof PrivilegedUserInstance
   )
-select tx, getMessage(entity), entity, "entity"
+select entity,
+  "Entity `" + entity.getCqlDefinition().getName() +
+    "` is accessed with unnecessarily privileged rights."
