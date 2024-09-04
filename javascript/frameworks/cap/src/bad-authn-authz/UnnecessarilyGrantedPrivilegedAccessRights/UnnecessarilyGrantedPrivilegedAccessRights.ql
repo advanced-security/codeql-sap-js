@@ -16,10 +16,10 @@ import advanced_security.javascript.frameworks.cap.CAPUnnecessarilyGrantedPrivil
 
 string getMessage(EntityReference entity) {
   entity instanceof LocalEntityReference and
-  result = "This transaction is accessing an $@ that requires authorization."
+  result = "requires authorization."
   or
   entity instanceof RemoteEntityReference and
-  result = "This transaction is accessing an $@ that may require authorization."
+  result = "may require authorization."
 }
 
 from CdsTransaction tx, EntityReference entity
@@ -43,5 +43,4 @@ where
     tx.getUser().getALocalSource() instanceof PrivilegedUserInstance
   )
 select entity,
-  "Entity `" + entity.getCqlDefinition().getName() +
-    "` is accessed with unnecessarily privileged rights."
+  "This entity is accessed with unnecessarily privileged rights that " + getMessage(entity)
