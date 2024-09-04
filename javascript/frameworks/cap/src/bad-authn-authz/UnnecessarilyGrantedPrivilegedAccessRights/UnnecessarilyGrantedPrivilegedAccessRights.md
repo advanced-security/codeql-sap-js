@@ -1,6 +1,6 @@
 # Access rights to an entity is unnecessarily elevated to privileged
 
-The privileged user, represented as `cds.User.Privileged`, is being used to access an entity that requires authorization. If the required access rights is greater than the user accessing it, the application may expose entities to the user that does not have rights to view it.
+The privileged user `cds.User.Privileged` is used to access an entity that requires authorization. If the application does not verify the actual user rights, it may expose protected entities to unauthorized users.
 
 This is especially important when the accessed entity belongs to a remote service. By default, when using a production-grade authentication strategy all CAP endpoints are authenticated. However, if the entity is outside the application, there is no guarantee that the user is authenticated in the remote service.
 
