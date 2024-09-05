@@ -12,19 +12,21 @@
 
 import advanced_security.javascript.frameworks.cap.CAPNoAuthzQuery
 
-string getClickableText(CdlElement cdlElement) {
-  cdlElement instanceof CdlService and result = "CDS service"
-  or
-  cdlElement instanceof CdlEntity and result = "CDS entity"
-  or
-  cdlElement instanceof CdlAction and result = "CDS action"
-  or
-  cdlElement instanceof CdlFunction and result = "CDS function"
-}
+/*
+ * TODO: Revamp this predicate after we start to natively support CDS.
+ * string getClickableText(CdlElement cdlElement) {
+ *  cdlElement instanceof CdlService and result = "CDS service"
+ *  or
+ *  cdlElement instanceof CdlEntity and result = "CDS entity"
+ *  or
+ *  cdlElement instanceof CdlAction and result = "CDS action"
+ *  or
+ *  cdlElement instanceof CdlFunction and result = "CDS function"
+ * }
+ */
 
 from CdlElement cdlElement
 where
   cdlElement instanceof CdlElementWithoutJsAuthn and
   cdlElement instanceof CdlElementWithoutCdsAuthn
-select cdlElement,
-  "This " + getClickableText(cdlElement) + " is exposed without any authentication."
+select cdlElement, "This CDS definition is exposed without any authentication."
