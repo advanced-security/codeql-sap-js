@@ -1,0 +1,2 @@
+| service/exposed/.xsaccess:1:1:4:1 | {\\n    " ...  null\\n} | CSRF protection is missing from the configuration. |
+| service/xs-app.json:14:31:14:35 | false | CSRF protection should not be disabled. |
