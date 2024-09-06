@@ -25,8 +25,6 @@ class ParseSink extends DataFlow::Node {
  * 3. Ones based on emitting and subscribing to asynchronous events.
  */
 abstract class InterServiceCommunication extends HandlerRegistration {
-  InterServiceCommunication() { this.getReceiver() instanceof ServiceInstance }
-
   /**
    * The method call used by the sender to communicate with the recipient.
    */
@@ -77,23 +75,19 @@ abstract class InterServiceCommunication extends HandlerRegistration {
  */
 class RestStyleCommunication extends InterServiceCommunication {
   RestStyleCommunication() {
-    exists(SrvSend srvSend |
-      methodCall = srvSend and
-      sender = this.getReceiver() and
-      srvSend = recipient.(SourceNode).getAMemberCall("send") and
-      srvSend.asExpr().getEnclosingFunction+() = this.getHandler().asExpr()
-    )
+    methodCall instanceof SrvSend and
+    sender = this.getService() and
+    recipient = methodCall.getRecipient() and
+    methodCall.asExpr().getEnclosingFunction+() = this.getHandler().asExpr()
   }
 }
 
 class CrudStyleCommunication extends InterServiceCommunication {
   CrudStyleCommunication() {
-    exists(SrvRun srvRun |
-      methodCall = srvRun and
-      sender = this.getReceiver() and
-      recipient = srvRun.getReceiver() and
-      srvRun.asExpr().getEnclosingFunction+() = this.getHandler().asExpr()
-    )
+    methodCall instanceof SrvRun and
+    sender = this.getReceiver() and
+    recipient = methodCall.getReceiver() and
+    methodCall.asExpr().getEnclosingFunction+() = this.getHandler().asExpr()
   }
 }
 
@@ -103,6 +97,7 @@ class AsyncStyleCommunication extends InterServiceCommunication {
       HandlerRegistration emittingRegistration, HandlerRegistration orchestratingRegistration,
       SrvEmit srvEmit, InterServiceCommunicationMethodCall methodCallOnReceiver
     |
+      /* TODO refactor this */
       emittingRegistration != orchestratingRegistration and
       /* The service that emits the event and the service that registers the handler are the same; it's the sender. */
       this = orchestratingRegistration and
@@ -112,8 +107,10 @@ class AsyncStyleCommunication extends InterServiceCommunication {
       /* 1. match by their event name. */
       srvEmit.getEmittedEvent() = orchestratingRegistration.getAnEventName() and
       /* 2. match by their service name in cds.connect().to(). */
-      srvEmit.getEmitter().getDefinition().getManifestName() =
-        orchestratingRegistration.getReceiver().(ServiceInstanceFromCdsConnectTo).getServiceName() and
+      [
+        srvEmit.getEmitter().getDefinition().getManifestName(),
+        srvEmit.getEmitter().getDefinition().getUnqualifiedName()
+      ] = orchestratingRegistration.getReceiver().(ServiceInstanceFromCdsConnectTo).getServiceName() and
       recipient = methodCallOnReceiver.getReceiver() and
       methodCallOnReceiver.getEnclosingFunction() = orchestratingRegistration.getHandler().asExpr()
     )

@@ -1,5 +1,6 @@
 import javascript
 import semmle.javascript.dataflow.DataFlow
+import advanced_security.javascript.frameworks.cap.TypeTrackers
 import advanced_security.javascript.frameworks.cap.PackageJson
 import advanced_security.javascript.frameworks.cap.CDL
 import advanced_security.javascript.frameworks.cap.CQL
@@ -59,13 +60,16 @@ class CdsServeCall extends DataFlow::CallNode {
     this.getServiceRepresentation().getStringValue() = "all" and
     result = any(UserDefinedApplicationService service)
     or
-    /* 2. The argument to cds.serve is a name by which the service is required */
+    /* 2. The argument to cds.serve is a name of the service */
+    result.getUnqualifiedName() = this.getServiceRepresentation().getStringValue()
+    or
+    /* 3. The argument to cds.serve is a name by which the service is required */
     exists(RequiredService requiredService |
       requiredService.getName() = this.getServiceRepresentation().getStringValue() and
       result.getFile() = requiredService.getImplementationFile()
     )
     or
-    /* 3. The argument to cds.serve is a service instance */
+    /* 4. The argument to cds.serve is a service instance */
     exists(ServiceInstance serviceInstance |
       this.getServiceRepresentation() = serviceInstance.asExpr() and
       result = serviceInstance.getDefinition()
@@ -92,10 +96,18 @@ class CdsConnectToCall extends DataFlow::CallNode {
 /**
  * A dataflow node that represents a service. Note that its definition is a `UserDefinedApplicationService`, not a `ServiceInstance`.
  */
-abstract class ServiceInstance extends DataFlow::Node {
+abstract class ServiceInstance extends SourceNode {
   abstract UserDefinedApplicationService getDefinition();
 
-  abstract MethodCallNode getASrvMethodCall();
+  /**
+   * Gets a method call on this service instance.
+   */
+  MethodCallNode getASrvMethodCall() { result = this.getAMemberCall(_) }
+
+  /**
+   * Gets a method call on this service instance that has the given name.
+   */
+  MethodCallNode getASrvMethodCall(string methodName) { result = this.getAMemberCall(methodName) }
 }
 
 /**
@@ -108,33 +120,13 @@ abstract class ServiceInstance extends DataFlow::Node {
  * ```
  */
 class ServiceInstanceFromCdsServe extends ServiceInstance {
-  ServiceInstanceFromCdsServe() { exists(CdsServeCall cdsServe | this = cdsServe) }
+  string serviceName;
+
+  ServiceInstanceFromCdsServe() { this = cdsServeCall().getAPropertyRead(serviceName) }
 
   override UserDefinedApplicationService getDefinition() {
     none() // TODO: how should we deal with serve("all")?
   }
-
-  override MethodCallNode getASrvMethodCall() {
-    none() // TODO
-  }
-}
-
-private SourceNode serviceInstanceFromCdsConnectTo(TypeTracker t, string serviceName) {
-  t.start() and
-  exists(CdsConnectToCall cdsConnectToCall |
-    (
-      result = cdsConnectToCall
-      or
-      result.asExpr().(AwaitExpr).getOperand() = cdsConnectToCall.asExpr()
-    ) and
-    serviceName = cdsConnectToCall.getArgument(0).getStringValue()
-  )
-  or
-  exists(TypeTracker t2 | result = serviceInstanceFromCdsConnectTo(t2, serviceName).track(t2, t))
-}
-
-private SourceNode serviceInstanceFromCdsConnectTo(string serviceName) {
-  result = serviceInstanceFromCdsConnectTo(TypeTracker::end(), serviceName)
 }
 
 /**
@@ -152,19 +144,16 @@ class ServiceInstanceFromCdsConnectTo extends ServiceInstance, SourceNode {
   ServiceInstanceFromCdsConnectTo() { this = serviceInstanceFromCdsConnectTo(serviceName) }
 
   override UserDefinedApplicationService getDefinition() {
-    exists(RequiredService serviceDecl, string abspath |
+    /* 1. The service  */
+    exists(RequiredService serviceDecl |
       serviceDecl.getName() = serviceName and
-      abspath = serviceDecl.getImplementationFile().getAbsolutePath() and
-      result.hasLocationInfo(abspath, _, _, _, _)
+      result.hasLocationInfo(serviceDecl.getImplementationFile().getAbsolutePath(), _, _, _, _)
     )
+    or
+    result.getUnqualifiedName() = serviceName
   }
 
   string getServiceName() { result = serviceName }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() { result = this.getAMemberCall(_) }
 }
 
 class DBServiceInstanceFromCdsConnectTo extends ServiceInstanceFromCdsConnectTo {
@@ -181,39 +170,22 @@ class DBServiceInstanceFromCdsConnectTo extends ServiceInstanceFromCdsConnectTo 
  * ```
  */
 class ServiceInstanceFromConstructor extends ServiceInstance {
-  ServiceInstanceFromConstructor() {
-    exists(CdsApplicationServiceClass cds | this = cds.getAnInstantiation())
-  }
+  ServiceInstanceFromConstructor() { this = cdsApplicationServiceInstantiation() }
 
   override UserDefinedApplicationService getDefinition() { none() }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() {
-    exists(VarDef definition |
-      definition.getSource().flow() = this and
-      definition.getAVariable().getAnAccess() = result.getReceiver().asExpr()
-    )
-  }
 }
 
 /**
  * A read to `this` variable which represents the service whose definition encloses this variable access.
  */
-class ServiceInstanceFromThisNode extends ServiceInstance {
+class ServiceInstanceFromThisNode extends ServiceInstance, ThisNode {
+  UserDefinedApplicationService userDefinedApplicationService;
+
   ServiceInstanceFromThisNode() {
-    exists(ThisNode thisNode | thisNode.flowsTo(this) and this != thisNode)
+    this.getBinder() = userDefinedApplicationService.getInitFunction()
   }
 
-  override UserDefinedApplicationService getDefinition() {
-    result.getInitFunction().asExpr() = this.asExpr().getEnclosingFunction+()
-  }
-
-  /**
-   * Gets a method call on this service instance.
-   */
-  override MethodCallNode getASrvMethodCall() { result.getReceiver() = this }
+  override UserDefinedApplicationService getDefinition() { result = userDefinedApplicationService }
 }
 
 class CdsServeWithCall extends MethodCallNode {
@@ -276,14 +248,14 @@ class ServiceInstanceFromServeWithParameter extends ServiceInstance {
       result.getFile() = requiredService.getImplementationFile()
     )
     or
+    result.getUnqualifiedName() = cdsServe.getServiceRepresentation().getStringValue()
+    or
     /* 3. The argument to cds.serve is a service instance */
     exists(ServiceInstance serviceInstance |
       cdsServe.getServiceRepresentation() = serviceInstance.asExpr() and
       result = serviceInstance.getDefinition()
     )
   }
-
-  override MethodCallNode getASrvMethodCall() { result.getReceiver().getALocalSource() = this }
 }
 
 /**
@@ -292,21 +264,15 @@ class ServiceInstanceFromServeWithParameter extends ServiceInstance {
  * to do something with the incoming request or event as its parameter.
  */
 class HandlerRegistration extends MethodCallNode {
+  ServiceInstance srv;
   string methodName;
 
   HandlerRegistration() {
-    exists(ServiceInstance srv |
-      (
-        srv.(SourceNode).flowsTo(this.getReceiver())
-        or
-        srv = this.getReceiver()
-      ) and
-      (
-        methodName = this.getMethodName() and
-        methodName = ["before", "on", "after"]
-      )
-    )
+    this = srv.getASrvMethodCall(methodName) and
+    methodName = ["before", "on", "after"]
   }
+
+  ServiceInstance getService() { result = srv }
 
   /**
    * Get the name of the event that the handler is registered for.
@@ -423,7 +389,7 @@ private class CdsServiceClass extends API::Node {
   CdsServiceClass() { exists(CdsFacade c | this = c.getMember("Service")) }
 }
 
-private class CdsApplicationServiceClass extends API::Node {
+class CdsApplicationServiceClass extends API::Node {
   CdsApplicationServiceClass() { exists(CdsFacade c | this = c.getMember("ApplicationService")) }
 }
 
@@ -459,6 +425,16 @@ abstract class UserDefinedApplicationService extends UserDefinedService {
     exists(RequiredService serviceManifest |
       this.hasLocationInfo(serviceManifest.getImplementationFile().getAbsolutePath(), _, _, _, _) and
       result = serviceManifest.getName()
+    )
+  }
+
+  /**
+   * Gets the name of this service as declared in the `package.json`.
+   */
+  string getUnqualifiedName() {
+    exists(CdlService cdlService |
+      this = cdlService.getImplementation() and
+      result = cdlService.getUnqualifiedName()
     )
   }
 
@@ -533,13 +509,16 @@ class ImplMethodCallApplicationServiceDefinition extends MethodCallNode,
 }
 
 abstract class InterServiceCommunicationMethodCall extends MethodCallNode {
-  InterServiceCommunicationMethodCall() {
-    exists(ServiceInstance srv | this = srv.getASrvMethodCall())
-  }
+  string name;
+  ServiceInstance recipient;
+
+  InterServiceCommunicationMethodCall() { this = recipient.getASrvMethodCall(name) }
+
+  ServiceInstance getRecipient() { result = recipient }
 }
 
 class SrvRun extends InterServiceCommunicationMethodCall {
-  SrvRun() { this.getMethodName() = "run" }
+  SrvRun() { name = "run" }
 
   CqlClause getCql() {
     result.asMethodCall() = this.getArgument(0).asExpr() or
@@ -550,10 +529,7 @@ class SrvRun extends InterServiceCommunicationMethodCall {
 class SrvEmit extends InterServiceCommunicationMethodCall {
   ServiceInstance emittingService;
 
-  SrvEmit() {
-    this.getMethodName() = "emit" and
-    emittingService = this.getReceiver()
-  }
+  SrvEmit() { name = "emit" }
 
   ServiceInstance getEmitter() { result = emittingService }
 
@@ -561,7 +537,7 @@ class SrvEmit extends InterServiceCommunicationMethodCall {
 }
 
 class SrvSend extends InterServiceCommunicationMethodCall {
-  SrvSend() { this.getMethodName() = "send" }
+  SrvSend() { name = "send" }
 }
 
 class CdsUser extends API::Node {
@@ -584,25 +560,14 @@ class CdsUser extends API::Node {
   }
 }
 
-class CustomPrivilegedUser extends ClassNode {
-  CustomPrivilegedUser() {
-    exists(CdsUser cdsUser | this.getASuperClassNode() = cdsUser.asSource()) and
-    exists(FunctionNode init |
-      init = this.getInstanceMethod("is") and
-      forall(Expr expr | expr = init.asExpr().(Function).getAReturnedExpr() |
-        expr.mayHaveBooleanValue(true)
-      )
-    )
-  }
-}
-
 class CdsTransaction extends MethodCallNode {
-  CdsTransaction() {
-    this.getReceiver() instanceof ServiceInstance and
-    this.getMethodName() = "tx"
-  }
+  ServiceInstance srv;
 
-  DataFlow::Node getContextObject() {
+  CdsTransaction() { this = srv.getAMemberCall("tx") }
+
+  ServiceInstance getRunner() { result = srv }
+
+  SourceNode getContextObject() {
     result = this.getAnArgument().getALocalSource() and not result instanceof FunctionNode
     or
     exists(Stmt stmt, CdsFacade cds |
@@ -611,6 +576,8 @@ class CdsTransaction extends MethodCallNode {
       stmt.getAChildExpr().(Assignment).getRhs().flow() = result
     )
   }
+
+  DataFlow::Node getUser() { result = this.getContextObject().getAPropertyWrite("user").getRhs() }
 
   MethodCallNode getATransactionCall() {
     exists(ControlFlowNode exprOrStmt |
@@ -639,7 +606,9 @@ class CdsTransaction extends MethodCallNode {
 
 abstract class CdsReference extends DataFlow::Node { }
 
-abstract class EntityReference extends CdsReference { }
+abstract class EntityReference extends CdsReference {
+  abstract CdlEntity getCqlDefinition();
+}
 
 class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
   DataFlow::SourceNode entities;
@@ -668,9 +637,12 @@ class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
 
   string getEntityName() { result = entityName }
 
-  abstract CdlEntity getCqlDefinition();
+  abstract override CdlEntity getCqlDefinition();
 }
 
+/**
+ * srv.entities or srv.entities(...) where the receiver is a ServiceInstance
+ */
 class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromEntities instanceof PropRead
 {
   ServiceInstance service;
@@ -700,6 +672,9 @@ class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromE
   }
 }
 
+/**
+ * db.entities, db.entities(...), cds.entities, cds.entities(...)
+ */
 class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
   EntityReferenceFromDbOrCdsEntities() {
     exists(DBServiceInstanceFromCdsConnectTo db |
@@ -719,8 +694,10 @@ class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
   }
 }
 
-class EntityReferenceFromTemplateOrString extends EntityReference, ExprNode {
-  EntityReferenceFromTemplateOrString() {
-    exists(CqlClause cql | this = cql.getAccessingEntityReference())
-  }
+class EntityReferenceFromCqlClause extends EntityReference, ExprNode {
+  CqlClause cql;
+
+  EntityReferenceFromCqlClause() { this = cql.getAccessingEntityReference() }
+
+  override CdlEntity getCqlDefinition() { result = cql.getAccessingEntityDefinition() }
 }

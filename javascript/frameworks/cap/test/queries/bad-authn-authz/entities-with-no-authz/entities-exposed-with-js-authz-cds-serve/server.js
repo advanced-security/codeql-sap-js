@@ -3,7 +3,7 @@ const app = require("express")();
 
 cds.serve("all").in(app);
 
-cds.serve("service-1").with(function () {
+cds.serve("Service1").with(function () {
   /*
    * Protect the whole service using `before`.
    * Translation of @(requires: [ "authenticated-user" ]).
@@ -42,7 +42,7 @@ cds.serve("service-1").with(function () {
   this.before("fun1", (req) => req.user.is("Role4") || req.reject(403));
 });
 
-cds.serve("service-2").with((srv) => {
+cds.serve("Service2").with((srv) => {
   /*
    * Protect the whole service using `on`.
    * Translation of @(requires: [ "authenticated-user" ]).

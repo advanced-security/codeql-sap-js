@@ -1,4 +1,4 @@
-using { advanced_security.dynamically_generated_privileged.sample_entities as db_schema } from '../db/schema';
+using { advanced_security.unnecessarily_granted_privileged_access_rights.sample_entities as db_schema } from '../db/schema';
 
 service Service1 @(path: '/service-1') {
   /* Unrestricted read access to anyone. */

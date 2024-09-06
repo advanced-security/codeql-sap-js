@@ -1,0 +1,4 @@
+| service/exposed/.xsaccess:3:23:3:26 | null | Authentication should not be disabled. |
+| service/missing_auth/.xsaccess:1:1:4:1 | {\\n    " ...  true\\n} | Authentication is missing from the configuration. |
+| service/xs-app.json:3:29:3:34 | "none" | Authentication should not be disabled. |
+| service/xs-app.json:15:35:15:40 | "none" | Authentication should not be disabled. |

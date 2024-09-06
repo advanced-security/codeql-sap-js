@@ -11,4 +11,6 @@ module.exports = cds.service.impl(function () {
     const cdsUser = cds.User;
     cdsUser.default = cdsUser.Privileged;
   });
+
+  super.init();
 });

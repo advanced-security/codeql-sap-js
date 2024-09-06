@@ -1,0 +1,18 @@
+{
+    "welcomeFile": "index.html",
+    "authenticationMethod": "none",
+    "routes": [
+        {
+            "source": "/good/(.*)",
+            "destination": "srv_api",
+            "csrfProtection": true,
+            "authenticationType": "xsuaa"
+        },
+        {
+            "source": "/bad/(.*)",
+            "destination": "srv_api",
+            "csrfProtection": false,
+            "authenticationType": "none"
+        }
+    ]
+}

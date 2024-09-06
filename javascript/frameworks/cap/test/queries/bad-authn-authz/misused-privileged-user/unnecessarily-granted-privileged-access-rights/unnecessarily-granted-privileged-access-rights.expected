@@ -1,0 +1,5 @@
+| srv/service1.js:33:24:33:49 | `Servic ... ntity2` | This entity is accessed with unnecessarily privileged rights that requires authorization. |
+| srv/service1.js:67:25:67:39 | Service2Entity2 | This entity is accessed with unnecessarily privileged rights that requires authorization. |
+| srv/service1.js:83:24:83:37 | `RemoteEntity` | This entity is accessed with unnecessarily privileged rights that may require authorization. |
+| srv/service2.js:18:21:18:37 | "Service2Entity2" | This entity is accessed with unnecessarily privileged rights that requires authorization. |
+| srv/service2.js:35:21:35:37 | "Service2Entity2" | This entity is accessed with unnecessarily privileged rights that requires authorization. |

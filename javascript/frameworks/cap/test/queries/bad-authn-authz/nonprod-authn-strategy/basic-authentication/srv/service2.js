@@ -8,4 +8,6 @@ module.exports = cds.service.impl(function () {
     const doSomething = console.log;
     doSomething(messageToPass);
   });
+
+  super.init();
 });

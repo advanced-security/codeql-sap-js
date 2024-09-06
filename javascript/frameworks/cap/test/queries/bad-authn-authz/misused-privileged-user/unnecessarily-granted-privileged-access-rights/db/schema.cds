@@ -1,4 +1,4 @@
-namespace advanced_security.dynamically_generated_privileged.sample_entities;
+namespace advanced_security.unnecessarily_granted_privileged_access_rights.sample_entities;
 
 entity Entity1 {
   Attribute1 : String(100);
