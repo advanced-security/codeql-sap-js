@@ -12,5 +12,6 @@ for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
 do
     cds compile $cds_file \
         -2 json \
-        -o "$cds_file.json"
+        -o "$cds_file.json" \
+        --locations
 done
