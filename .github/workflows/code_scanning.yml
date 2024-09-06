@@ -65,8 +65,13 @@ jobs:
         languages: javascript
         config-file: ./.github/codeql/codeql-config.yaml
         tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
+        db-location: ${{ runner.temp }}/cds.qldb
         debug: true
-
+        
+    - name: Index CDS files
+      run: |
+        ${{steps.init.outputs.codeql-path}} database index-files --language=javascript ${{ runner.temp }}/customDbLocation
+    
     - name: Perform CodeQL Analysis
       id: analyze
       uses: github/codeql-action/analyze@v3
