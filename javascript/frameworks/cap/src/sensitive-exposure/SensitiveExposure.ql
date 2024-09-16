@@ -43,6 +43,8 @@ class SensitiveExposureFieldSource extends DataFlow::Node {
     //and the namespace is the same (fully qualified id match)
     entity.(NamespacedEntity).getNamespace() = namespace
   }
+
+  SensitiveAnnotatedAttribute getCdsField() { result = cdsField }
 }
 
 class SensitiveLogExposureConfig extends TaintTracking::Configuration {
@@ -57,4 +59,7 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
 
 from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
 where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on a potentially sensitive piece of information."
+select sink, source, sink, "Log entry depends on the $@.",
+  source.getNode().(SensitiveExposureFieldSource).getCdsField(),
+  "potentially sensitive field `" +
+    source.getNode().(SensitiveExposureFieldSource).getCdsField().getName() + "`"

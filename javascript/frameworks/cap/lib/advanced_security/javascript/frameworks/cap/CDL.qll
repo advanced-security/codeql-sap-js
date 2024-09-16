@@ -5,6 +5,24 @@
 import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 
+abstract class CdlObject extends JsonObject {
+  predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
+    exists(Location loc, JsonValue loc_value |
+      loc = this.getLocation() and
+      loc_value = this.getPropValue("$location") and
+      path =
+        any(File f |
+          f.getAbsolutePath()
+              .matches("%" + loc_value.getPropValue("file").getStringValue() + ".json")
+        ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
+      sl = loc_value.getPropValue("line").getIntValue() and
+      sc = loc_value.getPropValue("col").getIntValue() and
+      el = sl and
+      ec = 0
+    )
+  }
+}
+
 private newtype CdlKind =
   CdlServiceKind(string value) { value = "service" } or
   CdlEntityKind(string value) { value = "entity" } or
@@ -15,7 +33,7 @@ private newtype CdlKind =
 /**
  * Any CDL element, including entities, event, actions, and more.
  */
-class CdlDefinition extends JsonObject {
+class CdlDefinition extends CdlObject {
   CdlDefinition() { exists(JsonObject root | this = root.getPropValue("definitions")) }
 
   JsonObject getElement(string elementName) { result = this.getPropValue(elementName) }
@@ -23,17 +41,7 @@ class CdlDefinition extends JsonObject {
   JsonObject getAnElement() { result = this.getElement(_) }
 }
 
-abstract class CdlElement extends JsonObject {
-  predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
-    exists(Location loc | loc = this.getLocation() |
-      path = loc.getFile().getAbsolutePath().regexpReplaceAll(".cds.json$", ".cds") and
-      sl = 0 and
-      sc = 0 and
-      el = 0 and
-      ec = 0
-    )
-  }
-
+abstract class CdlElement extends CdlObject {
   CdlKind kind;
   string name;
 
@@ -200,7 +208,7 @@ class CdlFunction extends CdlElement {
   }
 }
 
-class CdlAttribute extends JsonObject {
+class CdlAttribute extends CdlObject {
   string name;
 
   CdlAttribute() {
@@ -217,7 +225,7 @@ class CdlAttribute extends JsonObject {
 /**
  * a `CdlEntity` that is declared in a namespace
  */
-class NamespacedEntity extends JsonObject instanceof CdlEntity {
+class NamespacedEntity extends CdlObject instanceof CdlEntity {
   string namespace;
 
   NamespacedEntity() { this.getParent+().getPropValue("namespace").getStringValue() = namespace }
@@ -228,7 +236,7 @@ class NamespacedEntity extends JsonObject instanceof CdlEntity {
 /**
  * any `JsonValue` that has a `PersonalData` like annotation above it
  */
-abstract class SensitiveAnnotatedElement extends JsonValue {
+abstract class SensitiveAnnotatedElement extends CdlObject {
   abstract string getName();
 }
 
@@ -305,7 +313,7 @@ class RestrictAnnotation extends CdlAnnotation, JsonArray {
   RestrictCondition getARestrictCondition() { result = this.getElementValue(_) }
 }
 
-class RestrictCondition extends JsonObject {
+class RestrictCondition extends CdlObject {
   RestrictCondition() { exists(RestrictAnnotation restrict | this = restrict.getElementValue(_)) }
 
   predicate grants(string eventName) {
