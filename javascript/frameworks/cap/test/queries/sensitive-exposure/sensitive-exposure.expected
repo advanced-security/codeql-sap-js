@@ -1,8 +1,8 @@
 nodes
-| sensitive-exposure.js:10:32:10:42 | Sample.name |
-| sensitive-exposure.js:10:32:10:42 | Sample.name |
-| sensitive-exposure.js:10:32:10:42 | Sample.name |
+| sensitive-exposure.js:9:32:9:42 | Sample.name |
+| sensitive-exposure.js:9:32:9:42 | Sample.name |
+| sensitive-exposure.js:9:32:9:42 | Sample.name |
 edges
-| sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name |
+| sensitive-exposure.js:9:32:9:42 | Sample.name | sensitive-exposure.js:9:32:9:42 | Sample.name |
 #select
-| sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | sensitive-exposure.js:10:32:10:42 | Sample.name | Log entry depends on the $@. | sensitive-exposure.cds:4:5:4:0 | {\\n      ...       } | potentially sensitive field `name` |
+| sensitive-exposure.js:9:32:9:42 | Sample.name | sensitive-exposure.js:9:32:9:42 | Sample.name | sensitive-exposure.js:9:32:9:42 | Sample.name | Log entry depends on the $@. | sensitive-exposure.cds:4:5:4:0 | {\\n      ...       } | potentially sensitive field `name` |
