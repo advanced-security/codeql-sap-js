@@ -17,8 +17,8 @@ abstract class CdlObject extends JsonObject {
         ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
       sl = loc_value.getPropValue("line").getIntValue() and
       sc = loc_value.getPropValue("col").getIntValue() and
-      el = sl and
-      ec = 0
+      el = sl+1 and
+      ec = 1
     )
   }
 }
