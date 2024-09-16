@@ -6,7 +6,7 @@
  * @problem.severity warning
  * @security-severity 6
  * @precision high
- * @id js/entity-exposed-without-authentication
+ * @id js/cap-entity-exposed-without-authentication
  * @tags security
  */
 

@@ -5,7 +5,7 @@
  * @problem.severity error
  * @security-severity 6
  * @precision high
- * @id js/unnecessarily-granted-privileged-access-rights
+ * @id js/cap-unnecessarily-granted-privileged-access-rights
  * @tags security
  */
 

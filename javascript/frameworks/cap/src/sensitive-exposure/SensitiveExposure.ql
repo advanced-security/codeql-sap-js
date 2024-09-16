@@ -6,7 +6,7 @@
  * @problem.severity warning
  * @security-severity 7.5
  * @precision medium
- * @id js/sensitive-log
+ * @id js/cap-sensitive-log
  * @tags security
  *       external/cwe/cwe-532
  */
