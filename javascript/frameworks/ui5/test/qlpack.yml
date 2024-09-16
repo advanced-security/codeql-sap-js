@@ -3,6 +3,7 @@ version: 0.6.0
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^1.1.4"
+  codeql/javascript-queries: "^1.1.3"
   advanced-security/javascript-sap-ui5-queries: "^0.6.0"
   advanced-security/javascript-sap-ui5-models: "^0.6.0"
   advanced-security/javascript-sap-ui5-all: "^0.6.0"
