@@ -3,9 +3,9 @@
 CodeQL queries and supporting models for the SAP UI5 JavaScript framework
 
 ### Queries
-- [XSS](src/UI5Xss/UI5Xss.ql)
-- [Log Injection](src/UI5LogInjection/UI5LogInjection.ql)
-- [Clickjacking](src/UI5Clickjacking/UI5Clickjacking.ql)
+- [XSS](src/UI5Xss)
+- [Log Injection](src/UI5LogInjection)
+- [Clickjacking](src/UI5Clickjacking)
  
 ### Modeled UI5 framework elements
  - UI5 AMD-style components (also via jQuery)

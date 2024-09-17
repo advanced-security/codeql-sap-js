@@ -1,5 +1,5 @@
 {
-  "name": "@advanced-security/dynamically-generated-privileged",
+  "name": "@advanced-security/unnecessarily-granted-privileged-access-rights",
   "version": "1.0.0",
   "dependencies": {
     "@sap/cds": "*",
@@ -12,15 +12,9 @@
   },
   "cds": {
     "requires": {
-      "service-1": {
-        "impl": "srv/service1.js"
-      },
-      "service-2": {
-        "impl": "srv/service2.js"
-      },
-      "service-3": {
+      "RemoteService": {
         "kind": "odata",
-        "model": "@example/sample"
+        "model": "@advanced-security/remote-service"
       },
       "auth": {
         "impl": "srv/privileged-user.js"

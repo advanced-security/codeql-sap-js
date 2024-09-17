@@ -3,7 +3,6 @@ name: advanced-security/javascript-sap-async-xsjs-tests
 version: 0.1.0
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^1.1.1"
-  codeql/javascript-queries: "^1.1.0"
+  codeql/javascript-all: "^1.1.4"
   advanced-security/javascript-sap-async-xsjs-queries: "^0.1.0"
   advanced-security/javascript-sap-async-xsjs-lib: "^0.1.0"

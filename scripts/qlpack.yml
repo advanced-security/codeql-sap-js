@@ -4,4 +4,4 @@ warnOnImplicitThis: false
 name: advanced-security/jsdoc-extraction
 version: 0.0.1
 dependencies:
-  codeql/javascript-all: "^1.1.1"
+  codeql/javascript-all: "^1.1.4"

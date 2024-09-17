@@ -92,7 +92,8 @@ jobs:
             echo "I am compiling $cds_file"
             cds compile $cds_file \
               -2 json \
-              -o "$cds_file.json"
+              -o "$cds_file.json" \
+              --locations
           done
 
       - name: Run test suites

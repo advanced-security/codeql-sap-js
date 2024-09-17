@@ -5,6 +5,24 @@
 import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 
+abstract class CdlObject extends JsonObject {
+  predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
+    exists(Location loc, JsonValue loc_value |
+      loc = this.getLocation() and
+      loc_value = this.getPropValue("$location") and
+      path =
+        any(File f |
+          f.getAbsolutePath()
+              .matches("%" + loc_value.getPropValue("file").getStringValue() + ".json")
+        ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
+      sl = loc_value.getPropValue("line").getIntValue() and
+      sc = loc_value.getPropValue("col").getIntValue() and
+      el = sl+1 and
+      ec = 1
+    )
+  }
+}
+
 private newtype CdlKind =
   CdlServiceKind(string value) { value = "service" } or
   CdlEntityKind(string value) { value = "entity" } or
@@ -15,7 +33,7 @@ private newtype CdlKind =
 /**
  * Any CDL element, including entities, event, actions, and more.
  */
-class CdlDefinition extends JsonObject {
+class CdlDefinition extends CdlObject {
   CdlDefinition() { exists(JsonObject root | this = root.getPropValue("definitions")) }
 
   JsonObject getElement(string elementName) { result = this.getPropValue(elementName) }
@@ -23,7 +41,7 @@ class CdlDefinition extends JsonObject {
   JsonObject getAnElement() { result = this.getElement(_) }
 }
 
-abstract class CdlElement extends JsonObject {
+abstract class CdlElement extends CdlObject {
   CdlKind kind;
   string name;
 
@@ -33,6 +51,15 @@ abstract class CdlElement extends JsonObject {
    * Gets the name of this CDL element.
    */
   string getName() { result = name }
+
+  /**
+   * Gets the unqualified name of this CDL element without the leading namespace.
+   */
+  string getUnqualifiedName() {
+    exists(string qualifiedName | qualifiedName = this.getName() |
+      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
+    )
+  }
 
   /**
    * Gets the kind of this CDL element.
@@ -128,12 +155,6 @@ class CdlService extends CdlElement {
 class CdlEntity extends CdlElement {
   CdlEntity() { kind = CdlEntityKind(this.getPropStringValue("kind")) }
 
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
-
   predicate isSelectFrom(CdlEntity otherEntity) {
     otherEntity.getName() =
       this.getPropValue("query")
@@ -166,23 +187,11 @@ class CdlEntity extends CdlElement {
 class CdlEvent extends CdlElement {
   CdlEvent() { kind = CdlEventKind(this.getPropStringValue("kind")) }
 
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
-
   string getBasename() { result = name.splitAt(".", count(name.indexOf("."))) }
 }
 
 class CdlAction extends CdlElement {
   CdlAction() { kind = CdlActionKind(this.getPropStringValue("kind")) }
-
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
 
   predicate belongsToServiceWithNoAuthn() {
     exists(CdlService service | service.hasNoCdsAccessControl() | this = service.getAnAction())
@@ -194,18 +203,12 @@ class CdlFunction extends CdlElement {
 
   JsonObject getReturns() { result = this.getPropValue("returns") }
 
-  string getUnqualifiedName() {
-    exists(string qualifiedName | qualifiedName = this.getName() |
-      result = qualifiedName.splitAt(".", count(qualifiedName.indexOf(".")))
-    )
-  }
-
   predicate belongsToServiceWithNoAuthn() {
     exists(CdlService service | service.hasNoCdsAccessControl() | this = service.getAFunction())
   }
 }
 
-class CdlAttribute extends JsonObject {
+class CdlAttribute extends CdlObject {
   string name;
 
   CdlAttribute() {
@@ -222,7 +225,7 @@ class CdlAttribute extends JsonObject {
 /**
  * a `CdlEntity` that is declared in a namespace
  */
-class NamespacedEntity extends JsonObject instanceof CdlEntity {
+class NamespacedEntity extends CdlObject instanceof CdlEntity {
   string namespace;
 
   NamespacedEntity() { this.getParent+().getPropValue("namespace").getStringValue() = namespace }
@@ -233,7 +236,7 @@ class NamespacedEntity extends JsonObject instanceof CdlEntity {
 /**
  * any `JsonValue` that has a `PersonalData` like annotation above it
  */
-abstract class SensitiveAnnotatedElement extends JsonValue {
+abstract class SensitiveAnnotatedElement extends CdlObject {
   abstract string getName();
 }
 
@@ -310,7 +313,7 @@ class RestrictAnnotation extends CdlAnnotation, JsonArray {
   RestrictCondition getARestrictCondition() { result = this.getElementValue(_) }
 }
 
-class RestrictCondition extends JsonObject {
+class RestrictCondition extends CdlObject {
   RestrictCondition() { exists(RestrictAnnotation restrict | this = restrict.getElementValue(_)) }
 
   predicate grants(string eventName) {
