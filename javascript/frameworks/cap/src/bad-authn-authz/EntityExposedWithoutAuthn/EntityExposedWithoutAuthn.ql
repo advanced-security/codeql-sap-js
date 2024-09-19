@@ -6,27 +6,26 @@
  * @problem.severity warning
  * @security-severity 6
  * @precision high
- * @id js/entity-exposed-without-authentication
+ * @id js/cap-entity-exposed-without-authentication
  * @tags security
  */
 
 import advanced_security.javascript.frameworks.cap.CAPNoAuthzQuery
 
-/*
- * TODO: Revamp this predicate after we start to natively support CDS.
- * string getClickableText(CdlElement cdlElement) {
- *  cdlElement instanceof CdlService and result = "CDS service"
- *  or
- *  cdlElement instanceof CdlEntity and result = "CDS entity"
- *  or
- *  cdlElement instanceof CdlAction and result = "CDS action"
- *  or
- *  cdlElement instanceof CdlFunction and result = "CDS function"
- * }
- */
+string getClickableText(CdlElement cdlElement) {
+  cdlElement instanceof CdlService and result = "CDS service"
+  or
+  cdlElement instanceof CdlEntity and result = "CDS entity"
+  or
+  cdlElement instanceof CdlAction and result = "CDS action"
+  or
+  cdlElement instanceof CdlFunction and result = "CDS function"
+}
 
 from CdlElement cdlElement
 where
   cdlElement instanceof CdlElementWithoutJsAuthn and
   cdlElement instanceof CdlElementWithoutCdsAuthn
-select cdlElement, "This CDS definition is exposed without any authentication."
+select cdlElement,
+  "The " + getClickableText(cdlElement) + " `" + cdlElement.getName() +
+    "` is exposed without any authentication."

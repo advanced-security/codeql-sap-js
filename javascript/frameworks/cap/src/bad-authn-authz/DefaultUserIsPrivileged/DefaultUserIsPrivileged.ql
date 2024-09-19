@@ -5,7 +5,7 @@
  * @problem.severity error
  * @security-severity 6
  * @precision high
- * @id js/default-user-is-privileged
+ * @id js/cap-default-user-is-privileged
  * @tags security
  */
 

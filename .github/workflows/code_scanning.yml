@@ -12,7 +12,7 @@ on:
 
 env:
   LGTM_INDEX_XML_MODE: all
-  LGTM_INDEX_FILETYPES: ".json:JSON"
+  LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
 
 jobs:
   analyze-javascript:
@@ -52,7 +52,8 @@ jobs:
           echo "I am compiling $cds_file"
           cds compile $cds_file \
             -2 json \
-            -o "$cds_file.json"
+            -o "$cds_file.json" \
+            --locations
         done
 
     - name: Extract CodeQL bundle version from qlt.conf.json
@@ -66,7 +67,7 @@ jobs:
         config-file: ./.github/codeql/codeql-config.yaml
         tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
         debug: true
-
+    
     - name: Perform CodeQL Analysis
       id: analyze
       uses: github/codeql-action/analyze@v3
