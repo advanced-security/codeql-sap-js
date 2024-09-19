@@ -35,9 +35,9 @@ codeql database create <DB_NAME> --language=javascript
 ```
 
 ### Analyzing the database [with Code Scanning](https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-query-packs)
-[Example](https://github.com/advanced-security/codeql-sap-js/blob/main/.github/codeql/codeql-config.yaml#L3-L7).
+Example [configuration file](https://github.com/advanced-security/codeql-sap-js/blob/main/.github/codeql/codeql-config.yaml#L3-L7).
  
-### Analyzing the database with [with the CodeQL CLI](https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/publishing-and-using-codeql-packs#using-a-codeql-pack-to-analyze-a-codeql-database).
+### Analyzing the database with [with the CodeQL CLI](https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/publishing-and-using-codeql-packs#using-a-codeql-pack-to-analyze-a-codeql-database)
 Example:
 ```
 codeql database analyze <DB_NAME> advanced-security/javascript-sap-ui5-queries --download --format=sarif-latest --output=<OUTPUT_FILE>
