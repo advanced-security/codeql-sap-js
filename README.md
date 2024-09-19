@@ -19,8 +19,6 @@ jobs:
     name: Analyze
     runs-on: 'ubuntu-latest'
     permissions:
-      actions: read
-      contents: read
       security-events: write
 
     - name: Compile CDS files
