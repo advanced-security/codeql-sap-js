@@ -11,30 +11,7 @@ This repository contains [CodeQL](https://codeql.github.com/) models and queries
 
 ## Usage 
 
-### Building the CodeQL database
-
-1. Include and index XML, JSON and CDS files by setting the necessary environment variables:
-```
-export LGTM_INDEX_XML_MODE='ALL'
-export LGTM_INDEX_FILETYPES=$'.json:JSON\n.cds:JSON'
-```
-2. Compile all the CDS files using the SAP cds toolkit
-```
-npm install -g @sap/cds-dk
-for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
-  do
-    cds compile $cds_file \
-      -2 json \
-      -o "$cds_file.json" \
-      --locations
-  done
-```
-3. Build the database [as usual](https://docs.github.com/en/code-security/codeql-cli/codeql-cli-manual/database-create)
-```
-codeql database create <DB_NAME> --language=javascript
-```
-
-### Analyzing the database with [Code Scanning](https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-query-packs)
+### Analyzing a repository with [Code Scanning](https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-query-packs)
 Example workflow file:
 ```yaml
 jobs:
@@ -82,6 +59,29 @@ packs:
 paths-ignore:
   - "**/node_modules"
 ```
+### Building the CodeQL database with the CodeQL CLI
+
+1. Include and index XML, JSON and CDS files by setting the necessary environment variables:
+```
+export LGTM_INDEX_XML_MODE='ALL'
+export LGTM_INDEX_FILETYPES=$'.json:JSON\n.cds:JSON'
+```
+2. Compile all the CDS files using the SAP cds toolkit
+```
+npm install -g @sap/cds-dk
+for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
+  do
+    cds compile $cds_file \
+      -2 json \
+      -o "$cds_file.json" \
+      --locations
+  done
+```
+3. Build the database [as usual](https://docs.github.com/en/code-security/codeql-cli/codeql-cli-manual/database-create)
+```
+codeql database create <DB_NAME> --language=javascript
+```
+
 ### Analyzing the database with the [CodeQL CLI](https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/publishing-and-using-codeql-packs#using-a-codeql-pack-to-analyze-a-codeql-database)
 Example:
 ```
