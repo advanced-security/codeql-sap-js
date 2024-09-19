@@ -16,7 +16,7 @@ This repository contains [CodeQL](https://codeql.github.com/) models and queries
 1. Include and index XML, JSON and CDS files by setting the necessary environment variables:
 ```
 export LGTM_INDEX_XML_MODE='ALL'
-export LGTM_INDEX_FILETYPES=".json:JSON\n.cds:JSON"
+export LGTM_INDEX_FILETYPES=$'.json:JSON\n.cds:JSON'
 ```
 2. Compile all the CDS files using the SAP cds toolkit
 ```
