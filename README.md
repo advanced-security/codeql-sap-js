@@ -1,5 +1,5 @@
-# CodeQL: SAP Javascript frameworks
-This repository contains [CodeQL](https://codeql.github.com/) models and queries for SAP Javascript frameworks:
+# CodeQL: SAP JavaScript frameworks
+This repository contains [CodeQL](https://codeql.github.com/) models and queries for SAP JavaScript frameworks:
 - [CAP](javascript/frameworks/cap) (https://cap.cloud.sap/)
 - [UI5](javascript/frameworks/ui5) (https://sapui5.hana.ondemand.com/)
 - [XSJS](javascript/frameworks/xsjs) (https://www.npmjs.com/package/@sap/async-xsjs)
