@@ -67,7 +67,7 @@ jobs:
       id: analyze
       uses: github/codeql-action/analyze@v3
 ```
-Exmaple configuration file:
+Example configuration file:
 ```yaml
 name: "My CodeQL config"
 
