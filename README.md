@@ -7,7 +7,7 @@ This repository contains [CodeQL](https://codeql.github.com/) models and queries
 ### Published CodeQl packs
 - [advanced-security/javascript-sap-cap-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-cap-queries)
 - [advanced-security/javascript-sap-ui5-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-ui5-queries)
-- [advanced-security/javascript-sap-async-xsjs-queries](https://github.com/advanced-security/codeql-sap-async-xsjs/pkgs/container/javascript-sap-async-xsjs-queries)
+- [advanced-security/javascript-sap-async-xsjs-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-async-xsjs-queries)
 
 ## Usage 
 
@@ -35,8 +35,53 @@ codeql database create <DB_NAME> --language=javascript
 ```
 
 ### Analyzing the database with [Code Scanning](https://docs.github.com/en/code-security/code-scanning/creating-an-advanced-setup-for-code-scanning/customizing-your-advanced-setup-for-code-scanning#using-query-packs)
-Example [configuration file](https://github.com/advanced-security/codeql-sap-js/blob/main/.github/codeql/codeql-config.yaml#L3-L7).
- 
+Example workflow file:
+```yaml
+jobs:
+  analyze-javascript:
+    name: Analyze
+    runs-on: 'ubuntu-latest'
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    - name: Compile CDS files
+      run: |
+        npm install -g @sap/cds-dk
+        for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
+          do
+            cds compile $cds_file \
+              -2 json \
+              -o "$cds_file.json" \
+              --locations
+          done
+      
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: javascript
+        config-file: .github/codeql/codeql-config.yaml
+
+    - name: Perform CodeQL Analysis
+      id: analyze
+      uses: github/codeql-action/analyze@v3
+```
+Exmaple configuration file:
+```yaml
+name: "My CodeQL config"
+
+packs:
+  # Use these packs for JavaScript and TypeScript analysis
+  javascript:
+    - codeql/javascript-queries:codeql-suites/javascript-security-extended.qls
+    - advanced-security/javascript-sap-async-xsjs-queries:codeql-suites/javascript-security-extended.qls
+    - advanced-security/javascript-sap-cap-queries:codeql-suites/javascript-security-extended.qls
+    - advanced-security/javascript-sap-ui5-queries:codeql-suites/javascript-security-extended.qls
+
+paths-ignore:
+  - "**/node_modules"
+```
 ### Analyzing the database with the [CodeQL CLI](https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/publishing-and-using-codeql-packs#using-a-codeql-pack-to-analyze-a-codeql-database)
 Example:
 ```
