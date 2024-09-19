@@ -57,7 +57,7 @@ packs:
 paths-ignore:
   - "**/node_modules"
 ```
-### Building the CodeQL database with the CodeQL CLI
+### Building and analyzing the CodeQL database with the CodeQL CLI
 
 1. Include and index XML, JSON and CDS files by setting the necessary environment variables:
 ```
@@ -79,9 +79,7 @@ for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
 ```
 codeql database create <DB_NAME> --language=javascript
 ```
-
-### Analyzing the database with the [CodeQL CLI](https://docs.github.com/en/code-security/codeql-cli/using-the-advanced-functionality-of-the-codeql-cli/publishing-and-using-codeql-packs#using-a-codeql-pack-to-analyze-a-codeql-database)
-Example:
+4. Analyze the database using one or more packs
 ```
 codeql database analyze <DB_NAME> advanced-security/javascript-sap-ui5-queries --download --format=sarif-latest --output=<OUTPUT_FILE>
 ```
