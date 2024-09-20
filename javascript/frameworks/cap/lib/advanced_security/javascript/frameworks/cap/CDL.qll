@@ -7,17 +7,17 @@ import advanced_security.javascript.frameworks.cap.CDS
 
 abstract class CdlObject extends JsonObject {
   predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
-    exists(Location loc, JsonValue loc_value |
+    exists(Location loc, JsonValue locValue |
       loc = this.getLocation() and
-      loc_value = this.getPropValue("$location") and
+      locValue = this.getPropValue("$location") and
       path =
         any(File f |
           f.getAbsolutePath()
-              .matches("%" + loc_value.getPropValue("file").getStringValue() + ".json")
+              .matches("%" + locValue.getPropValue("file").getStringValue() + ".json")
         ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
-      sl = loc_value.getPropValue("line").getIntValue() and
-      sc = loc_value.getPropValue("col").getIntValue() and
-      el = sl+1 and
+      sl = locValue.getPropValue("line").getIntValue() and
+      sc = locValue.getPropValue("col").getIntValue() and
+      el = sl + 1 and
       ec = 1
     )
   }
