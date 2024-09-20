@@ -1,6 +1,6 @@
 | srv/service1.cds:3:9:4:1 | {\\n      ... }\\n    } | The CDS service `Service1` is exposed without any authentication. |
 | srv/service1.cds:5:10:6:1 | {\\n      ... }\\n    } | The CDS entity `Service1.Service1Entity` is exposed without any authentication. |
-| srv/service1.cds:12:10:13:1 | {\\n      ... }\\n    } | The CDS action `Service1.send1` is exposed without any authentication. |
+| srv/service1.cds:8:10:9:1 | {\\n      ... }\\n    } | The CDS action `Service1.send1` is exposed without any authentication. |
 | srv/service2.cds:3:9:4:1 | {\\n      ... }\\n    } | The CDS service `Service2` is exposed without any authentication. |
 | srv/service2.cds:5:10:6:1 | {\\n      ... }\\n    } | The CDS entity `Service2.Service2Entity` is exposed without any authentication. |
-| srv/service2.cds:12:10:13:1 | {\\n      ... }\\n    } | The CDS action `Service2.send2` is exposed without any authentication. |
+| srv/service2.cds:8:10:9:1 | {\\n      ... }\\n    } | The CDS action `Service2.send2` is exposed without any authentication. |
