@@ -3,7 +3,7 @@ name: advanced-security/javascript-sap-cap-queries-tests
 version: 0.3.0
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^1.1.4"
+  codeql/javascript-all: "^2.0.0"
   advanced-security/javascript-sap-cap-queries: "^0.3.0"
   advanced-security/javascript-sap-cap-models: "^0.3.0"
   advanced-security/javascript-sap-cap-all: "^0.3.0"
