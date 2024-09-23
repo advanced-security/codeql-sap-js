@@ -10,7 +10,7 @@ function requestParameterHandler(requestParameters) {
 function test1(requestParameters) {
   let someParameterValue1 = requestParameters.get("someParameter1");
   $.response.contentType = "text/html";
-  $.response.setBody(requestParameterHandler(someParameterValue1));
+  $.response.setBody(requestParameterHandler(someParameterValue1)); // js/xsjs-reflected-xss
   $.response.status = $.net.http.OK;
 }
 
