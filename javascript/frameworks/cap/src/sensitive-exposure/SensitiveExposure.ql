@@ -59,7 +59,7 @@ class SensitiveLogExposureConfig extends TaintTracking::Configuration {
 
 from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
 where config.hasFlowPath(source, sink)
-select sink, source, sink, "Log entry depends on the $@.",
+select sink, source, sink,
+  "Log entry depends on the $@ field which is annotated as potentially sensitive.",
   source.getNode().(SensitiveExposureFieldSource).getCdsField(),
-  "potentially sensitive field `" +
-    source.getNode().(SensitiveExposureFieldSource).getCdsField().getName() + "`"
+  source.getNode().(SensitiveExposureFieldSource).getCdsField().getName()
