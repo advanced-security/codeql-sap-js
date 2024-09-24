@@ -81,7 +81,10 @@ codeql database create <DB_NAME> --language=javascript
 ```
 4. Analyze the database using one or more packs
 ```
-codeql database analyze <DB_NAME> advanced-security/javascript-sap-ui5-queries --download --format=sarif-latest --output=<OUTPUT_FILE>
+codeql database analyze <DB_NAME> --format=sarif-latest --output=<OUTPUT_FILE> \
+  --download advanced-security/javascript-sap-cap-queries \
+             advanced-security/javascript-sap-ui5-queries \
+             advanced-security/javascript-sap-async-xsjs-queries
 ```
 
 ## License
