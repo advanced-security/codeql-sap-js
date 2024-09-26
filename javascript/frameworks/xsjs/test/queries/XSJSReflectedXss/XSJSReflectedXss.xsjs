@@ -10,12 +10,12 @@ function requestParameterHandler(requestParameters) {
 function test1(requestParameters) {
   let someParameterValue1 = requestParameters.get("someParameter1");
   $.response.contentType = "text/html";
-  $.response.setBody(requestParameterHandler(someParameterValue1));
+  $.response.setBody(requestParameterHandler(someParameterValue1)); // js/xsjs-reflected-xss
   $.response.status = $.net.http.OK;
 }
 
 /**
- * False positive case: content type is "text/plain"
+ * True negative case: content type is "text/plain"
  */
 function test2(requestParameters) {
   let someParameterValue2 = requestParameters.get("someParameter2");
@@ -25,7 +25,7 @@ function test2(requestParameters) {
 }
 
 /**
- * False positive case: content type is not set
+ * True negative case: content type is not set
  */
 function test3(requestParameters) {
   let someParameterValue3 = requestParameters.get("someParameter3");
@@ -36,3 +36,16 @@ function test3(requestParameters) {
 test1(requestParameters);
 test2(requestParameters);
 test3(requestParameters);
+
+/**
+ * True negative case: the value is sanitized
+ */
+var xssSecure = $.require('@sap/xss-secure');
+function test4(requestParameters) {
+  let someParameterValue4 = requestParameters.get("someParameter4");
+  $.response.contentType = "text/html";
+  $.response.setBody(requestParameterHandler(xssSecure.encodeHTML(someParameterValue4)));
+  $.response.status = $.net.http.OK;
+}
+
+test4(requestParameters);

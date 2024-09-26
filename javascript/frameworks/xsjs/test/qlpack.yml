@@ -4,5 +4,6 @@ version: 0.1.0
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.0.0"
+  codeql/javascript-queries: "^1.2.0"
   advanced-security/javascript-sap-async-xsjs-queries: "^0.1.0"
   advanced-security/javascript-sap-async-xsjs-lib: "^0.1.0"

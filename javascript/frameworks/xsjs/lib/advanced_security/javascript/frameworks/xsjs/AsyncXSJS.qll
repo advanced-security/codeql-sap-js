@@ -1,23 +1,24 @@
 import javascript
 import DataFlow
+import XSJSLibModules
 
 /**
  * The root XSJS namespace, accessed as a dollar sign (`$`) symbol.
  */
-class XSJSDollarNamespace extends GlobalVarRefNode {
-  XSJSDollarNamespace() {
-    this = globalVarRef("$") and
-    this.getFile().getExtension() = "xsjs"
+class XSJSDollarNode extends DataFlow::SourceNode {
+  XSJSDollarNode() {
+    this.accessesGlobal("$") and
+    this.getFile().getExtension() = ["xsjs", "xsjslib"]
   }
 }
 
 /**
- * `TypeModel` for `XSJSDollarNamespace`.
+ * `TypeModel` for `XSJSDollarNode`.
  */
 class XSJSDollarTypeModel extends ModelInput::TypeModel {
   override DataFlow::Node getASource(string type) {
     type = "XsjsDollar" and
-    result = any(XSJSDollarNamespace dollar)
+    result = any(XSJSDollarNode dollar)
   }
 
   /**
@@ -37,9 +38,9 @@ class XSJSRequestOrResponse extends SourceNode instanceof PropRef {
   XSJSRequestOrResponse() {
     fieldName = ["request", "response"] and
     (
-      exists(XSJSDollarNamespace dollar | this = dollar.getAPropertyReference(fieldName))
+      exists(XSJSDollarNode dollar | this = dollar.getAPropertyReference(fieldName))
       or
-      exists(XSJSDollarNamespace dollar |
+      exists(XSJSDollarNode dollar |
         this =
           dollar
               .getAPropertyReference(fieldName)
@@ -171,7 +172,7 @@ class XSJSDatabaseConnectionReference extends MethodCallNode {
   string subNamespace;
 
   XSJSDatabaseConnectionReference() {
-    exists(XSJSDollarNamespace dollar |
+    exists(XSJSDollarNode dollar |
       this.getMethodName() = "getConnection" and
       this.getReceiver().getALocalSource() = dollar.getAPropertyReference(subNamespace)
     )
@@ -211,7 +212,7 @@ class XSJSHDBConnectionReference extends XSJSDatabaseConnectionReference {
 
 class XSJSUtilNamespace extends SourceNode instanceof PropRef {
   XSJSUtilNamespace() {
-    exists(XSJSDollarNamespace dollar | this = dollar.getAPropertyReference("util"))
+    exists(XSJSDollarNode dollar | this = dollar.getAPropertyReference("util"))
   }
 }
 
