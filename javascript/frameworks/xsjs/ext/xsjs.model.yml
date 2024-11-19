@@ -60,6 +60,7 @@ extensions:
       extensible: sinkModel
     data:
       - [WebResponse, "Member[setBody].Argument[0]", html-injection]
+      - [XsjsDollar, "Member[import].Argument[0..1]", path-injection]
       # - [Mail, "Member[send].Argument[this]", "???"]
       # - [SMTPConnection, "Member[send].Argument[0]", "???"]
       # - ["HTTPClient", "Member[request].Argument[0]", "???"]
@@ -69,3 +70,4 @@ extensions:
       extensible: summaryModel
     data:
       - [global, "Member[JSON].Member[parse]", "Argument[0]", "ReturnValue", taint]
+      - ["@sap/xss-secure", "Member[encodeCSS,encodeHTML,encodeJS,encodeURL,encodeXML]", "Argument[0]", "ReturnValue", "taint"]

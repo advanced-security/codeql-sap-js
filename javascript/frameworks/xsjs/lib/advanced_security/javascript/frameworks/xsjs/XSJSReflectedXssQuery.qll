@@ -13,6 +13,15 @@ class XSJSResponseSetBodyCall extends MethodCallNode {
   XSJSResponse getParentXSJSResponse() { result = response }
 }
 
+SourceNode xssSecure(TypeTracker t) {
+  t.start() and
+  result = moduleImport("@sap/xss-secure")
+  or
+  exists(TypeTracker t2 | result = xssSecure(t2).track(t2, t))
+}
+
+SourceNode xssSecure() { result = xssSecure(TypeTracker::end()) }
+
 class Configuration extends TaintTracking::Configuration {
   Configuration() { this = "XSJS Reflected XSS Query" }
 
@@ -34,5 +43,13 @@ class Configuration extends TaintTracking::Configuration {
         thisOrAnotherXSJSResponse.contentTypeIsDependentOnRemote()
       )
     )
+  }
+
+  override predicate isSanitizer(DataFlow::Node node) {
+    super.isSanitizer(node) or
+    node instanceof DomBasedXss::Sanitizer or
+    node =
+      xssSecure()
+          .getAMemberInvocation(["encodeCSS", "encodeHTML", "encodeJS", "encodeURL", "encodeXML"])
   }
 }
