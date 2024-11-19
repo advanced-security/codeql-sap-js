@@ -1,7 +1,0 @@
----
-library: false
-warnOnImplicitThis: false
-name: advanced-security/jsdoc-extraction
-version: 0.0.1
-dependencies:
-  codeql/javascript-all: "^2.0.0"

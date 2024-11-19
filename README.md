@@ -87,6 +87,15 @@ codeql database analyze <DB_NAME> --format=sarif-latest --output=<OUTPUT_FILE> \
              advanced-security/javascript-sap-async-xsjs-queries
 ```
 
-## License
+## License 
 
-The code in this repository is licensed under the [MIT License](LICENSE) by [GitHub](https://github.com).
+This project is licensed under the terms of the MIT open source license. Please refer to [MIT](LICENSE.txt) for the full terms.
+
+## Maintainers 
+
+See [CODEOWNERS](CODEOWNERS)
+
+## Support
+
+See [SUPPORT](SUPPORT.md)
+

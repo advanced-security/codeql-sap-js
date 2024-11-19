@@ -1,0 +1,11 @@
+name: "cds"
+display_name: "SAP CAP CDS"
+version: 0.0.1
+column_kind: "utf16"
+file_types:
+  - name: cds
+    display_name: SAP CAP CDS files
+    extensions:
+      - .cds
+build_modes:
+  - none

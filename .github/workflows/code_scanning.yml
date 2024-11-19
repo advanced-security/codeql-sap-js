@@ -10,10 +10,6 @@ on:
     - cron: '39 12 * * 2'
   workflow_dispatch:
 
-env:
-  LGTM_INDEX_XML_MODE: all
-  LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
-
 jobs:
   analyze-javascript:
     name: Analyze
@@ -37,40 +33,36 @@ jobs:
           mv $dir .github/codeql/extensions/$dir
         done
 
-    - name: Ensure presence of cds shell command
-      run: |
-        if ! command -v cds &> /dev/null
-        then
-          npm install -g @sap/cds-dk
-        fi
-
-    # Compile .cds files to .cds.json files.
-    - name: Compile CAP CDS files
-      run: |
-        for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
-        do
-          echo "I am compiling $cds_file"
-          cds compile $cds_file \
-            -2 json \
-            -o "$cds_file.json" \
-            --locations
-        done
-
     - name: Extract CodeQL bundle version from qlt.conf.json
       run: |
         echo "BUNDLE_VERSION=$(jq .CodeQLCLIBundle qlt.conf.json -r)" >> $GITHUB_ENV
             
     - name: Initialize CodeQL
+      id: initialize-codeql
       uses: github/codeql-action/init@v3
+      env:
+        # Add our custom extractor to the CodeQL search path
+        CODEQL_ACTION_EXTRA_OPTIONS: '{"database":{"init":["--search-path","${{ github.workspace }}/extractors"]}}'
       with:
         languages: javascript
         config-file: ./.github/codeql/codeql-config.yaml
+        db-location: ${{ runner.temp }}/codeql-database
         tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
         debug: true
     
+    - name: Run CDS extractor
+      shell: bash
+      run: |
+        export CODEQL_DIST="$(dirname "${{ steps.initialize-codeql.outputs.codeql-path }}")"
+        export CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE="${{ runner.temp }}/codeql-database/javascript"
+        ${{ github.workspace }}/scripts/compile-cds.sh
+
     - name: Perform CodeQL Analysis
       id: analyze
       uses: github/codeql-action/analyze@v3
+      env:
+        LGTM_INDEX_XML_MODE: all
+        LGTM_INDEX_FILETYPES: ".json:JSON"
 
     - name: Setup Python
       uses: actions/setup-python@v5

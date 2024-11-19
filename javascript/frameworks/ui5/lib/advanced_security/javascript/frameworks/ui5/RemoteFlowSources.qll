@@ -58,10 +58,6 @@ class ODataServiceModel extends UI5ExternalModel {
   override string getSourceType() { result = "ODataServiceModel" }
 
   ODataServiceModel() {
-    /*
-     * e.g. this.getView().setModel(this.getOwnerComponent().getModel("booking_nobatch"))
-     */
-
     exists(MethodCallNode setModelCall, CustomController controller |
       /*
        * 1. This flows from a DF node corresponding to the parent component's model to the `this.setModel` call
