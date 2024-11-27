@@ -4,6 +4,7 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.BindingStringParser as MakeBindingStringParser
+import advanced_security.javascript.frameworks.ui5.UI5View
 
 private class ContextBindingAttribute extends XmlAttribute {
   ContextBindingAttribute() { this.getName() = "binding" }
@@ -15,8 +16,12 @@ private class ContextBindingAttribute extends XmlAttribute {
 // TODO: add support for binding strings in strings such as `description: "Some {/description}"`
 private newtype TBindingString =
   TBindingStringFromLiteral(StringLiteral stringLiteral) { stringLiteral.getValue().matches("{%}") } or
-  TBindingStringFromXmlAttribute(XmlAttribute attribute) { attribute.getValue().matches("{%}") } or
+  TBindingStringFromXmlAttribute(XmlAttribute attribute) {
+    attribute.getLocation().getFile() instanceof XmlView and
+    attribute.getValue().matches("{%}")
+  } or
   TBindingStringFromJsonProperty(JsonObject object, string propertyName) {
+    object.getFile() instanceof UI5View and
     object.getPropStringValue(propertyName).matches("{%}")
   } or
   TBindingStringFromBindElementMethodCall(BindElementMethodCallNode bindElement) {

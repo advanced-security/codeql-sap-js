@@ -839,10 +839,10 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
       then
         exists(BindingPathComponentList tail |
           mkBindingPathComponentList(getNextSkippingWhitespace(nextToken), tail, last) and
-          list = MkConstBindingPathComponentList(name, tail, first)
+          list = MkConstBindingPathComponentList(name, tail)
         )
       else (
-        list = MkConstBindingPathComponentList(name, MkEmptyBindingPathComponentList(), first) and
+        list = MkConstBindingPathComponentList(name, MkEmptyBindingPathComponentList()) and
         last = name
       )
     )
@@ -850,7 +850,7 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
 
   private newtype TBindingPathComponentList =
     MkEmptyBindingPathComponentList() or
-    MkConstBindingPathComponentList(NameToken headToken, BindingPathComponentList tail, Token source) {
+    MkConstBindingPathComponentList(NameToken headToken, BindingPathComponentList tail) {
       exists(Token nextToken | nextToken = getNextSkippingWhitespace(headToken) |
         if nextToken instanceof ForwardSlashToken or nextToken instanceof DotToken
         then mkBindingPathComponentList(getNextSkippingWhitespace(nextToken), tail, _)
@@ -863,18 +863,16 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
       this = MkEmptyBindingPathComponentList() and result = ""
       or
       exists(NameToken head, BindingPathComponentList tail |
-        this = MkConstBindingPathComponentList(head, tail, _) and
+        this = MkConstBindingPathComponentList(head, tail) and
         if tail instanceof MkEmptyBindingPathComponentList
         then result = head.toString()
         else result = head.toString() + "/" + tail.toString()
       )
     }
 
-    NameToken getHead() { this = MkConstBindingPathComponentList(result, _, _) }
+    NameToken getHead() { this = MkConstBindingPathComponentList(result, _) }
 
-    BindingPathComponentList getTail() { this = MkConstBindingPathComponentList(_, result, _) }
-
-    Token getSource() { this = MkConstBindingPathComponentList(_, _, result) }
+    BindingPathComponentList getTail() { this = MkConstBindingPathComponentList(_, result) }
   }
 
   predicate mkAbsoluteBindingPath(Token first, BindingPath path, Token last) {
