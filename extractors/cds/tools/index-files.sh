@@ -52,10 +52,13 @@ echo "Processing CDS files to JSON"
 # the same name
 while IFS= read -r cds_file; do
     echo "Processing CDS file $cds_file to:"
-    $cds_command compile "$cds_file" \
-        -2 json \
-        -o "$cds_file.json" \
-        --locations
+    if ! $cds_command compile "$cds_file" -2 json -o "$cds_file.json" --locations 2> "$cds_file.err"; then
+        stderr_truncated=`grep "^\[ERROR\]" "$cds_file.err" | tail -n 4`
+        error_message=$'Could not compile the file '"$cds_file"$'.\nReported error(s):\n```\n'"$stderr_truncated"$'\n```'
+        echo "$error_message"
+        # Log an error diagnostic which appears on the status page
+        "$CODEQL_DIST/codeql" database add-diagnostic --extractor-name cds --ready-for-status-page --source-id cds/compilation-failure --source-name "Failure to compile one or more SAP CAP CDS files" --severity error --markdown-message "$error_message" --file-path "$cds_file" "$CODEQL_EXTRACTOR_CDS_WIP_DATABASE"
+    fi
 done < "$response_file"
 
 # Check if the JS extractor variables are set, and set them if not
