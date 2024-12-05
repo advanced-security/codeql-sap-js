@@ -8,6 +8,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  ql-for-ql:
+  codeql:
     uses: advanced-security/reusable-workflows/.github/workflows/codeql-ql.yml@main
     secrets: inherit
