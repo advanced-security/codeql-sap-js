@@ -14,11 +14,12 @@ abstract class CdlObject extends JsonObject {
       exists(Location loc, JsonValue locValue |
         loc = this.getLocation() and
         locValue = this.getPropValue("$location") and
+        // The path in the cds.json file is relative to the working directory used when running
+        // the cds compile command. In our extractor, that's always the root of the repository,
+        // so we can identify the entry in the `File` table by its relative path.
         path =
-          any(File f |
-            f.getAbsolutePath()
-                .matches("%" + locValue.getPropValue("file").getStringValue() + ".json")
-          ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
+          any(File f | f.getRelativePath() = locValue.getPropValue("file").getStringValue())
+              .getAbsolutePath() and
         if
           not exists(locValue.getPropValue("line")) and
           not exists(locValue.getPropValue("col"))
