@@ -62,6 +62,7 @@ typings/
 
 # Misc
 .DS_Store
+.*.swp
 
 dist/
 tmp/
