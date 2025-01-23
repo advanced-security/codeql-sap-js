@@ -2,24 +2,29 @@
 
 CodeQL queries and supporting models for the SAP UI5 JavaScript framework
 
-### Queries
+## Queries
+
 - [XSS](src/UI5Xss)
 - [Log Injection](src/UI5LogInjection)
 - [Clickjacking](src/UI5Clickjacking)
- 
-### Modeled UI5 framework elements
- - UI5 AMD-style components (also via jQuery)
- - MVC elements: 
-    - UI5 Controllers and Data Models (literal/external JSON models)
-    - UI5 [declarative Views](DeclarativeApp.png) (XML/JSON/HTML/JS)
-    - Library/custom UI5 Controls
-    - Project naming conventions (e.g. Control-Renderer)
-  - Source/Sink definition via [ModelAsData extensions](ext/ui5.model.yml#L61-L97)
-  - Controls inheritance via [ModelAsData extensions](ext/ui5.model.yml#L42-L59)
 
-### Supported Features with tests
+## Modeled UI5 framework elements
+
+- UI5 AMD-style components (also via jQuery)
+- MVC elements:
+  - UI5 Controllers and Data Models (literal/external JSON models)
+  - UI5 [declarative Views](DeclarativeApp.png) (XML/JSON/HTML/JS)
+  - Library/custom UI5 Controls
+  - Project naming conventions (e.g. Control-Renderer)
+- Source/Sink definition via [ModelAsData extensions](ext/ui5.model.yml#L61-L97)
+- Controls inheritance via [ModelAsData extensions](ext/ui5.model.yml#L42-L59)
+
+## Supported Features with tests
+
 The following tables list the main supported features with corresponding test cases
-#### Detecting XSS and Log injection vulnerabilities
+
+### Detecting XSS and Log injection vulnerabilities
+
 |test | library controls | [MaD sources sinks](ext/ui5.model.yml#L61-L97) | custom controls | UI5View | JS dataflow | HTML APIs | sanitizer | acc.path via handler |
 | - | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
 | [xss-html-control](https://github.com/advanced-security/codeql-sap-js/security/code-scanning/1033) | ✅︎ | ✅︎ | | XMLView |
@@ -30,7 +35,8 @@ The following tables list the main supported features with corresponding test ca
 | [sanitized](https://github.com/advanced-security/codeql-sap-js/security/code-scanning/277)| ✅︎ | ✅︎ | ✅︎ | XMLView | ✅︎ | DOM | ✅︎ |
 | [xss-event-handlers](https://github.com/advanced-security/codeql-sap-js/security/code-scanning/335)| ✅︎ | ✅︎ | ✅︎ | XMLView | | | | ✅︎ |
 
-#### Detecting Clickjacking vulnerabilities
+### Detecting Clickjacking vulnerabilities
+
 | test | secure | insecure frameOptions | missing frameOptions |
 | - | :-: | :-: | :-: |
 | [clickjacking-deny-all](test/queries/UI5Clickjacking/clickjacking-deny-all/index.html#L10) | ✅︎ | |
