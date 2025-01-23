@@ -18,7 +18,7 @@ pre-finalize.sh`"]
     JSE[[javascript extractor]]
     SIF[[index-files.sh]]
     DIDX[codeql database index-files<br> --language=cds<br>--include-extension=.cds]
-    CC[[\`cds\` compiler]]
+    CC[[cds compiler]]
     CDJ([.cds.json files])
     TF([CodeQL TRAP files])
     DBF[codeql database finalize<br> -- /path/to/database]
