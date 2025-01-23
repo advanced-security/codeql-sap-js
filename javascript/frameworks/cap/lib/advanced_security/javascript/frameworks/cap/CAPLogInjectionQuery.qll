@@ -29,7 +29,7 @@ class ConstantOnlyTemplateLiteral extends TemplateLiteral {
 }
 
 /**
- * Arguments of calls to `cds.log.{trace, debug, info, log, warn, error}`
+ * Arguments of calls to `cds.log.{trace, debug, info, log, warn, error}`.
  */
 class CdsLogSink extends DataFlow::Node {
   CdsLogSink() {
@@ -47,6 +47,13 @@ class CAPLogInjectionConfiguration extends LogInjectionConfiguration {
   override predicate isSource(DataFlow::Node start) {
     super.isSource(start) or
     start instanceof RemoteFlowSource
+  }
+
+  override predicate isBarrier(DataFlow::Node node) {
+    exists(HandlerParameterData handlerParameterData |
+      node = handlerParameterData and
+      not handlerParameterData.getType() = ["cds.String", "cds.LargeString"]
+    )
   }
 
   override predicate isSink(DataFlow::Node end) { end instanceof CdsLogSink }

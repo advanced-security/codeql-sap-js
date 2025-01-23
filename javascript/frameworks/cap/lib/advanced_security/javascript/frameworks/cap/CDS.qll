@@ -4,6 +4,7 @@ import advanced_security.javascript.frameworks.cap.TypeTrackers
 import advanced_security.javascript.frameworks.cap.PackageJson
 import advanced_security.javascript.frameworks.cap.CDL
 import advanced_security.javascript.frameworks.cap.CQL
+import advanced_security.javascript.frameworks.cap.RemoteFlowSources
 
 /**
  * ```js
@@ -700,4 +701,49 @@ class EntityReferenceFromCqlClause extends EntityReference, ExprNode {
   EntityReferenceFromCqlClause() { this = cql.getAccessingEntityReference() }
 
   override CdlEntity getCqlDefinition() { result = cql.getAccessingEntityDefinition() }
+}
+
+/**
+ * The `"data"` property of the handler's parameter that represents the request or message passed to this handler.
+ * This property carries the user-provided payload provided to the CAP application. e.g.
+ * ``` javascript
+ * srv.on("send", async (msg) => {
+ *   const { payload } = msg.data;
+ * })
+ * ```
+ * The `payload` carries the data that is sent to this application on the action or event named `send`.
+ */
+class HandlerParameterData instanceof PropRead {
+  HandlerParameter handlerParameter;
+  string dataName;
+
+  HandlerParameterData() {
+    this = handlerParameter.getAPropertyRead("data").getAPropertyRead(dataName)
+  }
+
+  /**
+   * Gets the type of this handler parameter data.
+   */
+  string getType() {
+    /*
+     * The result string is the type of this parameter if:
+     * - There is an actionName which is this HandlerRegistration's action/function name, and
+     * - The actionName in the CDS declaration has params with the same name of this parameter, and
+     * - The result is the name of the type of the parameter.
+     */
+
+    exists(
+      UserDefinedApplicationService userDefinedApplicationService,
+      CdlActionOrFunction cdlActionOrFunction, HandlerRegistration handlerRegistration
+    |
+      handlerRegistration = userDefinedApplicationService.getAHandlerRegistration() and
+      handlerRegistration = handlerParameter.getHandlerRegistration() and
+      handlerRegistration.getAnEventName() = cdlActionOrFunction.getUnqualifiedName() and
+      cdlActionOrFunction =
+        userDefinedApplicationService.getCdsDeclaration().getAnActionOrFunction() and
+      result = cdlActionOrFunction.getParameter(dataName).getType()
+    )
+  }
+
+  string toString() { result = this.(PropRead).toString() }
 }
