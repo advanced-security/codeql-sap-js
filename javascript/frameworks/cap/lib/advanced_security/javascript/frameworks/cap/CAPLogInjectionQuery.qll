@@ -43,18 +43,20 @@ class CdsLogSink extends DataFlow::Node {
   }
 }
 
-class CAPLogInjectionConfiguration extends LogInjectionConfiguration {
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start) or
+module CAPLogInjectionConfig implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node start) {
+    LogInjectionConfig::isSource(start) or
     start instanceof RemoteFlowSource
   }
 
-  override predicate isBarrier(DataFlow::Node node) {
+  predicate isBarrier(DataFlow::Node node) {
     exists(HandlerParameterData handlerParameterData |
       node = handlerParameterData and
       not handlerParameterData.getType() = ["cds.String", "cds.LargeString"]
     )
   }
 
-  override predicate isSink(DataFlow::Node end) { end instanceof CdsLogSink }
+  predicate isSink(DataFlow::Node end) { end instanceof CdsLogSink }
 }
+
+module CAPLogInjectionFlow = TaintTracking::Global<CAPLogInjectionConfig>;
