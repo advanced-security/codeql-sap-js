@@ -5,5 +5,5 @@ version: 0.3.0
 suites: codeql-suites
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^2.0.0"
+  codeql/javascript-all: "^2.4.0"
   advanced-security/javascript-sap-cap-models: "^0.3.0"
