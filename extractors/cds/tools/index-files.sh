@@ -54,7 +54,7 @@ while IFS= read -r cds_file; do
     echo "Processing CDS file $cds_file to: $cds_file.json"
     # Avoid using the `-o` (or `--dest`) option as it sends output to a new directory, where we want to
     # output to a file in the same directory as the input file but with a .json extension.
-    if ! $cds_command compile "$cds_file" -2 json --locations --service all > "$cds_file.json" 2> "$cds_file.err"
+    if ! $cds_command compile "$cds_file" -2 json --locations > "$cds_file.json" 2> "$cds_file.err"
     then
         stderr_truncated=`grep "^\[ERROR\]" "$cds_file.err" | tail -n 4`
         error_message=$'Could not compile the file '"$cds_file"$'.\nReported error(s):\n```\n'"$stderr_truncated"$'\n```'

@@ -81,7 +81,8 @@ jobs:
         run: |
           if ! command -v cds &> /dev/null
           then
-            npm install -g @sap/cds-dk
+            ## Workaround for https://github.tools.sap/cap/issues/issues/17840
+            npm install -g @sap/cds-dk@8.6.1
           fi
 
       # Compile .cds files to .cds.json files.
@@ -97,8 +98,8 @@ jobs:
               echo "I am compiling $cds_file"
               cds compile $cds_file \
                 -2 json \
-                -o "$cds_file.json" \
-                --locations
+                --locations \
+                > "$cds_file.json" 2> "$cds_file.err"
             done
             popd
           done
