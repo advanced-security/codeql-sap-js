@@ -36,12 +36,12 @@ then
     # directory.
     #
     # We also ensure we skip node_modules, as we can end up in a recursive loop
-    find . -type d -name node_modules -prune -false -o -type f \( -iname 'package.json' \) -exec grep -ql '@sap/cds' {} \; -execdir bash -c "grep -q \"^\$(pwd)\(/\|$\)\" \"$response_file\"" \; -execdir bash -c "echo \"Installing @sap/cds-dk into \$(pwd) to enable CDS compilation.\"" \; -execdir npm install --silent @sap/cds-dk \; -execdir npm install --silent \;
+    find . -type d -name node_modules -prune -false -o -type f \( -iname 'package.json' \) -exec grep -ql '@sap/cds' {} \; -execdir bash -c "grep -q \"^\$(pwd)\(/\|$\)\" \"$response_file\"" \; -execdir bash -c "echo \"Installing @sap/cds-dk into \$(pwd) to enable CDS compilation.\"" \; -execdir npm install --silent @sap/cds-dk@8.6.1 \; -execdir npm install --silent \;
 
     # Use the npx command to dynamically install the cds development kit (@sap/cds-dk) package if necessary,
     # which then provides the cds command line tool in directories which are not covered by the package.json
     # install command approach above
-    cds_command="npx -y --package @sap/cds-dk cds"
+    cds_command="npx -y --package @sap/cds-dk@8.6.1 cds"
 else
     cds_command="cds"
 fi
