@@ -1,3 +1,6 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (XSJSSqlInjection.ql:15,8-27)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSSqlInjection.ql:17,28-46)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSSqlInjection.ql:17,55-73)
 nodes
 | XSJSSqlInjection.xsjs:8:7:8:79 | someParameterValue1 |
 | XSJSSqlInjection.xsjs:8:29:8:79 | JSON.pa ... ter1")) |

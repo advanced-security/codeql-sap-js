@@ -1,3 +1,4 @@
+WARNING: type 'LogInjectionConfiguration' has been deprecated and may be removed in future (UI5LogsToHttp.ql:19,44-83)
 nodes
 | webapp/controller/app.controller.js:8:11:8:21 | input: null |
 | webapp/controller/app.controller.js:14:13:14:48 | input |

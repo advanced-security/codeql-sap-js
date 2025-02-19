@@ -1,3 +1,7 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (SensitiveExposure.ql:17,8-27)
+WARNING: type 'Configuration' has been deprecated and may be removed in future (SensitiveExposure.ql:50,42-70)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (SensitiveExposure.ql:60,41-59)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (SensitiveExposure.ql:60,68-86)
 nodes
 | sensitive-exposure.js:9:32:9:42 | Sample.name |
 | sensitive-exposure.js:9:32:9:42 | Sample.name |

@@ -32,19 +32,20 @@ class Configuration extends DomBasedXss::Configuration {
     )
   }
 
-  override predicate isSanitizer(DataFlow::Node node) {
+  override predicate isBarrier(DataFlow::Node node) {
     /* 1. Already a sanitizer defined in `DomBasedXssQuery::Configuration` */
     super.isSanitizer(node)
     or
     /* 2. Value read from a non-string control property */
-    node = any(PropertyMetadata m | not m.isUnrestrictedStringType())
+    exists(PropertyMetadata m | not m.isUnrestrictedStringType() | node = m)
     or
     /* 3-1. Sanitizers provided by `sap.base.security` */
-    exists(SapAmdModuleDefinition d, DataFlow::ParameterNode par |
+    exists(SapDefineModule d, DataFlow::ParameterNode par |
       node = par.getACall() and
-      par.getParameter() =
-        d.getDependencyParameter("sap/base/security/" +
+      par =
+        d.getRequiredObject("sap/base/security/" +
             ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML"])
+            .asSourceNode()
     )
     or
     /* 3-2. Sanitizers provided by `jQuery.sap` */

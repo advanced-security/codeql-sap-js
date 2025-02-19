@@ -1,3 +1,4 @@
+WARNING: type 'LogInjectionConfiguration' has been deprecated and may be removed in future (UI5LogInjection.ql:19,44-83)
 nodes
 | webapp/control/xss.js:8:23:8:40 | { type: "string" } |
 | webapp/control/xss.js:15:21:15:46 | value |

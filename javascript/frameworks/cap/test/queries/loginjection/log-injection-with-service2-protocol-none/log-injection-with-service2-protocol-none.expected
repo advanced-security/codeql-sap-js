@@ -1,3 +1,6 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (LogInjection.ql:14,8-27)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (LogInjection.ql:18,43-61)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (LogInjection.ql:18,70-88)
 nodes
 | srv/service1.js:6:33:6:35 | req |
 | srv/service1.js:6:33:6:35 | req |

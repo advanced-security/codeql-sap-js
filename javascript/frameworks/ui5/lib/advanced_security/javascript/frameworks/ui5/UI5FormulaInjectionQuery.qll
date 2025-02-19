@@ -10,7 +10,7 @@ private class StoragePutCall extends CallNode {
     /* 1. This is a call to `sap.ui.util.Storage.put` */
     // 1-1. Required from `sap/ui/util/Storage`
     exists(RequiredObject storageClass |
-      this.getReceiver().getALocalSource() = storageClass and
+      this.getReceiver().getALocalSource() = storageClass.asSourceNode() and
       this.getCalleeName() = "put"
     )
     or
@@ -46,7 +46,7 @@ private class FileSaveCall extends CallNode {
   FileSaveCall() {
     /* 1. Required from `sap/ui/core/util/File` */
     exists(RequiredObject fileClass |
-      this.getReceiver().getALocalSource() = fileClass and
+      this.getReceiver().getALocalSource() = fileClass.asSourceNode() and
       this.getCalleeName() = "save"
     )
     or

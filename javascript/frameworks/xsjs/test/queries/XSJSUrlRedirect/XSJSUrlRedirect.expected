@@ -1,3 +1,6 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (XSJSUrlRedirect.ql:15,8-27)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSUrlRedirect.ql:17,28-46)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSUrlRedirect.ql:17,55-73)
 nodes
 | XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue |
 | XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") |

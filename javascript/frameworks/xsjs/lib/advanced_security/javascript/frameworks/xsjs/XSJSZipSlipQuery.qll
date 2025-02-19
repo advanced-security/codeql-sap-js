@@ -76,7 +76,7 @@ class TaintedPathSanitizerGuard extends TaintTracking::SanitizerGuardNode {
   TaintedPathSanitizerGuard() { this = this }
 
   override predicate sanitizes(boolean outcome, Expr receiver) {
-    exists(TaintedPath::BarrierGuardNode node | node.blocks(outcome, receiver))
+    exists(TaintedPath::BarrierGuard node | node.blocksExpr(outcome, receiver))
   }
 }
 

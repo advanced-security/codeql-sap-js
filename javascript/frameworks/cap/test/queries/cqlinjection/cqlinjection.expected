@@ -1,3 +1,7 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (CqlInjection.ql:14,8-27)
+WARNING: type 'Configuration' has been deprecated and may be removed in future (CqlInjection.ql:19,33-61)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (CqlInjection.ql:46,29-47)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (CqlInjection.ql:46,56-74)
 nodes
 | cqlinjection.js:7:34:7:36 | req |
 | cqlinjection.js:7:34:7:36 | req |

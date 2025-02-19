@@ -2,7 +2,6 @@ import javascript
 import semmle.javascript.dataflow.DataFlow as StdLibDataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5View
-import advanced_security.javascript.frameworks.ui5.UI5AMDModule
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import StdLibDataFlow::DataFlow::PathGraph as DataFlowPathGraph

@@ -1,3 +1,4 @@
+WARNING: type 'Configuration' has been deprecated and may be removed in future (UI5PathInjection.ql:20,45-73)
 nodes
 | webapp/controller/app.controller.js:10:17:10:27 | input: null |
 | webapp/controller/app.controller.js:16:39:16:66 | oModel. ... input') |

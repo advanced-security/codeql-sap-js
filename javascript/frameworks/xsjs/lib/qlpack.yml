@@ -1,8 +1,8 @@
 ---
 library: true
 name: advanced-security/javascript-sap-xsjs-lib
-version: 0.1.0
+version: 0.2.0
 suites: codeql-suites
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^2.0.0"
+  codeql/javascript-all: "^2.4.0"

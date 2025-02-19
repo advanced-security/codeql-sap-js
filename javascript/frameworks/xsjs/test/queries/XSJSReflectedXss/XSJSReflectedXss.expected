@@ -1,3 +1,6 @@
+WARNING: module 'PathGraph' has been deprecated and may be removed in future (XSJSReflectedXss.ql:15,8-27)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSReflectedXss.ql:17,28-46)
+WARNING: type 'PathNode' has been deprecated and may be removed in future (XSJSReflectedXss.ql:17,55-73)
 nodes
 | XSJSReflectedXss.xsjs:11:7:11:67 | someParameterValue1 |
 | XSJSReflectedXss.xsjs:11:7:11:67 | someParameterValue1 |
@@ -46,4 +49,3 @@ edges
 | XSJSReflectedXss.xsjs:32:46:32:64 | someParameterValue3 | XSJSReflectedXss.xsjs:32:22:32:65 | request ... Value3) |
 #select
 | XSJSReflectedXss.xsjs:13:22:13:65 | request ... Value1) | XSJSReflectedXss.xsjs:11:29:11:67 | request ... eter1") | XSJSReflectedXss.xsjs:13:22:13:65 | request ... Value1) | Reflected XSS vulnerability due to $@. | XSJSReflectedXss.xsjs:11:29:11:67 | request ... eter1") | user-provided value |
-

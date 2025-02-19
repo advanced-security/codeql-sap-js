@@ -1,6 +1,5 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
-private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 /**
  * Step from a part of internal model to a relevant control property.

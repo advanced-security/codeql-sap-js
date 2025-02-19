@@ -138,8 +138,8 @@ class Loader extends CallNode {
 /**
  * A user-defined module through `sap.ui.define` or `jQuery.sap.declare`.
  */
-abstract class UserModule extends InvokeNode {
-  abstract string getADependencyType();
+abstract class UserModule extends CallExpr {
+  abstract string getADependency();
 
   abstract string getModuleFileRelativePath();
 
@@ -150,34 +150,44 @@ abstract class UserModule extends InvokeNode {
  * A user-defined module through `sap.ui.define`.
  * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui%23methods/sap.ui.define
  */
-class SapDefineModule extends CallNode, UserModule {
-  SapDefineModule() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("define") }
+class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserModule {
+  SapDefineModule() {
+    /*
+     * NOTE: This only matches a call to the dot expression `sap.ui.define`, and does not consider a flow among `sap`, `ui`, and `define`.
+     */
 
-  override string getADependencyType() { result = this.getDependencyType(_) }
+    exists(GlobalVarAccess sap, DotExpr sapUi, DotExpr sapUiDefine |
+      sap.getName() = "sap" and
+      sapUi.getBase() = sap and
+      sapUi.getPropertyName() = "ui" and
+      this.getReceiver() = sapUiDefine
+      // and this.getMethodName() = "define"
+    )
+  }
+
+  string getDependency(int i) { result = this.(AmdModuleDefinition).getDependency(i).getValue() }
+
+  override string getADependency() { result = this.getDependency(_) }
 
   override string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
-  string getDependencyType(int i) {
-    result = this.getArgument(0).getALocalSource().(ArrayLiteralNode).getElement(i).getStringValue()
-  }
-
-  override RequiredObject getRequiredObject(string dependencyType) {
-    exists(int i |
-      this.getDependencyType(i) = dependencyType and
-      result = this.getArgument(1).getALocalSource().(FunctionNode).getParameter(i)
-    )
+  override RequiredObject getRequiredObject(string name) {
+    result = this.(AmdModuleDefinition).getDependencyParameter(name)
   }
 
   WebApp getWebApp() { this.getFile() = result.getAResource() }
 
-  SapDefineModule getExtendingDefine() {
-    exists(Extension baseExtension, Extension subclassExtension, SapDefineModule subclassDefine |
-      baseExtension.getDefine() = this and
-      subclassDefine = subclassExtension.getDefine() and
-      any(RequiredObject module_ |
-        module_ = subclassDefine.getRequiredObject(baseExtension.getName().replaceAll(".", "/"))
-      ).flowsTo(subclassExtension.getReceiver()) and
-      result = subclassDefine
+  /**
+   * Gets the module defined with sap.ui.define that imports and extends this module.
+   */
+  SapDefineModule getExtendingModule() {
+    exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
+      baseExtendCall.getDefine() = this and
+      result = subclassExtendCall.getDefine() and
+      result
+          .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
+          .asSourceNode()
+          .flowsTo(subclassExtendCall.getReceiver())
     )
   }
 }
@@ -194,29 +204,27 @@ class JQuerySap extends DataFlow::SourceNode {
 /**
  * A user-defined module through `jQuery.sap.declare`.
  */
-class JQueryDefineModule extends UserModule, DataFlow::MethodCallNode {
-  JQueryDefineModule() { exists(JQuerySap jquerySap | jquerySap.flowsTo(this.getReceiver())) }
+class JQueryDefineModule extends UserModule, MethodCallExpr {
+  JQueryDefineModule() { exists(JQuerySap jquerySap | jquerySap.asExpr() = this.getReceiver()) }
 
-  override string getADependencyType() {
-    result = this.getArgument(0).asExpr().(StringLiteral).getValue()
-  }
+  override string getADependency() { result = this.getArgument(0).getStringValue() }
 
   override string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
-  /** WARNING: toString() Hack! */
+  /* WARNING: toString() Hack! */
   override RequiredObject getRequiredObject(string dependencyType) {
     result.toString() = dependencyType and
-    this.getADependencyType() = dependencyType
+    this.getADependency() = dependencyType
   }
 }
 
-private RequiredObject sapControl(TypeTracker t) {
+private SourceNode sapControl(TypeTracker t) {
   t.start() and
   exists(UserModule d, string dependencyType |
     dependencyType = ["sap/ui/core/Control", "sap.ui.core.Control"]
   |
-    d.getADependencyType() = dependencyType and
-    result = d.getRequiredObject(dependencyType)
+    d.getADependency() = dependencyType and
+    result = d.getRequiredObject(dependencyType).asSourceNode()
   )
   or
   exists(TypeTracker t2 | result = sapControl(t2).track(t2, t))
@@ -229,8 +237,8 @@ private SourceNode sapController(TypeTracker t) {
   exists(UserModule d, string dependencyType |
     dependencyType = ["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"]
   |
-    d.getADependencyType() = dependencyType and
-    result = d.getRequiredObject(dependencyType)
+    d.getADependency() = dependencyType and
+    result = d.getRequiredObject(dependencyType).asSourceNode()
   )
   or
   exists(TypeTracker t2 | result = sapController(t2).track(t2, t))
@@ -243,8 +251,8 @@ private SourceNode sapRenderer(TypeTracker t) {
   exists(UserModule d, string dependencyType |
     dependencyType = ["sap/ui/core/Renderer", "sap.ui.core.Renderer"]
   |
-    d.getADependencyType() = dependencyType and
-    result = d.getRequiredObject(dependencyType)
+    d.getADependency() = dependencyType and
+    result = d.getRequiredObject(dependencyType).asSourceNode()
   )
   or
   exists(TypeTracker t2 | result = sapController(t2).track(t2, t))
@@ -252,7 +260,7 @@ private SourceNode sapRenderer(TypeTracker t) {
 
 private SourceNode sapRenderer() { result = sapRenderer(TypeTracker::end()) }
 
-private class Renderer extends Extension {
+private class Renderer extends SapExtendCall {
   Renderer() { this.getReceiver().getALocalSource() = sapRenderer() }
 
   FunctionNode getRenderer() {
@@ -264,10 +272,10 @@ private class Renderer extends Extension {
   }
 }
 
-class CustomControl extends Extension {
+class CustomControl extends SapExtendCall {
   CustomControl() {
     this.getReceiver().getALocalSource() = sapControl() or
-    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingDefine())
+    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
   }
 
   CustomController getController() { this = result.getAControlReference().getDefinition() }
@@ -436,7 +444,7 @@ class ControllerReference extends Reference {
   CustomController getDefinition() { result = viewReference.getDefinition().getController() }
 }
 
-class CustomController extends Extension {
+class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
@@ -775,8 +783,8 @@ private SourceNode sapComponent(TypeTracker t) {
         "sap.ui.core.UIComponent"
       ]
   |
-    d.getADependencyType() = dependencyType and
-    result = d.getRequiredObject(dependencyType)
+    d.getADependency() = dependencyType and
+    result = d.getRequiredObject(dependencyType).asSourceNode()
   )
   or
   exists(TypeTracker t2 | result = sapComponent(t2).track(t2, t))
@@ -789,7 +797,7 @@ import ManifestJson
 /**
  * A UI5 Component that may contain other controllers or controls.
  */
-class Component extends Extension {
+class Component extends SapExtendCall {
   Component() { this.getReceiver().getALocalSource() = sapComponent() }
 
   string getId() { result = this.getName().regexpCapture("([a-zA-Z0-9.]+).Component", 1) }
@@ -1086,8 +1094,8 @@ class JsonModel extends UI5InternalModel {
     this instanceof NewNode and
     (
       exists(RequiredObject jsonModel |
-        jsonModel.flowsTo(this.getCalleeNode()) and
-        jsonModel.getDependencyType() = "sap/ui/model/json/JSONModel"
+        jsonModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+        jsonModel.getDependency() = "sap/ui/model/json/JSONModel"
       )
       or
       /* Fallback */
@@ -1197,8 +1205,8 @@ class XmlModel extends UI5InternalModel {
   XmlModel() {
     this instanceof NewNode and
     exists(RequiredObject xmlModel |
-      xmlModel.flowsTo(this.getCalleeNode()) and
-      xmlModel.getDependencyType() = "sap/ui/model/xml/XMLModel"
+      xmlModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+      xmlModel.getDependency() = "sap/ui/model/xml/XMLModel"
     )
   }
 
@@ -1234,31 +1242,34 @@ class ResourceModel extends UI5Model, ModelReference {
 }
 
 class BindingMode extends RequiredObject {
-  BindingMode() { this.getDependencyType() = "sap/ui/model/BindingMode" }
+  BindingMode() { this.getDependency() = "sap/ui/model/BindingMode" }
 
-  PropRead getOneWay() { result = this.getAPropertyRead("OneWay") }
+  PropRead getOneWay() { result = this.asSourceNode().getAPropertyRead("OneWay") }
 
-  PropRead getTwoWay() { result = this.getAPropertyRead("TwoWay") }
+  PropRead getTwoWay() { result = this.asSourceNode().getAPropertyRead("TwoWay") }
 
-  PropRead getDefault() { result = this.getAPropertyRead("Default") }
+  PropRead getDefault_() { result = this.asSourceNode().getAPropertyRead("Default") }
 
-  PropRead getOneTime() { result = this.getAPropertyRead("OneTime") }
+  PropRead getOneTime() { result = this.asSourceNode().getAPropertyRead("OneTime") }
 }
 
-class RequiredObject extends SourceNode {
+class RequiredObject extends Expr {
   RequiredObject() {
     exists(SapDefineModule sapDefineModule |
-      this = sapDefineModule.getArgument(1).getALocalSource().(FunctionNode).getParameter(_)
+      this = sapDefineModule.getArgument(1).(Function).getParameter(_)
     ) or
     exists(JQueryDefineModule jQueryDefineModule |
-      this.toString() =
-        jQueryDefineModule.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+      /* WARNING: toString() Hack! */
+      this.toString() = jQueryDefineModule.getArgument(0).(StringLiteral).getValue()
     )
   }
 
-  UserModule getDefiningModule() { result.getArgument(1).(FunctionNode).getParameter(_) = this }
+  pragma[inline]
+  SourceNode asSourceNode() { result = this.flow() }
 
-  string getDependencyType() {
+  UserModule getDefiningModule() { result.getArgument(1).(Function).getParameter(_) = this }
+
+  string getDependency() {
     exists(SapDefineModule module_ | this = module_.getRequiredObject(result))
   }
 }
@@ -1266,16 +1277,18 @@ class RequiredObject extends SourceNode {
 /**
  * `SomeModule.extend(...)` where `SomeModule` stands for a module imported with `sap.ui.define`.
  */
-class Extension extends InvokeNode, MethodCallNode {
-  Extension() {
+class SapExtendCall extends InvokeNode, MethodCallNode {
+  SapExtendCall() {
     /* 1. The receiver object is an imported one */
-    any(RequiredObject module_).flowsTo(this.getReceiver()) and
+    exists(RequiredObject requiredModule |
+      requiredModule.asSourceNode().flowsTo(this.getReceiver())
+    ) and
     /* 2. The method name is `extend` */
     this.(MethodCallNode).getMethodName() = "extend"
   }
 
   FunctionNode getMethod(string methodName) {
-    result = this.getArgument(1).(ObjectLiteralNode).getAPropertySource(methodName).(FunctionNode)
+    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName).(FunctionNode)
   }
 
   FunctionNode getAMethod() { result = this.getMethod(_) }
@@ -1287,22 +1300,22 @@ class Extension extends InvokeNode, MethodCallNode {
   Metadata getMetadata() {
     result = this.getContent().getAPropertySource("metadata")
     or
-    exists(Extension baseExtension |
-      baseExtension.getDefine().getExtendingDefine() = this.getDefine() and
-      result = baseExtension.getMetadata()
+    exists(SapExtendCall baseExtendCall |
+      baseExtendCall.getDefine().getExtendingModule() = this.getDefine() and
+      result = baseExtendCall.getMetadata()
     )
   }
 
   /** Gets the `sap.ui.define` call that wraps this extension. */
-  SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1).asExpr() }
+  SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1) }
 }
 
 private newtype TSapElement =
-  DefinitionOfElement(Extension extension) or
+  DefinitionOfElement(SapExtendCall extension) or
   ReferenceOfElement(Reference reference)
 
 class SapElement extends TSapElement {
-  Extension asDefinition() { this = DefinitionOfElement(result) }
+  SapExtendCall asDefinition() { this = DefinitionOfElement(result) }
 
   Reference asReference() { this = ReferenceOfElement(result) }
 
@@ -1331,12 +1344,12 @@ class SapElement extends TSapElement {
 }
 
 /**
- * The property metadata found in an Extension.
+ * The property metadata found in an SapExtendCall.
  */
 class Metadata extends ObjectLiteralNode {
-  Extension extension;
+  SapExtendCall extension;
 
-  Extension getExtension() { result = extension }
+  SapExtendCall getExtension() { result = extension }
 
   Metadata() { this = extension.getContent().getAPropertySource("metadata") }
 
