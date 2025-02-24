@@ -1,0 +1,14 @@
+{
+  "name": "@advanced-security/codeql-sap-js_index-cds-files",
+  "version": "1.0.0",
+  "description": "CodeQL extractor for DB indexing of .cds.json files produced by the 'cds' compiler.",
+  "main": "index-files.js",
+  "dependencies": {
+    "@sap/cds-dk": "^4.0.0",
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security",
+    "os": "^0.1.2",
+    "path": "^0.12.7",
+    "shell-quote": "^1.8.2"
+  }
+}
