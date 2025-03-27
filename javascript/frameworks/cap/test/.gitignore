@@ -1,0 +1,3 @@
+# Ignore package-lock.json files for tests.
+package-lock.json
+
