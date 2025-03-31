@@ -9,8 +9,8 @@ if [ -z "${CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION:-}" ]; then
     "${CODEQL_DIST}/codeql" database index-files \
         --include-extension=.cds \
         --language cds \
-        --prune **/node_modules/**/* \
-        --prune **/.eslint/**/* \
+        --prune '**/node_modules/**/*' \
+        --prune '**/.eslint/**/*' \
         --total-size-limit=10m \
         -- \
         "$CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE"
@@ -20,8 +20,8 @@ fi
 "${CODEQL_DIST}/codeql" database index-files \
     --include-extension=.view.xml \
     --language xml \
-    --prune **/node_modules/**/* \
-    --prune **/.eslint/**/* \
+    --prune '**/node_modules/**/*' \
+    --prune '**/.eslint/**/*' \
     --total-size-limit=10m \
     -- \
     "$CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE"
