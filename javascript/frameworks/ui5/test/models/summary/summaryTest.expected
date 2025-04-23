@@ -1,75 +1,75 @@
 nodes
-| summary.js:5:9:5:50 | value |
-| summary.js:5:17:5:50 | jQuery. ... param") |
-| summary.js:6:9:6:32 | value1 |
-| summary.js:6:18:6:32 | camelize(value) |
-| summary.js:6:27:6:31 | value |
-| summary.js:7:27:7:32 | value1 |
-| summary.js:11:9:11:50 | value |
-| summary.js:11:17:11:50 | jQuery. ... param") |
-| summary.js:12:9:12:29 | value1 |
-| summary.js:12:18:12:29 | myfun(value) |
-| summary.js:12:24:12:28 | value |
-| summary.js:13:27:13:32 | value1 |
-| summary.js:17:9:17:50 | value |
-| summary.js:17:17:17:50 | jQuery. ... param") |
-| summary.js:18:9:18:34 | value1 |
-| summary.js:18:18:18:34 | capitalize(value) |
-| summary.js:18:29:18:33 | value |
-| summary.js:19:27:19:32 | value1 |
-| summary.js:23:9:23:50 | value |
-| summary.js:23:17:23:50 | jQuery. ... param") |
-| summary.js:24:9:24:36 | value1 |
-| summary.js:24:18:24:36 | escapeRegExp(value) |
-| summary.js:24:31:24:35 | value |
-| summary.js:25:27:25:32 | value1 |
-| summary.js:29:9:29:50 | value |
-| summary.js:29:17:29:50 | jQuery. ... param") |
-| summary.js:30:9:30:37 | value1 |
-| summary.js:30:18:30:37 | formatMessage(value) |
-| summary.js:30:32:30:36 | value |
-| summary.js:31:27:31:32 | value1 |
-| summary.js:35:9:35:50 | value |
-| summary.js:35:17:35:50 | jQuery. ... param") |
-| summary.js:36:9:36:33 | value1 |
-| summary.js:36:18:36:33 | hyphenate(value) |
-| summary.js:36:28:36:32 | value |
-| summary.js:37:27:37:32 | value1 |
+| summary.js:5:7:5:48 | value |
+| summary.js:5:15:5:48 | jQuery. ... param") |
+| summary.js:6:7:6:30 | value1 |
+| summary.js:6:16:6:30 | camelize(value) |
+| summary.js:6:25:6:29 | value |
+| summary.js:7:25:7:30 | value1 |
+| summary.js:11:7:11:48 | value |
+| summary.js:11:15:11:48 | jQuery. ... param") |
+| summary.js:12:7:12:27 | value1 |
+| summary.js:12:16:12:27 | myfun(value) |
+| summary.js:12:22:12:26 | value |
+| summary.js:13:25:13:30 | value1 |
+| summary.js:17:7:17:48 | value |
+| summary.js:17:15:17:48 | jQuery. ... param") |
+| summary.js:18:7:18:32 | value1 |
+| summary.js:18:16:18:32 | capitalize(value) |
+| summary.js:18:27:18:31 | value |
+| summary.js:19:25:19:30 | value1 |
+| summary.js:23:7:23:48 | value |
+| summary.js:23:15:23:48 | jQuery. ... param") |
+| summary.js:24:7:24:34 | value1 |
+| summary.js:24:16:24:34 | escapeRegExp(value) |
+| summary.js:24:29:24:33 | value |
+| summary.js:25:25:25:30 | value1 |
+| summary.js:29:7:29:48 | value |
+| summary.js:29:15:29:48 | jQuery. ... param") |
+| summary.js:30:7:30:35 | value1 |
+| summary.js:30:16:30:35 | formatMessage(value) |
+| summary.js:30:30:30:34 | value |
+| summary.js:31:25:31:30 | value1 |
+| summary.js:35:7:35:48 | value |
+| summary.js:35:15:35:48 | jQuery. ... param") |
+| summary.js:36:7:36:31 | value1 |
+| summary.js:36:16:36:31 | hyphenate(value) |
+| summary.js:36:26:36:30 | value |
+| summary.js:37:25:37:30 | value1 |
 edges
-| summary.js:5:9:5:50 | value | summary.js:6:27:6:31 | value |
-| summary.js:5:17:5:50 | jQuery. ... param") | summary.js:5:9:5:50 | value |
-| summary.js:6:9:6:32 | value1 | summary.js:7:27:7:32 | value1 |
-| summary.js:6:18:6:32 | camelize(value) | summary.js:6:9:6:32 | value1 |
-| summary.js:6:27:6:31 | value | summary.js:6:18:6:32 | camelize(value) |
-| summary.js:11:9:11:50 | value | summary.js:12:24:12:28 | value |
-| summary.js:11:17:11:50 | jQuery. ... param") | summary.js:11:9:11:50 | value |
-| summary.js:12:9:12:29 | value1 | summary.js:13:27:13:32 | value1 |
-| summary.js:12:18:12:29 | myfun(value) | summary.js:12:9:12:29 | value1 |
-| summary.js:12:24:12:28 | value | summary.js:12:18:12:29 | myfun(value) |
-| summary.js:17:9:17:50 | value | summary.js:18:29:18:33 | value |
-| summary.js:17:17:17:50 | jQuery. ... param") | summary.js:17:9:17:50 | value |
-| summary.js:18:9:18:34 | value1 | summary.js:19:27:19:32 | value1 |
-| summary.js:18:18:18:34 | capitalize(value) | summary.js:18:9:18:34 | value1 |
-| summary.js:18:29:18:33 | value | summary.js:18:18:18:34 | capitalize(value) |
-| summary.js:23:9:23:50 | value | summary.js:24:31:24:35 | value |
-| summary.js:23:17:23:50 | jQuery. ... param") | summary.js:23:9:23:50 | value |
-| summary.js:24:9:24:36 | value1 | summary.js:25:27:25:32 | value1 |
-| summary.js:24:18:24:36 | escapeRegExp(value) | summary.js:24:9:24:36 | value1 |
-| summary.js:24:31:24:35 | value | summary.js:24:18:24:36 | escapeRegExp(value) |
-| summary.js:29:9:29:50 | value | summary.js:30:32:30:36 | value |
-| summary.js:29:17:29:50 | jQuery. ... param") | summary.js:29:9:29:50 | value |
-| summary.js:30:9:30:37 | value1 | summary.js:31:27:31:32 | value1 |
-| summary.js:30:18:30:37 | formatMessage(value) | summary.js:30:9:30:37 | value1 |
-| summary.js:30:32:30:36 | value | summary.js:30:18:30:37 | formatMessage(value) |
-| summary.js:35:9:35:50 | value | summary.js:36:28:36:32 | value |
-| summary.js:35:17:35:50 | jQuery. ... param") | summary.js:35:9:35:50 | value |
-| summary.js:36:9:36:33 | value1 | summary.js:37:27:37:32 | value1 |
-| summary.js:36:18:36:33 | hyphenate(value) | summary.js:36:9:36:33 | value1 |
-| summary.js:36:28:36:32 | value | summary.js:36:18:36:33 | hyphenate(value) |
+| summary.js:5:7:5:48 | value | summary.js:6:25:6:29 | value |
+| summary.js:5:15:5:48 | jQuery. ... param") | summary.js:5:7:5:48 | value |
+| summary.js:6:7:6:30 | value1 | summary.js:7:25:7:30 | value1 |
+| summary.js:6:16:6:30 | camelize(value) | summary.js:6:7:6:30 | value1 |
+| summary.js:6:25:6:29 | value | summary.js:6:16:6:30 | camelize(value) |
+| summary.js:11:7:11:48 | value | summary.js:12:22:12:26 | value |
+| summary.js:11:15:11:48 | jQuery. ... param") | summary.js:11:7:11:48 | value |
+| summary.js:12:7:12:27 | value1 | summary.js:13:25:13:30 | value1 |
+| summary.js:12:16:12:27 | myfun(value) | summary.js:12:7:12:27 | value1 |
+| summary.js:12:22:12:26 | value | summary.js:12:16:12:27 | myfun(value) |
+| summary.js:17:7:17:48 | value | summary.js:18:27:18:31 | value |
+| summary.js:17:15:17:48 | jQuery. ... param") | summary.js:17:7:17:48 | value |
+| summary.js:18:7:18:32 | value1 | summary.js:19:25:19:30 | value1 |
+| summary.js:18:16:18:32 | capitalize(value) | summary.js:18:7:18:32 | value1 |
+| summary.js:18:27:18:31 | value | summary.js:18:16:18:32 | capitalize(value) |
+| summary.js:23:7:23:48 | value | summary.js:24:29:24:33 | value |
+| summary.js:23:15:23:48 | jQuery. ... param") | summary.js:23:7:23:48 | value |
+| summary.js:24:7:24:34 | value1 | summary.js:25:25:25:30 | value1 |
+| summary.js:24:16:24:34 | escapeRegExp(value) | summary.js:24:7:24:34 | value1 |
+| summary.js:24:29:24:33 | value | summary.js:24:16:24:34 | escapeRegExp(value) |
+| summary.js:29:7:29:48 | value | summary.js:30:30:30:34 | value |
+| summary.js:29:15:29:48 | jQuery. ... param") | summary.js:29:7:29:48 | value |
+| summary.js:30:7:30:35 | value1 | summary.js:31:25:31:30 | value1 |
+| summary.js:30:16:30:35 | formatMessage(value) | summary.js:30:7:30:35 | value1 |
+| summary.js:30:30:30:34 | value | summary.js:30:16:30:35 | formatMessage(value) |
+| summary.js:35:7:35:48 | value | summary.js:36:26:36:30 | value |
+| summary.js:35:15:35:48 | jQuery. ... param") | summary.js:35:7:35:48 | value |
+| summary.js:36:7:36:31 | value1 | summary.js:37:25:37:30 | value1 |
+| summary.js:36:16:36:31 | hyphenate(value) | summary.js:36:7:36:31 | value1 |
+| summary.js:36:26:36:30 | value | summary.js:36:16:36:31 | hyphenate(value) |
 #select
-| summary.js:7:27:7:32 | value1 | summary.js:5:17:5:50 | jQuery. ... param") | summary.js:7:27:7:32 | value1 | XSS vulnerability due to $@. | summary.js:5:17:5:50 | jQuery. ... param") | user-provided value |
-| summary.js:13:27:13:32 | value1 | summary.js:11:17:11:50 | jQuery. ... param") | summary.js:13:27:13:32 | value1 | XSS vulnerability due to $@. | summary.js:11:17:11:50 | jQuery. ... param") | user-provided value |
-| summary.js:19:27:19:32 | value1 | summary.js:17:17:17:50 | jQuery. ... param") | summary.js:19:27:19:32 | value1 | XSS vulnerability due to $@. | summary.js:17:17:17:50 | jQuery. ... param") | user-provided value |
-| summary.js:25:27:25:32 | value1 | summary.js:23:17:23:50 | jQuery. ... param") | summary.js:25:27:25:32 | value1 | XSS vulnerability due to $@. | summary.js:23:17:23:50 | jQuery. ... param") | user-provided value |
-| summary.js:31:27:31:32 | value1 | summary.js:29:17:29:50 | jQuery. ... param") | summary.js:31:27:31:32 | value1 | XSS vulnerability due to $@. | summary.js:29:17:29:50 | jQuery. ... param") | user-provided value |
-| summary.js:37:27:37:32 | value1 | summary.js:35:17:35:50 | jQuery. ... param") | summary.js:37:27:37:32 | value1 | XSS vulnerability due to $@. | summary.js:35:17:35:50 | jQuery. ... param") | user-provided value |
+| summary.js:7:25:7:30 | value1 | summary.js:5:15:5:48 | jQuery. ... param") | summary.js:7:25:7:30 | value1 | XSS vulnerability due to $@. | summary.js:5:15:5:48 | jQuery. ... param") | user-provided value |
+| summary.js:13:25:13:30 | value1 | summary.js:11:15:11:48 | jQuery. ... param") | summary.js:13:25:13:30 | value1 | XSS vulnerability due to $@. | summary.js:11:15:11:48 | jQuery. ... param") | user-provided value |
+| summary.js:19:25:19:30 | value1 | summary.js:17:15:17:48 | jQuery. ... param") | summary.js:19:25:19:30 | value1 | XSS vulnerability due to $@. | summary.js:17:15:17:48 | jQuery. ... param") | user-provided value |
+| summary.js:25:25:25:30 | value1 | summary.js:23:15:23:48 | jQuery. ... param") | summary.js:25:25:25:30 | value1 | XSS vulnerability due to $@. | summary.js:23:15:23:48 | jQuery. ... param") | user-provided value |
+| summary.js:31:25:31:30 | value1 | summary.js:29:15:29:48 | jQuery. ... param") | summary.js:31:25:31:30 | value1 | XSS vulnerability due to $@. | summary.js:29:15:29:48 | jQuery. ... param") | user-provided value |
+| summary.js:37:25:37:30 | value1 | summary.js:35:15:35:48 | jQuery. ... param") | summary.js:37:25:37:30 | value1 | XSS vulnerability due to $@. | summary.js:35:15:35:48 | jQuery. ... param") | user-provided value |

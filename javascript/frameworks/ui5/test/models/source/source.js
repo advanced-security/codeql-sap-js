@@ -1,4 +1,4 @@
-sap.ui.require(
+sap.ui.define(
   [
     "sap/ui/codeeditor/CodeEditor",
     "sap/m/FeedInput",
