@@ -158,12 +158,12 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
      * NOTE: This only matches a call to the dot expression `sap.ui.define`, and does not consider a flow among `sap`, `ui`, and `define`.
      */
 
-    exists(GlobalVarAccess sap, DotExpr sapUi, DotExpr sapUiDefine |
+    exists(GlobalVarAccess sap, DotExpr sapUi |
       sap.getName() = "sap" and
       sapUi.getBase() = sap and
       sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine
-      // and this.getMethodName() = "define"
+      this.getReceiver() = sapUi and
+      this.getMethodName() = "define"
     )
   }
 
