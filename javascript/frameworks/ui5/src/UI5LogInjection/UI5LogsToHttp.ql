@@ -27,6 +27,47 @@ class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfigurati
   }
 }
 
+class UI5Logger extends RequiredObject {
+  UI5Logger() { this.getDependency() = "sap/base/Log" }
+
+  DataFlow::Node getALogListener() {
+    exists(MethodCallNode addLogListenerCall |
+      addLogListenerCall.getCalleeName() = "addLogListener" and
+      result = addLogListenerCall.getArgument(0)
+    )
+  }
+
+  MethodCallNode getLogEntriesCall() {
+    result.getReceiver().getALocalSource() = this.asSourceNode() and
+    result.getMethodName() = "getLogEntries"
+  }
+}
+
+private predicate test(MethodCallNode call, Node receiver, SourceNode receiverSource) {
+  call.getMethodName() = "getLogEntries" and
+  receiver = call.getReceiver() and
+  receiverSource = receiver.getALocalSource()
+}
+
+SourceNode isLogListener(TypeBackTracker t) {
+  t.start() and
+  exists(UI5Logger log | result = log.getALogListener())
+  or
+  exists(DataFlow::TypeBackTracker t2 | result = isLogListener(t2).backtrack(t2, t))
+}
+
+SourceNode isLogListener() { result = isLogListener(TypeBackTracker::end()) }
+
+class LogListener extends DataFlow::Node {
+  LogListener() { this = isLogListener() }
+
+  FunctionNode getOnLogEntryMethod() {
+    exists(DataFlow::PropWrite propWrite | propWrite.getPropertyName() = "onLogEntry" |
+      result = propWrite.getRhs()
+    )
+  }
+}
+
 from
   UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource
 where
