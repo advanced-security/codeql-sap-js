@@ -157,7 +157,7 @@ try {
     // compiler dependencies may be installed.
     if (packageJsonDirs.size === 0) {
         console.warn('WARN: failed to detect any package.json directories for cds compiler installation.');
-        exit(0);
+        process.exit(0);
     }
 
     packageJsonDirs.forEach((dir) => {
