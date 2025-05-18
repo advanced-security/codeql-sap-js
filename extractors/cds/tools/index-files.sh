@@ -10,13 +10,13 @@ fi
 
 if ! command -v node > /dev/null
 then
-    echo "node executable is required (in PATH) to run the 'index-files.js' script. Please install Node.js and try again."
+    echo "node executable is required (in PATH) to run the 'cds-extractor.js' script. Please install Node.js and try again."
     exit 2
 fi
 
 if ! command -v npm > /dev/null
 then
-    echo "npm executable is required (in PATH) to install the dependencies for the 'index-files.js' script."
+    echo "npm executable is required (in PATH) to install the dependencies for the 'cds-extractor.js' script."
     exit 3
 fi
 
@@ -25,6 +25,7 @@ fi
 # of the project that to be scanned / indexed.
 _cwd="$PWD"
 _response_file_path="$1"
+_run_mode="index-files"
 _script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 echo "Checking response file for CDS files to index"
@@ -33,7 +34,7 @@ echo "Checking response file for CDS files to index"
 # which indicates that no CDS files were selected or found.
 if [ ! -f "$_response_file_path" ] || [ ! -s "$_response_file_path" ]
 then
-    echo "'codeql database index-files --language cds' command terminated early as response file '$_response_file_path' does not exist or is empty. This is because no CDS files were selected or found."
+    echo "'codeql database cds-extractor --language cds' command terminated early as response file '$_response_file_path' does not exist or is empty. This is because no CDS files were selected or found."
     # Exit without error to avoid failing any calling (javascript)
     # extractor, and llow the tool the report the lack of coverage
     # for CDS files.
@@ -50,8 +51,8 @@ fi
 #  1. changing to this script's directory;
 #  2. installing node dependencies here;
 #  3. passing the original working directory as a parameter to the
-#     index-files.js script;
-#  4. expecting the index-files.js script to immediately change back to
+#     cds-extractor.js script;
+#  4. expecting the cds-extractor.js script to immediately change back to
 #     original working (aka the project source root) directory.
 
 cd "$_script_dir" && \
@@ -59,5 +60,5 @@ echo "Installing node package dependencies" && \
 npm install --quiet --no-audit --no-fund && \
 echo "Building TypeScript code" && \
 npm run build && \
-echo "Running the 'index-files.js' script" && \
-node "$(dirname "$0")/out/index-files.js" "$_response_file_path" "${_cwd}"
+echo "Running the 'cds-extractor.js' script" && \
+node "$(dirname "$0")/out/cds-extractor.js" "$_run_mode" "$_cwd" "$_response_file_path"
