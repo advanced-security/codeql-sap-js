@@ -7,17 +7,18 @@ if "%~1"=="" (
 
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo node executable is required (in PATH) to run the 'index-files.js' script. Please install Node.js and try again.
+    echo node executable is required (in PATH) to run the 'cds-extractor.js' script. Please install Node.js and try again.
     exit /b 2
 )
 
 where npm >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo npm executable is required (in PATH) to install the dependencies for the 'index-files.js' script.
+    echo npm executable is required (in PATH) to install the dependencies for the 'cds-extractor.js' script.
     exit /b 3
 )
 
 set "_response_file_path=%~1"
+set "_run_mode=index-files"
 set "_script_dir=%~dp0"
 REM Set _cwd before changing the working directory to the script directory.
 REM We assume this script is called from the source root directory of the
@@ -29,7 +30,7 @@ echo Checking response file for CDS files to index
 REM Terminate early if the _response_file_path doesn't exist or is empty,
 REM which indicates that no CDS files were selected or found.
 if not exist "%_response_file_path%" (
-    echo 'codeql database index-files --language cds' command terminated early as response file '%_response_file_path%' does not exist or is empty. This is because no CDS files were selected or found.
+    echo 'codeql database cds-extractor --language cds' command terminated early as response file '%_response_file_path%' does not exist or is empty. This is because no CDS files were selected or found.
     exit /b 0
 )
 
@@ -43,8 +44,8 @@ REM root, so we make a compromise of:
 REM  1. changing to this script's directory;
 REM  2. installing node dependencies here;
 REM  3. passing the original working directory as a parameter to the
-REM     index-files.js script;
-REM  4. expecting the index-files.js script to immediately change back to
+REM     cds-extractor.js script;
+REM  4. expecting the cds-extractor.js script to immediately change back to
 REM     the original working (aka the project source root) directory.
 
 cd /d "%_script_dir%" && ^
@@ -52,7 +53,7 @@ echo Installing node package dependencies && ^
 npm install --quiet --no-audit --no-fund && ^
 echo Building TypeScript code && ^
 npm run build && ^
-echo Running the 'index-files.js' script && ^
-node "%_script_dir%out\index-files.js" "%_response_file_path%" "%_cwd%"
+echo Running the 'cds-extractor.js' script && ^
+node "%_script_dir%out\cds-extractor.js" "%_run_mode%" "%_cwd%" "%_response_file_path%"
 
 exit /b %ERRORLEVEL%

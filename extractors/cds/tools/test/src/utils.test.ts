@@ -1,6 +1,8 @@
 import { resolve } from 'path';
 
-import { getArg, validateArguments } from '../../src/utils';
+import { RunMode, getArg, validateArguments } from '../../src/utils';
+
+const EXTRACTOR_SCRIPT_NAME = 'cds-extractor.js';
 
 describe('utils', () => {
   describe('getArg', () => {
@@ -35,28 +37,107 @@ describe('utils', () => {
       console.warn = originalConsoleWarn;
     });
 
-    it('should return true when argument count matches required count', () => {
-      const args = ['node', 'index-files.js', 'response-file', 'source-root'];
-      const result = validateArguments(args, 4);
-      expect(result).toBe(true);
-      expect(console.warn).not.toHaveBeenCalled();
+    it('should validate index-files mode requires 3 arguments', () => {
+      const args = [
+        'node',
+        EXTRACTOR_SCRIPT_NAME,
+        RunMode.INDEX_FILES,
+        'source-root',
+        'response-file',
+      ];
+      const result = validateArguments(args, RunMode.INDEX_FILES);
+      expect(result.isValid).toBe(true);
+      expect(result.args).toEqual({
+        runMode: RunMode.INDEX_FILES,
+        sourceRoot: 'source-root',
+        responseFile: 'response-file',
+      });
     });
 
-    it('should return false and print warning when argument count does not match required count', () => {
-      const args = ['node', 'index-files.js', 'response-file'];
-      const result = validateArguments(args, 4);
-      expect(result).toBe(false);
-      expect(console.warn).toHaveBeenCalledWith(
-        'Usage: node index-files.js <response-file> <source-root>',
+    it('should invalidate index-files mode with missing response file', () => {
+      const args = ['node', EXTRACTOR_SCRIPT_NAME, RunMode.INDEX_FILES, 'source-root'];
+      const result = validateArguments(args, RunMode.INDEX_FILES);
+      expect(result.isValid).toBe(false);
+      expect(result.usageMessage).toContain('<response-file>');
+    });
+
+    it('should validate debug-parser mode with optional response file', () => {
+      // With response file
+      const argsWithResponse = [
+        'node',
+        EXTRACTOR_SCRIPT_NAME,
+        RunMode.DEBUG_PARSER,
+        'source-root',
+        'response-file',
+      ];
+      const resultWithResponse = validateArguments(argsWithResponse, RunMode.DEBUG_PARSER);
+      expect(resultWithResponse.isValid).toBe(true);
+      expect(resultWithResponse.args).toEqual({
+        runMode: RunMode.DEBUG_PARSER,
+        sourceRoot: 'source-root',
+        responseFile: 'response-file',
+      });
+
+      // Without response file
+      const argsWithoutResponse = [
+        'node',
+        EXTRACTOR_SCRIPT_NAME,
+        RunMode.DEBUG_PARSER,
+        'source-root',
+      ];
+      const resultWithoutResponse = validateArguments(argsWithoutResponse, RunMode.DEBUG_PARSER);
+      expect(resultWithoutResponse.isValid).toBe(true);
+      expect(resultWithoutResponse.args).toEqual({
+        runMode: RunMode.DEBUG_PARSER,
+        sourceRoot: 'source-root',
+        responseFile: '',
+      });
+    });
+
+    it(`should validate minimum required arguments for runMode=${RunMode.AUTOBUILD}`, () => {
+      const args = ['node', EXTRACTOR_SCRIPT_NAME, RunMode.AUTOBUILD, 'source-root'];
+      const result = validateArguments(args, RunMode.AUTOBUILD);
+      expect(result.isValid).toBe(true);
+      expect(result.args).toEqual({
+        runMode: RunMode.AUTOBUILD,
+        sourceRoot: 'source-root',
+        responseFile: '',
+      });
+    });
+
+    it(`should validate minimum required arguments for runMode=${RunMode.DEBUG_PARSER}`, () => {
+      const args = ['node', EXTRACTOR_SCRIPT_NAME, RunMode.DEBUG_PARSER, 'source-root'];
+      const result = validateArguments(args, RunMode.DEBUG_PARSER);
+      expect(result.isValid).toBe(true);
+      expect(result.usageMessage).toContain(
+        `${RunMode.DEBUG_PARSER} <source-root> [<response-file>]`,
       );
     });
 
-    it('should use fallback script name when not provided', () => {
-      const args = ['node'];
-      const result = validateArguments(args, 3);
-      expect(result).toBe(false);
-      // When args[1] is undefined, the script name in the message has no value (just empty space)
-      expect(console.warn).toHaveBeenCalledWith('Usage: node  <response-file> <source-root>');
+    it(`should validate minimum required arguments for runMode=${RunMode.INDEX_FILES}`, () => {
+      const args = [
+        'node',
+        EXTRACTOR_SCRIPT_NAME,
+        RunMode.INDEX_FILES,
+        'source-root',
+        'response-file',
+      ];
+      const result = validateArguments(args, RunMode.INDEX_FILES);
+      expect(result.isValid).toBe(true);
+      expect(result.usageMessage).toContain(`${RunMode.INDEX_FILES} <source-root> <response-file>`);
+      expect(result.args).toEqual({
+        runMode: RunMode.INDEX_FILES,
+        sourceRoot: 'source-root',
+        responseFile: 'response-file',
+      });
+    });
+
+    it('should invalidate when run mode is not valid', () => {
+      const args = ['node', EXTRACTOR_SCRIPT_NAME, 'invalid-mode', 'source-root'];
+      const result = validateArguments(args, RunMode.AUTOBUILD);
+      expect(result.isValid).toBe(false);
+      expect(result.usageMessage).toContain('Invalid run mode');
+      expect(result.usageMessage).toContain('Supported run modes:');
     });
   });
 });

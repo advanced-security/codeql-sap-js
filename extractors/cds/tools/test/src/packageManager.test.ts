@@ -2,19 +2,25 @@ import * as childProcess from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { addDependencyDiagnostic, addPackageJsonParsingDiagnostic } from '../../src/diagnostics';
-import { findPackageJsonDirs, installDependencies } from '../../src/packageManager';
+import { addPackageJsonParsingDiagnostic } from '../../src/diagnostics';
+import {
+  findPackageJsonDirs,
+  installDependencies,
+  extractUniqueDependencyCombinations,
+} from '../../src/packageManager';
 
 // Mock dependencies
 jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
+  mkdirSync: jest.fn(),
+  writeFileSync: jest.fn(),
 }));
 
 jest.mock('path', () => ({
   ...jest.requireActual('path'),
   dirname: jest.fn(),
-  join: jest.fn(),
+  join: jest.fn((dir, file) => `${dir}/${file}`),
   resolve: jest.fn((...paths) => paths.join('/')),
 }));
 
@@ -362,77 +368,305 @@ describe('packageManager', () => {
     });
   });
 
+  describe('extractUniqueDependencyCombinations', () => {
+    it('should extract unique dependency combinations from projects', () => {
+      // Setup mock projects with different dependency combinations
+      const projectMap = new Map();
+      projectMap.set('project1', {
+        packageJson: {
+          dependencies: {
+            '@sap/cds': '1.0.0',
+            '@sap/cds-dk': '1.0.0',
+          },
+        },
+      });
+
+      projectMap.set('project2', {
+        packageJson: {
+          dependencies: {
+            '@sap/cds': '1.0.0',
+            '@sap/cds-dk': '1.0.0',
+          },
+        },
+      });
+
+      projectMap.set('project3', {
+        packageJson: {
+          dependencies: {
+            '@sap/cds': '2.0.0',
+            '@sap/cds-dk': '2.0.0',
+          },
+        },
+      });
+
+      projectMap.set('project-no-deps', {
+        packageJson: {
+          dependencies: {},
+        },
+      });
+
+      projectMap.set('project-no-package', {});
+
+      const result = extractUniqueDependencyCombinations(projectMap);
+
+      // Should extract 3 unique combinations - the two explicit ones plus one for 'latest'
+      expect(result.length).toBe(3);
+
+      // First combination should be for CDS 1.0.0
+      expect(result.find(c => c.cdsVersion === '1.0.0')).toBeDefined();
+
+      // Second combination should be for CDS 2.0.0
+      expect(result.find(c => c.cdsVersion === '2.0.0')).toBeDefined();
+
+      // Third combination should be for CDS latest
+      expect(result.find(c => c.cdsVersion === 'latest')).toBeDefined();
+    });
+
+    it('should handle devDependencies as well as dependencies', () => {
+      // Setup mock projects with dependencies in different locations
+      const projectMap = new Map();
+      projectMap.set('project-dev-deps', {
+        packageJson: {
+          devDependencies: {
+            '@sap/cds': '3.0.0',
+            '@sap/cds-dk': '3.0.0',
+          },
+        },
+      });
+
+      projectMap.set('project-mixed-deps', {
+        packageJson: {
+          dependencies: {
+            '@sap/cds': '4.0.0',
+          },
+          devDependencies: {
+            '@sap/cds-dk': '4.0.0',
+          },
+        },
+      });
+
+      const result = extractUniqueDependencyCombinations(projectMap);
+
+      // Should extract 2 unique combinations
+      expect(result.length).toBe(2);
+
+      // Should find the devDependencies version
+      expect(result.find(c => c.cdsVersion === '3.0.0')).toBeDefined();
+
+      // Should find the mixed dependencies version
+      expect(result.find(c => c.cdsVersion === '4.0.0')).toBeDefined();
+    });
+
+    it('should return default latest combination when no projects have dependencies', () => {
+      // Setup mock projects with no CDS dependencies
+      const projectMap = new Map();
+      projectMap.set('project-empty', {
+        packageJson: {
+          dependencies: {},
+        },
+      });
+
+      projectMap.set('project-other-deps', {
+        packageJson: {
+          dependencies: {
+            'some-other-package': '1.0.0',
+          },
+        },
+      });
+
+      const result = extractUniqueDependencyCombinations(projectMap);
+
+      // Should return one default combination
+      expect(result.length).toBe(1);
+      expect(result[0].cdsVersion).toBe('latest');
+      expect(result[0].cdsDkVersion).toBe('latest');
+      expect(result[0].hash).toBeDefined();
+    });
+
+    it('should return default latest combination when projectMap is empty', () => {
+      const projectMap = new Map();
+      const result = extractUniqueDependencyCombinations(projectMap);
+
+      // Should return one default combination
+      expect(result.length).toBe(1);
+      expect(result[0].cdsVersion).toBe('latest');
+      expect(result[0].cdsDkVersion).toBe('latest');
+    });
+  });
+
   describe('installDependencies', () => {
-    it('should install dependencies for each directory', () => {
-      const packageJsonDirs = new Set(['/project1', '/project2']);
+    it('should install dependencies using the cache strategy', () => {
+      // Setup mock filesystem with package.json files
+      const projectMap = new Map();
+      projectMap.set('project1', {
+        projectDir: 'project1',
+        packageJson: {
+          name: 'project1',
+          dependencies: {
+            '@sap/cds': '1.0.0',
+            '@sap/cds-dk': '1.0.0',
+          },
+        },
+      });
+
+      projectMap.set('project2', {
+        projectDir: 'project2',
+        packageJson: {
+          name: 'project2',
+          dependencies: {
+            '@sap/cds': '1.0.0',
+            '@sap/cds-dk': '1.0.0',
+          },
+        },
+      });
+
+      const sourceRoot = '/source-root';
       const mockCodeqlPath = '/mock/codeql';
 
-      installDependencies(packageJsonDirs, mockCodeqlPath);
+      // Mock filesystem functions
+      (fs.existsSync as jest.Mock).mockImplementation(path => {
+        // Check for cache directory
+        if (path === '/source-root/.cds-extractor-cache') return false;
+        // Return false for node_modules to force npm install
+        if (path.includes('node_modules')) return false;
+        return true;
+      });
 
-      // Check npm install was called for each directory
-      expect(childProcess.execFileSync).toHaveBeenCalledTimes(4); // 2 directories x 2 calls per directory
+      // Mock the cache directory creation
+      (fs.mkdirSync as jest.Mock).mockImplementation(() => {});
 
-      // Check first npm install call for project1
-      expect(childProcess.execFileSync).toHaveBeenNthCalledWith(
-        1,
+      // Mock filesystem write
+      (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+
+      // Call the function
+      const result = installDependencies(projectMap, sourceRoot, mockCodeqlPath);
+
+      // Should return a map with the project to cache directory mapping
+      expect(result).toBeDefined();
+      expect(result instanceof Map).toBe(true);
+
+      // Verify mkdir was called for the cache directory
+      expect(fs.mkdirSync).toHaveBeenCalled();
+
+      // Verify npm install was called for the cache
+      expect(childProcess.execFileSync).toHaveBeenCalledWith(
         'npm',
         ['install', '--quiet', '--no-audit', '--no-fund'],
-        expect.objectContaining({ cwd: '/project1' }),
-      );
-
-      // Check @sap/cds-dk install call for project1
-      expect(childProcess.execFileSync).toHaveBeenNthCalledWith(
-        2,
-        'npm',
-        ['install', '--quiet', '--no-audit', '--no-fund', '--no-save', '@sap/cds-dk'],
-        expect.objectContaining({ cwd: '/project1' }),
+        expect.anything(),
       );
     });
 
-    it('should log warning when no directories are found', () => {
-      const packageJsonDirs = new Set<string>();
+    it('should log warning when no projects are found', () => {
+      const projectMap = new Map();
+      const sourceRoot = '/source-root';
 
       // Mock console.warn
       const originalConsoleWarn = console.warn;
       console.warn = jest.fn();
 
-      installDependencies(packageJsonDirs, '/mock/codeql');
+      installDependencies(projectMap, sourceRoot);
 
       expect(childProcess.execFileSync).not.toHaveBeenCalled();
       expect(console.warn).toHaveBeenCalledWith(
-        'WARN: failed to detect any package.json directories for cds compiler installation.',
+        'WARN: failed to detect any CDS projects for dependency installation.',
       );
 
       // Restore console.warn
       console.warn = originalConsoleWarn;
     });
 
-    it('should add diagnostic when npm install fails', () => {
-      const packageJsonDirs = new Set(['/project-error']);
-      const mockCodeqlPath = '/mock/codeql';
-
-      // Mock error for execFileSync
-      (childProcess.execFileSync as jest.Mock).mockImplementation(() => {
-        throw new Error('npm install failed');
+    it('should handle cache reuse for existing dependencies', () => {
+      // Setup mock project map
+      const projectMap = new Map();
+      projectMap.set('project1', {
+        projectDir: 'project1',
+        packageJson: {
+          name: 'project1',
+          dependencies: {
+            '@sap/cds': '1.0.0',
+            '@sap/cds-dk': '1.0.0',
+          },
+        },
       });
 
-      // Mock console.error
-      const originalConsoleError = console.error;
-      console.error = jest.fn();
+      const sourceRoot = '/source-root';
 
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((dir, file) => `${dir}/${file}`);
+      // Mock that the cache directory and node_modules already exist
+      (fs.existsSync as jest.Mock).mockImplementation(() => {
+        return true;
+      });
 
-      installDependencies(packageJsonDirs, mockCodeqlPath);
+      // Call the function
+      const result = installDependencies(projectMap, sourceRoot);
 
-      expect(addDependencyDiagnostic).toHaveBeenCalledWith(
-        '/project-error/package.json',
-        expect.stringContaining('npm install failed'),
-        mockCodeqlPath,
+      // Should return a map with the project to cache directory mapping
+      expect(result).toBeDefined();
+      expect(result instanceof Map).toBe(true);
+
+      // Verify npm install was not called since cache exists
+      expect(childProcess.execFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should handle projects with no CDS dependencies', () => {
+      // Setup mock project map with no explicit CDS dependencies
+      const projectMap = new Map();
+      projectMap.set('project-no-deps', {
+        projectDir: 'project-no-deps',
+        packageJson: {
+          name: 'project-no-deps',
+          dependencies: {
+            'some-other-dep': '1.0.0',
+          },
+        },
+      });
+
+      const sourceRoot = '/source-root';
+
+      // Mock existsSync to allow cache dir creation but reject node_modules
+      (fs.existsSync as jest.Mock).mockImplementation(path => {
+        if (!path) return false;
+        // The cache directory doesn't exist yet
+        if (path === '/source-root/.cds-extractor-cache') return false;
+        // Any cache subdirectory doesn't exist yet
+        if (typeof path === 'string' && path.startsWith('/source-root/.cds-extractor-cache/'))
+          return false;
+        // Node modules don't exist to force npm install
+        if (typeof path === 'string' && path.includes('node_modules')) return false;
+        // Everything else exists
+        return true;
+      });
+
+      // Mock console.log and console.warn to avoid test noise
+      const originalConsoleLog = console.log;
+      const originalConsoleWarn = console.warn;
+      console.log = jest.fn();
+      console.warn = jest.fn();
+
+      // Call the function
+      const result = installDependencies(projectMap, sourceRoot);
+
+      // Should return a map with the project mapped to cache directory with 'latest' versions
+      expect(result.size).toBe(1);
+
+      // Verify fs.mkdirSync was called
+      expect(fs.mkdirSync).toHaveBeenCalled();
+
+      // Verify writeFileSync was called with a package.json containing latest versions
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.stringContaining('"@sap/cds": "latest"'),
       );
 
-      // Restore console.error
-      console.error = originalConsoleError;
+      // Verify npm install was called
+      expect(childProcess.execFileSync).toHaveBeenCalledWith(
+        'npm',
+        ['install', '--quiet', '--no-audit', '--no-fund'],
+        expect.anything(),
+      );
+
+      // Restore console.log and console.warn
+      console.log = originalConsoleLog;
+      console.warn = originalConsoleWarn;
     });
   });
 });
