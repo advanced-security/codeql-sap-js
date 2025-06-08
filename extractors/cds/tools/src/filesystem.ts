@@ -101,11 +101,10 @@ export function readResponseFile(responseFile: string): string[] {
 export function recursivelyRenameJsonFiles(dirPath: string): void {
   // Make sure the directory exists
   if (!dirExists(dirPath)) {
-    console.log(`Directory not found or not a directory: ${dirPath}`);
+    console.log(`Directory not found: ${dirPath}`);
     return;
   }
-
-  console.log(`Processing JSON files in output directory: ${dirPath}`);
+  console.log(`Processing JSON files in directory: ${dirPath}`);
 
   // Get all entries in the directory
   const entries = readdirSync(dirPath, { withFileTypes: true });

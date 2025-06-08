@@ -22,10 +22,11 @@
     "strict": true
   },
   "include": [
-    "src/**/*.ts",
-    "test/**/*.ts",
     "*.ts",
-    "jest.config.js"
+    "eslint.config.mjs",
+    "jest.config.js",
+    "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "node_modules",

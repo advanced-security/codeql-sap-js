@@ -71,3 +71,5 @@ tmp/
 **.testproj
 dbs
 *.cds.json
+.cds-extractor-cache
+

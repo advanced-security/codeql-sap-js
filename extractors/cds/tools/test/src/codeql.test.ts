@@ -157,7 +157,7 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'Error executing JavaScript extractor: Failed to execute',
+        error: 'Error running JavaScript extractor: Failed to execute',
       });
     });
 
@@ -175,7 +175,7 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'JavaScript extractor failed with exit code: 1',
+        error: 'JavaScript extractor failed with exit code 1',
       });
     });
 
@@ -190,12 +190,12 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'Error executing JavaScript extractor: Failed to execute',
+        error: 'Error running JavaScript extractor: Failed to execute',
       });
 
       expect(addJavaScriptExtractorDiagnostic).toHaveBeenCalledWith(
         '/path/to/source',
-        'Error executing JavaScript extractor: Failed to execute',
+        'Error running JavaScript extractor: Failed to execute',
         codeqlPath,
       );
     });
