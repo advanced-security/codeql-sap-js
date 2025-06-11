@@ -1,7 +1,8 @@
 import * as childProcess from 'child_process';
+import * as path from 'path';
 
-import { determineCdsCommand, compileCdsToJson } from '../../src/cdsCompiler';
-import * as filesystem from '../../src/filesystem';
+import { determineCdsCommand, compileCdsToJson } from '../../../src/cds/compiler';
+import * as filesystem from '../../../src/filesystem';
 
 // Mock dependencies
 jest.mock('child_process', () => ({
@@ -13,7 +14,14 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
 }));
 
-jest.mock('../../src/filesystem', () => ({
+jest.mock('path', () => ({
+  resolve: jest.fn(),
+  join: jest.fn(),
+  relative: jest.fn(),
+  delimiter: ':', // for Unix-like systems
+}));
+
+jest.mock('../../../src/filesystem', () => ({
   fileExists: jest.fn(),
   dirExists: jest.fn(),
   recursivelyRenameJsonFiles: jest.fn(),
@@ -57,14 +65,22 @@ describe('cdsCompiler', () => {
   });
 
   describe('compileCdsToJson', () => {
+    beforeEach(() => {
+      // Mock path functions
+      (path.resolve as jest.Mock).mockImplementation(p => `/resolved/${p}`);
+      (path.join as jest.Mock).mockImplementation((...parts) => parts.join('/'));
+      (path.relative as jest.Mock).mockImplementation((_from, _to) => 'relative/path');
+    });
+
     it('should successfully compile CDS file to JSON file', () => {
       const cdsFilePath = '/path/to/model.cds';
       const sourceRoot = '/path/to';
       const cdsCommand = 'cds';
-      const expectedJsonPath = '/path/to/model.cds.json';
+      const resolvedCdsPath = `/resolved/${cdsFilePath}`;
+      const expectedJsonPath = `${resolvedCdsPath}.json`;
 
       // Mock filesystem.fileExists to return true for CDS file
-      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === cdsFilePath);
+      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === resolvedCdsPath);
 
       // Mock successful compilation
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
@@ -75,7 +91,7 @@ describe('cdsCompiler', () => {
 
       // Mock that the output JSON file exists
       (filesystem.fileExists as jest.Mock).mockImplementation(
-        path => path === cdsFilePath || path === expectedJsonPath,
+        path => path === resolvedCdsPath || path === expectedJsonPath,
       );
 
       // Mock that the output is not a directory
@@ -86,13 +102,14 @@ describe('cdsCompiler', () => {
       expect(result).toEqual({
         success: true,
         outputPath: expectedJsonPath,
+        compiledAsProject: false,
       });
 
       expect(childProcess.spawnSync).toHaveBeenCalledWith(
         cdsCommand,
         [
           'compile',
-          cdsFilePath,
+          resolvedCdsPath,
           '--to',
           'json',
           '--dest',
@@ -113,6 +130,7 @@ describe('cdsCompiler', () => {
       const cdsFilePath = '/path/to/nonexistent.cds';
       const sourceRoot = '/path/to';
       const cdsCommand = 'cds';
+      const resolvedCdsPath = `/resolved/${cdsFilePath}`;
 
       // Mock filesystem.fileExists to return false for CDS file
       (filesystem.fileExists as jest.Mock).mockReturnValue(false);
@@ -121,7 +139,7 @@ describe('cdsCompiler', () => {
 
       expect(result).toEqual({
         success: false,
-        message: expect.stringContaining(`Expected CDS file '${cdsFilePath}' does not exist.`),
+        message: expect.stringContaining(`Expected CDS file '${resolvedCdsPath}' does not exist.`),
       });
 
       expect(childProcess.spawnSync).not.toHaveBeenCalled();
@@ -131,9 +149,10 @@ describe('cdsCompiler', () => {
       const cdsFilePath = '/path/to/model.cds';
       const sourceRoot = '/path/to';
       const cdsCommand = 'cds';
+      const resolvedCdsPath = `/resolved/${cdsFilePath}`;
 
       // Mock filesystem.fileExists to return true for CDS file
-      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === cdsFilePath);
+      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === resolvedCdsPath);
 
       // Mock compilation failure
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
@@ -154,10 +173,11 @@ describe('cdsCompiler', () => {
       const cdsFilePath = '/path/to/model.cds';
       const sourceRoot = '/path/to';
       const cdsCommand = 'cds';
-      const expectedJsonPath = '/path/to/model.cds.json';
+      const resolvedCdsPath = `/resolved/${cdsFilePath}`;
+      const expectedJsonPath = `${resolvedCdsPath}.json`;
 
       // Mock filesystem.fileExists to return true for CDS file
-      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === cdsFilePath);
+      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === resolvedCdsPath);
 
       // Mock successful compilation
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
@@ -167,7 +187,7 @@ describe('cdsCompiler', () => {
       });
 
       // Mock that the output is a directory
-      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === cdsFilePath);
+      (filesystem.fileExists as jest.Mock).mockImplementation(path => path === resolvedCdsPath);
       (filesystem.dirExists as jest.Mock).mockImplementation(path => path === expectedJsonPath);
 
       const result = compileCdsToJson(cdsFilePath, sourceRoot, cdsCommand);
@@ -175,10 +195,17 @@ describe('cdsCompiler', () => {
       expect(result).toEqual({
         success: true,
         outputPath: expectedJsonPath,
+        compiledAsProject: false,
       });
 
       // Check if recursivelyRenameJsonFiles was called
       expect(filesystem.recursivelyRenameJsonFiles).toHaveBeenCalledWith(expectedJsonPath);
     });
+
+    // This test is a duplicate of the first test case with the same name
+    // The implementation above already tests this functionality
+
+    // This test is a duplicate of the first test case with the same name
+    // The implementation above already tests this functionality
   });
 });
