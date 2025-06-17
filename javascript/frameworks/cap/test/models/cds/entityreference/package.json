@@ -2,9 +2,10 @@
   "name": "@advanced-security/entityreference",
   "version": "1.0.0",
   "dependencies": {
-    "@sap/cds": "^7",
-    "express": "^4.21.2",
-    "@cap-js/sqlite": "*"
+    "@cap-js/sqlite": "*",
+    "@sap/cds": "^9.0.3",
+    "@sap/cds-dk": "^9.0.5",
+    "express": "^4.21.2"
   },
   "scripts": {
     "start": "cds-serve",
