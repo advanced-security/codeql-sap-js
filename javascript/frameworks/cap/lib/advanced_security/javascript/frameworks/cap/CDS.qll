@@ -7,6 +7,7 @@ import advanced_security.javascript.frameworks.cap.CQL
 import advanced_security.javascript.frameworks.cap.RemoteFlowSources
 
 /**
+ * The CDS facade that provides useful interfaces to the current CAP application.
  * ```js
  * const cds = require('@sap/cds')
  * ```
@@ -20,20 +21,8 @@ class CdsFacade extends API::Node {
 /**
  * A call to `entities` on a CDS facade.
  */
-class CdsEntitiesCall extends API::Node {
-  CdsEntitiesCall() { exists(CdsFacade cds | this = cds.getMember("entities")) }
-}
-
-/**
- * An entity instance obtained by the entity's namespace,
- * via `cds.entities`
- * ```javascript
- * // Obtained through `cds.entities`
- * const { Service1 } = cds.entities("sample.application.namespace");
- * ```
- */
-class EntityEntry extends DataFlow::CallNode {
-  EntityEntry() { exists(CdsEntitiesCall c | c.getACall() = this) }
+class CdsEntitiesCall extends DataFlow::CallNode {
+  CdsEntitiesCall() { exists(CdsFacade cds | this = cds.getMember("entities").getACall()) }
 
   /**
    * Gets the namespace that this entity belongs to.
@@ -41,6 +30,23 @@ class EntityEntry extends DataFlow::CallNode {
   string getNamespace() {
     result = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
   }
+}
+
+/**
+ * The property `db` of on a CDS facade, often accessed as `cds.db`.
+ */
+class CdsDb extends SourceNode {
+  CdsDb() { exists(CdsFacade cds | this = cds.getMember("db").asSource()) }
+
+  MethodCallNode getRunCall() { result = this.getAMemberCall("run") }
+
+  MethodCallNode getCreateCall() { result = this.getAMemberCall("create") }
+
+  MethodCallNode getUpdateCall() { result = this.getAMemberCall("update") }
+
+  MethodCallNode getDeleteCall() { result = this.getAMemberCall("delete") }
+
+  MethodCallNode getInsertCall() { result = this.getAMemberCall("insert") }
 }
 
 /**
@@ -95,7 +101,8 @@ class CdsConnectToCall extends DataFlow::CallNode {
 }
 
 /**
- * A dataflow node that represents a service. Note that its definition is a `UserDefinedApplicationService`, not a `ServiceInstance`.
+ * A dataflow node that represents a service.
+ * Note that its definition is a `UserDefinedApplicationService`, not a `ServiceInstance`.
  */
 abstract class ServiceInstance extends SourceNode {
   abstract UserDefinedApplicationService getDefinition();
@@ -494,10 +501,7 @@ class ImplMethodCallApplicationServiceDefinition extends MethodCallNode,
   UserDefinedApplicationService
 {
   ImplMethodCallApplicationServiceDefinition() {
-    exists(CdsFacade cds |
-      this.getReceiver() = cds.getMember("service").asSource() and
-      this.getMethodName() = "impl"
-    )
+    exists(CdsFacade cds | this = cds.getMember("service").getMember("impl").getACall())
   }
 
   override FunctionNode getInitFunction() { result = this.getArgument(0) }
@@ -601,38 +605,87 @@ class CdsTransaction extends MethodCallNode {
 
 abstract class CdsReference extends DataFlow::Node { }
 
+/**
+ * A reference object to an entity that belongs to a service. e.g.
+ *
+ * ```javascript
+ * // 1. Obtained through `cds.entities`
+ * const { Entity1 } = cds.entities("sample.application.namespace");
+ * // 2. Obtained through `Service.entities`, in this case the `Service`
+ * // being a `this` variable of the service.
+ * const { Entity2 } = this.entities;
+ * // 3. A direct mention of a name in a literal pass to the fluent API builder.
+ * SELECT.from`Books`.where(`ID=${id}`)
+ * ```
+ */
 abstract class EntityReference extends CdsReference {
   abstract CdlEntity getCqlDefinition();
 }
 
+/**
+ * A reference object to an entity that belongs to a service, either
+ * obtained through a method call to `entities`, or a read from property
+ * `entities`. e.g.
+ *
+ * ```javascript
+ * // 1. Obtained through `cds.entities`
+ * const { Entity1 } = cds.entities("sample.application.namespace");
+ * // 2. Obtained through `Service.entities`, in this case the `Service`
+ * // being a `this` variable of the service.
+ * const { Entity2 } = this.entities;
+ * // 3. A direct mention of a name in a literal pass to the fluent API builder.
+ * SELECT.from`Books`.where(`ID=${id}`)
+ * ```
+ */
 class EntityReferenceFromEntities extends EntityReference instanceof PropRead {
-  DataFlow::SourceNode entities;
+  /**
+   * Property or call to entities
+   */
+  DataFlow::SourceNode entitiesAccess;
+  /**
+   * Receiver of the entities call or the base of propread
+   */
   DataFlow::Node receiver;
+  /**
+   * Name of the (unqualified) entity being accessed
+   */
   string entityName;
 
   EntityReferenceFromEntities() {
+    /*
+     * 1. Reference obtained through a call to `entities` on the
+     * service instance.
+     */
+
     exists(MethodCallNode entitiesCall |
-      entities = entitiesCall and
+      entitiesAccess = entitiesCall and
       receiver = entitiesCall.getReceiver() and
       entitiesCall.getMethodName() = "entities" and
       this = entitiesCall.getAPropertyRead(entityName)
     )
     or
+    /*
+     * 2. Reference obtained through a read from property `entities` of the
+     * service instance.
+     */
+
     exists(PropRead entitiesRead |
-      entities = entitiesRead and
+      entitiesAccess = entitiesRead and
       receiver = entitiesRead.getBase() and
       entitiesRead.getPropertyName() = "entities" and
       this = entitiesRead.getAPropertyRead(entityName)
     )
   }
 
-  DataFlow::SourceNode getEntities() { result = entities }
+  DataFlow::SourceNode getEntities() { result = entitiesAccess }
 
   DataFlow::Node getReceiver() { result = receiver }
 
   string getEntityName() { result = entityName }
 
   abstract override CdlEntity getCqlDefinition();
+
+  abstract UserDefinedApplicationService getServiceDefinition();
 }
 
 /**
@@ -642,13 +695,7 @@ class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromE
 {
   ServiceInstance service;
 
-  EntityReferenceFromUserDefinedServiceEntities() {
-    this.getReceiver() = service.(ServiceInstanceFromThisNode)
-    or
-    this.getEntities() = service.(ServiceInstanceFromCdsConnectTo).getAMemberCall("entities")
-    or
-    this.getEntities() = service.(ServiceInstanceFromCdsConnectTo).getAPropertyRead("entities")
-  }
+  EntityReferenceFromUserDefinedServiceEntities() { this.getReceiver().getALocalSource() = service }
 
   override CdlEntity getCqlDefinition() {
     this.getEntities() instanceof PropRead and
@@ -665,6 +712,8 @@ class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromE
           .getEntity(this.getEntities().(MethodCallNode).getArgument(0).getStringValue() + "." +
               entityName)
   }
+
+  override UserDefinedApplicationService getServiceDefinition() { result = service.getDefinition() }
 }
 
 /**
@@ -672,20 +721,21 @@ class EntityReferenceFromUserDefinedServiceEntities extends EntityReferenceFromE
  */
 class EntityReferenceFromDbOrCdsEntities extends EntityReferenceFromEntities {
   EntityReferenceFromDbOrCdsEntities() {
-    exists(DBServiceInstanceFromCdsConnectTo db |
-      entities = db.getAMemberCall("entities") or entities = db.getAPropertyRead("entities")
-    )
-    or
-    exists(CdsFacade cds |
-      entities = cds.getMember("entities").getACall() or
-      entities = cds.getMember("entities").asSource()
-    )
+    this.getReceiver().getALocalSource() instanceof DBServiceInstanceFromCdsConnectTo or
+    exists(CdsFacade cds | this.getReceiver().getALocalSource() = cds.getNode()) or
+    exists(CdsFacade cds | this.getReceiver().getALocalSource() = cds.getMember("db").asSource())
   }
 
   override CdlEntity getCqlDefinition() {
     /* NOTE: the result may be multiple; but they are all identical so we don't really care. */
     result.getName() =
       this.getEntities().(MethodCallNode).getArgument(0).getStringValue() + "." + entityName
+  }
+
+  override UserDefinedApplicationService getServiceDefinition() {
+    /* TODO: Always get the DB service definition. */
+    none()
+    // result.getServiceName() = this.(CdsEntitiesCall).getNamespace()
   }
 }
 
@@ -739,5 +789,59 @@ class HandlerParameterData instanceof PropRead {
     )
   }
 
-  string toString() { result = this.(PropRead).toString() }
+  string toString() { result = super.toString() }
+}
+
+/**
+ * A call to a method capable of running a CQL query. This includes the following:
+ * - Generic query runners: `cds.run`, `cds.db.run`, `srv.run`
+ * - Shortcut to CQL's `READ`: `cds.read`, `cds.db.read`, `srv.read`
+ * - Shortcut to CQL's `CREATE`: `cds.create`, `cds.db.create`, `srv.create`
+ * - Shortcut to CQL's `INSERT`: `cds.insert`, `cds.db.insert`, `srv.insert`
+ * - Shortcut to CQL's `UPSERT`: `cds.upsert`, `cds.db.upsert`, `srv.upsert`
+ * - Shortcut to CQL's `UPDATE`: `cds.update`, `cds.db.update`, `srv.update`
+ * - Shortcut to CQL's `DELETE`: `cds.delete`, `cds.db.delete`, `srv.delete`
+ */
+abstract class CqlQueryRunnerCall extends MethodCallNode {
+  SourceNode base;
+  string methodName;
+
+  CqlQueryRunnerCall() {
+    this = base.getAMemberCall(methodName) and
+    (
+      /*
+       * 1. Method call on the CDS facade or the base database service,
+       * accessed as `cds.db`.
+       */
+
+      exists(CdsFacade cds | base = cds.asSource()) or
+      exists(CdsDb cdsDb | base = cdsDb) or
+      /* 2. Method call on a service instance object. */
+      exists(ServiceInstance srv | base = srv)
+    )
+  }
+}
+
+class CqlRunMethodCall extends CqlQueryRunnerCall {
+  CqlRunMethodCall() { this.getMethodName() = "run" }
+}
+
+class CqlReadMethodCall extends CqlQueryRunnerCall {
+  CqlReadMethodCall() { this.getMethodName() = "read" }
+}
+
+class CqlCreateMethodCall extends CqlQueryRunnerCall {
+  CqlCreateMethodCall() { this.getMethodName() = "create" }
+}
+
+class CqlUpdateMethodCall extends CqlQueryRunnerCall {
+  CqlUpdateMethodCall() { this.getMethodName() = "update" }
+}
+
+class CqlDeleteMethodCall extends CqlQueryRunnerCall {
+  CqlDeleteMethodCall() { this.getMethodName() = "delete" }
+}
+
+class CqlInsertMethodCall extends CqlQueryRunnerCall {
+  CqlInsertMethodCall() { this.getMethodName() = "insert" }
 }
