@@ -12,38 +12,27 @@
 
 import javascript
 import DataFlow::PathGraph
-import semmle.javascript.security.dataflow.SqlInjectionCustomizations::SqlInjection
-import advanced_security.javascript.frameworks.cap.CQL
-import advanced_security.javascript.frameworks.cap.RemoteFlowSources
+import advanced_security.javascript.frameworks.cap.CAPCqlInjectionQuery
 
-class CqlIConfiguration extends TaintTracking::Configuration {
-  CqlIConfiguration() { this = "CqlInjection" }
-
-  override predicate isSource(DataFlow::Node source) { source instanceof RemoteFlowSource }
-
-  override predicate isSink(DataFlow::Node sink) { sink instanceof CQLSink }
-
-  override predicate isSanitizer(DataFlow::Node node) {
-    super.isSanitizer(node) or
-    node instanceof Sanitizer
-  }
-
-  override predicate isAdditionalTaintStep(DataFlow::Node pred, DataFlow::Node succ) {
-    //string concatenation in a clause arg taints the clause
-    exists(TaintedClause clause |
-      clause.getArgument() = pred.asExpr() and
-      clause.asExpr() = succ.asExpr()
-    )
-    or
-    //less precise, any concat in the alternative sql stmt construction techniques
-    exists(ParseCQLTaintedClause parse |
-      parse.getAnArgument() = pred and
-      parse = succ
-    )
-  }
+DataFlow::Node getQueryOfSink(DataFlow::Node sink) {
+  exists(CqlRunMethodCall cqlRunMethodCall |
+    sink = cqlRunMethodCall.(CqlRunMethodCall).getAQueryParameter() and
+    result = sink
+  )
+  or
+  exists(CqlShortcutMethodCallWithStringConcat shortcutCall |
+    sink = shortcutCall.(CqlQueryRunnerCall).getAQueryParameter() and
+    result = shortcutCall
+  )
+  or
+  exists(AwaitExpr await, CqlClauseWithStringConcatParameter cqlClauseWithStringConcat |
+    sink = await.flow() and
+    await.getOperand() = cqlClauseWithStringConcat.(CqlClause).asExpr() and
+    result = cqlClauseWithStringConcat.(CqlClause).flow()
+  )
 }
 
-from CqlIConfiguration sql, DataFlow::PathNode source, DataFlow::PathNode sink
+from CqlInjectionConfiguration sql, DataFlow::PathNode source, DataFlow::PathNode sink
 where sql.hasFlowPath(source, sink)
-select sink.getNode(), source, sink, "This query depends on a $@.", source.getNode(),
-  "user-provided value"
+select getQueryOfSink(sink.getNode()), source, sink, "This CQL query depends on a $@.",
+  source.getNode(), "user-provided value"
