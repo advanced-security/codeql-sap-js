@@ -30,16 +30,20 @@ pre-finalize.sh`"]
     JSE[[javascript extractor]]
     DTRAC[codeql database<br>trace-command]
     SPF[[pre-finalize.sh]]
-    DIDX[codeql database index-files<br> --language=cds<br>--include-extension=.cds]
-    SIF[[index-files.sh]]
-    SIT[[index-files.ts/js]]
-    NPM[[npm install & build]]
-    DETS[[Determine CDS command]]
-    FIND[[Find package.json dirs]]
-    INST[[Install dependencies]]
-    CC[[cds compiler]]
+    ABCMD[[autobuild.sh/cmd]]
+    ABT[[cds-extractor.ts/js]]
+    ENV[[setup & validate<br>environment]]
+    PDG[[build project<br>dependency graph]]
+    INSTC[[install dependencies<br>with caching]]
+    PROC[[process CDS files<br>to JSON]]
+    PMAP[[project-aware<br>dependency resolution]]
+    FIND[[find project for<br>CDS file]]
+    CDCMD[[determine CDS<br>command for project]]
+    COMP[[compile CDS<br>to JSON]]
     CDJ([.cds.json files])
+    FILT[[configure LGTM<br>index filters]]
     JSA[[javascript extractor<br>autobuild script]]
+    DIAG[[add compilation<br>diagnostics]]
     TF([CodeQL TRAP files])
     DBF[codeql database finalize<br> -- /path/to/database]
 
@@ -54,20 +58,30 @@ pre-finalize.sh`"]
     JSE ==> |run autobuild within<br>the javascript extractor| DTRAC
     
     DTRAC ==> |run the build --command| SPF
-    SPF ==> |run codeql index-files<br>for CDS files| DIDX
-    DIDX ==> |invoke script via<br>--search-path| SIF
-    SIF ==> |runs TypeScript version<br>after npm install| NPM
-    NPM ==> |executes compiled<br>index-files.js| SIT
+    SPF ==> |run autobuilder<br>for CDS files| ABCMD
+    ABCMD ==> |runs TypeScript version<br>of CDS extractor| ABT
     
-    SIT ==> |finds project directories<br>with package.json| FIND
-    FIND ==> |install CDS dependencies<br>in project directories| INST
-    SIT ==> |determines which<br>cds command to use| DETS
-    DETS ==> |processes each CDS file| CC
+    ABT ==> |setup and validate<br>environment first| ENV
+    ABT ==> |build project dependency<br>graph for source root| PDG
+    PDG ==> |analyze CDS projects<br>structure & relationships| PMAP
     
-    CC ==> |compile .cds files to<br>create .cds.json files| CDJ
+    ABT ==> |efficiently install<br>required dependencies| INSTC
+    INSTC ==> |use cached approach for<br>dependency installation| PMAP
+    
+    ABT ==> |process each CDS file<br>to generate JSON files| PROC
+    PROC ==> |find which project<br>contains this CDS file| FIND
+    FIND ==> |uses project-aware<br>dependency resolution| PMAP
+    FIND ==> |determine appropriate<br>CDS command for project| CDCMD
+    
+    CDCMD ==> |compile CDS file to JSON<br>with project context| COMP
+    COMP ==> |generate JSON representation<br>with project awareness| CDJ
+    COMP --x |if compilation fails,<br>report diagnostics| DIAG
+    DIAG -.-> |diagnostics stored<br>in database| DB
+    
     CDJ -.-> |stored in same location<br>as original .cds files| DB
     
-    SIT ==> |configures extraction<br>filters for JSON files| JSA
+    ABT ==> |configure extraction<br>filters for JSON files| FILT
+    ABT ==> |run JavaScript extractor<br>to process JSON files| JSA
     JSA ==> |processes .cds.json files<br>via javascript extractor| CDJ
     
     CDJ ==> |javascript extractor<br>generates TRAP files| TF

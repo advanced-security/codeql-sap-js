@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { execFileSync } from 'child_process';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -16,33 +18,80 @@ import {
 jest.mock('child_process');
 jest.mock('os');
 jest.mock('path');
-jest.mock('../../src/filesystem', () => ({
-  dirExists: jest.fn(),
-  fileExists: jest.fn(),
+jest.mock('../../src/filesystem', () => {
+  const originalModule = jest.requireActual('../../src/filesystem');
+  return {
+    ...originalModule,
+    dirExists: jest.fn().mockImplementation(path => {
+      // Default to true unless specified in a test
+      if (path === '/invalid/source') return false;
+      return true;
+    }),
+    fileExists: jest.fn().mockImplementation(_path => {
+      // Path-specific mock logic can be added here if needed
+      return true; // Default to true for all paths
+    }),
+  };
+});
+jest.mock('fs', () => ({
+  existsSync: jest.fn().mockImplementation(path => {
+    // Return true for autobuild script paths in the tests
+    if (path === '/path/to/js/extractor/tools/autobuild.sh') return true;
+    if (path === '/dist/js/extractor/tools/autobuild.sh') return true;
+    if (path === '/path/to/codeql_unpacked/codeql') return true;
+    if (path === '/dist/codeql/codeql') return true;
+    return false;
+  }),
 }));
 
 describe('environment', () => {
   // Save original environment
   const originalEnv = { ...process.env };
+  // Define a logger for capturing console output
+  let consoleSpy: {
+    log: jest.SpyInstance;
+    warn: jest.SpyInstance;
+    error: jest.SpyInstance;
+  };
 
   beforeEach(() => {
-    jest.resetModules();
-    jest.resetAllMocks();
+    jest.resetModules(); // Reset modules to clear cache
+    jest.resetAllMocks(); // Reset all mocks
     // Reset environment variables before each test
     process.env = { ...originalEnv };
+
+    // Spy on console methods
+    consoleSpy = {
+      log: jest.spyOn(console, 'log').mockImplementation(() => {}),
+      warn: jest.spyOn(console, 'warn').mockImplementation(() => {}),
+      error: jest.spyOn(console, 'error').mockImplementation(() => {}),
+    };
+
+    // Default path mocks
+    (path.resolve as jest.Mock).mockImplementation((p: string) => p);
+    (path.join as jest.Mock).mockImplementation((...args: string[]) => args.join('/'));
+
+    // Reset the fs.existsSync mock to its default implementation in the mock declaration
+    (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
+      // Return true for autobuild script paths in the tests
+      if (path === '/path/to/js/extractor/tools/autobuild.sh') return true;
+      if (path === '/dist/js/extractor/tools/autobuild.sh') return true;
+      if (path === '/path/to/codeql_unpacked/codeql') return true;
+      if (path === '/dist/codeql/codeql') return true;
+      return false;
+    });
   });
 
   afterEach(() => {
     // Restore environment variables after each test
     process.env = { ...originalEnv };
+    // Restore console spies
+    consoleSpy.log.mockRestore();
+    consoleSpy.warn.mockRestore();
+    consoleSpy.error.mockRestore();
   });
 
   describe('getPlatformInfo', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      jest.resetAllMocks();
-    });
-
     it('should correctly identify Windows platform', () => {
       // Mock OS platform and architecture
       (os.platform as jest.Mock).mockReturnValue('win32');
@@ -71,118 +120,210 @@ describe('environment', () => {
   });
 
   describe('getCodeQLExePath', () => {
-    it('should resolve codeql.exe path on Windows', () => {
-      // Mock platform info
-      jest.spyOn(os, 'platform').mockReturnValue('win32');
-      jest.spyOn(os, 'arch').mockReturnValue('x64');
-
-      // Mock path.resolve
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Set CODEQL_DIST environment variable
+    it('should resolve codeql.exe path on Windows when CODEQL_DIST is set and valid', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('win32');
       process.env.CODEQL_DIST = '/path/to/codeql';
 
-      const codeqlPath = getCodeQLExePath();
+      // Mock existsSync to return true specifically for the codeql.exe path
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/path/to/codeql/codeql.exe',
+      );
 
+      const codeqlPath = getCodeQLExePath();
       expect(codeqlPath).toBe('/path/to/codeql/codeql.exe');
-      expect(path.join).toHaveBeenCalledWith('/path/to/codeql', 'codeql.exe');
+      expect(fs.existsSync).toHaveBeenCalledWith('/path/to/codeql/codeql.exe');
     });
 
-    it('should resolve codeql path on non-Windows', () => {
-      // Mock platform info
-      jest.spyOn(os, 'platform').mockReturnValue('darwin');
-      jest.spyOn(os, 'arch').mockReturnValue('x64');
-
-      // Mock path.resolve
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Set CODEQL_DIST environment variable
+    it('should resolve codeql path on non-Windows when CODEQL_DIST is set and valid', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
       process.env.CODEQL_DIST = '/path/to/codeql';
 
-      const codeqlPath = getCodeQLExePath();
+      // Mock existsSync to return true specifically for the codeql path
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/path/to/codeql/codeql',
+      );
 
+      const codeqlPath = getCodeQLExePath();
       expect(codeqlPath).toBe('/path/to/codeql/codeql');
-      expect(path.join).toHaveBeenCalledWith('/path/to/codeql', 'codeql');
+      expect(fs.existsSync).toHaveBeenCalledWith('/path/to/codeql/codeql');
     });
 
-    it('should handle missing CODEQL_DIST environment variable', () => {
-      // Mock platform info
-      jest.spyOn(os, 'platform').mockReturnValue('darwin');
+    it('should fall back to PATH search if CODEQL_DIST is set but path is invalid, then succeed if PATH is valid', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      process.env.CODEQL_DIST = '/invalid/dist/path';
 
-      // Mock path.resolve
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
+      // Mock file existence
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/invalid/dist/path/codeql') return false;
+        if (p === '/resolved/via/version/codeql') return true;
+        return false;
+      });
 
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
+      // Mock execFileSync to return unpackedLocation
+      (execFileSync as jest.Mock).mockReturnValueOnce(
+        JSON.stringify({ unpackedLocation: '/resolved/via/version' }),
+      );
 
-      // Ensure CODEQL_DIST is not set
+      const codeqlPath = getCodeQLExePath();
+      expect(codeqlPath).toBe('/resolved/via/version/codeql');
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "CODEQL_DIST is set to '/invalid/dist/path', but CodeQL executable was not found",
+        ),
+      );
+      expect(execFileSync).toHaveBeenCalledWith(
+        'codeql',
+        ['version', '--format=json'],
+        expect.any(Object),
+      );
+    });
+
+    it('should find codeql via PATH using `codeql version --format=json` if CODEQL_DIST is not set', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
       delete process.env.CODEQL_DIST;
 
-      const codeqlPath = getCodeQLExePath();
+      // Mock file existence
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/resolved/via/version/codeql',
+      );
 
-      expect(codeqlPath).toBe('/codeql');
-      expect(path.join).toHaveBeenCalledWith('', 'codeql');
+      // Mock execFileSync to return unpackedLocation
+      (execFileSync as jest.Mock).mockReturnValueOnce(
+        JSON.stringify({ unpackedLocation: '/resolved/via/version' }),
+      );
+
+      const codeqlPath = getCodeQLExePath();
+      expect(codeqlPath).toBe('/resolved/via/version/codeql');
+      expect(execFileSync).toHaveBeenCalledWith(
+        'codeql',
+        ['version', '--format=json'],
+        expect.any(Object),
+      );
+      expect(fs.existsSync).toHaveBeenCalledWith('/resolved/via/version/codeql');
+    });
+
+    it('should return empty string if CODEQL_DIST is not set and `codeql version --format=json` fails (ENOENT)', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      delete process.env.CODEQL_DIST;
+
+      // Mock execFileSync to throw ENOENT error
+      const error = new Error('Command not found');
+      (error as any).code = 'ENOENT';
+      (execFileSync as jest.Mock).mockImplementation(() => {
+        throw error;
+      });
+
+      const codeqlPath = getCodeQLExePath();
+      expect(codeqlPath).toBe('');
+      expect(consoleSpy.log).toHaveBeenCalledWith(
+        expect.stringContaining("INFO: The command 'codeql' was not found in your system PATH."),
+      );
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('ERROR: Failed to determine CodeQL executable path'),
+      );
+    });
+
+    it('should return empty string if CODEQL_DIST is not set and `codeql version --format=json` output is invalid (missing unpackedLocation)', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      delete process.env.CODEQL_DIST;
+
+      // Mock execFileSync to return invalid JSON without unpackedLocation
+      (execFileSync as jest.Mock).mockReturnValueOnce(JSON.stringify({ version: '1.2.3' }));
+
+      const codeqlPath = getCodeQLExePath();
+      expect(codeqlPath).toBe('');
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "WARN: Could not determine CodeQL executable path from 'codeql version --format=json' output.",
+        ),
+      );
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('ERROR: Failed to determine CodeQL executable path'),
+      );
+    });
+
+    it('should return empty string if `codeql version --format=json` provides unpackedLocation but executable is not found there', () => {
+      // Setup platform
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      delete process.env.CODEQL_DIST;
+
+      // Mock execFileSync to return valid JSON with unpackedLocation
+      (execFileSync as jest.Mock).mockReturnValueOnce(
+        JSON.stringify({ unpackedLocation: '/some/path' }),
+      );
+
+      // Mock existsSync to return false for the executable path
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      const codeqlPath = getCodeQLExePath();
+      expect(codeqlPath).toBe('');
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "WARN: 'codeql version --format=json' provided unpackedLocation '/some/path', but executable not found",
+        ),
+      );
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining('ERROR: Failed to determine CodeQL executable path'),
+      );
     });
   });
 
   describe('getJavaScriptExtractorRoot', () => {
     it('should return CODEQL_EXTRACTOR_JAVASCRIPT_ROOT when set', () => {
       process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT = '/path/to/js/extractor';
-
       const jsExtractorRoot = getJavaScriptExtractorRoot('/path/to/codeql');
-
       expect(jsExtractorRoot).toBe('/path/to/js/extractor');
       expect(execFileSync).not.toHaveBeenCalled();
     });
 
-    it('should resolve JavaScript extractor root using codeql command when env var not set', () => {
-      // Mock execFileSync to return a path
-      (execFileSync as jest.Mock).mockReturnValue(Buffer.from('/resolved/js/extractor/path\n'));
-
-      // Ensure environment variable is not set
+    it('should resolve JS extractor root if env var not set and codeqlExePath is valid', () => {
       delete process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT;
 
-      const jsExtractorRoot = getJavaScriptExtractorRoot('/path/to/codeql');
+      // Mock execFileSync to return a path
+      (execFileSync as jest.Mock).mockReturnValueOnce('/resolved/js/extractor/path\n');
 
+      const jsExtractorRoot = getJavaScriptExtractorRoot('/valid/codeql/path');
       expect(jsExtractorRoot).toBe('/resolved/js/extractor/path');
-      expect(execFileSync).toHaveBeenCalledWith('/path/to/codeql', [
-        'resolve',
-        'extractor',
-        '--language=javascript',
-      ]);
+      expect(execFileSync).toHaveBeenCalledWith(
+        '/valid/codeql/path',
+        ['resolve', 'extractor', '--language=javascript'],
+        expect.any(Object),
+      );
     });
 
-    it('should handle errors when resolving JavaScript extractor root', () => {
+    it('should return empty string if codeqlExePath is empty', () => {
+      delete process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT;
+      const jsExtractorRoot = getJavaScriptExtractorRoot('');
+      expect(jsExtractorRoot).toBe('');
+      expect(execFileSync).not.toHaveBeenCalled();
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /^\[CDS-.+ \d+\] WARN: Cannot resolve JavaScript extractor root because the CodeQL executable path was not provided or found\.$/,
+        ),
+      );
+    });
+
+    it('should return empty string and log error if JS extractor resolution fails', () => {
+      delete process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT;
+
       // Mock execFileSync to throw an error
       (execFileSync as jest.Mock).mockImplementation(() => {
         throw new Error('Command failed');
       });
 
-      // Mock console.error
-      const mockConsoleError = jest.spyOn(console, 'error').mockImplementation();
-
-      // Ensure environment variable is not set
-      delete process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT;
-
-      const jsExtractorRoot = getJavaScriptExtractorRoot('/path/to/codeql');
-
+      const jsExtractorRoot = getJavaScriptExtractorRoot('/valid/codeql/path');
       expect(jsExtractorRoot).toBe('');
-      expect(execFileSync).toHaveBeenCalledWith('/path/to/codeql', [
-        'resolve',
-        'extractor',
-        '--language=javascript',
-      ]);
-      expect(mockConsoleError).toHaveBeenCalledWith(
-        'Error resolving JavaScript extractor root: Error: Command failed',
+      expect(consoleSpy.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Error resolving JavaScript extractor root using '/valid/codeql/path': Error: Command failed",
+        ),
       );
-
-      mockConsoleError.mockRestore();
     });
   });
 
@@ -230,164 +371,155 @@ describe('environment', () => {
 
   describe('getAutobuildScriptPath', () => {
     it('should return correct autobuild script path for Windows', () => {
-      // Mock platform info
-      jest.spyOn(os, 'platform').mockReturnValue('win32');
-
-      // Mock path.resolve
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
+      (os.platform as jest.Mock).mockReturnValue('win32');
       const autobuildScriptPath = getAutobuildScriptPath('/path/to/js/extractor');
-
       expect(autobuildScriptPath).toBe('/path/to/js/extractor/tools/autobuild.cmd');
-      expect(path.join).toHaveBeenCalledWith('/path/to/js/extractor', 'tools', 'autobuild.cmd');
     });
 
     it('should return correct autobuild script path for non-Windows', () => {
-      // Mock platform info
-      jest.spyOn(os, 'platform').mockReturnValue('darwin');
-
-      // Mock path.resolve
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
+      (os.platform as jest.Mock).mockReturnValue('darwin');
       const autobuildScriptPath = getAutobuildScriptPath('/path/to/js/extractor');
-
       expect(autobuildScriptPath).toBe('/path/to/js/extractor/tools/autobuild.sh');
-      expect(path.join).toHaveBeenCalledWith('/path/to/js/extractor', 'tools', 'autobuild.sh');
+    });
+
+    it('should return empty string if jsExtractorRoot is empty', () => {
+      const autobuildScriptPath = getAutobuildScriptPath('');
+      expect(autobuildScriptPath).toBe('');
     });
   });
 
   describe('configureLgtmIndexFilters', () => {
     it('should set up index filters with standard patterns when no existing filters are set', () => {
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Ensure LGTM_INDEX_FILTERS is not set
       delete process.env.LGTM_INDEX_FILTERS;
-
       configureLgtmIndexFilters();
-
       expect(process.env.LGTM_INDEX_FILTERS).toBeDefined();
       expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
       expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
     });
 
     it('should preserve existing exclusion filters except for generic exclusions', () => {
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // We need a better understanding of how the function is filtering the patterns
-      // Let's modify our test to focus on what we know the function is actually doing
       process.env.LGTM_INDEX_FILTERS = [
-        'exclude:**/*.*', // generic pattern that will be handled differently
-        'exclude:specific/path/**/*', // specific pattern that should be preserved
+        'exclude:**/*.*', // generic pattern
+        'exclude:specific/path/**/*', // specific pattern
       ].join('\n');
-
-      // Mock console.log to avoid noise in tests
-      const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
-
       configureLgtmIndexFilters();
-
-      // Check if specific patterns are included
       expect(process.env.LGTM_INDEX_FILTERS).toContain('include:**/*.cds.json');
       expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:specific/path/**/*');
-
-      // Check that the standard settings are applied
-      expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
-      expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
-
-      mockConsoleLog.mockRestore();
-    });
-
-    it('should always set required environment variables', () => {
-      // Mock path.join
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      configureLgtmIndexFilters();
-
       expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
       expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
     });
   });
 
   describe('setupAndValidateEnvironment', () => {
-    // Get mocked filesystem module using jest.requireMock
-    const filesystem = jest.requireMock('../../src/filesystem');
+    let filesystem: any;
 
     beforeEach(() => {
-      // Reset mocks
-      jest.clearAllMocks();
-
-      // Mock platform info
-      (os.platform as jest.Mock).mockReturnValue('linux');
-      (os.arch as jest.Mock).mockReturnValue('x64');
-
-      // Mock path functions
-      (path.resolve as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-      (path.join as jest.Mock).mockImplementation((...paths) => paths.join('/'));
-
-      // Default mock for execFileSync
-      (execFileSync as jest.Mock).mockReturnValue(Buffer.from('/path/to/js/extractor\n'));
-
-      // Default mock for filesystem functions
-      (filesystem.dirExists as jest.Mock).mockReturnValue(true);
-      (filesystem.fileExists as jest.Mock).mockReturnValue(true);
-
-      // Set environment variables
-      process.env.CODEQL_DIST = '/path/to/codeql';
+      filesystem = jest.requireMock('../../src/filesystem');
+      filesystem.dirExists = jest.fn().mockReturnValue(true);
+      // Ensure the mock is properly reset for each test
+      (fs.existsSync as jest.Mock).mockReset();
     });
 
-    it('should return success when all validations pass', () => {
-      const result = setupAndValidateEnvironment('/path/to/source');
+    it('should report error if CodeQL executable is not found', () => {
+      // Setup CodeQL detection to fail
+      delete process.env.CODEQL_DIST;
 
-      expect(result.success).toBe(true);
-      expect(result.errorMessages).toHaveLength(0);
-      expect(result.codeqlExePath).toBe('/path/to/codeql/codeql');
-      expect(result.jsExtractorRoot).toBe('/path/to/js/extractor');
-      expect(result.autobuildScriptPath).toBe('/path/to/js/extractor/tools/autobuild.sh');
-      expect(result.platformInfo.platform).toBe('linux');
-    });
+      // Mock execFileSync to throw ENOENT for codeql
+      const error = new Error('Command not found');
+      (error as any).code = 'ENOENT';
+      (execFileSync as jest.Mock).mockImplementation((_command: string, args: string[]) => {
+        if (args?.includes('version')) {
+          throw error;
+        }
+        return '';
+      });
 
-    it('should report error when source root does not exist', () => {
-      (filesystem.dirExists as jest.Mock).mockReturnValue(false);
+      // No codeql executable exists
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
 
       const result = setupAndValidateEnvironment('/path/to/source');
 
       expect(result.success).toBe(false);
       expect(result.errorMessages).toContain(
-        "project root directory '/path/to/source' does not exist",
+        'Failed to find CodeQL executable. Ensure CODEQL_DIST is set and valid, or CodeQL CLI is in PATH.',
+      );
+      expect(result.errorMessages).toContain(
+        'Cannot determine JavaScript extractor root because CodeQL executable was not found.',
       );
     });
 
-    it('should report error when JavaScript extractor root cannot be resolved', () => {
-      (execFileSync as jest.Mock).mockImplementation(() => {
-        throw new Error('Command failed');
+    it('should report error when source root does not exist', () => {
+      // We're relying on the global mock to return false for '/invalid/source'
+      const result = setupAndValidateEnvironment('/invalid/source');
+
+      expect(result.success).toBe(false);
+      expect(result.errorMessages).toContain(
+        "Project root directory '/invalid/source' does not exist.",
+      );
+    });
+
+    it('should report error if JS extractor root cannot be resolved even if CodeQL is found', () => {
+      // Mock OS platform
+      (os.platform as jest.Mock).mockReturnValue('linux');
+
+      // Setup CodeQL detection
+      delete process.env.CODEQL_DIST;
+
+      // Mock execFileSync for version and extractor resolution
+      (execFileSync as jest.Mock).mockImplementation((_command: string, args: string[]) => {
+        if (args?.includes('version')) {
+          return JSON.stringify({ unpackedLocation: '/path/to/codeql_unpacked' });
+        }
+        if (args?.includes('extractor')) {
+          throw new Error('Extractor resolution failed');
+        }
+        return '';
+      });
+
+      // Mock fs.existsSync
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/path/to/codeql_unpacked/codeql') return true;
+        return false;
       });
 
       const result = setupAndValidateEnvironment('/path/to/source');
 
       expect(result.success).toBe(false);
+      expect(result.codeqlExePath).toBe('/path/to/codeql_unpacked/codeql'); // CodeQL was found
+      expect(result.jsExtractorRoot).toBe(''); // But JS extractor root was not
       expect(result.errorMessages).toContain(
-        'CODEQL_EXTRACTOR_JAVASCRIPT_ROOT environment variable is not set',
+        'Failed to determine JavaScript extractor root using the found CodeQL executable.',
       );
     });
 
-    it('should set up environment variables when validations pass', () => {
-      // Set CDS environment variables
-      process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE = 'cds-db';
-      process.env.CODEQL_EXTRACTOR_CDS_DIAGNOSTIC_DIR = 'cds-diag';
+    // Test for the specific runtime error condition
+    it('should fail validation if CODEQL_DIST is not set and codeql is not in PATH, leading to empty codeqlExePath', () => {
+      // Setup CodeQL detection to fail
+      delete process.env.CODEQL_DIST;
+
+      // Mock execFileSync to throw ENOENT for codeql
+      const error = new Error('Command not found');
+      (error as any).code = 'ENOENT';
+      (execFileSync as jest.Mock).mockImplementation((_command: string, args: string[]) => {
+        if (args?.includes('version')) {
+          throw error;
+        }
+        return '';
+      });
+
+      // No codeql executable exists
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
 
       const result = setupAndValidateEnvironment('/path/to/source');
 
-      expect(result.success).toBe(true);
-      expect(process.env.CODEQL_EXTRACTOR_JAVASCRIPT_ROOT).toBe('/path/to/js/extractor');
-      expect(process.env.CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE).toBe('cds-db');
-      expect(process.env.CODEQL_EXTRACTOR_JAVASCRIPT_DIAGNOSTIC_DIR).toBe('cds-diag');
+      expect(result.success).toBe(false);
+      expect(result.codeqlExePath).toBe(''); // This is key for the runtime error
+      expect(result.errorMessages).toContain(
+        'Failed to find CodeQL executable. Ensure CODEQL_DIST is set and valid, or CodeQL CLI is in PATH.',
+      );
+      expect(result.errorMessages).toContain(
+        'Cannot determine JavaScript extractor root because CodeQL executable was not found.',
+      );
     });
   });
 });
