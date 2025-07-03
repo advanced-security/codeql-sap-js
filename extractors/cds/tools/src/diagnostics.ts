@@ -3,6 +3,8 @@ import { resolve } from 'path';
 
 import { quote } from 'shell-quote';
 
+import { cdsExtractorLog } from './logging';
+
 /**
  * Severity levels for diagnostics
  */
@@ -50,11 +52,12 @@ export function addDiagnostic(
       '--',
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ''}`,
     ]);
-    console.log(`Added ${severity} diagnostic for ${logPrefix}: ${filePath}`);
+    cdsExtractorLog('info', `Added ${severity} diagnostic for ${logPrefix}: ${filePath}`);
     return true;
   } catch (err) {
-    console.error(
-      `ERROR: Failed to add ${severity} diagnostic for ${logPrefix}=${filePath} : ${String(err)}`,
+    cdsExtractorLog(
+      'error',
+      `Failed to add ${severity} diagnostic for ${logPrefix}=${filePath} : ${String(err)}`,
     );
     return false;
   }

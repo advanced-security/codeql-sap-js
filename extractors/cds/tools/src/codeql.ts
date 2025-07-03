@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 
 import { addJavaScriptExtractorDiagnostic } from './diagnostics';
 import { getPlatformInfo } from './environment';
+import { cdsExtractorLog } from './logging';
 
 /**
  * Run the JavaScript extractor autobuild script
@@ -16,7 +17,8 @@ export function runJavaScriptExtractor(
   autobuildScriptPath: string,
   codeqlExePath?: string,
 ): { success: boolean; error?: string } {
-  console.log(
+  cdsExtractorLog(
+    'info',
     `Extracting the .cds.json files by running the 'javascript' extractor autobuild script:
         ${autobuildScriptPath}`,
   );
@@ -41,7 +43,7 @@ export function runJavaScriptExtractor(
   });
 
   if (result.error) {
-    const errorMessage = `Error executing JavaScript extractor: ${result.error.message}`;
+    const errorMessage = `Error running JavaScript extractor: ${result.error.message}`;
     if (codeqlExePath) {
       addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath);
     }
@@ -52,7 +54,7 @@ export function runJavaScriptExtractor(
   }
 
   if (result.status !== 0) {
-    const errorMessage = `JavaScript extractor failed with exit code: ${String(result.status)}`;
+    const errorMessage = `JavaScript extractor failed with exit code ${String(result.status)}`;
     if (codeqlExePath) {
       addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath);
     }
@@ -113,7 +115,8 @@ export function validateRequirements(
   }
 
   if (errorMessages.length > 0) {
-    console.warn(
+    cdsExtractorLog(
+      'warn',
       `'${codeqlExe} database index-files --language cds' terminated early due to: ${errorMessages.join(
         ', ',
       )}.`,

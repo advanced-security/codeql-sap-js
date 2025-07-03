@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync, renameSync, statSync } from 'fs';
 import { format, join, parse } from 'path';
 
+import { cdsExtractorLog } from './logging';
+
 /**
  * Check if a directory exists
  * @param dirPath Path to the directory to check
@@ -101,11 +103,10 @@ export function readResponseFile(responseFile: string): string[] {
 export function recursivelyRenameJsonFiles(dirPath: string): void {
   // Make sure the directory exists
   if (!dirExists(dirPath)) {
-    console.log(`Directory not found or not a directory: ${dirPath}`);
+    cdsExtractorLog('info', `Directory not found: ${dirPath}`);
     return;
   }
-
-  console.log(`Processing JSON files in output directory: ${dirPath}`);
+  cdsExtractorLog('info', `Processing JSON files in directory: ${dirPath}`);
 
   // Get all entries in the directory
   const entries = readdirSync(dirPath, { withFileTypes: true });
@@ -124,7 +125,7 @@ export function recursivelyRenameJsonFiles(dirPath: string): void {
       // Rename .json files to .cds.json
       const newPath = format({ ...parse(fullPath), base: '', ext: '.cds.json' });
       renameSync(fullPath, newPath);
-      console.log(`Renamed CDS output file from ${fullPath} to ${newPath}`);
+      cdsExtractorLog('info', `Renamed CDS output file from ${fullPath} to ${newPath}`);
     }
   }
 }

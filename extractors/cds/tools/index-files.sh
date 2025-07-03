@@ -2,15 +2,14 @@
 
 set -eu
 
-if [ $# -ne 1 ]
-then
-    echo "Usage:  $0 <response_file_path>"
-    exit 1
-fi
+## This script currently:
+## - ignores any arguments passed to it;
+## - assumes it is run from the root of the project source directory;
+## 
 
 if ! command -v node > /dev/null
 then
-    echo "node executable is required (in PATH) to run the 'index-files.js' script. Please install Node.js and try again."
+    echo "node executable is required (in PATH) to run the 'cds-extractor.js' script. Please install Node.js and try again."
     exit 2
 fi
 
@@ -24,40 +23,50 @@ fi
 # from which this script was called, which we assume is the "source root" directory
 # of the project that to be scanned / indexed.
 _cwd="$PWD"
-_response_file_path="$1"
 _script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+_cds_extractor_js_path="${_script_dir}/dist/cds-extractor.js"
+_cds_extractor_node_modules_dir="${_script_dir}/node_modules"
 
-echo "Checking response file for CDS files to index"
-
-# Terminate early if the _response_file_path doesn't exist or is empty,
-# which indicates that no CDS files were selected or found.
-if [ ! -f "$_response_file_path" ] || [ ! -s "$_response_file_path" ]
-then
-    echo "'codeql database index-files --language cds' command terminated early as response file '$_response_file_path' does not exist or is empty. This is because no CDS files were selected or found."
-    # Exit without error to avoid failing any calling (javascript)
-    # extractor, and llow the tool the report the lack of coverage
-    # for CDS files.
-    exit 0
-fi
-
-# Change to the directory of this script to ensure that npm looks up the
+# Change to the directory of this shell script to ensure that npm looks up the
 # package.json file in the correct directory and installs the dependencies
-# (i.e. node_modules) relative to this directory. This is technically a
-# violation of the assumption that extractor scripts will be run with the
-# current working directory set to the root of the project source, but we
-# also need node_modules to be installed here and not in the project source
-# root, so we make a compromise of:
-#  1. changing to this script's directory;
-#  2. installing node dependencies here;
-#  3. passing the original working directory as a parameter to the
-#     index-files.js script;
-#  4. expecting the index-files.js script to immediately change back to
+# (i.e. node_modules) relative to this directory. This is technically a violation
+# of the assumption that extractor scripts will be run with the current working
+# directory set to the root of the project source, but we also need node_modules
+# to be installed here and not in the project source root, so we make the following
+# compromise:
+#
+#  1. change to this shell script's directory;
+#  2. pass the original working directory as a parameter to the
+#     cds-extractor.js script;
+#  3. expect the cds-extractor.js script to immediately change back to
 #     original working (aka the project source root) directory.
 
 cd "$_script_dir" && \
-echo "Installing node package dependencies" && \
-npm install --quiet --no-audit --no-fund && \
-echo "Building TypeScript code" && \
-npm run build && \
-echo "Running the 'index-files.js' script" && \
-node "$(dirname "$0")/out/index-files.js" "$_response_file_path" "${_cwd}"
+
+# Check if the 'node_modules' directory exists in the current script's directory.
+# This is a highly imperfect check that CDS extractor dependencies have been installed.
+if [ ! -d "${_cds_extractor_node_modules_dir}" ]; then
+    echo "Installing dependencies for the CDS extractor script in '${_cds_extractor_node_modules_dir}' directory."
+    if npm install --quiet --no-audit --no-fund ; then
+        echo "CDS extractor dependencies installed successfully."
+    else
+        echo "Error: Failed to install CDS extractor dependencies."
+        echo "Please ensure that the dependencies have been installed by running 'npm install' in the 'extractors/cds/tools' directory."
+        exit 4
+    fi
+fi
+
+# Check if the 'cds-extractor.js' script exists at the expected path.
+if [ ! -f "${_cds_extractor_js_path}" ]; then
+    echo "Building the 'cds-extractor.js' script from TypeScript source."
+    if npm run build --silent; then
+        echo "CDS extractor script built successfully."
+    else
+        echo "Error: Failed to build the CDS extractor script."
+        echo "Please ensure that the TypeScript source has been compiled to JavaScript in the 'dist' directory."
+        exit 5
+    fi
+fi
+
+echo "Running the 'cds-extractor.js' script" && \
+node "${_cds_extractor_js_path}" "$_cwd"

@@ -1,3 +1,11 @@
+import * as path from 'path';
+
+import { setSourceRootDirectory } from '../src/logging';
+
+// Set up the source root directory for logging during tests
+const testSourceRoot = path.resolve(__dirname, '..');
+setSourceRootDirectory(testSourceRoot);
+
 // Mocked console methods to prevent output during tests
 // Store original console methods
 const originalConsole = {
