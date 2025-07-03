@@ -1,3 +1,4 @@
+| applicationserviceinstance.js:1:13:1:31 | require("@sap/cds") |
 | applicationserviceinstance.js:2:11:2:60 | new cds ... ptions) |
 | applicationserviceinstance.js:3:12:3:67 | await n ... ptions) |
 | applicationserviceinstance.js:3:18:3:67 | new cds ... ptions) |
@@ -6,6 +7,7 @@
 | applicationserviceinstance.js:5:20:5:49 | cds.con ... rvice") |
 | applicationserviceinstance.js:6:9:6:12 | svc5 |
 | applicationserviceinstance.js:7:9:7:12 | svc4 |
+| applicationserviceinstance.js:9:16:9:38 | require ... s/lib") |
 | applicationserviceinstance.js:10:9:10:12 | svc6 |
 | applicationserviceinstance.js:12:22:12:48 | cds.con ... ice-2") |
 | applicationserviceinstance.js:15:7:15:6 | this |
