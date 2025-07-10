@@ -165,8 +165,8 @@ class CdlService extends CdlElement {
   CdlService() { kind = CdlServiceKind(this.getPropStringValue("kind")) }
 
   UserDefinedApplicationService getImplementation() {
-    result.getFile().getRelativePath().regexpReplaceAll("\\.[^.]+$", ".cds.json") =
-      this.getFile().getRelativePath()
+    result.getFile().getRelativePath().regexpReplaceAll("\\.[^.]+$", ".cds") =
+      this.getPropValue("$location").getPropValue("file").getStringValue()
   }
 
   /**

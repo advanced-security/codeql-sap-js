@@ -1,33 +1,41 @@
-import { resolve } from 'path';
-
-/**
- * Safely get a command-line parameter and properly resolve the path.
- * @param `args` - Command line arguments array.
- * @param `index` - Index of the argument to get.
- * @param `defaultValue` - Default value to return if argument is not present.
- * @returns The resolved argument value or the default value
- */
-export function getArg(args: string[], index: number, defaultValue = ''): string {
-  if (index < args.length) {
-    // Handle the path resolution properly without unnecessary quoting
-    return resolve(args[index]);
-  }
-  return defaultValue;
-}
+const USAGE_MESSAGE = `\tUsage: node <script> <source-root>`;
 
 /**
  * Check if the script was invoked with the required arguments.
- * @param `args` Command line arguments to check.
- * @param `requiredCount` Number of required arguments.
- * @returns Boolean `true` if the script was invoked correctly, `false` otherwise.
+ * This function validates and sanitizes script arguments and returns them if valid.
+ * The CDS extractor now runs in autobuild mode by default.
+ *
+ * Requirements:
+ * - Only requires: <source-root>
+ *
+ * @param args Command line arguments to check.
+ * @returns Object with validation result, usage message if failed, and validated
+ * arguments if successful.
  */
-export function validateArguments(args: string[], requiredCount: number): boolean {
-  if (args.length !== requiredCount) {
-    // Extract the script name from the path properly
-    const scriptPath = args[1] ?? '';
-    const scriptName = scriptPath.split(/[/\\]/).pop() ?? 'index-files.js';
-    console.warn(`Usage: node ${scriptName} <response-file> <source-root>`);
-    return false;
+export function validateArguments(args: string[]): {
+  isValid: boolean;
+  usageMessage?: string;
+  args?: {
+    sourceRoot: string;
+  };
+} {
+  // Minimum arguments: node, script, source-root (3 total)
+  if (args.length < 3) {
+    return {
+      isValid: false,
+      usageMessage: USAGE_MESSAGE,
+    };
   }
-  return true;
+
+  // Get the source root from args (now the first parameter after script name)
+  const sourceRoot: string = args[2];
+
+  // Return the validated arguments
+  return {
+    isValid: true,
+    usageMessage: `<source-root>`,
+    args: {
+      sourceRoot,
+    },
+  };
 }

@@ -1,7 +1,6 @@
 import * as childProcess from 'child_process';
-import * as fs from 'fs';
 
-import { validateRequirements, runJavaScriptExtractor } from '../../src/codeql';
+import { runJavaScriptExtractor } from '../../src/codeql';
 import { addJavaScriptExtractorDiagnostic } from '../../src/diagnostics';
 import * as environment from '../../src/environment';
 
@@ -32,88 +31,6 @@ describe('codeql', () => {
       arch: 'x64',
       isWindows: false,
       exeExtension: '',
-    });
-  });
-
-  describe('validateRequirements', () => {
-    it('should return true when all requirements are met', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-
-      const result = validateRequirements(
-        '/path/to/source',
-        '/path/to/codeql',
-        '/path/to/response.file',
-        '/path/to/autobuild.sh',
-        '/path/to/jsextractor',
-      );
-
-      expect(result).toBe(true);
-      // The implementation calls existsSync 4 times in total
-      expect(fs.existsSync).toHaveBeenCalledTimes(4);
-    });
-
-    it('should return false when autobuild script does not exist', () => {
-      // Mock existsSync to return false only for autobuild script
-      (fs.existsSync as jest.Mock).mockImplementation(path => {
-        return path !== '/path/to/autobuild.sh';
-      });
-
-      // Mock console.warn to avoid polluting test output
-      const originalConsoleWarn = console.warn;
-      console.warn = jest.fn();
-
-      const result = validateRequirements(
-        '/path/to/source',
-        '/path/to/codeql',
-        '/path/to/response.file',
-        '/path/to/autobuild.sh',
-        '/path/to/jsextractor',
-      );
-
-      expect(result).toBe(false);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining("autobuild script '/path/to/autobuild.sh' does not exist"),
-      );
-
-      // Restore console.warn
-      console.warn = originalConsoleWarn;
-    });
-
-    it('should return false and report all missing requirements', () => {
-      // Mock existsSync to return false for all paths
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-      // Mock console.warn to avoid polluting test output
-      const originalConsoleWarn = console.warn;
-      console.warn = jest.fn();
-
-      const result = validateRequirements(
-        '/path/to/source',
-        '/path/to/codeql',
-        '/path/to/response.file',
-        '/path/to/autobuild.sh',
-        '', // Empty JS extractor root
-      );
-
-      expect(result).toBe(false);
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining("autobuild script '/path/to/autobuild.sh' does not exist"),
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining("codeql executable '/path/to/codeql' does not exist"),
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining("response file '/path/to/response.file' does not exist"),
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining("project root directory '/path/to/source' does not exist"),
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('CODEQL_EXTRACTOR_JAVASCRIPT_ROOT environment variable is not set'),
-      );
-
-      // Restore console.warn
-      console.warn = originalConsoleWarn;
     });
   });
 
@@ -157,7 +74,7 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'Error executing JavaScript extractor: Failed to execute',
+        error: 'Error running JavaScript extractor: Failed to execute',
       });
     });
 
@@ -175,7 +92,7 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'JavaScript extractor failed with exit code: 1',
+        error: 'JavaScript extractor failed with exit code 1',
       });
     });
 
@@ -190,12 +107,12 @@ describe('codeql', () => {
 
       expect(result).toEqual({
         success: false,
-        error: 'Error executing JavaScript extractor: Failed to execute',
+        error: 'Error running JavaScript extractor: Failed to execute',
       });
 
       expect(addJavaScriptExtractorDiagnostic).toHaveBeenCalledWith(
         '/path/to/source',
-        'Error executing JavaScript extractor: Failed to execute',
+        'Error running JavaScript extractor: Failed to execute',
         codeqlPath,
       );
     });

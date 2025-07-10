@@ -1,14 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {
-  fileExists,
-  dirExists,
-  readResponseFile,
-  recursivelyRenameJsonFiles,
-  validateResponseFile,
-  getCdsFilePathsToProcess,
-} from '../../src/filesystem';
+import { fileExists, dirExists, recursivelyRenameJsonFiles } from '../../src/filesystem';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -88,27 +81,6 @@ describe('filesystem', () => {
     });
   });
 
-  describe('readResponseFile', () => {
-    it('should read response file and return array of file paths', () => {
-      const mockContent = '/path/file1.cds\n/path/file2.cds\n\n/path/file3.cds';
-      (fs.readFileSync as jest.Mock).mockReturnValue(mockContent);
-
-      const result = readResponseFile('/path/to/response.file');
-      expect(result).toEqual(['/path/file1.cds', '/path/file2.cds', '/path/file3.cds']);
-      expect(fs.readFileSync).toHaveBeenCalledWith('/path/to/response.file', 'utf-8');
-    });
-
-    it('should throw error when response file cannot be read', () => {
-      (fs.readFileSync as jest.Mock).mockImplementation(() => {
-        throw new Error('File not found');
-      });
-
-      expect(() => readResponseFile('/path/to/nonexistent.file')).toThrow(
-        "Response file '/path/to/nonexistent.file' could not be read due to an error: Error: File not found",
-      );
-    });
-  });
-
   describe('recursivelyRenameJsonFiles', () => {
     // Mock console.log to avoid output during tests
     const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation();
@@ -129,7 +101,7 @@ describe('filesystem', () => {
       recursivelyRenameJsonFiles('/non-existent/dir');
 
       expect(mockConsoleLog).toHaveBeenCalledWith(
-        'Directory not found or not a directory: /non-existent/dir',
+        expect.stringMatching(/^\[CDS-.+ \d+\] INFO: Directory not found: \/non-existent\/dir$/),
       );
       expect(fs.readdirSync).not.toHaveBeenCalled();
     });
@@ -226,108 +198,6 @@ describe('filesystem', () => {
       );
 
       consoleSpy.mockRestore();
-    });
-  });
-
-  describe('validateResponseFile', () => {
-    it('should return success when file exists', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
-
-      const result = validateResponseFile('/path/to/response.file');
-
-      expect(result.success).toBe(true);
-      expect(result.errorMessage).toBeUndefined();
-    });
-
-    it('should return failure with message when file does not exist', () => {
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-      const result = validateResponseFile('/path/to/nonexistent.file');
-
-      expect(result.success).toBe(false);
-      expect(result.errorMessage).toContain('response file');
-      expect(result.errorMessage).toContain('does not exist');
-    });
-  });
-
-  describe('getCdsFilePathsToProcess', () => {
-    const platformInfo = { isWindows: false };
-    const windowsPlatformInfo = { isWindows: true };
-
-    it('should return success and file paths when response file exists and contains entries', () => {
-      // Mock validation success
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
-
-      // Mock file content with multiple entries
-      const mockContent = '/path/file1.cds\n/path/file2.cds\n/path/file3.cds';
-      (fs.readFileSync as jest.Mock).mockReturnValue(mockContent);
-
-      const result = getCdsFilePathsToProcess('/path/to/response.file', platformInfo);
-
-      expect(result.success).toBe(true);
-      expect(result.cdsFilePaths).toEqual([
-        '/path/file1.cds',
-        '/path/file2.cds',
-        '/path/file3.cds',
-      ]);
-      expect(result.errorMessage).toBeUndefined();
-    });
-
-    it('should handle response file that does not exist', () => {
-      // Mock file doesn't exist
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-      const result = getCdsFilePathsToProcess('/path/to/nonexistent.file', platformInfo);
-
-      expect(result.success).toBe(false);
-      expect(result.cdsFilePaths).toEqual([]);
-      expect(result.errorMessage).toContain('codeql database index-files --language cds');
-      expect(result.errorMessage).toContain('does not exist');
-    });
-
-    it('should handle Windows platform correctly in error messages', () => {
-      // Mock file doesn't exist
-      (fs.existsSync as jest.Mock).mockReturnValue(false);
-
-      const result = getCdsFilePathsToProcess('/path/to/nonexistent.file', windowsPlatformInfo);
-
-      expect(result.success).toBe(false);
-      expect(result.cdsFilePaths).toEqual([]);
-      expect(result.errorMessage).toContain('codeql.exe database index-files --language cds');
-    });
-
-    it('should handle empty response file', () => {
-      // Mock validation success
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
-
-      // Mock empty file
-      (fs.readFileSync as jest.Mock).mockReturnValue('');
-
-      const result = getCdsFilePathsToProcess('/path/to/empty.file', platformInfo);
-
-      expect(result.success).toBe(false);
-      expect(result.cdsFilePaths).toEqual([]);
-      expect(result.errorMessage).toContain('empty');
-    });
-
-    it('should handle file read errors', () => {
-      // Mock validation success
-      (fs.existsSync as jest.Mock).mockReturnValue(true);
-      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
-
-      // Mock read error
-      (fs.readFileSync as jest.Mock).mockImplementation(() => {
-        throw new Error('Permission denied');
-      });
-
-      const result = getCdsFilePathsToProcess('/path/to/error.file', platformInfo);
-
-      expect(result.success).toBe(false);
-      expect(result.cdsFilePaths).toEqual([]);
-      expect(result.errorMessage).toContain('Permission denied');
     });
   });
 });

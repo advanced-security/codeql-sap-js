@@ -1,11 +1,6 @@
 import * as childProcess from 'child_process';
 
-import {
-  addCompilationDiagnostic,
-  addDependencyDiagnostic,
-  addJavaScriptExtractorDiagnostic,
-  addPackageJsonParsingDiagnostic,
-} from '../../src/diagnostics';
+import { addCompilationDiagnostic, addJavaScriptExtractorDiagnostic } from '../../src/diagnostics';
 
 // Mock dependencies
 jest.mock('child_process', () => ({
@@ -93,80 +88,6 @@ describe('diagnostics', () => {
 
       // Restore console.error
       console.error = originalConsoleError;
-    });
-  });
-
-  describe('addPackageJsonParsingDiagnostic', () => {
-    it('should add package.json parsing diagnostic successfully', () => {
-      const packageJsonPath = '/path/to/package.json';
-      const errorMessage = 'Invalid JSON format';
-      const codeqlExePath = '/path/to/codeql';
-
-      // Mock process.env to include necessary environment variable
-      const originalEnv = process.env;
-      process.env = {
-        ...originalEnv,
-        CODEQL_EXTRACTOR_CDS_WIP_DATABASE: '/path/to/db',
-      };
-
-      // Mock successful execution
-      (childProcess.execFileSync as jest.Mock).mockReturnValue(Buffer.from(''));
-
-      const result = addPackageJsonParsingDiagnostic(packageJsonPath, errorMessage, codeqlExePath);
-
-      expect(result).toBe(true);
-      expect(childProcess.execFileSync).toHaveBeenCalledWith(
-        codeqlExePath,
-        expect.arrayContaining([
-          'database',
-          'add-diagnostic',
-          '--extractor-name=cds',
-          '--ready-for-status-page',
-          '--source-id=cds/package-json-parsing-failure',
-          '--severity=warning',
-          `--markdown-message=${errorMessage}`,
-        ]),
-      );
-
-      // Restore original environment
-      process.env = originalEnv;
-    });
-  });
-
-  describe('addDependencyDiagnostic', () => {
-    it('should add dependency installation diagnostic successfully', () => {
-      const packageJsonPath = '/path/to/package.json';
-      const errorMessage = 'Failed to install npm dependencies';
-      const codeqlExePath = '/path/to/codeql';
-
-      // Mock process.env to include necessary environment variable
-      const originalEnv = process.env;
-      process.env = {
-        ...originalEnv,
-        CODEQL_EXTRACTOR_CDS_WIP_DATABASE: '/path/to/db',
-      };
-
-      // Mock successful execution
-      (childProcess.execFileSync as jest.Mock).mockReturnValue(Buffer.from(''));
-
-      const result = addDependencyDiagnostic(packageJsonPath, errorMessage, codeqlExePath);
-
-      expect(result).toBe(true);
-      expect(childProcess.execFileSync).toHaveBeenCalledWith(
-        codeqlExePath,
-        expect.arrayContaining([
-          'database',
-          'add-diagnostic',
-          '--extractor-name=cds',
-          '--ready-for-status-page',
-          '--source-id=cds/dependency-failure',
-          '--severity=error',
-          `--markdown-message=${errorMessage}`,
-        ]),
-      );
-
-      // Restore original environment
-      process.env = originalEnv;
     });
   });
 
