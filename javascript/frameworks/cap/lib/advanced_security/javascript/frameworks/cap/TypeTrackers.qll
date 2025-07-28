@@ -39,3 +39,32 @@ private SourceNode cdsApplicationServiceInstantiation(TypeTracker t) {
 SourceNode cdsApplicationServiceInstantiation() {
   result = cdsApplicationServiceInstantiation(TypeTracker::end())
 }
+
+SourceNode copyWriteUtils(TypeTracker t) {
+  t.start() and
+  exists(CdsUtils::CdsUtilsModuleAccess mod | result = mod.getCopyWriteCall())
+  or
+  exists(TypeTracker t2 | result = copyWriteUtils(t2).track(t2, t))
+}
+
+SourceNode copyWriteUtils() { result = copyWriteUtils(TypeTracker::end()) }
+
+SourceNode singleArgCallsUtils(TypeTracker t) {
+  t.start() and
+  exists(CdsUtils::CdsUtilsModuleAccess mod | result = mod.getSingleArgCalls())
+  or
+  exists(TypeTracker t2 | result = singleArgCallsUtils(t2).track(t2, t))
+}
+
+SourceNode singleArgCallsUtils() { result = singleArgCallsUtils(TypeTracker::end()) }
+
+SourceNode singleArgAdditionalFlowUtils(TypeTracker t) {
+  t.start() and
+  exists(CdsUtils::CdsUtilsModuleAccess mod | result = mod.getThroughCall())
+  or
+  exists(TypeTracker t2 | result = singleArgAdditionalFlowUtils(t2).track(t2, t))
+}
+
+SourceNode singleArgAdditionalFlowUtils() {
+  result = singleArgAdditionalFlowUtils(TypeTracker::end())
+}

@@ -1040,3 +1040,81 @@ class CdsQlCall extends CqlClauseParserCall {
     )
   }
 }
+
+/**
+ * Exported functions from CAP `cds.utils`.
+ * Functions described from:
+ * https://www.npmjs.com/package/@sap/cds?activeTab=code
+ */
+module CdsUtils {
+  /**
+   * An access to the `utils` module on a CDS facade.
+   */
+  class CdsUtilsModuleAccess extends API::Node {
+    CdsUtilsModuleAccess() { exists(CdsFacade cds | this = cds.getMember("utils")) }
+
+    //additional flow steps
+    DataFlow::CallNode getThroughCall() {
+      result =
+        this.getMember(["decodeURI", "decodeURIComponent", "local", "isdir", "isfile"]).getACall()
+    }
+
+    //sinks
+    DataFlow::CallNode getSingleArgCalls() {
+      result =
+        this.getMember(["find", "stat", "read", "readdir", "mkdirp", "rmdir", "rimraf", "rm"])
+            .getACall()
+    }
+
+    DataFlow::CallNode getCopyWriteCall() {
+      result = this.getMember(["append", "copy", "write"]).getACall()
+    }
+  }
+
+  abstract class UtilsSink extends DataFlow::Node { }
+
+  abstract class UtilsExtraFlow extends DataFlow::Node { }
+
+  /**
+   * This represents both the data and the filename in calls as follows:
+   * ```javascript
+   * await write ({foo:'bar'}) .to ('some','file.json')
+   * ```
+   * sinks in this example are:
+   * ```javascript
+   * {foo:'bar'}
+   * 'some'
+   * 'file.json'
+   * ```
+   */
+  class SrcDstSink extends UtilsSink {
+    SrcDstSink() {
+      this = copyWriteUtils().(DataFlow::CallNode).getAnArgument() or
+      this = copyWriteUtils().getAMemberCall("to").getAnArgument()
+    }
+  }
+
+  /**
+   * This represents arguments to calls where the argument represents a path. e.g.
+   * ```javascript
+   * await rimraf('dist','db','data')
+   * ```
+   */
+  class SimpleSinks extends UtilsSink {
+    SimpleSinks() { this = singleArgCallsUtils().(DataFlow::CallNode).getAnArgument() }
+  }
+
+  /**
+   * This represents calls where the taint flows through the call. e.g.
+   * ```javascript
+   * let dir = isdir ('app')
+   * ```
+   */
+  class SimpleAdditionalFlowStep extends UtilsExtraFlow {
+    SimpleAdditionalFlowStep() { this = singleArgAdditionalFlowUtils() }
+
+    DataFlow::CallNode getOutgoingNode() { result = this }
+
+    DataFlow::Node getIngoingNode() { result = this.(DataFlow::CallNode).getAnArgument() }
+  }
+}

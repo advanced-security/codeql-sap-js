@@ -1,0 +1,37 @@
+| utils.js:5:11:5:31 | decodeU ... %A4%A") | decodeU ... %A4%A"): additional flow step |
+| utils.js:7:12:7:41 | decodeU ... %A4%A") | decodeU ... %A4%A"): additional flow step |
+| utils.js:9:12:9:28 | local("%E0%A4%A") | local("%E0%A4%A"): additional flow step |
+| utils.js:13:11:13:22 | isdir('app') | isdir('app'): additional flow step |
+| utils.js:15:12:15:33 | isfile( ... .json') | isfile( ... .json'): additional flow step |
+| utils.js:17:22:17:35 | 'package.json' | 'package.json': sink |
+| utils.js:19:26:19:39 | 'package.json' | 'package.json': sink |
+| utils.js:21:20:21:33 | 'package.json' | 'package.json': sink |
+| utils.js:23:20:23:33 | 'package.json' | 'package.json': sink |
+| utils.js:25:14:25:22 | 'db/data' | 'db/data': sink |
+| utils.js:25:28:25:41 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:26:14:26:22 | 'db/data' | 'db/data': sink |
+| utils.js:26:25:26:38 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:28:12:28:20 | 'db/data' | 'db/data': sink |
+| utils.js:28:26:28:39 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:29:12:29:20 | 'db/data' | 'db/data': sink |
+| utils.js:29:23:29:36 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:31:13:31:26 | { foo: 'bar' } | { foo: 'bar' }: sink |
+| utils.js:31:32:31:47 | 'some/file.json' | 'some/file.json': sink |
+| utils.js:32:13:32:28 | 'some/file.json' | 'some/file.json': sink |
+| utils.js:32:31:32:44 | { foo: 'bar' } | { foo: 'bar' }: sink |
+| utils.js:34:14:34:19 | 'dist' | 'dist': sink |
+| utils.js:34:22:34:25 | 'db' | 'db': sink |
+| utils.js:34:28:34:33 | 'data' | 'data': sink |
+| utils.js:35:14:35:27 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:37:13:37:18 | 'dist' | 'dist': sink |
+| utils.js:37:21:37:24 | 'db' | 'db': sink |
+| utils.js:37:27:37:32 | 'data' | 'data': sink |
+| utils.js:38:13:38:26 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:40:14:40:19 | 'dist' | 'dist': sink |
+| utils.js:40:22:40:25 | 'db' | 'db': sink |
+| utils.js:40:28:40:33 | 'data' | 'data': sink |
+| utils.js:41:14:41:27 | 'dist/db/data' | 'dist/db/data': sink |
+| utils.js:43:10:43:15 | 'dist' | 'dist': sink |
+| utils.js:43:18:43:21 | 'db' | 'db': sink |
+| utils.js:43:24:43:29 | 'data' | 'data': sink |
+| utils.js:44:10:44:23 | 'dist/db/data' | 'dist/db/data': sink |
