@@ -98,8 +98,7 @@ jobs:
         run: |
           # Use the dedicated CDS compilation script that includes proper version resolution
           # This script follows the same logic as the CDS extractor's resolveCdsVersions function
-          chmod +x extractors/cds/tools/test/cds-compilation-for-actions.test.sh
-          ./extractors/cds/tools/test/cds-compilation-for-actions.test.sh
+          ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
       - name: Run test suites
         id: run-test-suites
