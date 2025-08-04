@@ -6,7 +6,7 @@
 set -e
 
 # Base directory to scan (relative to project root)
-BASE_DIR="javascript/frameworks/cap/test/queries"
+BASE_DIR="javascript/frameworks/cap/test"
 
 # Navigate to project root directory (4 levels up from extractors/cds/tools/test/)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,26 +32,26 @@ echo ""
 resolve_cds_dk_version() {
   local package_json_path="$1"
   local minimum_version=8
-  
+
   if [ ! -f "$package_json_path" ]; then
     echo "^$minimum_version"
     return
   fi
-  
+
   # Extract @sap/cds and @sap/cds-dk versions from package.json using grep and sed
   local cds_version=""
   local cds_dk_version=""
-  
+
   if grep -q '"@sap/cds"' "$package_json_path"; then
     cds_version=$(grep '"@sap/cds"' "$package_json_path" | sed -E 's/.*"@sap\/cds": "([^"]+)".*/\1/')
   fi
-  
+
   if grep -q '"@sap/cds-dk"' "$package_json_path"; then
     cds_dk_version=$(grep '"@sap/cds-dk"' "$package_json_path" | sed -E 's/.*"@sap\/cds-dk": "([^"]+)".*/\1/')
   fi
-  
+
   local preferred_dk_version=""
-  
+
   if [ -n "$cds_dk_version" ]; then
     # Use explicit @sap/cds-dk version if available, but enforce minimum
     preferred_dk_version=$(enforce_minimum_version "$cds_dk_version" "$minimum_version")
@@ -62,7 +62,7 @@ resolve_cds_dk_version() {
     # No version information found, use minimum
     preferred_dk_version="^$minimum_version"
   fi
-  
+
   echo "$preferred_dk_version"
 }
 
@@ -70,10 +70,10 @@ resolve_cds_dk_version() {
 enforce_minimum_version() {
   local version="$1"
   local minimum_version="$2"
-  
+
   # Extract major version number (handle ^, ~, and plain numbers)
   local major_version=$(echo "$version" | sed -E 's/^[\^~]?([0-9]+).*/\1/')
-  
+
   if [[ "$major_version" =~ ^[0-9]+$ ]]; then
     if [ "$major_version" -lt "$minimum_version" ]; then
       echo "^$minimum_version"
@@ -89,10 +89,10 @@ enforce_minimum_version() {
 derive_compatible_version() {
   local cds_version="$1"
   local minimum_version="$2"
-  
+
   # Extract major version and use same range
   local major_version=$(echo "$cds_version" | sed -E 's/^[\^~]?([0-9]+).*/\1/')
-  
+
   if [[ "$major_version" =~ ^[0-9]+$ ]]; then
     local derived_version="^$major_version"
     # Apply minimum version enforcement
@@ -107,7 +107,7 @@ derive_compatible_version() {
 get_relative_path() {
   local target="$1"
   local base="$2"
-  
+
   # Use Python to calculate relative path (works on both macOS and Linux)
   python3 -c "import os.path; print(os.path.relpath('$target', '$base'))" 2>/dev/null || echo "$target"
 }
@@ -121,27 +121,64 @@ echo ""
 # Array to collect generated model.cds.json files
 GENERATED_FILES=()
 
-# Find test directories (those containing .expected files)
+# Array to track processed directories to avoid duplicates
+PROCESSED_DIRS=()
+
+# Find test directories (those containing .expected files) and deduplicate
 echo "Scanning for test directories..."
-for test_dir in $(find "$BASE_DIR" -type f -name '*.expected' -exec dirname {} \;);
+TEST_DIRS=($(find "$BASE_DIR" -type f -name '*.expected' -exec dirname {} \; | sort -u))
+
+for test_dir in "${TEST_DIRS[@]}";
 do
+  # Skip if this directory has already been processed
+  if [[ " ${PROCESSED_DIRS[@]} " =~ " ${test_dir} " ]]; then
+    echo "Skipping already processed directory: $test_dir"
+    continue
+  fi
+
   echo "Processing test directory: $test_dir"
-  
+
   # Change to test directory
   pushd "$test_dir" > /dev/null
-  
+
+  # Check if this directory contains any .cds files in supported locations
+  echo "  Checking for CDS files in project directory: $(pwd)"
+  CDS_FILES_FOUND=false
+
+  # Check for .cds files in the base directory
+  if find . -maxdepth 1 -type f -name '*.cds' | grep -q .; then
+    CDS_FILES_FOUND=true
+  fi
+
+  # Check for .cds files in app/, db/, or srv/ subdirectories (including nested)
+  if [ "$CDS_FILES_FOUND" = false ]; then
+    for subdir in app db srv; do
+      if [ -d "$subdir" ] && find "$subdir" -type f -name '*.cds' | grep -q .; then
+        CDS_FILES_FOUND=true
+        break
+      fi
+    done
+  fi
+
+  if [ "$CDS_FILES_FOUND" = false ]; then
+    echo "  ⚠️  No .cds files found in base directory or app/db/srv subdirectories - skipping compilation"
+    popd > /dev/null
+    echo ""
+    continue
+  fi
+
   # Generate a single model.cds.json file per project directory,
   # aligning with the CDS extractor's standardized compilation behavior.
   echo "  Compiling CDS project in directory: $(pwd)"
-  
+
   # Resolve the appropriate @sap/cds-dk version for this project
   local_package_json="$(pwd)/package.json"
   preferred_dk_version=$(resolve_cds_dk_version "$local_package_json")
   echo "  Resolved @sap/cds-dk version: $preferred_dk_version"
-  
+
   # Determine compilation targets using simplified logic from CDS extractor
   COMPILE_TARGETS=""
-  
+
   # Rule 1. index.cds if the test_dir directly contains an index.cds file (highest priority)
   if [ -f "index.cds" ]; then
     COMPILE_TARGETS="index.cds"
@@ -160,11 +197,11 @@ do
       echo "  Using CAP directories and root CDS files as compilation targets: app db srv $ROOT_FILES"
     fi
   fi
-  
+
   # Use npx with project-specific version to ensure compatibility
   cds_dk_package="@sap/cds-dk@$preferred_dk_version"
   echo "  Running: npx --yes --package $cds_dk_package cds compile $COMPILE_TARGETS --locations --to json --dest model.cds.json"
-  
+
   # Disable exit-on-error for this compilation attempt
   set +e
   npx --yes --package "$cds_dk_package" cds compile \
@@ -175,13 +212,15 @@ do
     --log-level warn
   COMPILE_EXIT_CODE=$?
   set -e
-  
+
   # Log compilation result
   if [ -f "model.cds.json" ]; then
     echo "  ✓ Successfully generated model.cds.json in $(pwd)"
     # Add to list of generated files (convert to relative path)
     RELATIVE_PATH=$(get_relative_path "$(pwd)/model.cds.json" "$PROJECT_ROOT")
     GENERATED_FILES+=("$RELATIVE_PATH")
+    # Mark this directory as processed
+    PROCESSED_DIRS+=("$test_dir")
   else
     echo "  ✗ Warning: model.cds.json was not generated in $(pwd) (exit code: $COMPILE_EXIT_CODE)"
     if [ -s "compilation.err" ]; then
@@ -189,7 +228,7 @@ do
       cat "compilation.err" | sed 's/^/    /'
     fi
   fi
-  
+
   popd > /dev/null
   echo ""
 done
