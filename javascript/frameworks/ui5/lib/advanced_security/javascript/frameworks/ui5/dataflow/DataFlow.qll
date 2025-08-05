@@ -5,6 +5,7 @@ import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import StdLibDataFlow::DataFlow::PathGraph as DataFlowPathGraph
+private import PatchDataFlow
 
 /**
  * A statically visible part of a local model's content that has a binding path referring to it in a control declaration acting as an HTML injection sink.
