@@ -55,9 +55,9 @@ jobs:
       shell: bash
       run: |
         export CODEQL_DIST="$(dirname "${{ steps.initialize-codeql.outputs.codeql-path }}")"
-        # export CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE="${{ runner.temp }}/codeql-database/javascript"
-        # ${{ github.workspace }}/scripts/compile-cds.sh
-        ${{ github.workspace }}/extractors/cds/tools/workflow/cds-compilation-for-actions.sh
+        export CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE="${{ runner.temp }}/codeql-database/javascript"
+        ${{ github.workspace }}/scripts/compile-cds.sh
+        # ${{ github.workspace }}/extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
     - name: Perform CodeQL Analysis
       id: analyze
