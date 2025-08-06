@@ -47,7 +47,8 @@ jobs:
         languages: javascript
         config-file: ./.github/codeql/codeql-config.yaml
         db-location: ${{ runner.temp }}/codeql-database
-        tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
+        # tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
+        tools: https://github.com/github/codeql-action/releases/download/codeql-bundle-v2.22.0/codeql-bundle-linux64.tar.gz
         debug: true
     
     - name: Run CDS extractor
@@ -56,6 +57,7 @@ jobs:
         export CODEQL_DIST="$(dirname "${{ steps.initialize-codeql.outputs.codeql-path }}")"
         export CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE="${{ runner.temp }}/codeql-database/javascript"
         ${{ github.workspace }}/scripts/compile-cds.sh
+        # ${{ github.workspace }}/extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
     - name: Perform CodeQL Analysis
       id: analyze
