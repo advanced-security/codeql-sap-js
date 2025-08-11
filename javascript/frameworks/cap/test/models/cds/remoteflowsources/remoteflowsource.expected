@@ -1,12 +1,31 @@
-| srv/service1.js:6:29:6:31 | req |
-| srv/service2.js:5:27:5:29 | msg |
-| srv/service3nocds.js:6:43:6:45 | req |
-| srv/service3nocds.js:7:34:7:36 | req |
-| srv/service3nocds.js:11:28:11:30 | req |
-| srv/service3nocds.js:12:26:12:28 | req |
-| srv/service3nocds.js:19:34:19:36 | req |
-| srv/service4withcds.js:5:38:5:40 | req |
-| srv/service4withcds.js:6:43:6:45 | req |
-| srv/service4withcds.js:14:33:14:35 | req |
-| srv/service4withcds.js:15:38:15:40 | req |
-| srv/service4withcds.js:16:23:16:25 | req |
+| srv/service1.js:7:33:7:40 | req.data |
+| srv/service1.js:13:33:13:42 | req.params |
+| srv/service1.js:19:29:19:39 | req.headers |
+| srv/service1.js:25:30:25:56 | req.htt ... omeProp |
+| srv/service1.js:26:30:26:55 | req.htt ... omeProp |
+| srv/service1.js:27:30:27:57 | req.htt ... omeProp |
+| srv/service1.js:28:30:28:58 | req.htt ... omeProp |
+| srv/service1.js:29:30:29:58 | req.htt ... omeProp |
+| srv/service1.js:30:30:30:53 | req.htt ... inalUrl |
+| srv/service1.js:31:30:31:50 | req.htt ... ostname |
+| srv/service1.js:32:30:32:57 | req.htt ... eProp") |
+| srv/service1.js:33:30:33:56 | req.htt ... eProp") |
+| srv/service1.js:34:31:34:61 | req.htt ... eProp") |
+| srv/service1.js:35:31:35:60 | req.htt ... eProp") |
+| srv/service1.js:41:29:41:34 | req.id |
+| srv/service2.js:5:31:5:38 | msg.data |
+| srv/service3.js:6:33:6:40 | req.data |
+| srv/service3.js:12:33:12:42 | req.params |
+| srv/service3.js:18:29:18:39 | req.headers |
+| srv/service3.js:24:30:24:56 | req.htt ... omeProp |
+| srv/service3.js:25:30:25:55 | req.htt ... omeProp |
+| srv/service3.js:26:30:26:57 | req.htt ... omeProp |
+| srv/service3.js:27:30:27:58 | req.htt ... omeProp |
+| srv/service3.js:28:30:28:58 | req.htt ... omeProp |
+| srv/service3.js:29:30:29:53 | req.htt ... inalUrl |
+| srv/service3.js:30:30:30:50 | req.htt ... ostname |
+| srv/service3.js:31:30:31:57 | req.htt ... eProp") |
+| srv/service3.js:32:30:32:56 | req.htt ... eProp") |
+| srv/service3.js:33:31:33:61 | req.htt ... eProp") |
+| srv/service3.js:34:31:34:60 | req.htt ... eProp") |
+| srv/service3.js:40:29:40:34 | req.id |

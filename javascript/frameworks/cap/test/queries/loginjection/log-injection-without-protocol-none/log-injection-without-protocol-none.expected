@@ -2,35 +2,30 @@ WARNING: module 'PathGraph' has been deprecated and may be removed in future (Lo
 WARNING: type 'PathNode' has been deprecated and may be removed in future (LogInjection.ql:18,43-61)
 WARNING: type 'PathNode' has been deprecated and may be removed in future (LogInjection.ql:18,70-88)
 nodes
-| srv/service1.js:6:33:6:35 | req |
-| srv/service1.js:6:33:6:35 | req |
 | srv/service1.js:7:19:7:35 | { messageToPass } |
 | srv/service1.js:7:19:7:46 | messageToPass |
 | srv/service1.js:7:21:7:33 | messageToPass |
-| srv/service1.js:7:39:7:41 | req |
+| srv/service1.js:7:39:7:46 | req.data |
 | srv/service1.js:7:39:7:46 | req.data |
 | srv/service1.js:9:36:9:52 | { messageToPass } |
 | srv/service1.js:9:38:9:50 | messageToPass |
-| srv/service2.js:6:29:6:31 | msg |
 | srv/service2.js:6:29:6:31 | msg |
 | srv/service2.js:7:15:7:31 | { messageToPass } |
 | srv/service2.js:7:15:7:42 | messageToPass |
 | srv/service2.js:7:17:7:29 | messageToPass |
 | srv/service2.js:7:35:7:37 | msg |
 | srv/service2.js:7:35:7:42 | msg.data |
+| srv/service2.js:7:35:7:42 | msg.data |
 | srv/service2.js:9:32:9:44 | messageToPass |
 | srv/service2.js:9:32:9:44 | messageToPass |
 edges
-| srv/service1.js:6:33:6:35 | req | srv/service1.js:7:39:7:41 | req |
-| srv/service1.js:6:33:6:35 | req | srv/service1.js:7:39:7:41 | req |
 | srv/service1.js:7:19:7:35 | { messageToPass } | srv/service1.js:7:21:7:33 | messageToPass |
 | srv/service1.js:7:19:7:46 | messageToPass | srv/service1.js:9:38:9:50 | messageToPass |
 | srv/service1.js:7:21:7:33 | messageToPass | srv/service1.js:7:19:7:46 | messageToPass |
-| srv/service1.js:7:39:7:41 | req | srv/service1.js:7:39:7:46 | req.data |
+| srv/service1.js:7:39:7:46 | req.data | srv/service1.js:7:19:7:35 | { messageToPass } |
 | srv/service1.js:7:39:7:46 | req.data | srv/service1.js:7:19:7:35 | { messageToPass } |
 | srv/service1.js:9:36:9:52 | { messageToPass } | srv/service2.js:6:29:6:31 | msg |
 | srv/service1.js:9:38:9:50 | messageToPass | srv/service1.js:9:36:9:52 | { messageToPass } |
-| srv/service2.js:6:29:6:31 | msg | srv/service2.js:7:35:7:37 | msg |
 | srv/service2.js:6:29:6:31 | msg | srv/service2.js:7:35:7:37 | msg |
 | srv/service2.js:7:15:7:31 | { messageToPass } | srv/service2.js:7:17:7:29 | messageToPass |
 | srv/service2.js:7:15:7:42 | messageToPass | srv/service2.js:9:32:9:44 | messageToPass |
@@ -38,6 +33,7 @@ edges
 | srv/service2.js:7:17:7:29 | messageToPass | srv/service2.js:7:15:7:42 | messageToPass |
 | srv/service2.js:7:35:7:37 | msg | srv/service2.js:7:35:7:42 | msg.data |
 | srv/service2.js:7:35:7:42 | msg.data | srv/service2.js:7:15:7:31 | { messageToPass } |
+| srv/service2.js:7:35:7:42 | msg.data | srv/service2.js:7:15:7:31 | { messageToPass } |
 #select
-| srv/service2.js:9:32:9:44 | messageToPass | srv/service1.js:6:33:6:35 | req | srv/service2.js:9:32:9:44 | messageToPass | Log entry depends on a $@. | srv/service1.js:6:33:6:35 | req | user-provided value |
-| srv/service2.js:9:32:9:44 | messageToPass | srv/service2.js:6:29:6:31 | msg | srv/service2.js:9:32:9:44 | messageToPass | Log entry depends on a $@. | srv/service2.js:6:29:6:31 | msg | user-provided value |
+| srv/service2.js:9:32:9:44 | messageToPass | srv/service1.js:7:39:7:46 | req.data | srv/service2.js:9:32:9:44 | messageToPass | Log entry depends on a $@. | srv/service1.js:7:39:7:46 | req.data | user-provided value |
+| srv/service2.js:9:32:9:44 | messageToPass | srv/service2.js:7:35:7:42 | msg.data | srv/service2.js:9:32:9:44 | messageToPass | Log entry depends on a $@. | srv/service2.js:7:35:7:42 | msg.data | user-provided value |

@@ -346,16 +346,26 @@ class HandlerRegistration extends MethodCallNode {
 }
 
 /**
- * A parameter of a handler
+ * The first parameter of a handler, representing the request object received either directly
+ * from a user, or from another service that may be internal (defined in the same application) 
+ * or external (defined in another application, or even served from a different server).
+ * e.g.
+ * ``` javascript
+ * module.exports = class Service1 extends cds.ApplicationService {
+ *   this.on("SomeEvent", "SomeEntity", (req) => { ... });
+ *   this.before("SomeEvent", "SomeEntity", (req, next) => { ... });
+ *   this.after("SomeEvent", "SomeEntity", (req, next) => { ... });
+ * }
+ * ``` 
+ * All parameters named `req` above are captured. Also see `HandlerParameterOfExposedService`
+ * for a subset of this class that is only about handlers exposed to some protocol.
  */
-class HandlerParameter instanceof ParameterNode {
+class HandlerParameter extends ParameterNode {
   Handler handler;
 
   HandlerParameter() { this = handler.getParameter(0) }
 
   Handler getHandler() { result = handler }
-
-  string toString() { result = super.toString() }
 }
 
 /**
@@ -832,7 +842,7 @@ class HandlerParameterData instanceof PropRead {
   string dataName;
 
   HandlerParameterData() {
-    this = handlerParameter.(SourceNode).getAPropertyRead("data").getAPropertyRead(dataName)
+    this = handlerParameter.getAPropertyRead("data").getAPropertyRead(dataName)
   }
 
   /**
