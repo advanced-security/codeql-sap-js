@@ -166,16 +166,14 @@ class CqlClauseParserCallWithStringConcat instanceof CqlClauseParserCall {
  * instead (notice the lack of parentheses around the template literal), then the `where` call
  * becomes a parser call of the template literal following it and thus acts as a sanitizer.
  */
-class CqlInjectionConfiguration extends TaintTracking::Configuration {
-  CqlInjectionConfiguration() { this = "CQL injection from untrusted data" }
+module CqlInjectionConfiguration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
 
-  override predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
+  predicate isSink(DataFlow::Node node) { node instanceof CqlInjectionSink }
 
-  override predicate isSink(DataFlow::Node node) { node instanceof CqlInjectionSink }
+  predicate isBarrier(DataFlow::Node node) { node instanceof SqlInjection::Sanitizer }
 
-  override predicate isSanitizer(DataFlow::Node node) { node instanceof SqlInjection::Sanitizer }
-
-  override predicate isAdditionalTaintStep(DataFlow::Node start, DataFlow::Node end) {
+  predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
     /*
      * 1. Given a call to a CQL parser, jump from the argument to the parser call itself.
      */

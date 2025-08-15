@@ -11,11 +11,15 @@
  */
 
 import javascript
-import DataFlow::PathGraph
 import advanced_security.javascript.frameworks.cap.dataflow.DataFlow
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
 
-from CAPLogInjectionConfiguration config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
+module CAPLogInjectionConfigurationFlow = TaintTracking::Global<CAPLogInjectionConfiguration>;
+
+import CAPLogInjectionConfigurationFlow::PathGraph
+
+from
+  CAPLogInjectionConfigurationFlow::PathNode source, CAPLogInjectionConfigurationFlow::PathNode sink
+where CAPLogInjectionConfigurationFlow::flowPath(source, sink)
 select sink.getNode(), source, sink, "Log entry depends on a $@.", source.getNode(),
   "user-provided value"

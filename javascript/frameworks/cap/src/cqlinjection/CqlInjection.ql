@@ -11,11 +11,14 @@
  */
 
 import javascript
-import DataFlow::PathGraph
 import advanced_security.javascript.frameworks.cap.CAPCqlInjectionQuery
 
-from CqlInjectionConfiguration sql, DataFlow::PathNode source, DataFlow::PathNode sink
-where sql.hasFlowPath(source, sink)
+module CqlInjectionConfigurationFlow = TaintTracking::Global<CqlInjectionConfiguration>;
+
+import CqlInjectionConfigurationFlow::PathGraph
+
+from CqlInjectionConfigurationFlow::PathNode source, CqlInjectionConfigurationFlow::PathNode sink
+where CqlInjectionConfigurationFlow::flowPath(source, sink)
 select sink.getNode().(CqlInjectionSink).getQuery(), source, sink,
   "This CQL query contains a string concatenation with a $@.", source.getNode(),
   "user-provided value"

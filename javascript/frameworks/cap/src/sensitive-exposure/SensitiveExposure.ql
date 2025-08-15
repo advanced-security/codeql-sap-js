@@ -14,7 +14,6 @@
 import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
-import DataFlow::PathGraph
 
 EntityReferenceFromEntities entityAccesses(string entityNamespace) {
   entityNamespace = result.getEntitiesCallNamespace()
@@ -40,18 +39,18 @@ class SensitiveExposureFieldSource instanceof PropRead {
   string toString() { result = super.toString() }
 }
 
-class SensitiveLogExposureConfig extends TaintTracking::Configuration {
-  SensitiveLogExposureConfig() { this = "SensitiveLogExposure" }
+module SensitiveLogExposureConfig implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node source) { source instanceof SensitiveExposureFieldSource }
 
-  override predicate isSource(DataFlow::Node source) {
-    source instanceof SensitiveExposureFieldSource
-  }
-
-  override predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
+  predicate isSink(DataFlow::Node sink) { sink instanceof CdsLogSink }
 }
 
-from SensitiveLogExposureConfig config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
+module SensitiveLogExposureConfigFlow = TaintTracking::Global<SensitiveLogExposureConfig>;
+
+import SensitiveLogExposureConfigFlow::PathGraph
+
+from SensitiveLogExposureConfigFlow::PathNode source, SensitiveLogExposureConfigFlow::PathNode sink
+where SensitiveLogExposureConfigFlow::flowPath(source, sink)
 select sink, source, sink,
   "Log entry depends on the $@ field which is annotated as potentially sensitive.",
   source.getNode().(SensitiveExposureFieldSource).getCdsField(),
