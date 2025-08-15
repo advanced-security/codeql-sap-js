@@ -5,7 +5,6 @@ nodes
 | webapp/view/app.view.xml:15:5:18:28 | value={/input} |
 | webapp/view/app.view.xml:22:5:22:37 | content={/input} |
 edges
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:8:5:10:26 | value={/input} |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:12:13:12:37 | text={/input} |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:15:5:18:28 | value={/input} |

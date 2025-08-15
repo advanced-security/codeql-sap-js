@@ -4,7 +4,6 @@ nodes
 | webapp/view/app.view.xml:8:5:8:36 | content={/input} |
 edges
 | webapp/controller/app.controller.js:8:26:8:63 | new JSO ... .json") | webapp/view/app.view.xml:8:5:8:36 | content={/input} |
-| webapp/controller/app.controller.js:8:40:8:62 | "contro ... l.json" | webapp/controller/app.controller.js:8:40:8:62 | "contro ... l.json" |
 | webapp/controller/app.controller.js:8:40:8:62 | "contro ... l.json" | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
 | webapp/controller/app.controller.js:8:40:8:62 | "contro ... l.json" | webapp/view/app.view.xml:8:5:8:36 | content={/input} |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:8:26:8:63 | new JSO ... .json") |

@@ -13,11 +13,19 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5LogInjectionQuery
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow::UI5PathGraph
+import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+
+module UI5LogInjectionFlow = TaintTracking::Global<UI5LogInjection>;
+
+module UI5LogInjectionUI5PathGraph =
+  UI5PathGraph<UI5LogInjectionFlow::PathNode, UI5LogInjectionFlow::PathGraph>;
+
+import UI5LogInjectionUI5PathGraph
 
 from
-  UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource
+  UI5LogInjectionUI5PathGraph::UI5PathNode source, UI5LogInjectionUI5PathGraph::UI5PathNode sink,
+  UI5LogInjectionUI5PathGraph::UI5PathNode primarySource
 where
-  cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
+  UI5LogInjectionFlow::flowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource()
 select sink, primarySource, sink, "Log entry depends on a $@.", primarySource, "user-provided value"
