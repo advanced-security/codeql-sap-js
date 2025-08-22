@@ -7,11 +7,21 @@
 import javascript
 import advanced_security.javascript.frameworks.cap.CDSUtils
 
-abstract class UtilsAccessedPathSink extends DataFlow::Node { }
+abstract class UtilsSink extends DataFlow::Node {
+  abstract string sinkType();
+}
 
-abstract class UtilsControlledDataSink extends DataFlow::Node { }
+abstract class UtilsAccessedPathSink extends UtilsSink {
+  override string sinkType() { result = "unrestricted file read" }
+}
 
-abstract class UtilsControlledPathSink extends DataFlow::Node { }
+abstract class UtilsControlledDataSink extends UtilsSink {
+  override string sinkType() { result = "tainted data being written to a file" }
+}
+
+abstract class UtilsControlledPathSink extends UtilsSink {
+  override string sinkType() { result = "unrestricted file operations" }
+}
 
 abstract class UtilsExtraFlow extends DataFlow::Node { }
 
@@ -74,14 +84,16 @@ class ControlledInputPath extends UtilsControlledPathSink {
  * let dir = isdir ('app')
  * ```
  */
-class AdditionalFlowStep extends UtilsExtraFlow {
-  AdditionalFlowStep() {
-    exists(PathConverters pc | pc.getPath() = this)
+class CDSAdditionalFlowStep extends UtilsExtraFlow {
+  DataFlow::CallNode outNode;
+
+  CDSAdditionalFlowStep() {
+    exists(PathConverters pc | pc.getPath() = this and outNode = pc)
     or
-    exists(PathPredicates pr | pr.getPath() = this)
+    exists(PathPredicates pr | pr.getPath() = this and outNode = pr)
   }
 
-  DataFlow::CallNode getOutgoingNode() { result = this }
+  DataFlow::CallNode getOutgoingNode() { result = outNode }
 
-  DataFlow::Node getIngoingNode() { result = this.(DataFlow::CallNode).getAnArgument() }
+  DataFlow::Node getIngoingNode() { result = this }
 }
