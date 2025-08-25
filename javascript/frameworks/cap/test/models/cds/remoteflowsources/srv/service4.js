@@ -41,5 +41,11 @@ module.exports = class Service4 extends cds.ApplicationService {
       const Service2 = await cds.connect.to("service-2");
       Service2.send("send2", { messageToPass });
     });
+
+    this.on("send6", async (req) => {
+      const messageToPass = req._queryOptions;  // UNSAFE: Taint source, Exposed service
+      const Service2 = await cds.connect.to("service-2");
+      Service2.send("send2", { messageToPass });
+    });
   }
 };

@@ -44,24 +44,30 @@ module.exports = class Service1 extends cds.ApplicationService {
     });
 
     this.on("send6", async (req) => {
-      const messageToPass = req.locale;  // SAFE: Not a taint source, Exposed service
+      const messageToPass = req._queryOptions;  // UNSAFE: Taint source, Exposed service
       const Service2 = await cds.connect.to("service-2");
       Service2.send("send2", { messageToPass });
     });
 
     this.on("send7", async (req) => {
-      const messageToPass = req.tenant;  // SAFE: Not a taint source, Exposed service
+      const messageToPass = req.locale;  // SAFE: Not a taint source, Exposed service
       const Service2 = await cds.connect.to("service-2");
       Service2.send("send2", { messageToPass });
     });
 
     this.on("send8", async (req) => {
-      const messageToPass = req.timestamp;  // SAFE: Not a taint source, Exposed service
+      const messageToPass = req.tenant;  // SAFE: Not a taint source, Exposed service
       const Service2 = await cds.connect.to("service-2");
       Service2.send("send2", { messageToPass });
     });
 
     this.on("send9", async (req) => {
+      const messageToPass = req.timestamp;  // SAFE: Not a taint source, Exposed service
+      const Service2 = await cds.connect.to("service-2");
+      Service2.send("send2", { messageToPass });
+    });
+
+    this.on("send10", async (req) => {
       const messageToPass = req.user;  // SAFE: Not a taint source, Exposed service
       const Service2 = await cds.connect.to("service-2");
       Service2.send("send2", { messageToPass });
