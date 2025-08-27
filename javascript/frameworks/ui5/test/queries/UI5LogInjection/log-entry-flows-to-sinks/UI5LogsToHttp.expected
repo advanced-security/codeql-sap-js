@@ -1,9 +1,3 @@
-WARNING: type 'Configuration' has been deprecated and may be removed in future (UI5LogsToHttp.ql:33,33-61)
-WARNING: type 'FlowLabel' has been deprecated and may be removed in future (UI5LogsToHttp.ql:29,36-55)
-WARNING: type 'FlowLabel' has been deprecated and may be removed in future (UI5LogsToHttp.ql:36,52-71)
-WARNING: type 'FlowLabel' has been deprecated and may be removed in future (UI5LogsToHttp.ql:42,47-66)
-WARNING: type 'FlowLabel' has been deprecated and may be removed in future (UI5LogsToHttp.ql:43,5-24)
-WARNING: type 'FlowLabel' has been deprecated and may be removed in future (UI5LogsToHttp.ql:69,50-69)
 nodes
 | webapp/controller/app.controller.js:11:11:11:21 | input: null |
 | webapp/controller/app.controller.js:17:13:17:48 | input |
@@ -14,8 +8,6 @@ nodes
 | webapp/utils/CustomLogListener.js:13:19:13:32 | oEvent.message |
 | webapp/utils/LogEntriesToHttp.js:7:13:7:52 | message |
 | webapp/utils/LogEntriesToHttp.js:7:23:7:41 | Log.getLogEntries() |
-| webapp/utils/LogEntriesToHttp.js:7:23:7:44 | Log.get ... es()[0] |
-| webapp/utils/LogEntriesToHttp.js:7:23:7:52 | Log.get ... message |
 | webapp/utils/LogEntriesToHttp.js:11:19:11:25 | message |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
 | webapp/view/app.view.xml:8:5:8:37 | content={/output} |
@@ -31,9 +23,7 @@ edges
 | webapp/utils/CustomLogListener.js:9:29:9:34 | oEvent | webapp/utils/CustomLogListener.js:13:19:13:24 | oEvent |
 | webapp/utils/CustomLogListener.js:13:19:13:24 | oEvent | webapp/utils/CustomLogListener.js:13:19:13:32 | oEvent.message |
 | webapp/utils/LogEntriesToHttp.js:7:13:7:52 | message | webapp/utils/LogEntriesToHttp.js:11:19:11:25 | message |
-| webapp/utils/LogEntriesToHttp.js:7:23:7:41 | Log.getLogEntries() | webapp/utils/LogEntriesToHttp.js:7:23:7:44 | Log.get ... es()[0] |
-| webapp/utils/LogEntriesToHttp.js:7:23:7:44 | Log.get ... es()[0] | webapp/utils/LogEntriesToHttp.js:7:23:7:52 | Log.get ... message |
-| webapp/utils/LogEntriesToHttp.js:7:23:7:52 | Log.get ... message | webapp/utils/LogEntriesToHttp.js:7:13:7:52 | message |
+| webapp/utils/LogEntriesToHttp.js:7:23:7:41 | Log.getLogEntries() | webapp/utils/LogEntriesToHttp.js:7:13:7:52 | message |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:11:11:11:21 | input: null |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:14:22:14:41 | new JSONModel(oData) |
 | webapp/view/app.view.xml:8:5:8:37 | content={/output} | webapp/controller/app.controller.js:12:11:12:22 | output: null |

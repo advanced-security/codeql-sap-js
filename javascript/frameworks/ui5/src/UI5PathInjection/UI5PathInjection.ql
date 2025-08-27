@@ -14,24 +14,20 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow::UI5PathGraph
+import advanced_security.javascript.frameworks.ui5.UI5PathInjectionQuery
 
-// import semmle.javascript.security.dataflow.TaintedPathQuery as TaintedPathQuery
-class UI5PathInjectionConfiguration extends TaintTracking::Configuration {
-  UI5PathInjectionConfiguration() { this = "UI5 Path Injection" }
+module UI5PathInjectionFlow = TaintTracking::Global<UI5PathInjection>;
 
-  override predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
+module UI5PathInjectionPathGraph =
+  UI5PathGraph<UI5PathInjectionFlow::PathNode, UI5PathInjectionFlow::PathGraph>;
 
-  override predicate isSink(DataFlow::Node node) {
-    node = ModelOutput::getASinkNode("ui5-path-injection").asSink()
-  }
-}
+import UI5PathInjectionPathGraph 
 
 from
-  UI5PathInjectionConfiguration config, UI5PathNode source, UI5PathNode sink,
-  UI5PathNode primarySource
+  UI5PathInjectionPathGraph::UI5PathNode source, UI5PathInjectionPathGraph::UI5PathNode sink,
+  UI5PathInjectionPathGraph::UI5PathNode primarySource
 where
-  config.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
+  UI5PathInjectionFlow::flowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource()
 select sink, primarySource, sink, "The path of a saved file depends on a $@.", primarySource,
   "user-provided value"

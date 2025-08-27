@@ -13,14 +13,21 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow::UI5PathGraph
 import advanced_security.javascript.frameworks.ui5.UI5FormulaInjectionQuery
 
+module UI5FormulaInjectionFlow = TaintTracking::Global<UI5FormulaInjection>;
+
+module UI5FormulaInjectionUI5PathGraph =
+  UI5PathGraph<UI5FormulaInjectionFlow::PathNode, UI5FormulaInjectionFlow::PathGraph>;
+
+import UI5FormulaInjectionUI5PathGraph
+
 from
-  UI5FormulaInjectionConfiguration config, UI5PathNode source, UI5PathNode sink,
-  UI5PathNode primarySource
+  UI5FormulaInjectionUI5PathGraph::UI5PathNode source,
+  UI5FormulaInjectionUI5PathGraph::UI5PathNode sink,
+  UI5FormulaInjectionUI5PathGraph::UI5PathNode primarySource
 where
-  config.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
+  UI5FormulaInjectionFlow::flowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource()
 select sink, primarySource, sink, "The content of a saved file depends on a $@.", primarySource,
   "user-provided value"

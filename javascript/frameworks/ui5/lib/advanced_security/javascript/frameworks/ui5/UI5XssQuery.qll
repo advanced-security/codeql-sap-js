@@ -1,39 +1,18 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5View
-import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
+private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
-class Configuration extends DomBasedXss::Configuration {
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start)
+module UI5Xss implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node start) {
+    DomBasedXss::DomBasedXssConfig::isSource(start, _)
     or
     start instanceof RemoteFlowSource
   }
 
-  override predicate isAdditionalFlowStep(
-    DataFlow::Node start, DataFlow::Node end, DataFlow::FlowLabel inLabel,
-    DataFlow::FlowLabel outLabel
-  ) {
-    /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
-    super.isAdditionalFlowStep(start, end, inLabel, outLabel)
-    or
-    /* TODO: Legacy code */
-    /* Handler argument node to handler parameter */
-    exists(UI5Handler h |
-      start = h.getBindingPath().getNode() and
-      /*
-       * Ideally we would like to show an intermediate node where
-       * the handler is bound to a control, but there is no sourceNode there
-       * `end = h.getBindingPath() or start = h.getBindingPath()`
-       */
-
-      end = h.getParameter(0)
-    )
-  }
-
-  override predicate isBarrier(DataFlow::Node node) {
+  predicate isBarrier(DataFlow::Node node) {
     /* 1. Already a sanitizer defined in `DomBasedXssQuery::Configuration` */
-    super.isSanitizer(node)
+    DomBasedXss::DomBasedXssConfig::isBarrier(node)
     or
     /* 2. Value read from a non-string control property */
     exists(PropertyMetadata m | not m.isUnrestrictedStringType() | node = m)
@@ -53,9 +32,27 @@ class Configuration extends DomBasedXss::Configuration {
       ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML", "encodeHTML"]
   }
 
-  override predicate isSink(DataFlow::Node node) {
+  predicate isSink(DataFlow::Node node) {
     node instanceof UI5ExtHtmlISink or
     node instanceof UI5ModelHtmlISink
+  }
+
+  predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
+    /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
+    DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
+    or
+    /* TODO: Legacy code */
+    /* Handler argument node to handler parameter */
+    exists(UI5Handler h |
+      start = h.getBindingPath().getNode() and
+      /*
+       * Ideally we would like to show an intermediate node where
+       * the handler is bound to a control, but there is no sourceNode there
+       * `end = h.getBindingPath() or start = h.getBindingPath()`
+       */
+
+      end = h.getParameter(0)
+    )
   }
 }
 
