@@ -1,0 +1,13 @@
+name: "CodeQL - QL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  codeql:
+    uses: advanced-security/reusable-workflows/.github/workflows/codeql-ql.yml@main
+    secrets: inherit
