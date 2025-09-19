@@ -12,8 +12,13 @@
 
 import javascript
 import advanced_security.javascript.frameworks.xsjs.XSJSZipSlipQuery
-import DataFlow::PathGraph
+import semmle.javascript.frameworks.data.ModelsAsData
 
-from Configuration config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
-select sink, source, sink, "The path of $@ being saved depends on a $@.", sink, "this zip file", source, "user-provided value"
+module XSJSZipSlipFlow = DataFlow::GlobalWithState<XSJSZipSlip>;
+
+import XSJSZipSlipFlow::PathGraph
+
+from XSJSZipSlipFlow::PathNode source, XSJSZipSlipFlow::PathNode sink
+where XSJSZipSlipFlow::flowPath(source, sink)
+select sink, source, sink, "The path of $@ being saved depends on a $@.", sink, "this zip file",
+  source, "user-provided value"

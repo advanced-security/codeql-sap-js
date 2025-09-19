@@ -35,9 +35,7 @@ extensions:
       extensible: sourceModel
     data:
       # ========== 1. Retrieving Web Request Body ==========
-      - [WebRequestBody, "Member[asArrayBuffer].ReturnValue", remote]
-      - [WebRequestBody, "Member[asString].ReturnValue", remote]
-      - [WebRequestBody, "Member[asWebRequest].ReturnValue", remote]
+      - [WebRequestBody, "", remote]
 
       # ========== 2. Retrieving Web Request Parameter Value ==========
       - [WebRequestParameters, "Member[get].ReturnValue", remote]
@@ -45,9 +43,6 @@ extensions:
 
       # ========== 3. Receiving Response through HTTPClient ==========
       - [HTTPClient, "InboundResponse.Member[body]", remote]
-      - [HTTPClient, "InboundResponse.Member[body].Member[asArrayBuffer].ReturnValue", remote]
-      - [HTTPClient, "InboundResponse.Member[body].Member[asString].ReturnValue", remote]
-      - [HTTPClient, "InboundResponse.Member[body].Member[asWebRequest].ReturnValue", remote]
       - [HTTPClient, "InboundResponse.Member[cacheControl]", remote]
       - [HTTPClient, "InboundResponse.Member[contentType]", remote]
       - [HTTPClient, "InboundResponse.Member[cookies]", remote]
@@ -60,12 +55,15 @@ extensions:
       extensible: sinkModel
     data:
       - [WebResponse, "Member[setBody].Argument[0]", html-injection]
-      # - [Mail, "Member[send].Argument[this]", "???"]
-      # - [SMTPConnection, "Member[send].Argument[0]", "???"]
-      # - ["HTTPClient", "Member[request].Argument[0]", "???"]
 
   - addsTo:
       pack: codeql/javascript-all
       extensible: summaryModel
     data:
       - [global, "Member[JSON].Member[parse]", "Argument[0]", "ReturnValue", taint]
+      - [WebRequestBody, "Member[asArrayBuffer]", "Argument[this]", "ReturnValue", taint]
+      - [WebRequestBody, "Member[asString]", "Argument[this]", "ReturnValue", taint]
+      - [WebRequestBody, "Member[asWebRequest]", "Argument[this]", "ReturnValue", taint]
+      - [InboundResponse, "Member[body].Member[asArrayBuffer]", "Argument[this]", "ReturnValue", taint]
+      - [InboundResponse, "Member[body].Member[asString]", "Argument[this]", "ReturnValue", taint]
+      - [InboundResponse, "Member[body].Member[asWebRequest]", "Argument[this]", "ReturnValue", taint]
