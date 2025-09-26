@@ -43,7 +43,7 @@ export function runJavaScriptExtractor(
   if (result.error) {
     const errorMessage = `Error running JavaScript extractor: ${result.error.message}`;
     if (codeqlExePath) {
-      addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath);
+      addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath, sourceRoot);
     }
     return {
       success: false,
@@ -54,7 +54,7 @@ export function runJavaScriptExtractor(
   if (result.status !== 0) {
     const errorMessage = `JavaScript extractor failed with exit code ${String(result.status)}`;
     if (codeqlExePath) {
-      addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath);
+      addJavaScriptExtractorDiagnostic(sourceRoot, errorMessage, codeqlExePath, sourceRoot);
     }
     return {
       success: false,
