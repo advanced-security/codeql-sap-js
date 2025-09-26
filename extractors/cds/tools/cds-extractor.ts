@@ -183,7 +183,12 @@ try {
     if (!extractorResult.success && extractorResult.error) {
       cdsExtractorLog('error', `Error running JavaScript extractor: ${extractorResult.error}`);
       if (codeqlExePath) {
-        addJavaScriptExtractorDiagnostic(sourceRoot, extractorResult.error, codeqlExePath);
+        addJavaScriptExtractorDiagnostic(
+          sourceRoot,
+          extractorResult.error,
+          codeqlExePath,
+          sourceRoot,
+        );
       }
       logExtractorStop(false, 'JavaScript extractor failed');
     } else {
@@ -223,7 +228,12 @@ try {
   if (!extractorResult.success && extractorResult.error) {
     cdsExtractorLog('error', `Error running JavaScript extractor: ${extractorResult.error}`);
     if (codeqlExePath) {
-      addJavaScriptExtractorDiagnostic(sourceRoot, extractorResult.error, codeqlExePath);
+      addJavaScriptExtractorDiagnostic(
+        sourceRoot,
+        extractorResult.error,
+        codeqlExePath,
+        sourceRoot,
+      );
     }
     logExtractorStop(false, 'JavaScript extractor failed');
   } else {
@@ -316,6 +326,7 @@ try {
       cdsFilePathsToProcess[0], // Use first file as representative
       `Compilation orchestration failed: ${String(error)}`,
       codeqlExePath,
+      sourceRoot,
     );
   }
 }
@@ -350,7 +361,12 @@ if (!extractorResult.success && extractorResult.error) {
     // Use the first CDS file as a representative file for the diagnostic
     const firstProject = Array.from(dependencyGraph.projects.values())[0];
     const representativeFile = firstProject.cdsFiles[0] || sourceRoot;
-    addJavaScriptExtractorDiagnostic(representativeFile, extractorResult.error, codeqlExePath);
+    addJavaScriptExtractorDiagnostic(
+      representativeFile,
+      extractorResult.error,
+      codeqlExePath,
+      sourceRoot,
+    );
   }
 
   logExtractorStop(false, 'JavaScript extractor failed');

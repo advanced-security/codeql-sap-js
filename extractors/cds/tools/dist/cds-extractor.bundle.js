@@ -5790,10 +5790,10 @@ var Ignore = class {
   ignored(p) {
     const fullpath = p.fullpath();
     const fullpaths = `${fullpath}/`;
-    const relative4 = p.relative() || ".";
-    const relatives = `${relative4}/`;
+    const relative5 = p.relative() || ".";
+    const relatives = `${relative5}/`;
     for (const m of this.relative) {
-      if (m.match(relative4) || m.match(relatives))
+      if (m.match(relative5) || m.match(relatives))
         return true;
     }
     for (const m of this.absolute) {
@@ -5804,9 +5804,9 @@ var Ignore = class {
   }
   childrenIgnored(p) {
     const fullpath = p.fullpath() + "/";
-    const relative4 = (p.relative() || ".") + "/";
+    const relative5 = (p.relative() || ".") + "/";
     for (const m of this.relativeChildren) {
-      if (m.match(relative4))
+      if (m.match(relative5))
         return true;
     }
     for (const m of this.absoluteChildren) {
@@ -7449,7 +7449,27 @@ function validateTaskOutputs(task, sourceRoot2) {
 // src/diagnostics.ts
 var import_child_process4 = require("child_process");
 var import_path6 = require("path");
-function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, severity, logPrefix) {
+function convertToRelativePath(filePath, sourceRoot2) {
+  if (!filePath || typeof filePath !== "string" || !sourceRoot2 || typeof sourceRoot2 !== "string") {
+    return ".";
+  }
+  try {
+    const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
+    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    if (resolvedFilePath === resolvedSourceRoot) {
+      return ".";
+    }
+    const relativePath = (0, import_path6.relative)(resolvedSourceRoot, resolvedFilePath);
+    if (relativePath.startsWith("..")) {
+      return ".";
+    }
+    return relativePath;
+  } catch {
+    return ".";
+  }
+}
+function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, severity, logPrefix, sourceRoot2) {
+  const finalFilePath = sourceRoot2 ? convertToRelativePath(filePath, sourceRoot2) : (0, import_path6.resolve)(filePath);
   try {
     (0, import_child_process4.execFileSync)(codeqlExePath2, [
       "database",
@@ -7460,7 +7480,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
       `--source-name=${sourceName}`,
       `--severity=${severity}`,
       `--markdown-message=${message}`,
-      `--file-path=${(0, import_path6.resolve)(filePath)}`,
+      `--file-path=${finalFilePath}`,
       "--",
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ""}`
     ]);
@@ -7474,7 +7494,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
     return false;
   }
 }
-function addCompilationDiagnostic(cdsFilePath, errorMessage, codeqlExePath2) {
+function addCompilationDiagnostic(cdsFilePath, errorMessage, codeqlExePath2, sourceRoot2) {
   return addDiagnostic(
     cdsFilePath,
     errorMessage,
@@ -7482,7 +7502,8 @@ function addCompilationDiagnostic(cdsFilePath, errorMessage, codeqlExePath2) {
     "cds/compilation-failure",
     "Failure to compile one or more SAP CAP CDS files",
     "error" /* Error */,
-    "source file"
+    "source file",
+    sourceRoot2
   );
 }
 function addDependencyGraphDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
@@ -7493,7 +7514,8 @@ function addDependencyGraphDiagnostic(sourceRoot2, errorMessage, codeqlExePath2)
     "cds/dependency-graph-failure",
     "CDS project dependency graph build failure",
     "error" /* Error */,
-    "source root"
+    "source root",
+    sourceRoot2
   );
 }
 function addDependencyInstallationDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
@@ -7504,7 +7526,8 @@ function addDependencyInstallationDiagnostic(sourceRoot2, errorMessage, codeqlEx
     "cds/dependency-installation-failure",
     "CDS dependency installation failure",
     "error" /* Error */,
-    "source root"
+    "source root",
+    sourceRoot2
   );
 }
 function addEnvironmentSetupDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
@@ -7516,10 +7539,11 @@ function addEnvironmentSetupDiagnostic(sourceRoot2, errorMessage, codeqlExePath2
     "cds/environment-setup-failure",
     "CDS extractor environment setup failure",
     "error" /* Error */,
-    "source root"
+    "source root",
+    sourceRoot2
   );
 }
-function addJavaScriptExtractorDiagnostic(filePath, errorMessage, codeqlExePath2) {
+function addJavaScriptExtractorDiagnostic(filePath, errorMessage, codeqlExePath2, sourceRoot2) {
   return addDiagnostic(
     filePath,
     errorMessage,
@@ -7527,7 +7551,8 @@ function addJavaScriptExtractorDiagnostic(filePath, errorMessage, codeqlExePath2
     "cds/js-extractor-failure",
     "Failure in JavaScript extractor for SAP CAP CDS files",
     "error" /* Error */,
-    "extraction file"
+    "extraction file",
+    sourceRoot2
   );
 }
 function addNoCdsProjectsDiagnostic(sourceRoot2, message, codeqlExePath2) {
@@ -7538,7 +7563,8 @@ function addNoCdsProjectsDiagnostic(sourceRoot2, message, codeqlExePath2) {
     "cds/no-cds-projects",
     "No CDS projects detected in source",
     "warning" /* Warning */,
-    "source root"
+    "source root",
+    sourceRoot2
   );
 }
 
@@ -8069,7 +8095,7 @@ function projectInstallDependencies(project, sourceRoot2) {
 }
 
 // src/cds/compiler/retry.ts
-function addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath2) {
+function addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath2, sourceRoot2) {
   for (const project of dependencyGraph2.projects.values()) {
     for (const task of project.compilationTasks) {
       if (task.status === "failed") {
@@ -8079,7 +8105,8 @@ function addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath
             addCompilationDiagnostic(
               sourceFile,
               task.errorSummary ?? "Compilation failed",
-              codeqlExePath2
+              codeqlExePath2,
+              sourceRoot2
             );
           }
         }
@@ -8191,7 +8218,11 @@ function orchestrateRetryAttempts(dependencyGraph2, codeqlExePath2) {
     result.retryCompilationDurationMs = retryCompilationEndTime - retryCompilationStartTime;
     updateCdsDependencyGraphStatus(dependencyGraph2, dependencyGraph2.sourceRootDir);
     updateDependencyGraphWithRetryResults(dependencyGraph2, result);
-    addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath2);
+    addCompilationDiagnosticsForFailedTasks(
+      dependencyGraph2,
+      codeqlExePath2,
+      dependencyGraph2.sourceRootDir
+    );
     result.success = result.totalSuccessfulRetries > 0 || result.totalTasksRequiringRetry === 0;
   } catch (error) {
     const errorMessage = `Retry orchestration failed: ${String(error)}`;
@@ -9071,7 +9102,7 @@ function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath
   if (result.error) {
     const errorMessage = `Error running JavaScript extractor: ${result.error.message}`;
     if (codeqlExePath2) {
-      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2);
+      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
     }
     return {
       success: false,
@@ -9081,7 +9112,7 @@ function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath
   if (result.status !== 0) {
     const errorMessage = `JavaScript extractor failed with exit code ${String(result.status)}`;
     if (codeqlExePath2) {
-      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2);
+      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
     }
     return {
       success: false,
@@ -9445,7 +9476,12 @@ try {
     if (!extractorResult2.success && extractorResult2.error) {
       cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult2.error}`);
       if (codeqlExePath) {
-        addJavaScriptExtractorDiagnostic(sourceRoot, extractorResult2.error, codeqlExePath);
+        addJavaScriptExtractorDiagnostic(
+          sourceRoot,
+          extractorResult2.error,
+          codeqlExePath,
+          sourceRoot
+        );
       }
       logExtractorStop(false, "JavaScript extractor failed");
     } else {
@@ -9476,7 +9512,12 @@ try {
   if (!extractorResult2.success && extractorResult2.error) {
     cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult2.error}`);
     if (codeqlExePath) {
-      addJavaScriptExtractorDiagnostic(sourceRoot, extractorResult2.error, codeqlExePath);
+      addJavaScriptExtractorDiagnostic(
+        sourceRoot,
+        extractorResult2.error,
+        codeqlExePath,
+        sourceRoot
+      );
     }
     logExtractorStop(false, "JavaScript extractor failed");
   } else {
@@ -9539,7 +9580,8 @@ try {
       cdsFilePathsToProcess[0],
       // Use first file as representative
       `Compilation orchestration failed: ${String(error)}`,
-      codeqlExePath
+      codeqlExePath,
+      sourceRoot
     );
   }
 }
@@ -9557,7 +9599,12 @@ if (!extractorResult.success && extractorResult.error) {
   if (codeqlExePath && dependencyGraph.projects.size > 0) {
     const firstProject = Array.from(dependencyGraph.projects.values())[0];
     const representativeFile = firstProject.cdsFiles[0] || sourceRoot;
-    addJavaScriptExtractorDiagnostic(representativeFile, extractorResult.error, codeqlExePath);
+    addJavaScriptExtractorDiagnostic(
+      representativeFile,
+      extractorResult.error,
+      codeqlExePath,
+      sourceRoot
+    );
   }
   logExtractorStop(false, "JavaScript extractor failed");
 } else {
