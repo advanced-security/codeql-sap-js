@@ -1,20 +1,50 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5View
-private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
+import semmle.javascript.security.dataflow.XssThroughDomCustomizations
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 
-private class DataFromRemoteControlReference extends RemoteFlowSource, MethodCallNode {
+private class DataFromRemoteControlReference extends RemoteFlowSource {
   DataFromRemoteControlReference() {
     exists(UI5Control sourceControl, string typeAlias, ControlReference controlReference |
-      ApiGraphModelsExtensions::typeModel(typeAlias, sourceControl.getImportPath(), _) and
-      ApiGraphModelsExtensions::sourceModel(typeAlias, _, "remote", _) and
+      typeModel(typeAlias, sourceControl.getImportPath(), _) and
+      sourceModel(typeAlias, _, "remote", _) and
       sourceControl.getAReference() = controlReference and
-      controlReference.flowsTo(this.getReceiver()) and
-      this.getMethodName() = "getValue"
+      (
+        this = controlReference.getAMemberCall("getValue") or
+        this = controlReference.getAPropertyRead("value")
+      )
     )
   }
 
   override string getSourceType() { result = "Data from a remote control" }
+}
+
+private class InputControlInstantiation extends ElementInstantiation {
+  InputControlInstantiation() { typeModel("UI5InputControl", this.getImportPath(), _) }
+}
+
+private class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source
+{
+  DataFromInstantiatedAndPlacedAtControl() {
+    exists(
+      InputControlInstantiation controlInstantiation, string typeAlias,
+      ControlReference controlReference
+    |
+      /* Double check that the type derives a remote flow source. */
+      typeModel(typeAlias, controlInstantiation.getImportPath(), _) and
+      sourceModel(typeAlias, _, "remote", _) and
+      controlInstantiation.getId() = controlReference.getId() and
+      (
+        this = controlReference.getAMemberCall("getValue") or
+        this = controlReference.getAPropertyRead("value")
+      )
+    )
+  }
+
+  override string getSourceType() {
+    result = "Data from an instantiated control placed in a DOM tree"
+  }
 }
 
 class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSource {
@@ -60,24 +90,28 @@ class ODataServiceModel extends UI5ExternalModel {
   ODataServiceModel() {
     exists(MethodCallNode setModelCall, CustomController controller |
       /*
-       * 1. This flows from a DF node corresponding to the parent component's model to the `this.setModel` call
-       * i.e. Aims to capture something like `this.getOwnerComponent().getModel("someModelName")` as in
-       * `this.getView().setModel(this.getOwnerComponent().getModel("someModelName"))`
+       * 1. This flows from a DF node corresponding to the parent component's model
+       * to the `this.setModel` call. e.g.
+       *
+       * `this.getOwnerComponent().getModel("someModelName")` as in
+       * `this.getView().setModel(this.getOwnerComponent().getModel("someModelName"))`.
        */
 
       modelName = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
       this.getCalleeName() = "getModel" and
       controller.getOwnerComponentRef().flowsTo(this.(MethodCallNode).getReceiver()) and
       this.flowsTo(setModelCall.getArgument(0)) and
-      setModelCall.getMethodName() = "setModel" and
-      setModelCall.getReceiver() = controller.getAViewReference() and
-      /* 2. The component's manifest.json declares the DataSource as being of OData type */
+      setModelCall = controller.getAViewReference().getAMemberCall("setModel") and
+      /*
+       * 2. The component's `manifest.json` declares the DataSource as being of OData type.
+       */
+
       controller.getOwnerComponent().getExternalModelDef(modelName).getDataSource() instanceof
         ODataDataSourceManifest
     )
     or
     /*
-     * A constructor call to sap.ui.model.odata.v2.ODataModel.
+     * A constructor call to `sap.ui.model.odata.v2.ODataModel`.
      */
 
     this instanceof NewNode and

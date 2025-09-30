@@ -5,6 +5,7 @@ import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 private module WebAppResourceRootJsonReader implements JsonParser::MakeJsonReaderSig<WebApp> {
   class JsonReader extends WebApp {
@@ -133,10 +134,11 @@ class WebApp extends HTML::HtmlFile {
 }
 
 /**
- * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui.loader%23methods/sap.ui.loader.config
+ * The global instance of `sap.ui.Core` that represents this UI5 application, as retrieved
+ * by a call to `sap.ui.getCore()`.
  */
-class Loader extends CallNode {
-  Loader() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("loader") }
+class SapUiCore extends MethodCallNode {
+  SapUiCore() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("getCore") }
 }
 
 /**
@@ -291,24 +293,31 @@ class CustomControl extends SapExtendCall {
       result = renderer.getRenderer()
     )
   }
+
+  ValueNode getAThisNode() {
+    exists(ThisNode thisNode | thisNode.getBinder() = this.getAMethod() |
+      result.getALocalSource() = thisNode
+    )
+  }
 }
 
 abstract class Reference extends MethodCallNode { }
 
 /**
- * A JS reference to a `UI5Control`, commonly obtained via `View.byId(controlId)`.
+ * A JS reference to a `UI5Control`, commonly obtained via its ID.
  */
 class ControlReference extends Reference {
   string controlId;
 
   ControlReference() {
-    exists(CustomController controller |
-      (
-        controller.getAViewReference().flowsTo(this.getReceiver()) or
-        controller.getAThisNode() = this.getReceiver()
-      ) and
-      this.getMethodName() = "byId" and
-      this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = controlId
+    this.getArgument(0).getStringValue() = controlId and
+    (
+      exists(CustomController controller |
+        this = controller.getAViewReference().getAMemberCall("byId") or
+        this.getReceiver() = controller.getAThisNode()
+      )
+      or
+      exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
     )
   }
 
@@ -453,13 +462,7 @@ class CustomController extends SapExtendCall {
   UI5View getView() { this = result.getController() }
 
   ControlReference getAControlReference() {
-    exists(MethodCallNode viewRef |
-      viewRef = this.getAViewReference() and
-      /* There is a view */
-      viewRef.flowsTo(result.(MethodCallNode).getReceiver()) and
-      /* The result is a member of this view */
-      result.(MethodCallNode).getMethodName() = "byId"
-    )
+    result = this.getAViewReference().getAMemberCall("byId")
   }
 
   ValueNode getAThisNode() {
@@ -481,19 +484,16 @@ class CustomController extends SapExtendCall {
   }
 
   UI5Model getModel() {
-    exists(MethodCallNode setModelCall |
-      this.getAViewReference().flowsTo(setModelCall.getReceiver()) and
-      setModelCall.getMethodName() = "setModel" and
-      result.flowsTo(setModelCall.getAnArgument())
-    )
+    result = this.getAViewReference().getAMemberCall("setModel").getAnArgument().getALocalSource()
   }
 
   ModelReference getModelReference(string modelName) {
-    this.getAViewReference().flowsTo(result.getReceiver()) and
-    result.getModelName() = modelName
+    result = this.getAViewReference().getAMemberCall(modelName)
   }
 
-  ModelReference getAModelReference() { this.getAViewReference().flowsTo(result.getReceiver()) }
+  ModelReference getAModelReference() {
+    result = this.getAViewReference().getAMemberCall("getModel")
+  }
 
   RouterReference getARouterReference() {
     result.getMethodName() = "getRouter" and
@@ -514,9 +514,10 @@ class RouteReference extends MethodCallNode {
   string name;
 
   RouteReference() {
-    this.getMethodName() = "getRoute" and
-    this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name and
-    exists(RouterReference routerReference | routerReference.flowsTo(this.getReceiver()))
+    exists(RouterReference routerReference |
+      this = routerReference.getAMemberCall("getRoute") and
+      this.getArgument(0).getStringValue() = name
+    )
   }
 
   string getName() { result = name }
@@ -1238,21 +1239,18 @@ class RequiredObject extends Expr {
  */
 class SapExtendCall extends InvokeNode, MethodCallNode {
   SapExtendCall() {
-    /* 1. The receiver object is an imported one */
     exists(RequiredObject requiredModule |
-      requiredModule.asSourceNode().flowsTo(this.getReceiver())
-    ) and
-    /* 2. The method name is `extend` */
-    this.(MethodCallNode).getMethodName() = "extend"
+      this = requiredModule.asSourceNode().getAMemberCall("extend")
+    )
   }
 
   FunctionNode getMethod(string methodName) {
-    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName).(FunctionNode)
+    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName)
   }
 
   FunctionNode getAMethod() { result = this.getMethod(_) }
 
-  string getName() { result = this.getArgument(0).asExpr().(StringLiteral).getValue() }
+  string getName() { result = this.getArgument(0).getStringValue() }
 
   ObjectLiteralNode getContent() { result = this.getArgument(1) }
 
@@ -1269,14 +1267,34 @@ class SapExtendCall extends InvokeNode, MethodCallNode {
   SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1) }
 }
 
+class ElementInstantiation extends NewNode {
+  string importPath;
+
+  ElementInstantiation() {
+    exists(RequiredObject requiredObject |
+      this = requiredObject.asSourceNode().getAnInstantiation() and
+      importPath = requiredObject.getDependency()
+    )
+  }
+
+  string getId() {
+    result = this.getArgument(0).(SourceNode).getAPropertyWrite("id").getRhs().getStringValue()
+  }
+
+  string getImportPath() { result = importPath }
+}
+
 private newtype TSapElement =
-  DefinitionOfElement(SapExtendCall extension) or
-  ReferenceOfElement(Reference reference)
+  TDefinitionOfElement(SapExtendCall extension) or
+  TReferenceOfElement(Reference reference) or
+  TInstantiationOfElement(ElementInstantiation newNode)
 
 class SapElement extends TSapElement {
-  SapExtendCall asDefinition() { this = DefinitionOfElement(result) }
+  SapExtendCall asDefinition() { this = TDefinitionOfElement(result) }
 
-  Reference asReference() { this = ReferenceOfElement(result) }
+  Reference asReference() { this = TReferenceOfElement(result) }
+
+  ElementInstantiation asInstantiation() { this = TInstantiationOfElement(result) }
 
   SapElement getParentElement() {
     result.asReference() = this.asDefinition().(CustomControl).getController().getAViewReference() or
@@ -1286,7 +1304,26 @@ class SapElement extends TSapElement {
     result.asDefinition() = this.asDefinition().(CustomController).getOwnerComponent() or
     result.asDefinition() =
       this.asReference().(ControllerReference).getDefinition().getOwnerComponent()
+    /* TODO: Implement branch for `asInstantiation` */
   }
+
+  string getId() {
+    result = this.asInstantiation().getId()
+    or
+    /* TODO: Needs testing */
+    result =
+      this.asDefinition()
+          .(CustomControl)
+          .getMetadata()
+          .getProperty("id")
+          .getAPropertySource()
+          .getStringValue()
+    /*
+     * Note that because we cannot statically determine the ID of an element from the references alone,
+     * we do not implement the branch of `TReferenceOfElement`.
+     */
+
+    }
 
   string toString() {
     result = this.asDefinition().toString() or
@@ -1312,11 +1349,8 @@ class Metadata extends ObjectLiteralNode {
 
   Metadata() { this = extension.getContent().getAPropertySource("metadata") }
 
-  SourceNode getProperty(string name) {
-    result =
-      any(PropertyMetadata property |
-        property.getParentMetadata() = this and property.getName() = name
-      )
+  PropertyMetadata getProperty(string name) {
+    result.getParentMetadata() = this and result.getName() = name
   }
 }
 
