@@ -495,12 +495,11 @@ class CustomController extends SapExtendCall {
   }
 
   ModelReference getModelReference(string modelName) {
-    result = this.getAViewReference().getAMemberCall(modelName)
+    result = this.getAViewReference().getAMemberCall("getModel") and
+    result.getArgument(0).getALocalSource().getStringValue() = modelName
   }
 
-  ModelReference getAModelReference() {
-    result = this.getAViewReference().getAMemberCall("getModel")
-  }
+  ModelReference getAModelReference() { result = this.getModelReference(_) }
 
   RouterReference getARouterReference() {
     exists(ThisNode controllerThis | controllerThis.getBinder() = this.getAMethod() |
