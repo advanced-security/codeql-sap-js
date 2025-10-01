@@ -133,21 +133,17 @@ private class RouteParameterAccess extends RemoteFlowSource instanceof PropRead 
   override string getSourceType() { result = "RouteParameterAccess" }
 
   RouteParameterAccess() {
-    exists(
-      ControllerHandler handler, RouteManifest routeManifest, ParameterNode handlerParameter,
-      MethodCallNode getParameterCall
-    |
+    exists(ControllerHandler handler, RouteManifest routeManifest, MethodCallNode getParameterCall |
       handler.isAttachedToRoute(routeManifest.getName()) and
       this.asExpr().getEnclosingFunction() = handler.getFunction() and
-      handlerParameter = handler.getParameter(0) and
-      getParameterCall.getMethodName() = "getParameter" and
-      getParameterCall.getReceiver().getALocalSource() = handlerParameter and
+      getParameterCall = handler.getParameter(0).getAMemberCall("getParameter") and
       (
-        routeManifest.matchesPathString(this.getPropertyName()) and
-        this.getBase().getALocalSource() = getParameterCall
+        exists(string path |
+          this = getParameterCall.getAPropertyRead(path) and
+          routeManifest.matchesPathString(path)
+        )
         or
-        /* TODO: Why does `routeManifest.matchesPathString` not work for propertyName?? */
-        this.getBase().(PropRead).getBase().getALocalSource() = getParameterCall
+        this = getParameterCall.getAPropertyRead().getAPropertyRead()
       )
     )
   }
@@ -157,10 +153,8 @@ private class DisplayEventHandlerParameterAccess extends RemoteFlowSource instan
   override string getSourceType() { result = "DisplayEventHandlerParameterAccess" }
 
   DisplayEventHandlerParameterAccess() {
-    exists(DisplayEventHandler handler, MethodCallNode getParameterCall |
-      getParameterCall.getMethodName() = "getParameter" and
-      this.getBase().getALocalSource() = getParameterCall and
-      handler.getParameter(0) = getParameterCall.getReceiver().getALocalSource()
+    exists(DisplayEventHandler handler |
+      this = handler.getParameter(0).getAMemberCall("getParameter").getAPropertyRead()
     )
   }
 }
