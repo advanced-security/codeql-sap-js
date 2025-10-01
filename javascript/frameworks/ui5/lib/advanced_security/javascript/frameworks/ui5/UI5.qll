@@ -485,9 +485,8 @@ class CustomController extends SapExtendCall {
      * controller.
      */
 
-    exists(DisplayEventHandler handler |
-      handler.getAssociatedContextObject().getALocalSource() = this.getAThisNode() and
-      result.getBinder() = handler
+    exists(DisplayEventHandler handler | handler = result.getBinder() |
+      handler.getAssociatedContextObject().getALocalSource() = this.getAThisNode()
     )
   }
 
@@ -504,10 +503,8 @@ class CustomController extends SapExtendCall {
   }
 
   RouterReference getARouterReference() {
-    result.getMethodName() = "getRouter" and
-    exists(ThisNode controllerThis |
-      result.(MethodCallNode).getReceiver() = controllerThis.getALocalUse() and
-      controllerThis.getBinder() = this.getAMethod()
+    exists(ThisNode controllerThis | controllerThis.getBinder() = this.getAMethod() |
+      result = controllerThis.getAMemberCall("getRouter")
     )
   }
 
