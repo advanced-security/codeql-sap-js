@@ -1,6 +1,7 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5View
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 module UI5Xss implements DataFlow::ConfigSig {
@@ -34,7 +35,8 @@ module UI5Xss implements DataFlow::ConfigSig {
 
   predicate isSink(DataFlow::Node node) {
     node instanceof UI5ExtHtmlISink or
-    node instanceof UI5ModelHtmlISink
+    node instanceof UI5ModelHtmlISink or
+    node instanceof DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
@@ -67,5 +69,50 @@ class UI5ModelHtmlISink extends DataFlow::Node {
  * An HTML injection sink typically for custom controls whose RenderManager calls acting as sinks.
  */
 private class UI5ExtHtmlISink extends DataFlow::Node {
-  UI5ExtHtmlISink() { this = ModelOutput::getASinkNode("ui5-html-injection").asSink() }
+  UI5ExtHtmlISink() {
+    this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
+    not this.asExpr().getParent+() instanceof NewExpr
+  }
+}
+
+private class HTMLControlInstantiation extends ElementInstantiation {
+  HTMLControlInstantiation() { typeModel("UI5HTMLControl", this.getImportPath(), _) }
+}
+
+/**
+ * The DOM value of a UI5 control that is dynamically generated then placed at
+ * a certain position in a DOM.
+ */
+/* TODO: Needs testing of each branch */
+class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
+  DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
+    /* 1. The content is set via the first argument of the constructor. */
+    exists(HTMLControlInstantiation htmlControlInstantiation |
+      exists(string typeAlias |
+        typeModel(typeAlias, htmlControlInstantiation.getImportPath(), _) and
+        /* Double check that the type derives a UI5-XSS sink. */
+        sinkModel(typeAlias, _, "ui5-html-injection", _) and
+        exists(PropWrite propWrite |
+          this = propWrite.getRhs() and
+          propWrite.getBase() = htmlControlInstantiation.getArgument(0) and
+          propWrite.getPropertyName() = "content"
+        )
+      )
+      or
+      /* 2. The content is written to the reference of the control. */
+      exists(ControlReference controlReference |
+        htmlControlInstantiation.getId() = controlReference.getId()
+      |
+        /*
+         * 2-1. The content is written directly to the `content` property of the control
+         * reference.
+         */
+
+        this = controlReference.getAPropertyWrite("content")
+        or
+        /* 2-2. The content is written using the `setContent` setter.  */
+        this = controlReference.getAMemberCall("content").getArgument(0)
+      )
+    )
+  }
 }

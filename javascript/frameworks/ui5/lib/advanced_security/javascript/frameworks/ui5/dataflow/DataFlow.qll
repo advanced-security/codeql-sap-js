@@ -7,9 +7,11 @@ import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import PatchDataFlow
 
 /**
- * A statically visible part of a local model's content that has a binding path referring to it in a control declaration acting as an HTML injection sink.
+ * A statically visible part of a local model's content that has a binding path referring to it in a
+ * control declaration acting as an HTML injection sink.
  *
- * e.g.1. Given a JSON model `oModel` declared in a controller handler and an HTML injection sink `SomeSinkControl` as:
+ * e.g.1. Given a JSON model `oModel` declared in a controller handler and an HTML injection sink
+ * `SomeSinkControl` as:
  * ```javascript
  * let oModel = new JSONModel({ y: null });
  * ```
@@ -19,7 +21,8 @@ private import PatchDataFlow
  * ```
  * The content `y: null` of `oModel` is recognized as an instance of this class.
  *
- * e.g.2. Given a JSON model `oModel` which gains its content from a JSON file and an HTML injection sink `SomeSinkControl` as:
+ * e.g.2. Given a JSON model `oModel` which gains its content from a JSON file and an HTML injection
+ * sink `SomeSinkControl` as:
  * ```javascript
  * let oModel = new JSONModel("controller/contents.json");
  * ```
@@ -155,8 +158,11 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     }
 
     /**
-     * An edge from a content of an internal model to the corresponding binding path in a view, which makes it an edge in the opposite direction as of `bindingPathToInternalModelContent` above.
-     * In order to ensure that the edge indeed holds, we check if the model's binding mode is declared as two-way.
+     * An edge from a content of an internal model to the corresponding binding path in a view,
+     * which makes it an edge in the opposite direction as of `bindingPathToInternalModelContent`
+     * above.
+     * In order to ensure that the edge indeed holds, we check if the model's binding mode is
+     * declared as two-way.
      *
      * c.f. `FlowSteps::InternalModelContentToCustomMetadataPropertyStep`.
      */
