@@ -218,9 +218,7 @@ class JQueryDefineModule extends UserModule, MethodCallExpr {
     exists(JQuerySap jQuerySap | this = jQuerySap.getAMemberCall(["declare", "define"]).asExpr())
   }
 
-  override string getADependency() {
-    result = this.getArgument(0).getALocalSource().getStringValue()
-  }
+  override string getADependency() { result = this.getArgument(0).getStringValue() }
 
   override string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
@@ -588,13 +586,11 @@ class RoutingTarget extends MethodCallNode {
   }
 
   MethodCallNode getAnAttachDisplayCall() {
-    result.getReceiver().getALocalSource() = routerReference.getATarget() and
-    result.getMethodName() = "attachDisplay"
+    result = routerReference.getATarget().getAMemberCall("attachDisplay")
   }
 
   MethodCallNode getADetachDisplayCall() {
-    result.getReceiver().getALocalSource() = routerReference.getATarget() and
-    result.getMethodName() = "detachDisplay"
+    result = routerReference.getATarget().getAMemberCall("detachDisplay")
   }
 }
 
