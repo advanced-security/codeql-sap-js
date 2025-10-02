@@ -29,13 +29,7 @@ module UI5LogEntryToHttp implements DataFlow::StateConfigSig {
     UI5LogInjection::isAdditionalFlowStep(start, end) and
     preState = postState
     or
-    inSameWebApp(start.getFile(), end.getFile()) and
-    start =
-      ModelOutput::getATypeNode("SapLogger")
-          .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
-          .getACall()
-          .getAnArgument() and
-    end = ModelOutput::getATypeNode("SapLogEntries").asSource() and
+    stepLogger(start, end) and
     preState = "not-logged-not-accessed" and
     postState = "logged-and-accessed"
   }
