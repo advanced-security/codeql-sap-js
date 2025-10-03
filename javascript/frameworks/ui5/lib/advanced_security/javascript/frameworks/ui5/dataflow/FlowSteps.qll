@@ -347,7 +347,7 @@ class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlow
  * A step from any argument of a SAP logging function to the `onLogEntry`
  * method of a custom log listener in the same application.
  */
-predicate stepLogger(DataFlow::Node start, DataFlow::Node end) {
+predicate logArgumentToListener(DataFlow::Node start, DataFlow::Node end) {
   inSameWebApp(start.getFile(), end.getFile()) and
   start =
     ModelOutput::getATypeNode("SapLogger")
@@ -357,6 +357,12 @@ predicate stepLogger(DataFlow::Node start, DataFlow::Node end) {
   end = ModelOutput::getATypeNode("SapLogEntries").asSource()
 }
 
+/**
+ * A step from any argument of a SAP logging function to the `onLogEntry`
+ * method of a custom log listener in the same application.
+ */
 class LogArgumentToListener extends DataFlow::SharedFlowStep {
-  override predicate step(DataFlow::Node start, DataFlow::Node end) { stepLogger(start, end) }
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    logArgumentToListener(start, end)
+  }
 }

@@ -29,7 +29,7 @@ module UI5LogEntryToHttp implements DataFlow::StateConfigSig {
     UI5LogInjection::isAdditionalFlowStep(start, end) and
     preState = postState
     or
-    stepLogger(start, end) and
+    logArgumentToListener(start, end) and
     preState = "not-logged-not-accessed" and
     postState = "logged-and-accessed"
   }
