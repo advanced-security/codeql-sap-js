@@ -458,6 +458,7 @@ describe('retry.ts', () => {
         '/test/project/db/schema.cds',
         expect.any(String),
         codeqlExePath,
+        '/test',
       );
     });
 
@@ -486,6 +487,7 @@ describe('retry.ts', () => {
         '/test/project/db/schema.cds',
         expect.any(String),
         codeqlExePath,
+        '/test',
       );
     });
 
