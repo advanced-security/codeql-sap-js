@@ -29,11 +29,9 @@ module UI5LogEntryToHttp implements DataFlow::StateConfigSig {
     UI5LogInjection::isAdditionalFlowStep(start, end) and
     preState = postState
     or
-    exists(LogArgumentToListener logArgumentToListener |
-      logArgumentToListener.step(start, end) and
-      preState = "not-logged-not-accessed" and
-      postState = "logged-and-accessed"
-    )
+    logArgumentToListener(start, end) and
+    preState = "not-logged-not-accessed" and
+    postState = "logged-and-accessed"
   }
 
   predicate isSink(DataFlow::Node node, FlowState state) {
