@@ -79,15 +79,24 @@ private class HTMLControlInstantiation extends ElementInstantiation {
   HTMLControlInstantiation() { typeModel("UI5HTMLControl", this.getImportPath(), _) }
 }
 
+private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
+
 /**
  * The DOM value of a UI5 control that is dynamically generated then placed at
  * a certain position in a DOM.
  */
-/* TODO: Needs testing of each branch */
-class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
+/*
+ * TODO 1: Needs testing of each branch
+ * TODO 2: Model the `placeAt`:
+ */
+
+private class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
+  HTMLControlInstantiation htmlControlInstantiation;
+  ControlPlaceAtCall placeAtCall;
+
   DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
-    /* 1. The content is set via the first argument of the constructor. */
-    exists(HTMLControlInstantiation htmlControlInstantiation |
+    (
+      /* 1. The content is set via the first argument of the constructor. */
       exists(string typeAlias |
         typeModel(typeAlias, htmlControlInstantiation.getImportPath(), _) and
         /* Double check that the type derives a UI5-XSS sink. */
@@ -113,6 +122,7 @@ class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends Dat
         /* 2-2. The content is written using the `setContent` setter.  */
         this = controlReference.getAMemberCall("content").getArgument(0)
       )
-    )
+    ) and
+    TrackPlaceAtCallConfigFlow::flow(htmlControlInstantiation, placeAtCall)
   }
 }

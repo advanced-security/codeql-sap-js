@@ -72,6 +72,10 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
 
     UI5BindingPath asUI5BindingPathNode() { this = TUI5BindingPathNode(result) }
 
+    predicate isDataFlowNode() { exists(this.asDataFlowNode()) }
+
+    predicate isUI5BindingPathNode() { exists(this.asUI5BindingPathNode()) }
+
     string toString() {
       result = this.asDataFlowNode().toString()
       or
@@ -216,5 +220,66 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     or
     ui5PathNodeSucc.asUI5BindingPathNode().getModel() = ui5PathNodePred.asDataFlowNode() and
     ui5PathNodeSucc.asUI5BindingPathNode() = any(UI5View view).getAnHtmlISink()
+  }
+}
+
+module TrackPlaceAtCallConfig implements DataFlow::ConfigSig {
+  /**
+   * A child element instantiation.
+   */
+  predicate isSource(DataFlow::Node node) { node instanceof ElementInstantiation }
+
+  additional predicate isSinkWithPlaceAtCall(DataFlow::Node node, ControlPlaceAtCall placeAtCall) {
+    node = placeAtCall
+  }
+
+  /**
+   * An "extension point" exposed from a parent element instantiation to
+   * register a child to itself.
+   */
+  predicate isSink(DataFlow::Node node) { isSinkWithPlaceAtCall(node, _) }
+
+  /**
+   * Step from data being written and the property that is being written to.
+   * Needed to express the fact that the child control is usually written to
+   * a property of a parent control to establish the child-parent relationship.
+   *
+   * NOTE: The "extension point" exposed by the parent control can come in the
+   * form of:
+   *
+   * 1. `new Parent({ children: [ new Child( ... ) ] })`
+   * 2. `new Parent(...).children[0] = new Child( ... )`
+   * 3. `new Parent(...).addChild(new Child( ... ))`
+   *
+   * The first and second cases are (nested) `PropWrite`s to `getArgument(0)`
+   * and are easily covered. But the third case poses a new problem of identifying
+   * methods that writes to the `children` property, which CodeQL can't verify
+   * because its definition is in the library.
+   *
+   * - [X] Mark all method calls: overgeneralizes, can infer dumb things
+   *       (`sap.m.FlexBox.removeItem` comes to mind), but would still work for all
+   *       true cases
+   * - [ ] Heuristic by prefix: not an attractive option since heuristics can fail
+   */
+  predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
+    exists(DataFlow::PropWrite propWrite |
+      start = propWrite.getRhs() and
+      end = propWrite.getBase()
+    )
+    or
+    exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
+      start = maybeAddingChildAPICall.getAnArgument() and
+      end = maybeAddingChildAPICall.getReceiver()
+    )
+    or
+    exists(DataFlow::MethodCallNode call |
+      start = call.getReceiver() and
+      end = call
+    )
+    or
+    exists(DataFlow::NewNode new |
+      start = new.getAnArgument() and
+      end = new
+    )
   }
 }

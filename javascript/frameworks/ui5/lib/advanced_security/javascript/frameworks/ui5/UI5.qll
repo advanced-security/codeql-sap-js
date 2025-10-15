@@ -302,25 +302,26 @@ class CustomControl extends SapExtendCall {
 class ControlPlaceAtCall extends MethodCallNode {
   ControlPlaceAtCall() {
     exists(SapElement ui5Control |
-      // /* 1. `this.placeAt(...)` in a custom control definition */
-      // this = ui5Control.asDefinition().getAThisNode()
-      // or
-      // /*
-      // * 2. `new SomeControl(...).placeAt(...)` where `SomeControl`
-      // *    may be UI5 library control or a custom control
-      // */
-      // ui5Control.asInstantiation().
-      // or
-      // /* 3. `.byId(...).placeAt(...)` */
-      // ui5Control.asReference().
-      none() // TODO
+      /* 1. `this.placeAt(...)` in a custom control definition */
+      this = ui5Control.asDefinition().getAThisNode().getAMemberCall("placeAt")
+      or
+      /*
+       * 2. `new SomeControl(...).placeAt(...)` where
+       * `SomeControl` may be UI5 library control or a custom control
+       */
+
+      this = ui5Control.asInstantiation().getAMemberCall("placeAt")
+      or
+      // this = ui5Control.getParentElement*().asInstantiation().getAMemberCall("placeAt") or
+      /* 3. `.byId(...).placeAt(...)` */
+      this = ui5Control.asReference().getAMemberCall("placeAt")
     )
   }
+
+  string getDomElementId() { result = this.getArgument(0).getStringValue() }
 }
 
 abstract class Reference extends MethodCallNode { }
-
-private predicate byId(MethodCallNode byId) { byId.getMethodName() = "byId" }
 
 /**
  * A JS reference to a `UI5Control`, commonly obtained via its ID.
@@ -476,10 +477,10 @@ class CustomController extends SapExtendCall {
   }
 
   override ThisNode getAThisNode() {
-    /* 1. `this` referring to the binder */
+    /* ========== 1. `this` referring to the binder ========== */
     result = super.getAThisNode()
     or
-    /* 2. `this` bound to a callback's `this` */
+    /* 2. ========== `this` bound to a callback's `this` ========== */
     /*
      * 2-1. The this node of `.attachDisplay` or `.detachDisplay` also represents this
      * controller.
@@ -1289,8 +1290,19 @@ class SapElement extends TSapElement {
     result.asDefinition() = this.asReference().(ViewReference).getDefinition().getController() or
     result.asDefinition() = this.asDefinition().(CustomController).getOwnerComponent() or
     result.asDefinition() =
-      this.asReference().(ControllerReference).getDefinition().getOwnerComponent()
-    /* TODO: Implement branch for `asInstantiation` */
+      this.asReference().(ControllerReference).getDefinition().getOwnerComponent() or
+    /* ==================== exists(result.asInstantiation()) branches ==================== */
+    result.asInstantiation() =
+      this.asReference().(ControlReference).getAMemberCall(_).getAnArgument().getALocalSource() or
+    result.asInstantiation() =
+      this.asReference().(ControlReference).getAPropertyWrite().getRhs().getALocalSource()
+    // or
+    // result.asInstantiation() =
+    //   this.asInstantiation().getAMemberCall(_).getAnArgument().getALocalSource() or
+    // result.asInstantiation() = this.asInstantiation().getAPropertyWrite().getRhs().getALocalSource() or
+    // result.asInstantiation() = this.asInstantiation().getAnArgument()
+    // TrackParentControlConfig::flow(this.asInstantiation())
+    /* =================================================================================== */
   }
 
   string getId() {
@@ -1313,15 +1325,14 @@ class SapElement extends TSapElement {
 
   string toString() {
     result = this.asDefinition().toString() or
-    result = this.asReference().toString()
+    result = this.asReference().toString() or
+    result = this.asInstantiation().toString()
   }
 
-  predicate hasLocationInfo(
-    string filepath, int startline, int startcolumn, int endline, int endcolumn
-  ) {
-    this.asDefinition().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
-    or
-    this.asReference().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
+  Location getLocation() {
+    result = this.asDefinition().getLocation() or
+    result = this.asReference().getLocation() or
+    result = this.asInstantiation().getLocation()
   }
 }
 

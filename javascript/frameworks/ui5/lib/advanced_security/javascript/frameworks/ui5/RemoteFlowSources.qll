@@ -24,13 +24,15 @@ private class InputControlInstantiation extends ElementInstantiation {
   InputControlInstantiation() { typeModel("UI5InputControl", this.getImportPath(), _) }
 }
 
-private class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source
+private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
+
+class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source
 {
+  InputControlInstantiation controlInstantiation;
+  ControlPlaceAtCall placeAtCall;
+
   DataFromInstantiatedAndPlacedAtControl() {
-    exists(
-      InputControlInstantiation controlInstantiation, string typeAlias,
-      ControlReference controlReference
-    |
+    exists(string typeAlias, ControlReference controlReference |
       /* Double check that the type derives a remote flow source. */
       typeModel(typeAlias, controlInstantiation.getImportPath(), _) and
       sourceModel(typeAlias, _, "remote", _) and
@@ -39,11 +41,17 @@ private class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, X
         this = controlReference.getAMemberCall("getValue") or
         this = controlReference.getAPropertyRead("value")
       )
-    )
+    ) and
+    TrackPlaceAtCallConfigFlow::flow(controlInstantiation, placeAtCall)
   }
 
   override string getSourceType() {
     result = "Data from an instantiated control placed in a DOM tree"
+  }
+
+  ControlPlaceAtCall getPlaceAtCall() {
+    // result = "TODO"
+    none() // TODO
   }
 }
 
