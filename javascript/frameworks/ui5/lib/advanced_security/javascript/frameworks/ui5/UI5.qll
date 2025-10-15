@@ -215,7 +215,7 @@ class JQuerySap extends DataFlow::SourceNode {
  */
 class JQueryDefineModule extends UserModule, MethodCallExpr {
   JQueryDefineModule() {
-    exists(JQuerySap jQuerySap | this = jQuerySap.getAMemberCall(["declare", "define"]).asExpr())
+    exists(JQuerySap jQuerySap | this = jQuerySap.getAMemberCall(["declare", "require"]).asExpr())
   }
 
   override string getADependency() { result = this.getArgument(0).getStringValue() }
@@ -496,11 +496,13 @@ class CustomController extends SapExtendCall {
   }
 
   ModelReference getModelReference(string modelName) {
-    result = this.getAViewReference().getAMemberCall("getModel") and
-    result.getArgument(0).getALocalSource().getStringValue() = modelName
+    result = this.getAModelReference() and
+    result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = modelName
   }
 
-  ModelReference getAModelReference() { result = this.getModelReference(_) }
+  ModelReference getAModelReference() {
+    result = this.getAViewReference().getAMemberCall("getModel")
+  }
 
   RouterReference getARouterReference() {
     exists(ThisNode controllerThis | controllerThis.getBinder() = this.getAMethod() |
