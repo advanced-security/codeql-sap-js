@@ -7470,6 +7470,16 @@ function convertToRelativePath(filePath, sourceRoot2) {
 }
 function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, severity, logPrefix, sourceRoot2) {
   const finalFilePath = sourceRoot2 ? convertToRelativePath(filePath, sourceRoot2) : (0, import_path6.resolve)(filePath);
+  let finalMessage = message;
+  if (sourceRoot2 && finalFilePath === "." && filePath !== sourceRoot2) {
+    const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
+    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    if (resolvedFilePath !== resolvedSourceRoot) {
+      finalMessage = `${message}
+
+**Note**: The file \`${filePath}\` is located outside the scanned source directory and cannot be linked directly in this diagnostic. This diagnostic is associated with the repository root instead.`;
+    }
+  }
   try {
     (0, import_child_process4.execFileSync)(codeqlExePath2, [
       "database",
@@ -7479,7 +7489,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
       `--source-id=${sourceId}`,
       `--source-name=${sourceName}`,
       `--severity=${severity}`,
-      `--markdown-message=${message}`,
+      `--markdown-message=${finalMessage}`,
       `--file-path=${finalFilePath}`,
       "--",
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ""}`

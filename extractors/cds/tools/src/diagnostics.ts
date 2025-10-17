@@ -79,6 +79,21 @@ function addDiagnostic(
     ? convertToRelativePath(filePath, sourceRoot)
     : resolve(filePath);
 
+  // If the file was remapped to source root due to being outside the repository,
+  // append an explanatory note to the message
+  let finalMessage = message;
+  if (sourceRoot && finalFilePath === '.' && filePath !== sourceRoot) {
+    const resolvedSourceRoot = resolve(sourceRoot);
+    const resolvedFilePath = filePath.startsWith('/')
+      ? resolve(filePath)
+      : resolve(resolvedSourceRoot, filePath);
+
+    // Only add the note if the file was actually outside the source root
+    if (resolvedFilePath !== resolvedSourceRoot) {
+      finalMessage = `${message}\n\n**Note**: The file \`${filePath}\` is located outside the scanned source directory and cannot be linked directly in this diagnostic. This diagnostic is associated with the repository root instead.`;
+    }
+  }
+
   try {
     execFileSync(codeqlExePath, [
       'database',
@@ -88,7 +103,7 @@ function addDiagnostic(
       `--source-id=${sourceId}`,
       `--source-name=${sourceName}`,
       `--severity=${severity}`,
-      `--markdown-message=${message}`,
+      `--markdown-message=${finalMessage}`,
       `--file-path=${finalFilePath}`,
       '--',
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ''}`,

@@ -77,6 +77,13 @@ describe('diagnostics', () => {
 
         expect(result).toBe(true);
         expectRelativePathInCall(`app${sep}models${sep}schema.cds`);
+        // Should NOT include explanatory note for files inside source root
+        expect(childProcess.execFileSync).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.arrayContaining([
+            expect.stringMatching(/--markdown-message=Syntax error in CDS file$/),
+          ]),
+        );
         restoreMockEnvironment(originalEnv);
       });
 
@@ -116,6 +123,15 @@ describe('diagnostics', () => {
         expect(result).toBe(true);
         // Should point to source root '.' when file is outside source root
         expectRelativePathInCall('.');
+        // Should include explanatory note in the message
+        expect(childProcess.execFileSync).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.arrayContaining([
+            expect.stringMatching(
+              /--markdown-message=.*\*\*Note\*\*.*located outside the scanned source directory/s,
+            ),
+          ]),
+        );
         restoreMockEnvironment(originalEnv);
       });
 
@@ -155,6 +171,15 @@ describe('diagnostics', () => {
         expect(result).toBe(true);
         // Should point to source root '.' when path tries to escape source root
         expectRelativePathInCall('.');
+        // Should include explanatory note in the message
+        expect(childProcess.execFileSync).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.arrayContaining([
+            expect.stringMatching(
+              /--markdown-message=.*\*\*Note\*\*.*located outside the scanned source directory/s,
+            ),
+          ]),
+        );
         restoreMockEnvironment(originalEnv);
       });
 
@@ -176,6 +201,15 @@ describe('diagnostics', () => {
         expect(result).toBe(true);
         // Should point to source root '.' when resolved path is outside source root
         expectRelativePathInCall('.');
+        // Should include explanatory note in the message
+        expect(childProcess.execFileSync).toHaveBeenCalledWith(
+          expect.any(String),
+          expect.arrayContaining([
+            expect.stringMatching(
+              /--markdown-message=.*\*\*Note\*\*.*located outside the scanned source directory/s,
+            ),
+          ]),
+        );
         restoreMockEnvironment(originalEnv);
       });
     });
