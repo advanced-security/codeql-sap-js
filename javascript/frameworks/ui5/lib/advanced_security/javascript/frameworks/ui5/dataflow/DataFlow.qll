@@ -229,15 +229,11 @@ module TrackPlaceAtCallConfig implements DataFlow::ConfigSig {
    */
   predicate isSource(DataFlow::Node node) { node instanceof ElementInstantiation }
 
-  additional predicate isSinkWithPlaceAtCall(DataFlow::Node node, ControlPlaceAtCall placeAtCall) {
-    node = placeAtCall
-  }
-
   /**
    * An "extension point" exposed from a parent element instantiation to
    * register a child to itself.
    */
-  predicate isSink(DataFlow::Node node) { isSinkWithPlaceAtCall(node, _) }
+  predicate isSink(DataFlow::Node node) { node instanceof ControlPlaceAtCall }
 
   /**
    * Step from data being written and the property that is being written to.

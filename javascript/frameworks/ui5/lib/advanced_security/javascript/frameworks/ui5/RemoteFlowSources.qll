@@ -26,8 +26,7 @@ private class InputControlInstantiation extends ElementInstantiation {
 
 private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
 
-class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source
-{
+class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source {
   InputControlInstantiation controlInstantiation;
   ControlPlaceAtCall placeAtCall;
 
@@ -47,11 +46,6 @@ class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroug
 
   override string getSourceType() {
     result = "Data from an instantiated control placed in a DOM tree"
-  }
-
-  ControlPlaceAtCall getPlaceAtCall() {
-    // result = "TODO"
-    none() // TODO
   }
 }
 

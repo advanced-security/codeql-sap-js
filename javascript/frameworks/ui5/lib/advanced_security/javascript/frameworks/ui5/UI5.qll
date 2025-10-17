@@ -301,21 +301,25 @@ class CustomControl extends SapExtendCall {
 
 class ControlPlaceAtCall extends MethodCallNode {
   ControlPlaceAtCall() {
-    exists(SapElement ui5Control |
-      /* 1. `this.placeAt(...)` in a custom control definition */
-      this = ui5Control.asDefinition().getAThisNode().getAMemberCall("placeAt")
-      or
-      /*
-       * 2. `new SomeControl(...).placeAt(...)` where
-       * `SomeControl` may be UI5 library control or a custom control
-       */
+    /* 1. `this.placeAt(...)` in a custom control definition. */
+    exists(CustomControl control | this = control.getAThisNode().getAMemberCall("placeAt"))
+    or
+    /*
+     * 2. `new SomeControl(...).placeAt(...)` where `SomeControl` may be UI5
+     * library control or a custom control.
+     */
 
-      this = ui5Control.asInstantiation().getAMemberCall("placeAt")
-      or
-      // this = ui5Control.getParentElement*().asInstantiation().getAMemberCall("placeAt") or
-      /* 3. `.byId(...).placeAt(...)` */
-      this = ui5Control.asReference().getAMemberCall("placeAt")
+    exists(ElementInstantiation controlInstantiation |
+      this = controlInstantiation.getAMemberCall("placeAt")
     )
+    or
+    /*
+     * 3. `oController.getView().byId(...).placeAt(...)` where
+     * `oController.getView().byId(...)` is a reference to a library control
+     * or a custom control.
+     */
+
+    exists(ControlReference controlReference | this = controlReference.getAMemberCall("placeAt"))
   }
 
   string getDomElementId() { result = this.getArgument(0).getStringValue() }
@@ -1277,66 +1281,6 @@ private newtype TSapElement =
   TDefinitionOfElement(SapExtendCall extension) or
   TReferenceOfElement(Reference reference) or
   TInstantiationOfElement(ElementInstantiation newNode)
-
-class SapElement extends TSapElement {
-  SapExtendCall asDefinition() { this = TDefinitionOfElement(result) }
-
-  Reference asReference() { this = TReferenceOfElement(result) }
-
-  ElementInstantiation asInstantiation() { this = TInstantiationOfElement(result) }
-
-  SapElement getParentElement() {
-    result.asReference() = this.asDefinition().(CustomControl).getController().getAViewReference() or
-    result.asReference() =
-      this.asReference().(ControlReference).getDefinition().getController().getAViewReference() or
-    result.asDefinition() = this.asReference().(ViewReference).getDefinition().getController() or
-    result.asDefinition() = this.asDefinition().(CustomController).getOwnerComponent() or
-    result.asDefinition() =
-      this.asReference().(ControllerReference).getDefinition().getOwnerComponent() or
-    /* ==================== exists(result.asInstantiation()) branches ==================== */
-    result.asInstantiation() =
-      this.asReference().(ControlReference).getAMemberCall(_).getAnArgument().getALocalSource() or
-    result.asInstantiation() =
-      this.asReference().(ControlReference).getAPropertyWrite().getRhs().getALocalSource()
-    // or
-    // result.asInstantiation() =
-    //   this.asInstantiation().getAMemberCall(_).getAnArgument().getALocalSource() or
-    // result.asInstantiation() = this.asInstantiation().getAPropertyWrite().getRhs().getALocalSource() or
-    // result.asInstantiation() = this.asInstantiation().getAnArgument()
-    // TrackParentControlConfig::flow(this.asInstantiation())
-    /* =================================================================================== */
-  }
-
-  string getId() {
-    result = this.asInstantiation().getId()
-    or
-    /* TODO: Needs testing */
-    result =
-      this.asDefinition()
-          .(CustomControl)
-          .getMetadata()
-          .getProperty("id")
-          .getAPropertySource()
-          .getStringValue()
-    /*
-     * Note that because we cannot statically determine the ID of an element from the references alone,
-     * we do not implement the branch of `TReferenceOfElement`.
-     */
-
-    }
-
-  string toString() {
-    result = this.asDefinition().toString() or
-    result = this.asReference().toString() or
-    result = this.asInstantiation().toString()
-  }
-
-  Location getLocation() {
-    result = this.asDefinition().getLocation() or
-    result = this.asReference().getLocation() or
-    result = this.asInstantiation().getLocation()
-  }
-}
 
 /**
  * The property metadata found in an SapExtendCall.
