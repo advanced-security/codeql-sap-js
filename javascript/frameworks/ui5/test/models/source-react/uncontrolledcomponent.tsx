@@ -5,7 +5,7 @@ import type { Ui5CustomEvent } from '@ui5/webcomponents-react-base';
 function UncontrolledComponent({ props }) {
 
   //direct event value access, no hook/react specific function
-  const handleButtonPress = (event: Ui5CustomEvent<InputDomRef>) => {
+  const handleClick = (event: Ui5CustomEvent<InputDomRef>) => {
     const finalValue = event.target.value; // SOURCE
     console.log('Input finalized with value:', finalValue);
   };
@@ -14,6 +14,7 @@ function UncontrolledComponent({ props }) {
         <div>
             <Input
                 placeholder="Enter some text"
+                onChange={handleClick}
             />
             <Button>
                 Get Input Value
