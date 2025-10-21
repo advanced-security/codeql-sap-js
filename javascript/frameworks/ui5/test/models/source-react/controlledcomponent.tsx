@@ -8,12 +8,12 @@ function ControlledComponent( { props }) {
 
     const handleButtonPress1 = () => {
         // Access the input value via the hook
-            console.log('Current input value:', inputRef1.current.value); // SOURCE
+            console.log('Current input value:', inputRef1.current.value); // SOURCE - not detected
     };
 
     const handleButtonPress2 = event => {
-        setInputValue(event.target.value); // SOURCE
-        console.log('Current input value:', inputRef2);  // SOURCE - only because of setInputValue
+        setInputValue(event.target.value); // SOURCE - detected
+        console.log('Current input value:', inputRef2);  // not directly a source
     };
 
     return (

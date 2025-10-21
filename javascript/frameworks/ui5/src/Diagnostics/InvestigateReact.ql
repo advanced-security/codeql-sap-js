@@ -9,7 +9,9 @@
  */
 
 import javascript
-import semmle.javascript.frameworks.React
+import semmle.javascript.security.dataflow.XssThroughDomQuery
+import semmle.javascript.security.dataflow.XssThroughDomCustomizations
 
-from ViewComponentInput v
-select v, v.getSourceType()
+from DataFlow::Node source
+where source instanceof XssThroughDom::Source
+select source, ""

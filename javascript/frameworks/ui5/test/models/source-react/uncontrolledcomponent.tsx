@@ -6,7 +6,7 @@ function UncontrolledComponent({ props }) {
 
   //direct event value access, no hook/react specific function
   const handleClick = (event: Ui5CustomEvent<InputDomRef>) => {
-    const finalValue = event.target.value; // SOURCE
+    const finalValue = event.target.value; // SOURCE - detected
     console.log('Input finalized with value:', finalValue);
   };
 
