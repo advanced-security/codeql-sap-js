@@ -165,10 +165,16 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       sap.getName() = "sap" and
       sapUi.getBase() = sap and
       sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine
-      // and this.getMethodName() = "define"
+      this.getReceiver() = sapUiDefine and
+      this.getMethodName() = ["define", "require"] // TODO: Treat sap.ui.declare in its own class
     )
   }
+
+  SapExtendCall getExtendCall() { result.getDefine() = this }
+
+  string getName() { result = this.getExtendCall().getName() }
+
+  Module asModule() { result = this.getTopLevel() }
 
   string getDependency(int i) {
     result = this.(AmdModuleDefinition).getDependencyExpr(i).getStringValue()
@@ -185,18 +191,65 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   WebApp getWebApp() { this.getFile() = result.getAResource() }
 
   /**
-   * Gets the module defined with sap.ui.define that imports and extends this module.
+   * Gets the module defined with sap.ui.define that imports and extends (subclasses) this module.
    */
   SapDefineModule getExtendingModule() {
-    exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
-      baseExtendCall.getDefine() = this and
-      result = subclassExtendCall.getDefine() and
-      result
-          .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
-          .asSourceNode()
-          .flowsTo(subclassExtendCall.getReceiver())
-    )
+    // exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
+    //   baseExtendCall.getDefine() = this and
+    //   result = subclassExtendCall.getDefine() and
+    //   result
+    //       .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
+    //       .asSourceNode()
+    //       .flowsTo(subclassExtendCall.getReceiver())
+    // )
+    none() // TODO
   }
+}
+
+/**
+ * Holds if the `importingModule` "imports" the `importedModule` via path `importPath`.
+ */
+private predicate importerAndImportee(
+  SapDefineModule importingModule, SapDefineModule importedModule, string importPath
+) {
+  /* 1. Absolute import paths: We resolve this ourselves. */
+  exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+    /*
+     *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
+     *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
+     *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
+     *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+     */
+
+    importPath = importingModule.asModule().getAnImport().getImportedPathExpr().getStringValue() and
+    importedModuleDefinitionPath = importedModule.getExtendCall().getName() and
+    importedModuleDefinitionPathSlashNormalized = importedModuleDefinitionPath.replaceAll(".", "/") and
+    importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
+  )
+  or
+  /*
+   * 2. Relative import paths: We delegate the heaving lifting of resolving to
+   * `Import.resolveImportedPath/0`.
+   */
+
+  exists(Import import_ |
+    importPath = import_.getImportedPathExpr().getStringValue() and
+    import_ = importingModule.asModule().getAnImport() and
+    import_.resolveImportedPath() = importedModule.getTopLevel()
+  )
+}
+
+/**
+ * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
+ */
+private predicate importerExtendsImportee(
+  SapDefineModule importingModule, SapDefineModule importedModule, string importPath
+) {
+  importerAndImportee(importingModule, importedModule, importPath) and
+  importingModule
+      .getRequiredObject(importPath)
+      .asSourceNode()
+      .flowsTo(importingModule.getExtendCall().getReceiver())
 }
 
 class JQuerySap extends DataFlow::SourceNode {
@@ -738,6 +791,11 @@ abstract class UI5InternalModel extends UI5Model, NewNode {
   abstract string getPathString();
 
   abstract string getPathString(Property property);
+
+  /**
+   * Holds if the content of the model is statically determinable.
+   */
+  abstract predicate contentIsStaticallyVisible();
 }
 
 import ManifestJson
@@ -1118,6 +1176,16 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  override predicate contentIsStaticallyVisible() {
+    /* 1. There is at least one path string that can be constructed out of the path string. */
+    exists(this.getPathString())
+    or
+    /* 2. There is a JSON file that can be loaded from. */
+    exists(JsonObject jsonObject |
+      jsonObject = resolveDirectPath(this.getArgument(0).getStringValue())
+    )
+  }
+
   /**
    * A model possibly supporting two-way binding explicitly set as a one-way binding model.
    */
@@ -1175,6 +1243,8 @@ class XmlModel extends UI5InternalModel {
   }
 
   override string getPathString() { result = "TODO" }
+
+  override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
 }
 
 class ResourceModel extends UI5Model, ModelReference {
