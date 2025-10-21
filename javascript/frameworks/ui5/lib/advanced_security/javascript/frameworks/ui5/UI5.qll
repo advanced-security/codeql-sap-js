@@ -204,52 +204,46 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
     // )
     none() // TODO
   }
-}
 
-/**
- * Holds if the `importingModule` "imports" the `importedModule` via path `importPath`.
- */
-private predicate importerAndImportee(
-  SapDefineModule importingModule, SapDefineModule importedModule, string importPath
-) {
-  /* 1. Absolute import paths: We resolve this ourselves. */
-  exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+  /**
+   * Gets the module that this module imports via path `importPath`.
+   */
+  SapDefineModule getImportedModule(string importPath) {
+    /* 1. Absolute import paths: We resolve this ourselves. */
+    exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+      /*
+       *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
+       *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
+       *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
+       *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+       */
+
+      importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
+      importedModuleDefinitionPath = result.getExtendCall().getName() and
+      importedModuleDefinitionPathSlashNormalized =
+        importedModuleDefinitionPath.replaceAll(".", "/") and
+      importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
+    )
+    or
     /*
-     *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
-     *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
-     *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
-     *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+     * 2. Relative import paths: We delegate the heaving lifting of resolving to
+     * `Import.resolveImportedPath/0`.
      */
 
-    importPath = importingModule.asModule().getAnImport().getImportedPathExpr().getStringValue() and
-    importedModuleDefinitionPath = importedModule.getExtendCall().getName() and
-    importedModuleDefinitionPathSlashNormalized = importedModuleDefinitionPath.replaceAll(".", "/") and
-    importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
-  )
-  or
-  /*
-   * 2. Relative import paths: We delegate the heaving lifting of resolving to
-   * `Import.resolveImportedPath/0`.
+    exists(Import import_ |
+      importPath = import_.getImportedPathExpr().getStringValue() and
+      import_ = this.asModule().getAnImport() and
+      import_.resolveImportedPath() = result.getTopLevel()
+    )
+  }
+
+  /**
+   * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
    */
-
-  exists(Import import_ |
-    importPath = import_.getImportedPathExpr().getStringValue() and
-    import_ = importingModule.asModule().getAnImport() and
-    import_.resolveImportedPath() = importedModule.getTopLevel()
-  )
-}
-
-/**
- * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
- */
-private predicate importerExtendsImportee(
-  SapDefineModule importingModule, SapDefineModule importedModule, string importPath
-) {
-  importerAndImportee(importingModule, importedModule, importPath) and
-  importingModule
-      .getRequiredObject(importPath)
-      .asSourceNode()
-      .flowsTo(importingModule.getExtendCall().getReceiver())
+  SapDefineModule getSuperModule(string importPath) {
+    result = this.getImportedModule(importPath) and
+    this.getRequiredObject(importPath).asSourceNode().flowsTo(this.getExtendCall().getReceiver())
+  }
 }
 
 class JQuerySap extends DataFlow::SourceNode {
