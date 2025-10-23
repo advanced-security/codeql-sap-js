@@ -193,17 +193,7 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   /**
    * Gets the module defined with sap.ui.define that imports and extends (subclasses) this module.
    */
-  SapDefineModule getExtendingModule() {
-    // exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
-    //   baseExtendCall.getDefine() = this and
-    //   result = subclassExtendCall.getDefine() and
-    //   result
-    //       .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
-    //       .asSourceNode()
-    //       .flowsTo(subclassExtendCall.getReceiver())
-    // )
-    none() // TODO
-  }
+  SapDefineModule getExtendingModule() { result.getSuperModule(_) = this }
 
   /**
    * Gets the module that this module imports via path `importPath`.
@@ -291,7 +281,9 @@ class CustomControl extends SapExtendCall {
   CustomControl() {
     this.getReceiver().getALocalSource() =
       TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"]) or
-    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
+    exists(CustomControl superControl |
+      superControl.getDefine() = this.getDefine().getSuperModule(_)
+    )
   }
 
   CustomController getController() { this = result.getAControlReference().getDefinition() }
@@ -464,8 +456,14 @@ class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
-    this.getReceiver().getALocalSource() =
-      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"]) and
+    (
+      this.getReceiver().getALocalSource() =
+        TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
+      or
+      exists(CustomController superController |
+        superController.getDefine() = this.getDefine().getSuperModule(_)
+      )
+    ) and
     name = this.getFile().getBaseName().regexpCapture("([a-zA-Z0-9]+).[cC]ontroller.js", 1)
   }
 
