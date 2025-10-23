@@ -165,10 +165,16 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       sap.getName() = "sap" and
       sapUi.getBase() = sap and
       sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine
-      // and this.getMethodName() = "define"
+      this.getReceiver() = sapUiDefine and
+      this.getMethodName() = ["define", "require"] // TODO: Treat sap.ui.declare in its own class
     )
   }
+
+  SapExtendCall getExtendCall() { result.getDefine() = this }
+
+  string getName() { result = this.getExtendCall().getName() }
+
+  Module asModule() { result = this.getTopLevel() }
 
   string getDependency(int i) {
     result = this.(AmdModuleDefinition).getDependencyExpr(i).getStringValue()
@@ -185,17 +191,48 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   WebApp getWebApp() { this.getFile() = result.getAResource() }
 
   /**
-   * Gets the module defined with sap.ui.define that imports and extends this module.
+   * Gets the module defined with sap.ui.define that imports and extends (subclasses) this module.
    */
-  SapDefineModule getExtendingModule() {
-    exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
-      baseExtendCall.getDefine() = this and
-      result = subclassExtendCall.getDefine() and
-      result
-          .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
-          .asSourceNode()
-          .flowsTo(subclassExtendCall.getReceiver())
+  SapDefineModule getExtendingModule() { result.getSuperModule(_) = this }
+
+  /**
+   * Gets the module that this module imports via path `importPath`.
+   */
+  SapDefineModule getImportedModule(string importPath) {
+    /* 1. Absolute import paths: We resolve this ourselves. */
+    exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+      /*
+       *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
+       *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
+       *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
+       *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+       */
+
+      importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
+      importedModuleDefinitionPath = result.getExtendCall().getName() and
+      importedModuleDefinitionPathSlashNormalized =
+        importedModuleDefinitionPath.replaceAll(".", "/") and
+      importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
     )
+    or
+    /*
+     * 2. Relative import paths: We delegate the heaving lifting of resolving to
+     * `Import.resolveImportedPath/0`.
+     */
+
+    exists(Import import_ |
+      importPath = import_.getImportedPathExpr().getStringValue() and
+      import_ = this.asModule().getAnImport() and
+      import_.resolveImportedPath() = result.getTopLevel()
+    )
+  }
+
+  /**
+   * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
+   */
+  SapDefineModule getSuperModule(string importPath) {
+    result = this.getImportedModule(importPath) and
+    this.getRequiredObject(importPath).asSourceNode().flowsTo(this.getExtendCall().getReceiver())
   }
 }
 
@@ -244,7 +281,9 @@ class CustomControl extends SapExtendCall {
   CustomControl() {
     this.getReceiver().getALocalSource() =
       TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"]) or
-    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
+    exists(CustomControl superControl |
+      superControl.getDefine() = this.getDefine().getSuperModule(_)
+    )
   }
 
   CustomController getController() { this = result.getAControlReference().getDefinition() }
@@ -417,8 +456,14 @@ class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
-    this.getReceiver().getALocalSource() =
-      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"]) and
+    (
+      this.getReceiver().getALocalSource() =
+        TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
+      or
+      exists(CustomController superController |
+        superController.getDefine() = this.getDefine().getSuperModule(_)
+      )
+    ) and
     name = this.getFile().getBaseName().regexpCapture("([a-zA-Z0-9]+).[cC]ontroller.js", 1)
   }
 
@@ -738,6 +783,11 @@ abstract class UI5InternalModel extends UI5Model, NewNode {
   abstract string getPathString();
 
   abstract string getPathString(Property property);
+
+  /**
+   * Holds if the content of the model is statically determinable.
+   */
+  abstract predicate contentIsStaticallyVisible();
 }
 
 import ManifestJson
@@ -1118,6 +1168,16 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  override predicate contentIsStaticallyVisible() {
+    /* 1. There is at least one path string that can be constructed out of the path string. */
+    exists(this.getPathString())
+    or
+    /* 2. There is a JSON file that can be loaded from. */
+    exists(JsonObject jsonObject |
+      jsonObject = resolveDirectPath(this.getArgument(0).getStringValue())
+    )
+  }
+
   /**
    * A model possibly supporting two-way binding explicitly set as a one-way binding model.
    */
@@ -1175,6 +1235,8 @@ class XmlModel extends UI5InternalModel {
   }
 
   override string getPathString() { result = "TODO" }
+
+  override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
 }
 
 class ResourceModel extends UI5Model, ModelReference {
