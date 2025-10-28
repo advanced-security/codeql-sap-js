@@ -90,7 +90,7 @@ private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCa
  * TODO 2: Model the `placeAt`:
  */
 
-private class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
+class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
   HTMLControlInstantiation htmlControlInstantiation;
   ControlPlaceAtCall placeAtCall;
 
