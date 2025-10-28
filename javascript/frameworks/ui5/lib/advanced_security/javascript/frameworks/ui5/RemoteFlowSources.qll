@@ -77,14 +77,16 @@ class ODataServiceModel extends UI5ExternalModel {
     )
     or
     /*
-     * A constructor call to sap.ui.model.odata.v2.ODataModel.
+     * A constructor call to sap.ui.model.odata.v2.ODataModel or sap.ui.model.odata.v4.ODataModel.
      */
 
     this instanceof NewNode and
     (
       exists(RequiredObject oDataModel |
         oDataModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-        oDataModel.getDependency() = "sap/ui/model/odata/v2/ODataModel"
+        oDataModel.getDependency() in [
+            "sap/ui/model/odata/v2/ODataModel", "sap/ui/model/odata/v4/ODataModel"
+          ]
       )
       or
       this.getCalleeName() = "ODataModel"
