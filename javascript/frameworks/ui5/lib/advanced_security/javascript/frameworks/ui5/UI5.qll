@@ -1285,11 +1285,6 @@ class ElementInstantiation extends NewNode {
   string getImportPath() { result = importPath }
 }
 
-private newtype TSapElement =
-  TDefinitionOfElement(SapExtendCall extension) or
-  TReferenceOfElement(Reference reference) or
-  TInstantiationOfElement(ElementInstantiation newNode)
-
 /**
  * The property metadata found in an SapExtendCall.
  */

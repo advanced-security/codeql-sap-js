@@ -72,10 +72,6 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
 
     UI5BindingPath asUI5BindingPathNode() { this = TUI5BindingPathNode(result) }
 
-    predicate isDataFlowNode() { exists(this.asDataFlowNode()) }
-
-    predicate isUI5BindingPathNode() { exists(this.asUI5BindingPathNode()) }
-
     string toString() {
       result = this.asDataFlowNode().toString()
       or
