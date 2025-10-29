@@ -114,6 +114,7 @@ describe('codeql', () => {
         '/path/to/source',
         'Error running JavaScript extractor: Failed to execute',
         codeqlPath,
+        '/path/to/source',
       );
     });
   });

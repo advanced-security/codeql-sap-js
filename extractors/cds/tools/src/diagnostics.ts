@@ -1,5 +1,5 @@
 import { execFileSync } from 'child_process';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 
 import { cdsExtractorLog } from './logging';
 
@@ -14,6 +14,46 @@ export enum DiagnosticSeverity {
 }
 
 /**
+ * Converts a file path to be relative to the source root if possible
+ * @param filePath The file path to convert
+ * @param sourceRoot The source root directory to make the path relative to
+ * @returns The relative path if the file is under source root, otherwise '.' (source root)
+ */
+export function convertToRelativePath(filePath: string, sourceRoot: string): string {
+  // Handle invalid inputs
+  if (!filePath || typeof filePath !== 'string' || !sourceRoot || typeof sourceRoot !== 'string') {
+    return '.';
+  }
+
+  try {
+    const resolvedSourceRoot = resolve(sourceRoot);
+
+    // If filePath is absolute, resolve it directly; otherwise resolve relative to sourceRoot
+    const resolvedFilePath = filePath.startsWith('/')
+      ? resolve(filePath)
+      : resolve(resolvedSourceRoot, filePath);
+
+    // If the file path is the same as source root, return '.'
+    if (resolvedFilePath === resolvedSourceRoot) {
+      return '.';
+    }
+
+    const relativePath = relative(resolvedSourceRoot, resolvedFilePath);
+
+    // If the relative path starts with '..' it means the file is outside the source root
+    // Per CodeQL requirements, we should point to the source root '.' instead
+    if (relativePath.startsWith('..')) {
+      return '.';
+    }
+
+    return relativePath;
+  } catch {
+    // If path resolution fails for any reason, fallback to source root
+    return '.';
+  }
+}
+
+/**
  * Base function to add a diagnostic to the CodeQL database
  * @param filePath Path to the file related to the diagnostic
  * @param message The diagnostic message
@@ -22,6 +62,7 @@ export enum DiagnosticSeverity {
  * @param sourceName The source name for the diagnostic
  * @param severity The severity level of the diagnostic
  * @param logPrefix Prefix for the log message
+ * @param sourceRoot Optional source root directory to make file paths relative to
  * @returns True if the diagnostic was added, false otherwise
  */
 function addDiagnostic(
@@ -32,7 +73,27 @@ function addDiagnostic(
   sourceName: string,
   severity: DiagnosticSeverity,
   logPrefix: string,
+  sourceRoot?: string,
 ): boolean {
+  const finalFilePath = sourceRoot
+    ? convertToRelativePath(filePath, sourceRoot)
+    : resolve(filePath);
+
+  // If the file was remapped to source root due to being outside the repository,
+  // append an explanatory note to the message
+  let finalMessage = message;
+  if (sourceRoot && finalFilePath === '.' && filePath !== sourceRoot) {
+    const resolvedSourceRoot = resolve(sourceRoot);
+    const resolvedFilePath = filePath.startsWith('/')
+      ? resolve(filePath)
+      : resolve(resolvedSourceRoot, filePath);
+
+    // Only add the note if the file was actually outside the source root
+    if (resolvedFilePath !== resolvedSourceRoot) {
+      finalMessage = `${message}\n\n**Note**: The file \`${filePath}\` is located outside the scanned source directory and cannot be linked directly in this diagnostic. This diagnostic is associated with the repository root instead.`;
+    }
+  }
+
   try {
     execFileSync(codeqlExePath, [
       'database',
@@ -42,8 +103,8 @@ function addDiagnostic(
       `--source-id=${sourceId}`,
       `--source-name=${sourceName}`,
       `--severity=${severity}`,
-      `--markdown-message=${message}`,
-      `--file-path=${resolve(filePath)}`,
+      `--markdown-message=${finalMessage}`,
+      `--file-path=${finalFilePath}`,
       '--',
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ''}`,
     ]);
@@ -63,12 +124,14 @@ function addDiagnostic(
  * @param cdsFilePath Path to the CDS file that failed to compile
  * @param errorMessage The error message from the compilation
  * @param codeqlExePath Path to the CodeQL executable
+ * @param sourceRoot Optional source root directory to make file paths relative to
  * @returns True if the diagnostic was added, false otherwise
  */
 export function addCompilationDiagnostic(
   cdsFilePath: string,
   errorMessage: string,
   codeqlExePath: string,
+  sourceRoot?: string,
 ): boolean {
   return addDiagnostic(
     cdsFilePath,
@@ -78,6 +141,7 @@ export function addCompilationDiagnostic(
     'Failure to compile one or more SAP CAP CDS files',
     DiagnosticSeverity.Error,
     'source file',
+    sourceRoot,
   );
 }
 
@@ -101,6 +165,7 @@ export function addDependencyGraphDiagnostic(
     'CDS project dependency graph build failure',
     DiagnosticSeverity.Error,
     'source root',
+    sourceRoot,
   );
 }
 
@@ -124,6 +189,7 @@ export function addDependencyInstallationDiagnostic(
     'CDS dependency installation failure',
     DiagnosticSeverity.Error,
     'source root',
+    sourceRoot,
   );
 }
 
@@ -149,6 +215,7 @@ export function addEnvironmentSetupDiagnostic(
     'CDS extractor environment setup failure',
     DiagnosticSeverity.Error,
     'source root',
+    sourceRoot,
   );
 }
 
@@ -157,12 +224,14 @@ export function addEnvironmentSetupDiagnostic(
  * @param filePath Path to a relevant file for the error context
  * @param errorMessage The error message from the JavaScript extractor
  * @param codeqlExePath Path to the CodeQL executable
+ * @param sourceRoot Source root directory to make file paths relative to
  * @returns True if the diagnostic was added, false otherwise
  */
 export function addJavaScriptExtractorDiagnostic(
   filePath: string,
   errorMessage: string,
   codeqlExePath: string,
+  sourceRoot?: string,
 ): boolean {
   return addDiagnostic(
     filePath,
@@ -172,6 +241,7 @@ export function addJavaScriptExtractorDiagnostic(
     'Failure in JavaScript extractor for SAP CAP CDS files',
     DiagnosticSeverity.Error,
     'extraction file',
+    sourceRoot,
   );
 }
 
@@ -195,5 +265,6 @@ export function addNoCdsProjectsDiagnostic(
     'No CDS projects detected in source',
     DiagnosticSeverity.Warning,
     'source root',
+    sourceRoot,
   );
 }
