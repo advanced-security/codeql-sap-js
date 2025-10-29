@@ -352,6 +352,14 @@ class ControlReference extends Reference {
     )
   }
 
+  predicate isLibraryControlReference(string importPath) {
+    exists(XmlView xml, UI5Control control |
+      control = xml.getControl() and
+      control.getQualifiedType() = importPath and
+      controlId = control.getProperty("id").getValue()
+    )
+  }
+
   string getId() { result = controlId }
 
   MethodCallNode getARead(string propertyName) {

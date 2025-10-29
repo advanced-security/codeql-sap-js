@@ -1,0 +1,5 @@
+| webapp/controller/app.controller.js:18:9:18:27 | htmlControl.content | Content write to an HTML element  |
+| webapp/controller/app.controller.js:21:32:21:56 | inputRe ... Value() | Content write to an HTML element  |
+| webapp/controller/app.controller.js:30:20:30:60 | `<div>$ ... </div>` | Content write to an HTML element  |
+| webapp/controller/app.controller.js:36:32:36:56 | inputRe ... Value() | Content write to an HTML element  |
+| webapp/controller/app.controller.js:41:33:41:57 | inputRe ... Value() | Content write to an HTML element  |

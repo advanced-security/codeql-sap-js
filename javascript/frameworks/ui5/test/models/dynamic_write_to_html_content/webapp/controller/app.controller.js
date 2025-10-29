@@ -21,7 +21,7 @@ sap.ui.define(
         htmlControl.setContent(inputReference.getValue());
       },
 
-      doSomething: function () {
+      doSomething1: function () {
         let inputReference = this.getView().byId("unit-test-target1");
 
         /* ========== 2. Input value piped into dynamic HTML, instantiated and placed on-demand ========== */
@@ -41,6 +41,24 @@ sap.ui.define(
         htmlControl3.setContent(inputReference.getValue());
         htmlControl3.placeAt("HTMLPlaceholder");
       },
+
+      doSomething2: function () {
+        let inputReference = this.getView().byId("unit-test-target1");
+
+        /* ========== 2. Input value piped into dynamic HTML, instantiated and placed on-demand ========== */
+        /* 2-1. Value passed to the argument of the constructor call */
+        let htmlControl1 = new HTML({
+          content: `<div>${inputReference.getValue()}</div>`,
+        });
+
+        /* 2-2. Value directly set to `HTML.content` */
+        let htmlControl2 = new HTML();
+        htmlControl2.content = inputReference.getValue();
+
+        /* 2-3. Value set by `HTML.setContent(content)` */
+        let htmlControl3 = new HTML();
+        htmlControl3.setContent(inputReference.getValue());
+      }
     });
   }
 );

@@ -36,7 +36,7 @@ module UI5Xss implements DataFlow::ConfigSig {
   predicate isSink(DataFlow::Node node) {
     node instanceof UI5ExtHtmlISink or
     node instanceof UI5ModelHtmlISink or
-    node instanceof DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom
+    node instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
@@ -71,7 +71,8 @@ class UI5ModelHtmlISink extends DataFlow::Node {
 private class UI5ExtHtmlISink extends DataFlow::Node {
   UI5ExtHtmlISink() {
     this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
-    not this.asExpr().getParent+() instanceof NewExpr
+    /* Exclude property writes to HTML controls; they are covered in a separate class below. */
+    not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 }
 
@@ -81,48 +82,48 @@ private class HTMLControlInstantiation extends ElementInstantiation {
 
 private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
 
+abstract class DynamicallySetElementValueOfHTML extends DataFlow::Node { }
+
 /**
  * The DOM value of a UI5 control that is dynamically generated then placed at
  * a certain position in a DOM.
  */
-/*
- * TODO 1: Needs testing of each branch
- * TODO 2: Model the `placeAt`:
- */
-
-class DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DataFlow::Node {
-  HTMLControlInstantiation htmlControlInstantiation;
+class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DynamicallySetElementValueOfHTML
+{
+  DataFlow::Node root;
   ControlPlaceAtCall placeAtCall;
 
-  DangerouslySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
-    (
-      /* 1. The content is set via the first argument of the constructor. */
-      exists(string typeAlias |
-        typeModel(typeAlias, htmlControlInstantiation.getImportPath(), _) and
-        /* Double check that the type derives a UI5-XSS sink. */
-        sinkModel(typeAlias, _, "ui5-html-injection", _) and
-        exists(PropWrite propWrite |
-          this = propWrite.getRhs() and
-          propWrite.getBase() = htmlControlInstantiation.getArgument(0) and
-          propWrite.getPropertyName() = "content"
-        )
-      )
-      or
-      /* 2. The content is written to the reference of the control. */
-      exists(ControlReference controlReference |
-        htmlControlInstantiation.getId() = controlReference.getId()
-      |
-        /*
-         * 2-1. The content is written directly to the `content` property of the control
-         * reference.
-         */
-
-        this = controlReference.getAPropertyWrite("content")
+  DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
+    exists(NewNode new | root = new |
+      new = ModelOutput::getATypeNode("UI5HTMLControl").getAnInstantiation() and
+      (
+        this = new.getAnArgument().(ObjectLiteralNode).getAPropertyWrite("content").getRhs()
         or
-        /* 2-2. The content is written using the `setContent` setter.  */
-        this = controlReference.getAMemberCall("content").getArgument(0)
+        this = new.getAPropertyWrite("content").getRhs()
+        or
+        this = new.getAMemberCall("setContent").getAnArgument()
       )
     ) and
-    TrackPlaceAtCallConfigFlow::flow(htmlControlInstantiation, placeAtCall)
+    /* Ensure that this is placed somewhere in the DOM. */
+    TrackPlaceAtCallConfigFlow::flow(root, placeAtCall)
+  }
+}
+
+class DynamicallySetElementValueOfHTMLControlReference extends DynamicallySetElementValueOfHTML {
+  DynamicallySetElementValueOfHTMLControlReference() {
+    /* 2. The content is written to the reference of the control. */
+    exists(ControlReference controlReference |
+      controlReference.isLibraryControlReference("sap.m.HTML")
+    |
+      /*
+       * 2-1. The content is written directly to the `content` property of the control
+       * reference.
+       */
+
+      this = controlReference.getAPropertyWrite("content")
+      or
+      /* 2-2. The content is written using the `setContent` setter.  */
+      this = controlReference.getAMemberCall("setContent").getArgument(0)
+    )
   }
 }
