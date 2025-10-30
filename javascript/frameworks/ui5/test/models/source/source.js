@@ -9,6 +9,13 @@ sap.ui.require(
     "sap/ui/webc/main/MultiInput",
     "sap/m/SearchField",
     "sap/ui/webc/main/Input",
+    "sap/ui/commons/TextField",
+    "sap/ui/commons/PasswordField",
+    "sap/ui/commons/ValueHelpField",
+    "sap/ui/commons/SearchField",
+    "sap/ui/commons/ComboBox",
+    "sap/ui/commons/TextArea",
+    "sap/ui/webc/main/TextArea"
   ],
   function (
     CodeEditor,
@@ -20,6 +27,13 @@ sap.ui.require(
     MultiInput,
     SearchField,
     Input,
+    TextField,
+    PasswordField,
+    ValueHelpField,
+    SearchField,
+    ComboBox,
+    TextAreaCommons,
+    TextAreaWebc
   ) {
     var obj = new TextField();
     var value = obj.value;
@@ -52,6 +66,31 @@ sap.ui.require(
     var obj = new RichTextEditor();
     var value = obj.value;
     var obj = new RichTextEditor();
+    var value = obj.getValue();
+
+    var obj = new PasswordField();
+    var value = obj.value;
+    var obj = new PasswordField();
+    var value = obj.getValue();
+    var obj = new ValueHelpField();
+    var value = obj.value;
+    var obj = new ValueHelpField();
+    var value = obj.getValue();
+    var obj = new SearchField();
+    var value = obj.value;
+    var obj = new SearchField();
+    var value = obj.getValue();
+    var obj = new ComboBox();
+    var value = obj.value;
+    var obj = new ComboBox();
+    var value = obj.getValue();
+    var obj = new TextAreaCommons();
+    var value = obj.value;
+    var obj = new TextAreaCommons();
+    var value = obj.getValue();
+    var obj = new TextAreaWebc();
+    var value = obj.value;
+    var obj = new TextAreaWebc();
     var value = obj.getValue();
 
     var value = jQuery.sap.getUriParameters().get();
