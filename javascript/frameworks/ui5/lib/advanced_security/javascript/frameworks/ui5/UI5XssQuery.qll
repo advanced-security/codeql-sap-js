@@ -1,6 +1,7 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5View
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 module UI5Xss implements DataFlow::ConfigSig {
@@ -34,7 +35,8 @@ module UI5Xss implements DataFlow::ConfigSig {
 
   predicate isSink(DataFlow::Node node) {
     node instanceof UI5ExtHtmlISink or
-    node instanceof UI5ModelHtmlISink
+    node instanceof UI5ModelHtmlISink or
+    node instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
@@ -67,5 +69,61 @@ class UI5ModelHtmlISink extends DataFlow::Node {
  * An HTML injection sink typically for custom controls whose RenderManager calls acting as sinks.
  */
 private class UI5ExtHtmlISink extends DataFlow::Node {
-  UI5ExtHtmlISink() { this = ModelOutput::getASinkNode("ui5-html-injection").asSink() }
+  UI5ExtHtmlISink() {
+    this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
+    /* Exclude property writes to HTML controls; they are covered in a separate class below. */
+    not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
+  }
+}
+
+private class HTMLControlInstantiation extends ElementInstantiation {
+  HTMLControlInstantiation() { typeModel("UI5HTMLControl", this.getImportPath(), _) }
+}
+
+private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
+
+abstract class DynamicallySetElementValueOfHTML extends DataFlow::Node { }
+
+/**
+ * The DOM value of a UI5 control that is dynamically generated then placed at
+ * a certain position in a DOM.
+ */
+class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DynamicallySetElementValueOfHTML
+{
+  DataFlow::Node root;
+  ControlPlaceAtCall placeAtCall;
+
+  DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
+    exists(NewNode new | root = new |
+      new = ModelOutput::getATypeNode("UI5HTMLControl").getAnInstantiation() and
+      (
+        this = new.getAnArgument().(ObjectLiteralNode).getAPropertyWrite("content").getRhs()
+        or
+        this = new.getAPropertyWrite("content").getRhs()
+        or
+        this = new.getAMemberCall("setContent").getAnArgument()
+      )
+    ) and
+    /* Ensure that this is placed somewhere in the DOM. */
+    TrackPlaceAtCallConfigFlow::flow(root, placeAtCall)
+  }
+}
+
+class DynamicallySetElementValueOfHTMLControlReference extends DynamicallySetElementValueOfHTML {
+  DynamicallySetElementValueOfHTMLControlReference() {
+    /* 2. The content is written to the reference of the control. */
+    exists(ControlReference controlReference |
+      controlReference.isLibraryControlReference("sap.m.HTML")
+    |
+      /*
+       * 2-1. The content is written directly to the `content` property of the control
+       * reference.
+       */
+
+      this = controlReference.getAPropertyWrite("content")
+      or
+      /* 2-2. The content is written using the `setContent` setter.  */
+      this = controlReference.getAMemberCall("setContent").getArgument(0)
+    )
+  }
 }
