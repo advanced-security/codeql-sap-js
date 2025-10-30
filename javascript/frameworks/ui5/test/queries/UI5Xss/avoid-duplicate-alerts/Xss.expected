@@ -1,60 +1,38 @@
 nodes
-| XssTest.js:3:9:3:50 | value |
-| XssTest.js:3:9:3:50 | value |
-| XssTest.js:3:17:3:50 | jQuery. ... param") |
-| XssTest.js:3:17:3:50 | jQuery. ... param") |
-| XssTest.js:3:17:3:50 | jQuery. ... param") |
-| XssTest.js:4:20:4:24 | value |
-| XssTest.js:4:20:4:24 | value |
-| XssTest.js:4:20:4:24 | value |
-| XssTest.js:10:9:10:40 | value |
-| XssTest.js:10:17:10:40 | documen ... .search |
-| XssTest.js:10:17:10:40 | documen ... .search |
-| XssTest.js:11:20:11:24 | value |
-| XssTest.js:11:20:11:24 | value |
-| XssTest.js:17:9:17:40 | value |
-| XssTest.js:17:17:17:40 | documen ... .search |
-| XssTest.js:17:17:17:40 | documen ... .search |
-| XssTest.js:18:9:18:44 | value1 |
-| XssTest.js:18:18:18:44 | jQuery. ... (value) |
-| XssTest.js:18:39:18:43 | value |
-| XssTest.js:19:20:19:25 | value1 |
-| XssTest.js:19:20:19:25 | value1 |
-| XssTest.js:25:9:25:40 | value |
-| XssTest.js:25:17:25:40 | documen ... .search |
-| XssTest.js:25:17:25:40 | documen ... .search |
-| XssTest.js:26:9:26:44 | value1 |
-| XssTest.js:26:18:26:44 | jQuery. ... (value) |
-| XssTest.js:26:39:26:43 | value |
-| XssTest.js:27:20:27:25 | value1 |
-| XssTest.js:27:20:27:25 | value1 |
+| XssTest.js:3:9:3:13 | value | semmle.label | value |
+| XssTest.js:3:17:3:50 | jQuery. ... param") | semmle.label | jQuery. ... param") |
+| XssTest.js:4:20:4:24 | value | semmle.label | value |
+| XssTest.js:10:9:10:13 | value | semmle.label | value |
+| XssTest.js:10:17:10:40 | documen ... .search | semmle.label | documen ... .search |
+| XssTest.js:11:20:11:24 | value | semmle.label | value |
+| XssTest.js:17:9:17:13 | value | semmle.label | value |
+| XssTest.js:17:17:17:40 | documen ... .search | semmle.label | documen ... .search |
+| XssTest.js:18:9:18:14 | value1 | semmle.label | value1 |
+| XssTest.js:18:18:18:44 | jQuery. ... (value) | semmle.label | jQuery. ... (value) |
+| XssTest.js:18:39:18:43 | value | semmle.label | value |
+| XssTest.js:19:20:19:25 | value1 | semmle.label | value1 |
+| XssTest.js:25:9:25:13 | value | semmle.label | value |
+| XssTest.js:25:17:25:40 | documen ... .search | semmle.label | documen ... .search |
+| XssTest.js:26:9:26:14 | value1 | semmle.label | value1 |
+| XssTest.js:26:18:26:44 | jQuery. ... (value) | semmle.label | jQuery. ... (value) |
+| XssTest.js:26:39:26:43 | value | semmle.label | value |
+| XssTest.js:27:20:27:25 | value1 | semmle.label | value1 |
 edges
-| XssTest.js:3:9:3:50 | value | XssTest.js:4:20:4:24 | value |
-| XssTest.js:3:9:3:50 | value | XssTest.js:4:20:4:24 | value |
-| XssTest.js:3:9:3:50 | value | XssTest.js:4:20:4:24 | value |
-| XssTest.js:3:9:3:50 | value | XssTest.js:4:20:4:24 | value |
-| XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:3:9:3:50 | value |
-| XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:3:9:3:50 | value |
-| XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:3:9:3:50 | value |
-| XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:3:9:3:50 | value |
-| XssTest.js:10:9:10:40 | value | XssTest.js:11:20:11:24 | value |
-| XssTest.js:10:9:10:40 | value | XssTest.js:11:20:11:24 | value |
-| XssTest.js:10:17:10:40 | documen ... .search | XssTest.js:10:9:10:40 | value |
-| XssTest.js:10:17:10:40 | documen ... .search | XssTest.js:10:9:10:40 | value |
-| XssTest.js:17:9:17:40 | value | XssTest.js:18:39:18:43 | value |
-| XssTest.js:17:17:17:40 | documen ... .search | XssTest.js:17:9:17:40 | value |
-| XssTest.js:17:17:17:40 | documen ... .search | XssTest.js:17:9:17:40 | value |
-| XssTest.js:18:9:18:44 | value1 | XssTest.js:19:20:19:25 | value1 |
-| XssTest.js:18:9:18:44 | value1 | XssTest.js:19:20:19:25 | value1 |
-| XssTest.js:18:18:18:44 | jQuery. ... (value) | XssTest.js:18:9:18:44 | value1 |
-| XssTest.js:18:39:18:43 | value | XssTest.js:18:18:18:44 | jQuery. ... (value) |
-| XssTest.js:25:9:25:40 | value | XssTest.js:26:39:26:43 | value |
-| XssTest.js:25:17:25:40 | documen ... .search | XssTest.js:25:9:25:40 | value |
-| XssTest.js:25:17:25:40 | documen ... .search | XssTest.js:25:9:25:40 | value |
-| XssTest.js:26:9:26:44 | value1 | XssTest.js:27:20:27:25 | value1 |
-| XssTest.js:26:9:26:44 | value1 | XssTest.js:27:20:27:25 | value1 |
-| XssTest.js:26:18:26:44 | jQuery. ... (value) | XssTest.js:26:9:26:44 | value1 |
-| XssTest.js:26:39:26:43 | value | XssTest.js:26:18:26:44 | jQuery. ... (value) |
+| XssTest.js:3:9:3:13 | value | XssTest.js:4:20:4:24 | value | provenance |  |
+| XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:3:9:3:13 | value | provenance |  |
+| XssTest.js:10:9:10:13 | value | XssTest.js:11:20:11:24 | value | provenance |  |
+| XssTest.js:10:17:10:40 | documen ... .search | XssTest.js:10:9:10:13 | value | provenance |  |
+| XssTest.js:17:9:17:13 | value | XssTest.js:18:39:18:43 | value | provenance |  |
+| XssTest.js:17:17:17:40 | documen ... .search | XssTest.js:17:9:17:13 | value | provenance |  |
+| XssTest.js:18:9:18:14 | value1 | XssTest.js:19:20:19:25 | value1 | provenance |  |
+| XssTest.js:18:18:18:44 | jQuery. ... (value) | XssTest.js:18:9:18:14 | value1 | provenance |  |
+| XssTest.js:18:39:18:43 | value | XssTest.js:18:18:18:44 | jQuery. ... (value) | provenance |  |
+| XssTest.js:25:9:25:13 | value | XssTest.js:26:39:26:43 | value | provenance |  |
+| XssTest.js:25:17:25:40 | documen ... .search | XssTest.js:25:9:25:13 | value | provenance |  |
+| XssTest.js:26:9:26:14 | value1 | XssTest.js:27:20:27:25 | value1 | provenance |  |
+| XssTest.js:26:18:26:44 | jQuery. ... (value) | XssTest.js:26:9:26:14 | value1 | provenance |  |
+| XssTest.js:26:39:26:43 | value | XssTest.js:26:18:26:44 | jQuery. ... (value) | provenance |  |
+subpaths
 #select
 | XssTest.js:4:20:4:24 | value | XssTest.js:3:17:3:50 | jQuery. ... param") | XssTest.js:4:20:4:24 | value | Cross-site scripting vulnerability due to $@. | XssTest.js:3:17:3:50 | jQuery. ... param") | user-provided value |
 | XssTest.js:11:20:11:24 | value | XssTest.js:10:17:10:40 | documen ... .search | XssTest.js:11:20:11:24 | value | Cross-site scripting vulnerability due to $@. | XssTest.js:10:17:10:40 | documen ... .search | user-provided value |

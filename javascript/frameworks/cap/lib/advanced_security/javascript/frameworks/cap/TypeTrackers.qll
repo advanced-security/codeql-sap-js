@@ -39,3 +39,12 @@ private SourceNode cdsApplicationServiceInstantiation(TypeTracker t) {
 SourceNode cdsApplicationServiceInstantiation() {
   result = cdsApplicationServiceInstantiation(TypeTracker::end())
 }
+
+private SourceNode isHandlerParameter(TypeTracker t, Handler handler) {
+  result = handler.getParameter(0) or
+  exists(TypeTracker t2 | result = isHandlerParameter(t, handler).track(t2, t))
+}
+
+SourceNode isHandlerParameter(Handler handler) {
+  result = isHandlerParameter(TypeTracker::end(), handler)
+}

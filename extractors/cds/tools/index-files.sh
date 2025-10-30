@@ -1,104 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eu
 
-echo "Indexing CDS files"
+## This script currently:
+## - ignores any arguments passed to it;
+## - assumes it is run from the root of the project source directory;
+## 
 
-# Check if the list of files is empty
-response_file="$1"
-
-# If the response_file doesn't exist, terminate:
-if [ ! -f "$response_file" ]; then
-    echo "codeql database index-files --language cds terminated early as response file '$response_file' does not exist. This is because no CDS files were selected or found."
-    exit 0
-fi
-
-# If the response_file is empty, terminate
-if [ ! -s "$response_file" ]; then
-    echo "codeql database index-files --language cds terminated early as response file '$response_file' is empty. This is because no CDS files were selected or found."
-    exit 0
-fi
-
-# Determine if we have the cds command available, and if not, install the cds development kit
-# in the appropriate directories
-if ! command -v cds &> /dev/null
+if ! command -v node > /dev/null
 then
-    echo "Pre-installing cds compiler"
+    echo "node executable is required (in PATH) to run the 'cds-extractor.bundle.js' script. Please install Node.js and try again."
+    exit 2
+fi
 
-    # Find all the directories containing a package.json with a dependency on @sap/cds, where
-    # the directory contains at least one of the files listed in the response file (e.g. the
-    # cds files we want to extract).
-    #
-    # We then install the cds development kit (@sap/cds-dk) in each directory, which makes the
-    # `cds` command usable from the npx command within that directory.
-    #
-    # Nested package.json files simply cause the package to be installed in the parent node_modules
-    # directory.
-    #
-    # We also ensure we skip node_modules, as we can end up in a recursive loop
-    find . -type d -name node_modules -prune -false -o -type f \( -iname 'package.json' \) -exec grep -ql '@sap/cds' {} \; -execdir bash -c "grep -q \"^\$(pwd)\(/\|$\)\" \"$response_file\"" \; -execdir bash -c "echo \"Installing @sap/cds-dk into \$(pwd) to enable CDS compilation.\"" \; -execdir npm install --silent @sap/cds-dk \; -execdir npm install --silent \;
+# Set the _cwd variable to the present working directory (PWD) as the directory
+# from which this script was called, which we assume is the "source root" directory
+# of the project that to be scanned / indexed.
+_cwd="$PWD"
+_script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+_cds_extractor_bundle_path="${_script_dir}/dist/cds-extractor.bundle.js"
 
-    # Use the npx command to dynamically install the cds development kit (@sap/cds-dk) package if necessary,
-    # which then provides the cds command line tool in directories which are not covered by the package.json
-    # install command approach above
-    cds_command="npx -y --package @sap/cds-dk cds"
+# Change to the directory of this shell script to maintain consistency with
+# the original approach for path resolution.
+cd "$_script_dir"
+
+# Check if the pre-built bundle exists
+if [ -f "${_cds_extractor_bundle_path}" ]; then
+    echo "Running the 'cds-extractor.bundle.js' script"
+    node "${_cds_extractor_bundle_path}" "$_cwd"
 else
-    cds_command="cds"
+    echo "Error: CDS extractor bundle not found at '${_cds_extractor_bundle_path}'"
+    echo "Please ensure that the bundle has been built by running 'npm run bundle' in the 'extractors/cds/tools' directory."
+    exit 6
 fi
-
-echo "Processing CDS files to JSON"
-
-# Run the cds compile command on each file in the response file, outputting the compiled JSON to a file with
-# the same name
-while IFS= read -r cds_file; do
-    echo "Processing CDS file $cds_file to:"
-    if ! $cds_command compile "$cds_file" -2 json -o "$cds_file.json" --locations 2> "$cds_file.err"; then
-        stderr_truncated=`grep "^\[ERROR\]" "$cds_file.err" | tail -n 4`
-        error_message=$'Could not compile the file '"$cds_file"$'.\nReported error(s):\n```\n'"$stderr_truncated"$'\n```'
-        echo "$error_message"
-        # Log an error diagnostic which appears on the status page
-        "$CODEQL_DIST/codeql" database add-diagnostic --extractor-name cds --ready-for-status-page --source-id cds/compilation-failure --source-name "Failure to compile one or more SAP CAP CDS files" --severity error --markdown-message "$error_message" --file-path "$cds_file" "$CODEQL_EXTRACTOR_CDS_WIP_DATABASE"
-    fi
-done < "$response_file"
-
-# Check if the JS extractor variables are set, and set them if not
-if [ -z "${CODEQL_EXTRACTOR_JAVASCRIPT_ROOT:-}" ]; then
-    # Find the JavaScript extractor location
-    export CODEQL_EXTRACTOR_JAVASCRIPT_ROOT="$("$CODEQL_DIST/codeql" resolve extractor --language=javascript)"    
-
-    # Set the JAVASCRIPT extractor environment variables to the same as the CDS extractor environment variables
-    # so that the JS extractor will write to the CDS database
-    export CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE="$CODEQL_EXTRACTOR_CDS_WIP_DATABASE"
-    export CODEQL_EXTRACTOR_JAVASCRIPT_DIAGNOSTIC_DIR="$CODEQL_EXTRACTOR_CDS_DIAGNOSTIC_DIR"
-    export CODEQL_EXTRACTOR_JAVASCRIPT_LOG_DIR="$CODEQL_EXTRACTOR_CDS_LOG_DIR"
-    export CODEQL_EXTRACTOR_JAVASCRIPT_SCRATCH_DIR="$CODEQL_EXTRACTOR_CDS_SCRATCH_DIR"
-    export CODEQL_EXTRACTOR_JAVASCRIPT_TRAP_DIR="$CODEQL_EXTRACTOR_CDS_TRAP_DIR"
-    export CODEQL_EXTRACTOR_JAVASCRIPT_SOURCE_ARCHIVE_DIR="$CODEQL_EXTRACTOR_CDS_SOURCE_ARCHIVE_DIR"
-fi
-
-# Check if LGTM_INDEX_FILTERS is already set
-# This typically happens if "paths" or "paths-ignore" are set in the LGTM.yml file
-if [ -z "${LGTM_INDEX_FILTERS:-}" ]; then
-    exclude_filters=""
-else
-    echo $'Found \$LGTM_INDEX_FILTERS already set to:\n'"$LGTM_INDEX_FILTERS"
-    # If it is set, we will try to honour the paths-ignore filter
-    # Split by \n and find all the entries that start with exclude, excluding "exclude:**/*" and "exclude:**/*.*"
-    # and then join them back together with \n
-    exclude_filters=$'\n'"$(echo "$LGTM_INDEX_FILTERS" | grep '^exclude' | grep -v 'exclude:\*\*/\*\|exclude:\*\*/\*\.\*')"
-fi
-
-# Enable extraction of the cds.json files only
-export LGTM_INDEX_FILTERS=$'exclude:**/*.*\ninclude:**/*.cds.json\ninclude:**/*.cds\nexclude:**/node_modules/**/*.*'"$exclude_filters"
-echo "Setting \$LGTM_INDEX_FILTERS to:\n$LGTM_INDEX_FILTERS"
-export LGTM_INDEX_TYPESCRIPT="NONE"
-# Configure to copy over the CDS files as well, by pretending they are JSON
-export LGTM_INDEX_FILETYPES=".cds:JSON"
-# Ignore the LGTM_INDEX_INCLUDE variable for this purpose, as it may
-# refer explicitly to .ts or .js files
-unset LGTM_INDEX_INCLUDE
-
-echo "Extracting the cds.json files"
-
-# Invoke the JavaScript autobuilder to index the .cds.json files only
-"$CODEQL_EXTRACTOR_JAVASCRIPT_ROOT"/tools/autobuild.sh

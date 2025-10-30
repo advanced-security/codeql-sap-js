@@ -1,6 +1,5 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
-private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 /**
  * Step from a part of internal model to a relevant control property.
@@ -348,14 +347,22 @@ class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlow
  * A step from any argument of a SAP logging function to the `onLogEntry`
  * method of a custom log listener in the same application.
  */
+predicate logArgumentToListener(DataFlow::Node start, DataFlow::Node end) {
+  inSameWebApp(start.getFile(), end.getFile()) and
+  start =
+    ModelOutput::getATypeNode("SapLogger")
+        .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
+        .getACall()
+        .getAnArgument() and
+  end = ModelOutput::getATypeNode("SapLogEntries").asSource()
+}
+
+/**
+ * A step from any argument of a SAP logging function to the `onLogEntry`
+ * method of a custom log listener in the same application.
+ */
 class LogArgumentToListener extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
-    inSameWebApp(start.getFile(), end.getFile()) and
-    start =
-      ModelOutput::getATypeNode("SapLogger")
-          .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
-          .getACall()
-          .getAnArgument() and
-    end = ModelOutput::getATypeNode("SapLogEntries").asSource()
+    logArgumentToListener(start, end)
   }
 }

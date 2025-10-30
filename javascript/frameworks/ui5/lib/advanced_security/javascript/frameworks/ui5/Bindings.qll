@@ -65,7 +65,7 @@ private class BindingStringReader extends TBindingString {
     )
   }
 
-  DbLocation getLocation() {
+  Location getLocation() {
     exists(StringLiteral stringLiteral |
       this = TBindingStringFromLiteral(stringLiteral) and
       result = stringLiteral.getLocation()

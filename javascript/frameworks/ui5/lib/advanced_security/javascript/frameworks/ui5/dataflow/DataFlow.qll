@@ -2,10 +2,9 @@ import javascript
 import semmle.javascript.dataflow.DataFlow as StdLibDataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5View
-import advanced_security.javascript.frameworks.ui5.UI5AMDModule
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
-private import StdLibDataFlow::DataFlow::PathGraph as DataFlowPathGraph
+private import PatchDataFlow
 
 /**
  * A statically visible part of a local model's content that has a binding path referring to it in a control declaration acting as an HTML injection sink.
@@ -60,7 +59,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5Control getControlDeclaration() { result = controlDeclaration }
 }
 
-module UI5PathGraph {
+module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {
   private newtype TNode =
     TUI5BindingPathNode(UI5BindingPath path) or
     TDataFlowNode(DataFlow::Node node)
@@ -92,7 +91,7 @@ module UI5PathGraph {
           .hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
     }
 
-    DataFlow::PathNode getPathNode() { result.getNode() = this.asDataFlowNode() }
+    ConfigPathNode getPathNode() { result.getNode() = this.asDataFlowNode() }
 
     UI5PathNode getAPrimarySource() {
       if this.asDataFlowNode() instanceof LocalModelContentBoundBidirectionallyToSourceControl
@@ -124,9 +123,9 @@ module UI5PathGraph {
   query predicate nodes(UI5PathNode ui5PathNode) {
     exists(ui5PathNode.asUI5BindingPathNode())
     or
-    exists(DataFlow::PathNode pathNode |
+    exists(ConfigPathNode pathNode |
       pathNode.getNode() = ui5PathNode.asDataFlowNode() and
-      DataFlowPathGraph::nodes(pathNode)
+      ConfigPathGraph::nodes(pathNode, _, _)
     )
   }
 
@@ -182,10 +181,10 @@ module UI5PathGraph {
 
   query predicate edges(UI5PathNode ui5PathNodePred, UI5PathNode ui5PathNodeSucc) {
     /* Include all existing dataflow edges */
-    exists(DataFlow::PathNode pathNodeFrom, DataFlow::PathNode pathNodeTo |
+    exists(ConfigPathNode pathNodeFrom, ConfigPathNode pathNodeTo |
       pathNodeFrom.getNode() = ui5PathNodePred.asDataFlowNode() and
       pathNodeTo.getNode() = ui5PathNodeSucc.asDataFlowNode() and
-      DataFlowPathGraph::edges(pathNodeFrom, pathNodeTo)
+      ConfigPathGraph::edges(pathNodeFrom, pathNodeTo, _, _)
     ) and
     /* ========= TODO: Legacy code ========= */
     /* Exclude duplicate edge from model to handler parameter */

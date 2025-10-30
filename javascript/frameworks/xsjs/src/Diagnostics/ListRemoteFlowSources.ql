@@ -9,7 +9,7 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.xsjs.RemoteFlowSources
+import advanced_security.javascript.frameworks.xsjs.AsyncXSJS
 
 from RemoteFlowSource source, string type
 where type = source.getSourceType()

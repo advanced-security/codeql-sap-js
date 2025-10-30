@@ -1,23 +1,57 @@
-nodes
-| XSJSZipSlip.xsjs:7:7:7:62 | zipArchive |
-| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) |
-| XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() |
-| XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() |
-| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive |
-| XSJSZipSlip.xsjs:11:9:11:74 | targetFilePath |
-| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) |
-| XSJSZipSlip.xsjs:11:65:11:73 | entryPath |
-| XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath |
-| XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath |
 edges
-| XSJSZipSlip.xsjs:7:7:7:62 | zipArchive | XSJSZipSlip.xsjs:10:25:10:34 | zipArchive |
-| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | XSJSZipSlip.xsjs:7:7:7:62 | zipArchive |
-| XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) |
-| XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) |
-| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | XSJSZipSlip.xsjs:11:65:11:73 | entryPath |
-| XSJSZipSlip.xsjs:11:9:11:74 | targetFilePath | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath |
-| XSJSZipSlip.xsjs:11:9:11:74 | targetFilePath | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath |
-| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | XSJSZipSlip.xsjs:11:9:11:74 | targetFilePath |
-| XSJSZipSlip.xsjs:11:65:11:73 | entryPath | XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) |
+| XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | XSJSZipSlip.xsjs:31:7:31:17 | requestBody | provenance |  |
+| XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | XSJSZipSlip.xsjs:32:7:32:17 | requestBody | provenance |  |
+| XSJSZipSlip.xsjs:6:16:6:26 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:6:16:6:26 | requestBody | XSJSZipSlip.xsjs:7:35:7:45 | requestBody | provenance |  |
+| XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | provenance |  |
+| XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | provenance |  |
+| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | provenance |  |
+| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | provenance |  |
+| XSJSZipSlip.xsjs:7:35:7:45 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:7:35:7:45 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:7:35:7:45 | requestBody | XSJSZipSlip.xsjs:7:35:7:59 | request ... yBuffer | provenance | Config |
+| XSJSZipSlip.xsjs:7:35:7:59 | request ... yBuffer | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | XSJSZipSlip.xsjs:11:65:11:73 | entryPath | provenance | Config |
+| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | XSJSZipSlip.xsjs:11:65:11:73 | entryPath | provenance | Config |
+| XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | provenance |  |
+| XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | provenance |  |
+| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | provenance |  |
+| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | provenance |  |
+| XSJSZipSlip.xsjs:11:65:11:73 | entryPath | XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | provenance | Config |
+| XSJSZipSlip.xsjs:11:65:11:73 | entryPath | XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | provenance | Config |
+| XSJSZipSlip.xsjs:19:16:19:26 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:19:16:19:26 | requestBody | XSJSZipSlip.xsjs:20:35:20:45 | requestBody | provenance |  |
+| XSJSZipSlip.xsjs:20:35:20:45 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:20:35:20:45 | requestBody | XSJSZipSlip.xsjs:20:35:20:59 | request ... yBuffer | provenance | Config |
+| XSJSZipSlip.xsjs:20:35:20:59 | request ... yBuffer | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:31:7:31:17 | requestBody | XSJSZipSlip.xsjs:6:16:6:26 | requestBody | provenance |  |
+| XSJSZipSlip.xsjs:31:7:31:17 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:32:7:32:17 | requestBody | XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | provenance | Config |
+| XSJSZipSlip.xsjs:32:7:32:17 | requestBody | XSJSZipSlip.xsjs:19:16:19:26 | requestBody | provenance |  |
+nodes
+| XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | semmle.label | $.request.body |
+| XSJSZipSlip.xsjs:6:16:6:26 | requestBody | semmle.label | requestBody |
+| XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | semmle.label | zipArchive |
+| XSJSZipSlip.xsjs:7:7:7:16 | zipArchive | semmle.label | zipArchive |
+| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | semmle.label | new $.u ... ffer()) |
+| XSJSZipSlip.xsjs:7:20:7:62 | new $.u ... ffer()) | semmle.label | new $.u ... ffer()) |
+| XSJSZipSlip.xsjs:7:35:7:45 | requestBody | semmle.label | requestBody |
+| XSJSZipSlip.xsjs:7:35:7:59 | request ... yBuffer | semmle.label | request ... yBuffer |
+| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | semmle.label | zipArchive |
+| XSJSZipSlip.xsjs:10:25:10:34 | zipArchive | semmle.label | zipArchive |
+| XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | semmle.label | targetFilePath |
+| XSJSZipSlip.xsjs:11:9:11:22 | targetFilePath | semmle.label | targetFilePath |
+| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | semmle.label | require ... ryPath) |
+| XSJSZipSlip.xsjs:11:26:11:74 | require ... ryPath) | semmle.label | require ... ryPath) |
+| XSJSZipSlip.xsjs:11:65:11:73 | entryPath | semmle.label | entryPath |
+| XSJSZipSlip.xsjs:11:65:11:73 | entryPath | semmle.label | entryPath |
+| XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | semmle.label | targetFilePath |
+| XSJSZipSlip.xsjs:19:16:19:26 | requestBody | semmle.label | requestBody |
+| XSJSZipSlip.xsjs:20:35:20:45 | requestBody | semmle.label | requestBody |
+| XSJSZipSlip.xsjs:20:35:20:59 | request ... yBuffer | semmle.label | request ... yBuffer |
+| XSJSZipSlip.xsjs:31:7:31:17 | requestBody | semmle.label | requestBody |
+| XSJSZipSlip.xsjs:32:7:32:17 | requestBody | semmle.label | requestBody |
+subpaths
 #select
-| XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | The path of $@ being saved depends on a $@. | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | this zip file | XSJSZipSlip.xsjs:7:35:7:61 | request ... uffer() | user-provided value |
+| XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | The path of $@ being saved depends on a $@. | XSJSZipSlip.xsjs:12:37:12:50 | targetFilePath | this zip file | XSJSZipSlip.xsjs:1:19:1:32 | $.request.body | user-provided value |

@@ -1,64 +1,45 @@
-nodes
-| LogInjectionTest.js:6:9:6:50 | value |
-| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") |
-| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") |
-| LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:7:34:7:38 | value |
-| LogInjectionTest.js:13:9:13:36 | q |
-| LogInjectionTest.js:13:13:13:36 | url.par ... , true) |
-| LogInjectionTest.js:13:23:13:29 | req.url |
-| LogInjectionTest.js:13:23:13:29 | req.url |
-| LogInjectionTest.js:14:9:14:32 | value |
-| LogInjectionTest.js:14:17:14:17 | q |
-| LogInjectionTest.js:14:17:14:23 | q.query |
-| LogInjectionTest.js:14:17:14:32 | q.query.username |
-| LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:15:34:15:38 | value |
-| LogInjectionTest.js:21:9:21:36 | q |
-| LogInjectionTest.js:21:13:21:36 | url.par ... , true) |
-| LogInjectionTest.js:21:23:21:29 | req.url |
-| LogInjectionTest.js:21:23:21:29 | req.url |
-| LogInjectionTest.js:22:9:22:32 | value |
-| LogInjectionTest.js:22:17:22:17 | q |
-| LogInjectionTest.js:22:17:22:23 | q.query |
-| LogInjectionTest.js:22:17:22:32 | q.query.username |
-| LogInjectionTest.js:23:9:23:44 | value1 |
-| LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) |
-| LogInjectionTest.js:23:39:23:43 | value |
-| LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` |
-| LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` |
-| LogInjectionTest.js:24:34:24:39 | value1 |
 edges
-| LogInjectionTest.js:6:9:6:50 | value | LogInjectionTest.js:7:34:7:38 | value |
-| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | LogInjectionTest.js:6:9:6:50 | value |
-| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | LogInjectionTest.js:6:9:6:50 | value |
-| LogInjectionTest.js:7:34:7:38 | value | LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:7:34:7:38 | value | LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:13:9:13:36 | q | LogInjectionTest.js:14:17:14:17 | q |
-| LogInjectionTest.js:13:13:13:36 | url.par ... , true) | LogInjectionTest.js:13:9:13:36 | q |
-| LogInjectionTest.js:13:23:13:29 | req.url | LogInjectionTest.js:13:13:13:36 | url.par ... , true) |
-| LogInjectionTest.js:13:23:13:29 | req.url | LogInjectionTest.js:13:13:13:36 | url.par ... , true) |
-| LogInjectionTest.js:14:9:14:32 | value | LogInjectionTest.js:15:34:15:38 | value |
-| LogInjectionTest.js:14:17:14:17 | q | LogInjectionTest.js:14:17:14:23 | q.query |
-| LogInjectionTest.js:14:17:14:23 | q.query | LogInjectionTest.js:14:17:14:32 | q.query.username |
-| LogInjectionTest.js:14:17:14:32 | q.query.username | LogInjectionTest.js:14:9:14:32 | value |
-| LogInjectionTest.js:15:34:15:38 | value | LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:15:34:15:38 | value | LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` |
-| LogInjectionTest.js:21:9:21:36 | q | LogInjectionTest.js:22:17:22:17 | q |
-| LogInjectionTest.js:21:13:21:36 | url.par ... , true) | LogInjectionTest.js:21:9:21:36 | q |
-| LogInjectionTest.js:21:23:21:29 | req.url | LogInjectionTest.js:21:13:21:36 | url.par ... , true) |
-| LogInjectionTest.js:21:23:21:29 | req.url | LogInjectionTest.js:21:13:21:36 | url.par ... , true) |
-| LogInjectionTest.js:22:9:22:32 | value | LogInjectionTest.js:23:39:23:43 | value |
-| LogInjectionTest.js:22:17:22:17 | q | LogInjectionTest.js:22:17:22:23 | q.query |
-| LogInjectionTest.js:22:17:22:23 | q.query | LogInjectionTest.js:22:17:22:32 | q.query.username |
-| LogInjectionTest.js:22:17:22:32 | q.query.username | LogInjectionTest.js:22:9:22:32 | value |
-| LogInjectionTest.js:23:9:23:44 | value1 | LogInjectionTest.js:24:34:24:39 | value1 |
-| LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) | LogInjectionTest.js:23:9:23:44 | value1 |
-| LogInjectionTest.js:23:39:23:43 | value | LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) |
-| LogInjectionTest.js:24:34:24:39 | value1 | LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` |
-| LogInjectionTest.js:24:34:24:39 | value1 | LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` |
+| LogInjectionTest.js:6:9:6:13 | value | LogInjectionTest.js:7:34:7:38 | value | provenance |  |
+| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | LogInjectionTest.js:6:9:6:13 | value | provenance |  |
+| LogInjectionTest.js:7:34:7:38 | value | LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` | provenance |  |
+| LogInjectionTest.js:13:9:13:9 | q | LogInjectionTest.js:14:17:14:17 | q | provenance |  |
+| LogInjectionTest.js:13:13:13:36 | url.par ... , true) | LogInjectionTest.js:13:9:13:9 | q | provenance |  |
+| LogInjectionTest.js:13:23:13:29 | req.url | LogInjectionTest.js:13:13:13:36 | url.par ... , true) | provenance |  |
+| LogInjectionTest.js:14:9:14:13 | value | LogInjectionTest.js:15:34:15:38 | value | provenance |  |
+| LogInjectionTest.js:14:17:14:17 | q | LogInjectionTest.js:14:9:14:13 | value | provenance |  |
+| LogInjectionTest.js:15:34:15:38 | value | LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` | provenance |  |
+| LogInjectionTest.js:21:9:21:9 | q | LogInjectionTest.js:22:17:22:17 | q | provenance |  |
+| LogInjectionTest.js:21:13:21:36 | url.par ... , true) | LogInjectionTest.js:21:9:21:9 | q | provenance |  |
+| LogInjectionTest.js:21:23:21:29 | req.url | LogInjectionTest.js:21:13:21:36 | url.par ... , true) | provenance |  |
+| LogInjectionTest.js:22:9:22:13 | value | LogInjectionTest.js:23:39:23:43 | value | provenance |  |
+| LogInjectionTest.js:22:17:22:17 | q | LogInjectionTest.js:22:9:22:13 | value | provenance |  |
+| LogInjectionTest.js:23:9:23:14 | value1 | LogInjectionTest.js:24:34:24:39 | value1 | provenance |  |
+| LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) | LogInjectionTest.js:23:9:23:14 | value1 | provenance |  |
+| LogInjectionTest.js:23:39:23:43 | value | LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) | provenance |  |
+| LogInjectionTest.js:24:34:24:39 | value1 | LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` | provenance |  |
+nodes
+| LogInjectionTest.js:6:9:6:13 | value | semmle.label | value |
+| LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | semmle.label | jQuery. ... param") |
+| LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` | semmle.label | `[INFO] ... value}` |
+| LogInjectionTest.js:7:34:7:38 | value | semmle.label | value |
+| LogInjectionTest.js:13:9:13:9 | q | semmle.label | q |
+| LogInjectionTest.js:13:13:13:36 | url.par ... , true) | semmle.label | url.par ... , true) |
+| LogInjectionTest.js:13:23:13:29 | req.url | semmle.label | req.url |
+| LogInjectionTest.js:14:9:14:13 | value | semmle.label | value |
+| LogInjectionTest.js:14:17:14:17 | q | semmle.label | q |
+| LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` | semmle.label | `[INFO] ... value}` |
+| LogInjectionTest.js:15:34:15:38 | value | semmle.label | value |
+| LogInjectionTest.js:21:9:21:9 | q | semmle.label | q |
+| LogInjectionTest.js:21:13:21:36 | url.par ... , true) | semmle.label | url.par ... , true) |
+| LogInjectionTest.js:21:23:21:29 | req.url | semmle.label | req.url |
+| LogInjectionTest.js:22:9:22:13 | value | semmle.label | value |
+| LogInjectionTest.js:22:17:22:17 | q | semmle.label | q |
+| LogInjectionTest.js:23:9:23:14 | value1 | semmle.label | value1 |
+| LogInjectionTest.js:23:18:23:44 | jQuery. ... (value) | semmle.label | jQuery. ... (value) |
+| LogInjectionTest.js:23:39:23:43 | value | semmle.label | value |
+| LogInjectionTest.js:24:18:24:41 | `[INFO] ... alue1}` | semmle.label | `[INFO] ... alue1}` |
+| LogInjectionTest.js:24:34:24:39 | value1 | semmle.label | value1 |
+subpaths
 #select
 | LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` | LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | LogInjectionTest.js:7:18:7:40 | `[INFO] ... value}` | Log entry depends on a $@. | LogInjectionTest.js:6:17:6:50 | jQuery. ... param") | user-provided value |
 | LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` | LogInjectionTest.js:13:23:13:29 | req.url | LogInjectionTest.js:15:18:15:40 | `[INFO] ... value}` | Log entry depends on a $@. | LogInjectionTest.js:13:23:13:29 | req.url | user-provided value |

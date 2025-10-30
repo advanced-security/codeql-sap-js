@@ -8,13 +8,13 @@ import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 private class StoragePutCall extends CallNode {
   StoragePutCall() {
     /* 1. This is a call to `sap.ui.util.Storage.put` */
-    // 1-1. Required from `sap/ui/util/Storage`
+    /* 1-1. Required from `sap/ui/util/Storage` */
     exists(RequiredObject storageClass |
-      this.getReceiver().getALocalSource() = storageClass and
+      this.getReceiver().getALocalSource() = storageClass.asSourceNode() and
       this.getCalleeName() = "put"
     )
     or
-    // 1-2. Direct call to `sap.ui.util.Storage.put`
+    /* 1-2. Direct call to `sap.ui.util.Storage.put` */
     this =
       globalVarRef("sap")
           .getAPropertyRead("ui")
@@ -46,7 +46,7 @@ private class FileSaveCall extends CallNode {
   FileSaveCall() {
     /* 1. Required from `sap/ui/core/util/File` */
     exists(RequiredObject fileClass |
-      this.getReceiver().getALocalSource() = fileClass and
+      this.getReceiver().getALocalSource() = fileClass.asSourceNode() and
       this.getCalleeName() = "save"
     )
     or
@@ -109,12 +109,10 @@ private class FileSaveCall extends CallNode {
   }
 }
 
-class UI5FormulaInjectionConfiguration extends TaintTracking::Configuration {
-  UI5FormulaInjectionConfiguration() { this = "UI5 Formula Injection" }
+module UI5FormulaInjection implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
 
-  override predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
-
-  override predicate isSink(DataFlow::Node node) {
+  predicate isSink(DataFlow::Node node) {
     exists(StoragePutCall storagePutCall | node = storagePutCall.getArgument(1))
     or
     exists(FileSaveCall fileSaveCall |

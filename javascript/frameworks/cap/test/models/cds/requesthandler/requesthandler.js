@@ -7,6 +7,8 @@ class BooksService extends cds.ApplicationService {
             let [ID] = req.params
             return Object.assign(Books.data[ID], req.data)
         })
+        this.after('READ', req => req.target.data)
+        this.before('*', req => req.target.data)
         return super.init()
     }
 }

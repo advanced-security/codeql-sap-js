@@ -1,12 +1,16 @@
-| source.xsjs:42:24:42:54 | webRequ ... uffer() | Remote flow source of type: Remote flow |
-| source.xsjs:43:24:43:49 | webRequ ... tring() | Remote flow source of type: Remote flow |
-| source.xsjs:44:24:44:53 | webRequ ... quest() | Remote flow source of type: Remote flow |
-| source.xsjs:46:24:46:54 | webRequ ... uffer() | Remote flow source of type: Remote flow |
-| source.xsjs:47:24:47:49 | webRequ ... tring() | Remote flow source of type: Remote flow |
-| source.xsjs:48:24:48:53 | webRequ ... quest() | Remote flow source of type: Remote flow |
+| source.xsjs:8:23:8:38 | webRequest1.body | Remote flow source of type: Remote flow |
+| source.xsjs:8:23:8:38 | webRequest1.body | Remote flow source of type: Source node (remote) [from data-extension] |
+| source.xsjs:9:23:9:38 | webRequest2.body | Remote flow source of type: Remote flow |
+| source.xsjs:9:23:9:38 | webRequest2.body | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:52:25:52:44 | webRequestParam1.get | Remote flow source of type: Remote flow |
+| source.xsjs:52:25:52:44 | webRequestParam1.get | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:52:25:52:51 | webRequ ... ("key") | Remote flow source of type: Remote flow |
+| source.xsjs:52:25:52:51 | webRequ ... ("key") | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:53:25:53:44 | webRequestParam1.key | Remote flow source of type: Remote flow |
+| source.xsjs:53:25:53:44 | webRequestParam1.key | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:55:25:55:44 | webRequestParam2.get | Remote flow source of type: Remote flow |
+| source.xsjs:55:25:55:44 | webRequestParam2.get | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:55:25:55:51 | webRequ ... ("key") | Remote flow source of type: Remote flow |
+| source.xsjs:55:25:55:51 | webRequ ... ("key") | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.xsjs:56:25:56:44 | webRequestParam2.key | Remote flow source of type: Remote flow |
+| source.xsjs:56:25:56:44 | webRequestParam2.key | Remote flow source of type: Source node (remote) [from data-extension] |

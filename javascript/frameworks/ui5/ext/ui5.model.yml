@@ -22,10 +22,9 @@ extensions:
       - ["Assert", "global", "Member[jQuery].Member[sap].Member[assert]"]
       - ["SapLogger", "sap/base/Log", ""]
       - ["SapLogger", "global", "Member[sap].Member[base].Member[Log]"]
+      - ["SapLogger", "SapLogger", "Member[getLogger].ReturnValue"]
       - ["SapLogger", "global", "Member[jQuery].Member[sap].Member[log]"]
-      # Logging functions as well as `getLogger` also serves as a constructor
-      - ["SapLogger", "SapLogger", "Member[debug,error,fatal,info,setLevel,trace,warning,getLogger].ReturnValue"]
-      - ["SapLogEntries", "SapLogger", "Member[addLogListener].Parameter[0].Member[onLogEntry].Argument[0]"]
+      - ["SapLogEntries", "SapLogger", "Member[addLogListener].Argument[0].Member[onLogEntry].Parameter[0]"]
       - ["SapLogEntries", "SapLogger", "Member[getLogEntries].ReturnValue"]
       - ["ResourceBundle", "ResourceBundle", "Instance"]
       - ["ResourceBundle", "sap/base/i18n/ResourceBundle", ""]

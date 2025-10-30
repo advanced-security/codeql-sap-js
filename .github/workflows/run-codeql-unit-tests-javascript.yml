@@ -77,24 +77,28 @@ jobs:
         run: |
           qlt query run install-packs
 
-      - name: Ensure presence of cds shell command
-        run: |
-          if ! command -v cds &> /dev/null
-          then
-            npm install -g @sap/cds-dk
-          fi
+      - name: Setup Node.js for CDS compilation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
 
-      # Compile .cds files to .cds.json files.
+      - name: Verify Node.js and npm tools
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "npx version: $(npx --version)"
+          # Verify npx can access @sap/cds-dk without installing globally
+          echo "Testing npx access to @sap/cds-dk..."
+          npx --yes --package @sap/cds-dk@latest cds --version || echo "CDS will be installed per-project as needed"
+
+      # Compile .cds files to .cds.json files using the dedicated test script
       - name: Compile CAP CDS files
         run: |
-          for cds_file in $(find . -type f \( -iname '*.cds' \) -print)
-          do
-            echo "I am compiling $cds_file"
-            cds compile $cds_file \
-              -2 json \
-              -o "$cds_file.json" \
-              --locations
-          done
+          # Use the dedicated CDS compilation script that includes proper version resolution
+          # This script follows the same logic as the CDS extractor's resolveCdsVersions function
+          ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
       - name: Run test suites
         id: run-test-suites
@@ -105,7 +109,7 @@ jobs:
           CODEQL_STDLIB_IDENT: ${{matrix.codeql_standard_library_ident}}
           RUNNER_TMP: ${{ runner.temp }}
           LGTM_INDEX_XML_MODE: all
-          LGTM_INDEX_FILETYPES: ".json:JSON"
+          LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
 
         shell: bash
         run: >

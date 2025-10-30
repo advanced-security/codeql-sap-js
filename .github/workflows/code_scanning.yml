@@ -10,6 +10,9 @@ on:
     - cron: '39 12 * * 2'
   workflow_dispatch:
 
+env:
+  CODEQL_ACTION_DIFF_INFORMED_QUERIES: false
+
 jobs:
   analyze-javascript:
     name: Analyze

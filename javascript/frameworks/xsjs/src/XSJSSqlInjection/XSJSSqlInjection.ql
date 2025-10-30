@@ -12,8 +12,11 @@
 
 import javascript
 import advanced_security.javascript.frameworks.xsjs.XSJSSqlInjectionQuery
-import DataFlow::PathGraph
 
-from Configuration config, DataFlow::PathNode source, DataFlow::PathNode sink
-where config.hasFlowPath(source, sink)
+module ConfigurationFlow = TaintTracking::Global<Configuration>;
+
+import ConfigurationFlow::PathGraph
+
+from ConfigurationFlow::PathNode source, ConfigurationFlow::PathNode sink
+where ConfigurationFlow::flowPath(source, sink)
 select sink, source, sink, "This query depends on a $@.", source, "user-provided value"

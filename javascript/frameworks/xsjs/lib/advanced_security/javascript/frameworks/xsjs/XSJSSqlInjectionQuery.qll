@@ -12,16 +12,20 @@ class XSJSDBConnectionPrepareStatementArgument extends DataFlow::ValueNode {
   predicate isConcatenated() { this.getAPredecessor+() instanceof StringOps::ConcatenationNode }
 }
 
-class Configuration extends TaintTracking::Configuration {
-  Configuration() { this = "XSJS SQL Injection Query" }
-
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start) or
+module Configuration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node start) {
+    SqlInjection::SqlInjectionConfig::isSource(start)
+    or
     start instanceof RemoteFlowSource
   }
 
-  override predicate isSink(DataFlow::Node end) {
-    super.isSink(end) or
+  predicate isSink(DataFlow::Node end) {
     end.(XSJSDBConnectionPrepareStatementArgument).isConcatenated()
+  }
+
+  predicate isBarrier(DataFlow::Node node) { SqlInjection::SqlInjectionConfig::isBarrier(node) }
+
+  predicate isAdditionalFlowStep(DataFlow::Node node1, DataFlow::Node node2) {
+    SqlInjection::SqlInjectionConfig::isAdditionalFlowStep(node1, node2)
   }
 }

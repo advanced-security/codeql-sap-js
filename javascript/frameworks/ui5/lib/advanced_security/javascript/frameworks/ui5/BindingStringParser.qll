@@ -3,7 +3,7 @@ import javascript as stdlib
 signature class BindingStringReaderSig {
   string getBindingString();
 
-  stdlib::DbLocation getLocation();
+  stdlib::Location getLocation();
 
   // Get a dataflow node associated with the binding string, if any.
   // Note that not all location from which we can obtain a binding string
@@ -372,24 +372,85 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
       this = MkDoubleQuoteToken(_, _, _, result)
     }
 
-    Token getNext() {
-      result.getBegin() = this.getEnd() + 1 and
-      result.getReader() = this.getReader()
+    /**
+     * Gets the next contiguous token after the end of this token.
+     */
+    Token getNextAfterEnd() {
+      // Find the last contained token, then get the next token after that
+      result = getNextAfterContained() and
+      // Ensure contiguous tokens
+      consecutiveToken(this, result)
     }
 
-    predicate isFirst() {
-      not exists(Token other |
-        other.getBegin() < this.getBegin() and other.getReader() = this.getReader()
+    bindingset[t1, t2]
+    pragma[inline_late]
+    private predicate consecutiveToken(Token t1, Token t2) { t1.getEnd() + 1 = t2.getBegin() }
+
+    /**
+     * Gets the next token that occurs after the start of this token.
+     */
+    private Token getNext() {
+      exists(int pos |
+        tokenOrdering(this.getReader(), this, pos) and
+        tokenOrdering(this.getReader(), result, pos + uniqueTokensAtPosition(this.getReader(), pos))
       )
     }
 
+    /**
+     * Get the last token contained by this token.
+     */
+    pragma[noinline]
+    private Token getNextAfterContained() {
+      exists(Token lastToken |
+        contains(lastToken) and
+        result = lastToken.getNext() and
+        not contains(result)
+      )
+    }
+
+    predicate isFirst() { tokenOrdering(this.getReader(), this, 1) }
+
     predicate contains(Token t) {
-      this.getReader() = t.getReader() and
-      this.getBegin() < t.getBegin() and
-      this.getEnd() > t.getEnd()
+      // base case, every token contains itself
+      t = this
+      or
+      // Recursive case, find an existing token contained by this token, and determine whether the next token is
+      // contained
+      exists(Token prev |
+        this.contains(prev) and
+        prev.getNext() = t and
+        // In the case of overlapping ranges, report tokens that begin inside this token as "contained"
+        this.getEnd() >= t.getBegin()
+      )
+    }
+
+    /**
+     * The token `t` is completely contained within this outer token.
+     */
+    predicate strictContains(Token t) {
+      this.contains(t) and t.getBegin() > this.getBegin() and t.getEnd() < this.getEnd()
     }
 
     stdlib::Location getLocation() { result = getReader().getLocation() }
+  }
+
+  /**
+   * Holds if `t` is ordered at `position` according to the location of the beginning of the token.
+   *
+   * Note: `position` is not contiguous as certain strings may be matched by multiple tokens. In this
+   * case those tokens will all have the same `position`, and the subsequent token will have
+   * `position + count(tokens_with_current_position)`.
+   */
+  private predicate tokenOrdering(BindingStringReader reader, Token t, int position) {
+    t = rank[position](Token token | token.getReader() = reader | token order by token.getBegin())
+  }
+
+  /**
+   * Identify how many tokens are at a given position in the ordering, i.e. have the same beginning and end.
+   */
+  private int uniqueTokensAtPosition(BindingStringReader reader, int position) {
+    tokenOrdering(reader, _, position) and
+    result = count(Token t | tokenOrdering(reader, t, position))
   }
 
   private class WhiteSpaceToken extends Token, MkWhiteSpaceToken { }
@@ -431,10 +492,10 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
   private class DotToken extends Token, MkDot { }
 
   private Token getNextSkippingWhitespace(Token t) {
-    result = t.getNext() and
+    result = t.getNextAfterEnd() and
     not result instanceof WhiteSpaceToken
     or
-    exists(WhiteSpaceToken ws | ws = t.getNext() | result = getNextSkippingWhitespace(ws))
+    exists(WhiteSpaceToken ws | ws = t.getNextAfterEnd() | result = getNextSkippingWhitespace(ws))
   }
 
   private newtype TMemberList =
@@ -625,15 +686,15 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
   private newtype TValue =
     MkNumber(float n, Token source) {
       exists(NumberToken t | t.getValue().toFloat() = n and source = t |
-        not any(StringToken str).contains(t) and
-        not any(NameToken name).contains(t)
+        not any(StringToken str).strictContains(t) and
+        not any(NameToken name).strictContains(t)
       )
     } or
     MkString(string s, Token source) {
       exists(StringToken t |
         t.(Token).getValue() = s and
         t = source and
-        not any(NameToken nameToken).contains(t)
+        not any(NameToken nameToken).strictContains(t)
       )
     } or
     MkObject(MemberList members, Token source) {
@@ -662,27 +723,27 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
     } or
     MkTrue(Token source) {
       exists(TrueToken t |
-        not any(StringToken str).contains(t) and
-        not any(NameToken nameToken).contains(t) and
+        not any(StringToken str).strictContains(t) and
+        not any(NameToken nameToken).strictContains(t) and
         source = t
       )
     } or
     MkFalse(Token source) {
       exists(FalseToken t |
-        not any(StringToken str).contains(t) and
-        not any(NameToken nameToken).contains(t) and
+        not any(StringToken str).strictContains(t) and
+        not any(NameToken nameToken).strictContains(t) and
         source = t
       )
     } or
     MkNull(Token source) {
       exists(NullToken t |
-        not any(StringToken str).contains(t) and
-        not any(NameToken nameToken).contains(t) and
+        not any(StringToken str).strictContains(t) and
+        not any(NameToken nameToken).strictContains(t) and
         source = t
       )
     } or
     MkName(Token source) {
-      exists(NameToken t | not any(StringToken str).contains(t) and source = t)
+      exists(NameToken t | not any(StringToken str).strictContains(t) and source = t)
     } or
     MkIdent(Token source) {
       exists(IdentToken t | source = t and getNextSkippingWhitespace(t) instanceof ColonToken)

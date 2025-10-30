@@ -1,8 +1,8 @@
 library: false
 warnOnImplicitThis: false
 name: advanced-security/javascript-heuristic-models-tests
-version: 0.0.1
+version: 2.3.0
 extractor: javascript
 dependencies:
   "codeql/javascript-all": "*"
-  "advanced-security/javascript-heuristic-models": "*"
+  "advanced-security/javascript-heuristic-models": 2.3.0

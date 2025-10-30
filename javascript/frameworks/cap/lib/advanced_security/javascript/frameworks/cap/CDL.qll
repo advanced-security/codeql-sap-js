@@ -14,11 +14,15 @@ abstract class CdlObject extends JsonObject {
       exists(Location loc, JsonValue locValue |
         loc = this.getLocation() and
         locValue = this.getPropValue("$location") and
+        // The path in the `.cds.json` file is relative to the working directory used when
+        // running the `cds compile` command. In the CDS extractor, the `cwd` is always
+        // set to the base directory of the project for which compilation is being
+        // performed and `.cds.json` files are stored in that base project directory. The
+        // `$location` values in the generated JSON data are, therefore, relative to the
+        // base directory of the project.
         path =
-          any(File f |
-            f.getAbsolutePath()
-                .matches("%" + locValue.getPropValue("file").getStringValue() + ".json")
-          ).getAbsolutePath().regexpReplaceAll("\\.json$", "") and
+          locValue.getJsonFile().getParentContainer().getAbsolutePath().regexpReplaceAll("/$", "") +
+            "/" + locValue.getPropValue("file").getStringValue() and
         if
           not exists(locValue.getPropValue("line")) and
           not exists(locValue.getPropValue("col"))
@@ -160,8 +164,16 @@ class CdlService extends CdlElement {
   CdlService() { kind = CdlServiceKind(this.getPropStringValue("kind")) }
 
   UserDefinedApplicationService getImplementation() {
-    this.getFile().getStem() = result.getFile().getStem() + ".cds" and
-    this.getFile().getParentContainer() = this.getFile().getParentContainer()
+    exists(JsonValue jsonFileLocation |
+      jsonFileLocation = this.getPropValue("$location").getPropValue("file")
+    |
+      result.getFile().getAbsolutePath().regexpReplaceAll("\\.[^.]+$", ".cds") =
+        jsonFileLocation
+              .getJsonFile()
+              .getParentContainer()
+              .getAbsolutePath()
+              .regexpReplaceAll("/$", "") + "/" + jsonFileLocation.getStringValue()
+    )
   }
 
   /**
@@ -175,6 +187,10 @@ class CdlService extends CdlElement {
   }
 
   CdlEntity getAnEntity() { result = this.getEntity(_) }
+
+  CdlActionOrFunction getAnActionOrFunction() {
+    result = this.getAnEvent() or result = this.getAnAction()
+  }
 
   CdlEvent getEvent(string eventName) {
     result.getName() = eventName and this.getName() = result.getName().splitAt(".", 0)
@@ -227,13 +243,27 @@ class CdlEntity extends CdlElement {
   }
 }
 
-class CdlEvent extends CdlElement {
+abstract class CdlActionOrFunction extends CdlElement {
+  /**
+   * Gets a parameter definition of this action with a given name.
+   */
+  CdlAttribute getParameter(string paramName) {
+    result = this.getPropValue("params").getPropValue(paramName)
+  }
+
+  /**
+   * Gets a parameter definition of this action.
+   */
+  CdlAttribute getAParameter() { result = this.getParameter(_) }
+}
+
+class CdlEvent extends CdlActionOrFunction {
   CdlEvent() { kind = CdlEventKind(this.getPropStringValue("kind")) }
 
   string getBasename() { result = name.splitAt(".", count(name.indexOf("."))) }
 }
 
-class CdlAction extends CdlElement {
+class CdlAction extends CdlActionOrFunction {
   CdlAction() { kind = CdlActionKind(this.getPropStringValue("kind")) }
 
   predicate belongsToServiceWithNoAuthn() {
@@ -255,7 +285,10 @@ class CdlAttribute extends CdlObject {
   string name;
 
   CdlAttribute() {
-    exists(CdlElement entity | this = entity.getPropValue("elements").getPropValue(name))
+    exists(CdlElement entity | this = entity.getPropValue("elements").getPropValue(name)) or
+    exists(CdlActionOrFunction actionOrFunction |
+      this = actionOrFunction.getPropValue("params").getPropValue(name)
+    )
   }
 
   override string getObjectLocationName() { result = getName() }

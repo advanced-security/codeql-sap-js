@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@ui5/cli": "^3.3.0"
+    "@ui5/cli": "^4.0.26"
   }
 }

@@ -1,13 +1,13 @@
 nodes
-| webapp/controller/App.Controller.js:23:11:23:47 | searchValue |
+| webapp/controller/App.Controller.js:23:11:23:21 | searchValue |
 | webapp/controller/App.Controller.js:23:25:23:47 | oSearch ... Value() |
 | webapp/controller/App.Controller.js:27:34:27:44 | searchValue |
 | webapp/controls/Book.js:17:13:17:30 | { type: "string" } |
 | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" |
 | webapp/controls/Book.js:133:8:133:26 | oControl.getTitle() |
 edges
-| webapp/controller/App.Controller.js:23:11:23:47 | searchValue | webapp/controller/App.Controller.js:27:34:27:44 | searchValue |
-| webapp/controller/App.Controller.js:23:25:23:47 | oSearch ... Value() | webapp/controller/App.Controller.js:23:11:23:47 | searchValue |
+| webapp/controller/App.Controller.js:23:11:23:21 | searchValue | webapp/controller/App.Controller.js:27:34:27:44 | searchValue |
+| webapp/controller/App.Controller.js:23:25:23:47 | oSearch ... Value() | webapp/controller/App.Controller.js:23:11:23:21 | searchValue |
 | webapp/controller/App.Controller.js:27:34:27:44 | searchValue | webapp/controls/Book.js:17:13:17:30 | { type: "string" } |
 | webapp/controls/Book.js:17:13:17:30 | { type: "string" } | webapp/controls/Book.js:133:8:133:26 | oControl.getTitle() |
 | webapp/controls/Book.js:133:8:133:26 | oControl.getTitle() | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" |

@@ -1,0 +1,4 @@
+# Override .gitignore configs from parent directories in order to
+# include the bundled JS code for the CDS extractor.
+!dist/
+

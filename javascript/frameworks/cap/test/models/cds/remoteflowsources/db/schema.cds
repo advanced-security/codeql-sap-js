@@ -9,3 +9,7 @@ entity Entity2 {
   Attribute3 : String(100);
   Attribute4 : String(100)
 }
+
+entity Entity4 {
+  Attribute4 : String(100)
+}

@@ -1,0 +1,4 @@
+# Files to ignore under this "extractors" directory
+
+## Ignore the debug directory
+debug/

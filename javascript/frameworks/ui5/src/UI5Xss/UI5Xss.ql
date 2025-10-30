@@ -13,17 +13,22 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
-import UI5DataFlow::UI5PathGraph
+import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5XssQuery
 
+module UI5XssFlow = TaintTracking::Global<UI5Xss>;
+
+module UI5XssUI5PathGraph = UI5PathGraph<UI5XssFlow::PathNode, UI5XssFlow::PathGraph>;
+
+import UI5XssUI5PathGraph
+
 from
-  Configuration config, UI5PathGraph::UI5PathNode source, UI5PathGraph::UI5PathNode sink,
-  UI5PathGraph::UI5PathNode primarySource, UI5PathGraph::UI5PathNode primarySink
+  UI5XssUI5PathGraph::UI5PathNode source, UI5XssUI5PathGraph::UI5PathNode sink,
+  UI5XssUI5PathGraph::UI5PathNode primarySource, UI5XssUI5PathGraph::UI5PathNode primarySink
 where
-  config.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
-  config.isSource(source.asDataFlowNode()) and
-  config.isSink(sink.asDataFlowNode()) and
+  UI5XssFlow::flowPath(source.getPathNode(), sink.getPathNode()) and
+  UI5Xss::isSource(source.asDataFlowNode()) and
+  UI5Xss::isSink(sink.asDataFlowNode()) and
   primarySource = source.getAPrimarySource() and
   primarySink = sink.getAPrimaryHtmlISink()
 select primarySink, primarySource, primarySink, "XSS vulnerability due to $@.", primarySource,

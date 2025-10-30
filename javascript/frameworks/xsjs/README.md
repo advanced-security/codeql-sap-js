@@ -2,7 +2,8 @@
 
 CodeQL queries and supporting models for the SAP XSJS JavaScript framework
 
-### Queries
+## Queries
+
 - [XSS](src/XSJSReflectedXss)
 - [SQL Injection](src/XSJSSqlInjection)
 - [URL Redirection](src/XSJSUrlRedirect)
@@ -10,6 +11,7 @@ CodeQL queries and supporting models for the SAP XSJS JavaScript framework
 - [Authentication Issues](src/XSJSAuthentication)
 - [Disabled CSRF Protection](src/XSJSCsrfDisabled)
 
-### Modeled XSJS framework elements (From CodeQL v2.18.4)
- - XSJS NPM components
- - XSJSLib modules
+## Modeled XSJS framework elements (From CodeQL v2.18.4)
+
+- XSJS NPM components
+- XSJSLib modules

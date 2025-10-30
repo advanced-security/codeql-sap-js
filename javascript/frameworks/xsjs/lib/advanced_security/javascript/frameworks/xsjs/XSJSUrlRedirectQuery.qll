@@ -2,17 +2,14 @@ import javascript
 import advanced_security.javascript.frameworks.xsjs.AsyncXSJS
 import semmle.javascript.security.dataflow.ServerSideUrlRedirectQuery as UrlRedirect
 
-class Configuration extends TaintTracking::Configuration {
-  Configuration() { this = "XSJS URL Redirect Query" }
-
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start) or
+module Configuration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node start) {
+    UrlRedirect::ServerSideUrlRedirectConfig::isSource(start)
+    or
     start instanceof RemoteFlowSource
   }
 
-  override predicate isSink(DataFlow::Node end) {
-    super.isSink(end)
-    or
+  predicate isSink(DataFlow::Node end) {
     exists(XSJSRequestOrResponseHeaders headers |
       end = headers.getHeaderSetCall("location").getArgument(1)
     )

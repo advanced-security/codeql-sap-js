@@ -1,2 +1,5 @@
-| userdefinedservice.js:3:1:7:1 | class B ... )\\n  }\\n} |
-| userdefinedservice.js:10:18:14:1 | class L ... )\\n  }\\n} |
+| service1.js:3:1:7:1 | class S ... )\\n  }\\n} |
+| service2.js:3:18:7:1 | class L ... )\\n  }\\n} |
+| service3.js:3:18:7:2 | cds.ser ...  });\\n}) |
+| service4.js:3:18:7:2 | cds.ser ...  });\\n}) |
+| service5.js:3:18:7:1 | (srv) = ...   });\\n} |

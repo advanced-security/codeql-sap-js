@@ -1,49 +1,18 @@
 import javascript
 import advanced_security.javascript.frameworks.xsjs.AsyncXSJS
-import advanced_security.javascript.frameworks.xsjs.RemoteFlowSources
 import semmle.javascript.security.dataflow.ZipSlipQuery as ZipSlip
 import semmle.javascript.security.dataflow.TaintedPathCustomizations::TaintedPath as TaintedPath
 
 /**
- * An instance of `$.util.Zip`, but the argument to the constructor call is reachable from a remote flow source.
- */
-class XSJSZipInstanceDependingOnRemoteFlowSource extends XSJSZipInstance {
-  RemoteFlowSource remoteArgument;
-
-  XSJSZipInstanceDependingOnRemoteFlowSource() {
-    this.getAnArgument().getALocalSource() = remoteArgument
-  }
-
-  RemoteFlowSource getRemoteArgument() { result = remoteArgument }
-}
-
-class XSJSRemoteFlowSourceToZipInstanceStep extends DataFlow::SharedFlowStep {
-  override predicate step(DataFlow::Node pred, DataFlow::Node succ) {
-    exists(XSJSZipInstanceDependingOnRemoteFlowSource dollarUtilZip |
-      pred = dollarUtilZip.getRemoteArgument() and
-      succ = dollarUtilZip
-    )
-  }
-}
-
-class ForInLoopDomainToVariableStep extends DataFlow::SharedFlowStep {
-  override predicate step(DataFlow::Node pred, DataFlow::Node succ) {
-    exists(ForInStmt forLoop |
-      pred = forLoop.getIterationDomain().flow() and
-      succ = forLoop.getAnIterationVariable().getAnAccess().flow()
-    )
-  }
-}
-
-/**
- * A node that checks if the path that is being extracted is indeed the prefix of the entry, e.g.
+ * A node that checks if the path that is being extracted is indeed the prefix of the entry.
+ * e.g.
  * ``` javascript
  * if (entryPath.indexOf("SomePrefix") === 0) {
  *   // extract the file with the path.
  * }
  * ```
  */
-class ZipEntryPathIndexOfCallEqualsZeroGuard extends TaintTracking::SanitizerGuardNode {
+class ZipEntryPathIndexOfCallEqualsZeroGuard extends DataFlow::Node {
   EqualityTest equalityTest;
   MethodCallNode indexOfCall;
   ForInStmt forLoop;
@@ -56,53 +25,68 @@ class ZipEntryPathIndexOfCallEqualsZeroGuard extends TaintTracking::SanitizerGua
     equalityTest.getRightOperand().getIntValue() = 0
   }
 
-  override predicate sanitizes(boolean outcome, Expr receiver) {
+  predicate blocksExpr(boolean outcome, Expr receiver) {
     exists(DataFlow::Node targetFilePath, DataFlow::Node forLoopVariable |
       receiver = targetFilePath.asExpr() and
       targetFilePath = indexOfCall.getReceiver() and
       forLoopVariable = forLoop.getAnIterationVariable().getAnAccess().flow() and
-      TaintedPath::isAdditionalTaintedPathFlowStep(forLoopVariable,
-        targetFilePath.getALocalSource(), _, _) and
+      TaintedPath::isAdditionalFlowStep(forLoopVariable, _, targetFilePath.getALocalSource(), _) and
       outcome = equalityTest.getPolarity()
     )
   }
 }
 
-/**
- * A class wraps `TaintedPath::BarrierGuardNode` by delegating its `sanitizes/0` to the `blocks/0` predicate.
- * The characteristic predicate of this class is deliberately left out.
- */
-class TaintedPathSanitizerGuard extends TaintTracking::SanitizerGuardNode {
-  TaintedPathSanitizerGuard() { this = this }
-
-  override predicate sanitizes(boolean outcome, Expr receiver) {
-    exists(TaintedPath::BarrierGuardNode node | node.blocks(outcome, receiver))
+module XSJSZipSlip implements DataFlow::StateConfigSig {
+  class FlowState extends string {
+    FlowState() { this in ["$.util.Zip uninitialized", "$.util.Zip initialized"] }
   }
-}
 
-class Configuration extends TaintTracking::Configuration {
-  Configuration() { this = "XSJS Zip Slip Query" }
+  predicate isSource(DataFlow::Node node, FlowState state) {
+    node instanceof RemoteFlowSource and
+    state = "$.util.Zip uninitialized"
+  }
 
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start)
+  predicate isSink(DataFlow::Node node, FlowState state) {
+    node instanceof ZipSlip::Sink and
+    state = "$.util.Zip initialized"
+  }
+
+  predicate isBarrier(DataFlow::Node node, FlowState state) {
+    (
+      node = DataFlow::MakeBarrierGuard<ZipEntryPathIndexOfCallEqualsZeroGuard>::getABarrierNode()
+      or
+      node = DataFlow::MakeBarrierGuard<TaintedPath::BarrierGuard>::getABarrierNode()
+    ) and
+    state = state
+  }
+
+  predicate isAdditionalFlowStep(
+    DataFlow::Node start, FlowState preState, DataFlow::Node end, FlowState postState
+  ) {
+    /* 1. `$.util.Zip` initialized */
+    start = start and
+    preState = "$.util.Zip uninitialized" and
+    end instanceof XSJSZipInstance and
+    postState = "$.util.Zip initialized"
     or
-    exists(XSJSZipInstanceDependingOnRemoteFlowSource dollarUtilZip |
-      start = dollarUtilZip.getRemoteArgument()
+    /*
+     * 2. Jump from a domain of a for-in statement to an access of the iteration variable.
+     * e.g.
+     * ``` javascript
+     * for (var x in y) {
+     *   var z = x;
+     * }
+     * ```
+     * This step jumps from `y` to `x` in the body of the for-in loop.
+     */
+
+    exists(ForInStmt forLoop |
+      start = forLoop.getIterationDomain().flow() and
+      end = forLoop.getAnIterationVariable().getAnAccess().flow() and
+      preState = postState
     )
-  }
-
-  override predicate isAdditionalTaintStep(DataFlow::Node src, DataFlow::Node dst) {
-    TaintedPath::isAdditionalTaintedPathFlowStep(src, dst, _, _)
-  }
-
-  override predicate isSink(DataFlow::Node end) {
-    super.isSink(end)
     or
-    end instanceof ZipSlip::Sink
-  }
-
-  override predicate isSanitizerGuard(TaintTracking::SanitizerGuardNode node) {
-    node instanceof ZipEntryPathIndexOfCallEqualsZeroGuard or
-    node instanceof TaintedPathSanitizerGuard
+    TaintedPath::isAdditionalFlowStep(start, _, end, _) and
+    preState = postState
   }
 }

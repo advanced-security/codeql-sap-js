@@ -1,2 +1,43 @@
-| srv/service1.js:6:29:6:31 | req |
-| srv/service2.js:5:27:5:29 | msg |
+| srv/service1.js:7:33:7:40 | req.data |
+| srv/service1.js:20:33:20:42 | req.params |
+| srv/service1.js:32:29:32:39 | req.headers |
+| srv/service1.js:45:30:45:56 | req.htt ... omeProp |
+| srv/service1.js:46:30:46:55 | req.htt ... omeProp |
+| srv/service1.js:47:30:47:57 | req.htt ... omeProp |
+| srv/service1.js:48:30:48:58 | req.htt ... omeProp |
+| srv/service1.js:49:30:49:58 | req.htt ... omeProp |
+| srv/service1.js:50:30:50:53 | req.htt ... inalUrl |
+| srv/service1.js:51:30:51:50 | req.htt ... ostname |
+| srv/service1.js:52:30:52:57 | req.htt ... eProp") |
+| srv/service1.js:53:30:53:56 | req.htt ... eProp") |
+| srv/service1.js:54:31:54:61 | req.htt ... eProp") |
+| srv/service1.js:55:31:55:60 | req.htt ... eProp") |
+| srv/service1.js:61:29:61:34 | req.id |
+| srv/service1.js:73:29:73:45 | req._queryOptions |
+| srv/service1.js:111:10:111:21 | request.data |
+| srv/service1.js:115:10:115:23 | request.params |
+| srv/service1.js:119:10:119:24 | request.headers |
+| srv/service1.js:123:10:123:19 | request.id |
+| srv/service1.js:127:10:127:30 | request ... Options |
+| srv/service2.js:5:31:5:38 | msg.data |
+| srv/service3.js:6:33:6:40 | req.data |
+| srv/service3.js:19:31:19:40 | req.params |
+| srv/service3.js:31:29:31:39 | req.headers |
+| srv/service3.js:44:30:44:56 | req.htt ... omeProp |
+| srv/service3.js:45:30:45:55 | req.htt ... omeProp |
+| srv/service3.js:46:30:46:57 | req.htt ... omeProp |
+| srv/service3.js:47:30:47:58 | req.htt ... omeProp |
+| srv/service3.js:48:30:48:58 | req.htt ... omeProp |
+| srv/service3.js:49:30:49:53 | req.htt ... inalUrl |
+| srv/service3.js:50:30:50:50 | req.htt ... ostname |
+| srv/service3.js:51:30:51:57 | req.htt ... eProp") |
+| srv/service3.js:52:30:52:56 | req.htt ... eProp") |
+| srv/service3.js:53:31:53:61 | req.htt ... eProp") |
+| srv/service3.js:54:31:54:60 | req.htt ... eProp") |
+| srv/service3.js:60:29:60:34 | req.id |
+| srv/service3.js:72:29:72:45 | req._queryOptions |
+| srv/service3.js:112:10:112:21 | request.data |
+| srv/service3.js:116:10:116:23 | request.params |
+| srv/service3.js:120:10:120:24 | request.headers |
+| srv/service3.js:124:10:124:19 | request.id |
+| srv/service3.js:128:10:128:30 | request ... Options |

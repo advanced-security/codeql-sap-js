@@ -1,6 +1,6 @@
 import javascript
 import advanced_security.javascript.frameworks.xsjs.AsyncXSJS
-import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
+import semmle.javascript.security.dataflow.ReflectedXssQuery as ReflectedXssQuery
 
 class XSJSResponseSetBodyCall extends MethodCallNode {
   XSJSResponse response;
@@ -13,17 +13,13 @@ class XSJSResponseSetBodyCall extends MethodCallNode {
   XSJSResponse getParentXSJSResponse() { result = response }
 }
 
-class Configuration extends TaintTracking::Configuration {
-  Configuration() { this = "XSJS Reflected XSS Query" }
-
-  override predicate isSource(DataFlow::Node start) {
-    super.isSource(start) or
+module Configuration implements DataFlow::ConfigSig {
+  predicate isSource(DataFlow::Node start) {
+    ReflectedXssQuery::ReflectedXssConfig::isSource(start) or
     start instanceof RemoteFlowSource
   }
 
-  override predicate isSink(DataFlow::Node end) {
-    super.isSink(end)
-    or
+  predicate isSink(DataFlow::Node end) {
     exists(XSJSResponseSetBodyCall setBody, XSJSResponse thisOrAnotherXSJSResponse |
       thisOrAnotherXSJSResponse = setBody.getParentXSJSResponse() or
       thisOrAnotherXSJSResponse = setBody.getParentXSJSResponse().getAPredOrSuccResponse()
@@ -34,5 +30,9 @@ class Configuration extends TaintTracking::Configuration {
         thisOrAnotherXSJSResponse.contentTypeIsDependentOnRemote()
       )
     )
+  }
+
+  predicate isBarrier(DataFlow::Node node) {
+    ReflectedXssQuery::ReflectedXssConfig::isBarrier(node)
   }
 }

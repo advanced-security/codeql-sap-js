@@ -1,0 +1,21 @@
+{
+    "name": "@advanced-security/log-injection",
+    "version": "1.0.0",
+    "dependencies": {
+        "@cap-js/sqlite": "*",
+        "@sap/cds": "^7.9.5",
+        "@sap/cds-dk": "^8.6.1",
+        "express": "^4.17.1"
+    },
+    "scripts": {
+        "start": "cds-serve",
+        "watch": "cds watch"
+    },
+    "cds": {
+        "requires": {
+            "service": {
+                "impl": "srv/service.js"
+            }
+        }
+    }
+}

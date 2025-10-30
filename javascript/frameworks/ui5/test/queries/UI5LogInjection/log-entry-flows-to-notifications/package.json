@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@sapui5/sap.ui.vk": "^1.124.0"
+    "@sapui5/sap.ui.vk": "^1.140.0"
   }
 }

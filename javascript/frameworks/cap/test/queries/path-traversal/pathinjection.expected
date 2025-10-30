@@ -1,0 +1,100 @@
+edges
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:31:26:31:34 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:33:38:33:46 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:34:24:34:32 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:36:44:36:52 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:38:25:38:33 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:40:26:40:34 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:41:26:41:34 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:43:25:43:33 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:44:25:44:33 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:46:26:46:34 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:47:26:47:34 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:49:22:49:30 | userinput | provenance |  |
+| pathinjection.js:8:19:8:27 | userinput | pathinjection.js:50:22:50:30 | userinput | provenance |  |
+| pathinjection.js:8:31:8:38 | req.data | pathinjection.js:8:19:8:27 | userinput | provenance |  |
+| pathinjection.js:9:19:9:30 | userinputtwo | pathinjection.js:37:25:37:36 | userinputtwo | provenance |  |
+| pathinjection.js:9:34:9:44 | req.headers | pathinjection.js:9:19:9:30 | userinputtwo | provenance |  |
+| pathinjection.js:10:19:10:32 | userinputthree | pathinjection.js:12:38:12:51 | userinputthree | provenance |  |
+| pathinjection.js:10:19:10:32 | userinputthree | pathinjection.js:14:47:14:60 | userinputthree | provenance |  |
+| pathinjection.js:10:19:10:32 | userinputthree | pathinjection.js:16:34:16:47 | userinputthree | provenance |  |
+| pathinjection.js:10:19:10:32 | userinputthree | pathinjection.js:18:34:18:47 | userinputthree | provenance |  |
+| pathinjection.js:10:19:10:32 | userinputthree | pathinjection.js:20:35:20:48 | userinputthree | provenance |  |
+| pathinjection.js:10:36:10:45 | req.params | pathinjection.js:10:19:10:32 | userinputthree | provenance |  |
+| pathinjection.js:12:19:12:24 | taint1 | pathinjection.js:22:36:22:41 | taint1 | provenance |  |
+| pathinjection.js:12:28:12:52 | decodeU ... tthree) | pathinjection.js:12:19:12:24 | taint1 | provenance |  |
+| pathinjection.js:12:38:12:51 | userinputthree | pathinjection.js:12:28:12:52 | decodeU ... tthree) | provenance | Config |
+| pathinjection.js:14:19:14:24 | taint2 | pathinjection.js:24:40:24:45 | taint2 | provenance |  |
+| pathinjection.js:14:28:14:61 | decodeU ... tthree) | pathinjection.js:14:19:14:24 | taint2 | provenance |  |
+| pathinjection.js:14:47:14:60 | userinputthree | pathinjection.js:14:28:14:61 | decodeU ... tthree) | provenance | Config |
+| pathinjection.js:16:19:16:24 | taint3 | pathinjection.js:26:34:26:39 | taint3 | provenance |  |
+| pathinjection.js:16:28:16:48 | local(u ... tthree) | pathinjection.js:16:19:16:24 | taint3 | provenance |  |
+| pathinjection.js:16:34:16:47 | userinputthree | pathinjection.js:16:28:16:48 | local(u ... tthree) | provenance | Config |
+| pathinjection.js:18:19:18:24 | taint4 | pathinjection.js:28:34:28:39 | taint4 | provenance |  |
+| pathinjection.js:18:28:18:48 | isdir(u ... tthree) | pathinjection.js:18:19:18:24 | taint4 | provenance |  |
+| pathinjection.js:18:34:18:47 | userinputthree | pathinjection.js:18:28:18:48 | isdir(u ... tthree) | provenance | Config |
+| pathinjection.js:20:19:20:24 | taint5 | pathinjection.js:30:40:30:45 | taint5 | provenance |  |
+| pathinjection.js:20:28:20:49 | isfile( ... tthree) | pathinjection.js:20:19:20:24 | taint5 | provenance |  |
+| pathinjection.js:20:35:20:48 | userinputthree | pathinjection.js:20:28:20:49 | isfile( ... tthree) | provenance | Config |
+nodes
+| pathinjection.js:8:19:8:27 | userinput | semmle.label | userinput |
+| pathinjection.js:8:31:8:38 | req.data | semmle.label | req.data |
+| pathinjection.js:9:19:9:30 | userinputtwo | semmle.label | userinputtwo |
+| pathinjection.js:9:34:9:44 | req.headers | semmle.label | req.headers |
+| pathinjection.js:10:19:10:32 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:10:36:10:45 | req.params | semmle.label | req.params |
+| pathinjection.js:12:19:12:24 | taint1 | semmle.label | taint1 |
+| pathinjection.js:12:28:12:52 | decodeU ... tthree) | semmle.label | decodeU ... tthree) |
+| pathinjection.js:12:38:12:51 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:14:19:14:24 | taint2 | semmle.label | taint2 |
+| pathinjection.js:14:28:14:61 | decodeU ... tthree) | semmle.label | decodeU ... tthree) |
+| pathinjection.js:14:47:14:60 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:16:19:16:24 | taint3 | semmle.label | taint3 |
+| pathinjection.js:16:28:16:48 | local(u ... tthree) | semmle.label | local(u ... tthree) |
+| pathinjection.js:16:34:16:47 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:18:19:18:24 | taint4 | semmle.label | taint4 |
+| pathinjection.js:18:28:18:48 | isdir(u ... tthree) | semmle.label | isdir(u ... tthree) |
+| pathinjection.js:18:34:18:47 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:20:19:20:24 | taint5 | semmle.label | taint5 |
+| pathinjection.js:20:28:20:49 | isfile( ... tthree) | semmle.label | isfile( ... tthree) |
+| pathinjection.js:20:35:20:48 | userinputthree | semmle.label | userinputthree |
+| pathinjection.js:22:36:22:41 | taint1 | semmle.label | taint1 |
+| pathinjection.js:24:40:24:45 | taint2 | semmle.label | taint2 |
+| pathinjection.js:26:34:26:39 | taint3 | semmle.label | taint3 |
+| pathinjection.js:28:34:28:39 | taint4 | semmle.label | taint4 |
+| pathinjection.js:30:40:30:45 | taint5 | semmle.label | taint5 |
+| pathinjection.js:31:26:31:34 | userinput | semmle.label | userinput |
+| pathinjection.js:33:38:33:46 | userinput | semmle.label | userinput |
+| pathinjection.js:34:24:34:32 | userinput | semmle.label | userinput |
+| pathinjection.js:36:44:36:52 | userinput | semmle.label | userinput |
+| pathinjection.js:37:25:37:36 | userinputtwo | semmle.label | userinputtwo |
+| pathinjection.js:38:25:38:33 | userinput | semmle.label | userinput |
+| pathinjection.js:40:26:40:34 | userinput | semmle.label | userinput |
+| pathinjection.js:41:26:41:34 | userinput | semmle.label | userinput |
+| pathinjection.js:43:25:43:33 | userinput | semmle.label | userinput |
+| pathinjection.js:44:25:44:33 | userinput | semmle.label | userinput |
+| pathinjection.js:46:26:46:34 | userinput | semmle.label | userinput |
+| pathinjection.js:47:26:47:34 | userinput | semmle.label | userinput |
+| pathinjection.js:49:22:49:30 | userinput | semmle.label | userinput |
+| pathinjection.js:50:22:50:30 | userinput | semmle.label | userinput |
+subpaths
+#select
+| pathinjection.js:22:36:22:41 | taint1 | pathinjection.js:10:36:10:45 | req.params | pathinjection.js:22:36:22:41 | taint1 | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:24:40:24:45 | taint2 | pathinjection.js:10:36:10:45 | req.params | pathinjection.js:24:40:24:45 | taint2 | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:26:34:26:39 | taint3 | pathinjection.js:10:36:10:45 | req.params | pathinjection.js:26:34:26:39 | taint3 | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:28:34:28:39 | taint4 | pathinjection.js:10:36:10:45 | req.params | pathinjection.js:28:34:28:39 | taint4 | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:30:40:30:45 | taint5 | pathinjection.js:10:36:10:45 | req.params | pathinjection.js:30:40:30:45 | taint5 | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:31:26:31:34 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:31:26:31:34 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:33:38:33:46 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:33:38:33:46 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:34:24:34:32 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:34:24:34:32 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file read. |
+| pathinjection.js:36:44:36:52 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:36:44:36:52 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:37:25:37:36 | userinputtwo | pathinjection.js:9:34:9:44 | req.headers | pathinjection.js:37:25:37:36 | userinputtwo | This CDS utils usage relies on user-provided value and can result in tainted data being written to a file. |
+| pathinjection.js:38:25:38:33 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:38:25:38:33 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:40:26:40:34 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:40:26:40:34 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:41:26:41:34 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:41:26:41:34 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:43:25:43:33 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:43:25:43:33 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:44:25:44:33 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:44:25:44:33 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:46:26:46:34 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:46:26:46:34 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:47:26:47:34 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:47:26:47:34 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:49:22:49:30 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:49:22:49:30 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |
+| pathinjection.js:50:22:50:30 | userinput | pathinjection.js:8:31:8:38 | req.data | pathinjection.js:50:22:50:30 | userinput | This CDS utils usage relies on user-provided value and can result in unrestricted file operations. |

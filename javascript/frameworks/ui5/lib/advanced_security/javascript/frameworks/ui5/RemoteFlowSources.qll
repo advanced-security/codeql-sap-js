@@ -83,8 +83,8 @@ class ODataServiceModel extends UI5ExternalModel {
     this instanceof NewNode and
     (
       exists(RequiredObject oDataModel |
-        oDataModel.flowsTo(this.getCalleeNode()) and
-        oDataModel.getDependencyType() = "sap/ui/model/odata/v2/ODataModel"
+        oDataModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+        oDataModel.getDependency() = "sap/ui/model/odata/v2/ODataModel"
       )
       or
       this.getCalleeName() = "ODataModel"

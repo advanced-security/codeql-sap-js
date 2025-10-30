@@ -12,25 +12,21 @@
  */
 
 import javascript
+import advanced_security.javascript.frameworks.ui5.UI5LogsToHttpQuery
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow::UI5PathGraph
-import semmle.javascript.security.dataflow.LogInjectionQuery as LogInjection
 
-class UI5LogInjectionConfiguration extends LogInjection::LogInjectionConfiguration {
-  override predicate isSource(DataFlow::Node node) { node instanceof RemoteFlowSource }
+module UI5LogsToHttpFlow = TaintTracking::GlobalWithState<UI5LogEntryToHttp>;
 
-  override predicate isSink(DataFlow::Node node) {
-    exists(ClientRequest req |
-      node = req.getUrl() or
-      node = req.getADataNode()
-    )
-  }
-}
+module UI5LogsToHttpUI5PathGraph =
+  UI5PathGraph<UI5LogsToHttpFlow::PathNode, UI5LogsToHttpFlow::PathGraph>;
+
+import UI5LogsToHttpUI5PathGraph
 
 from
-  UI5LogInjectionConfiguration cfg, UI5PathNode source, UI5PathNode sink, UI5PathNode primarySource
+  UI5LogsToHttpUI5PathGraph::UI5PathNode source, UI5LogsToHttpUI5PathGraph::UI5PathNode sink,
+  UI5LogsToHttpUI5PathGraph::UI5PathNode primarySource
 where
-  cfg.hasFlowPath(source.getPathNode(), sink.getPathNode()) and
+  UI5LogsToHttpFlow::flowPath(source.getPathNode(), sink.getPathNode()) and
   primarySource = source.getAPrimarySource()
 select sink, primarySource, sink, "Outbound network request depends on $@ log data.", primarySource,
   "user-provided"

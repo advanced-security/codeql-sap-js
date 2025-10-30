@@ -1,11 +1,11 @@
 ---
 library: false
 name: advanced-security/javascript-sap-xsjs-queries
-version: 0.1.0
+version: 2.3.0
 suites: codeql-suites
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^2.0.0"
-  advanced-security/javascript-sap-xsjs-models: "^0.1.0"
-  advanced-security/javascript-sap-xsjs-lib: "^0.1.0"
+  codeql/javascript-all: "^2.4.0"
+  advanced-security/javascript-sap-xsjs-models: "^2.3.0"
+  advanced-security/javascript-sap-xsjs-all: "^2.3.0"
 default-suite-file: codeql-suites/javascript-code-scanning.qls

@@ -1,0 +1,33 @@
+| utils.js:5:22:5:35 | 'package.json' | 'package.json': controlled path sink |
+| utils.js:7:26:7:39 | 'package.json' | 'package.json': controlled path sink |
+| utils.js:9:20:9:33 | 'package.json' | 'package.json': controlled path sink |
+| utils.js:11:20:11:33 | 'package.json' | 'package.json': controlled path sink |
+| utils.js:13:14:13:22 | 'db/data' | 'db/data': controlled data sink |
+| utils.js:13:28:13:41 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:14:14:14:22 | 'db/data' | 'db/data': controlled path sink |
+| utils.js:14:25:14:38 | 'dist/db/data' | 'dist/db/data': controlled data sink |
+| utils.js:16:12:16:20 | 'db/data' | 'db/data': accessed path sink |
+| utils.js:16:26:16:39 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:17:12:17:20 | 'db/data' | 'db/data': accessed path sink |
+| utils.js:17:23:17:36 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:19:13:19:26 | { foo: 'bar' } | { foo: 'bar' }: controlled data sink |
+| utils.js:19:32:19:47 | 'some/file.json' | 'some/file.json': controlled path sink |
+| utils.js:20:13:20:28 | 'some/file.json' | 'some/file.json': controlled path sink |
+| utils.js:20:31:20:44 | { foo: 'bar' } | { foo: 'bar' }: controlled data sink |
+| utils.js:22:14:22:19 | 'dist' | 'dist': controlled path sink |
+| utils.js:22:22:22:25 | 'db' | 'db': controlled path sink |
+| utils.js:22:28:22:33 | 'data' | 'data': controlled path sink |
+| utils.js:23:14:23:27 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:25:13:25:18 | 'dist' | 'dist': controlled path sink |
+| utils.js:25:21:25:24 | 'db' | 'db': controlled path sink |
+| utils.js:25:27:25:32 | 'data' | 'data': controlled path sink |
+| utils.js:26:13:26:26 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:28:14:28:19 | 'dist' | 'dist': controlled path sink |
+| utils.js:28:22:28:25 | 'db' | 'db': controlled path sink |
+| utils.js:28:28:28:33 | 'data' | 'data': controlled path sink |
+| utils.js:29:14:29:27 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:31:10:31:15 | 'dist' | 'dist': controlled path sink |
+| utils.js:31:18:31:21 | 'db' | 'db': controlled path sink |
+| utils.js:31:24:31:29 | 'data' | 'data': controlled path sink |
+| utils.js:32:10:32:23 | 'dist/db/data' | 'dist/db/data': controlled path sink |
+| utils.js:40:20:40:28 | 'db/data' | 'db/data': controlled data sink |

@@ -1,0 +1,18 @@
+edges
+| sensitive-exposure-heuristic-source.js:6:41:6:67 | JSON.st ... ss.env) | sensitive-exposure-heuristic-source.js:6:18:6:69 | `[INFO] ... .env)}` | provenance |  |
+| sensitive-exposure-heuristic-source.js:6:56:6:66 | process.env | sensitive-exposure-heuristic-source.js:6:41:6:67 | JSON.st ... ss.env) | provenance |  |
+| sensitive-exposure-heuristic-source.js:8:13:8:15 | obj [x] | sensitive-exposure-heuristic-source.js:11:18:11:20 | obj | provenance |  |
+| sensitive-exposure-heuristic-source.js:8:19:10:9 | {\\n      ...       } [x] | sensitive-exposure-heuristic-source.js:8:13:8:15 | obj [x] | provenance |  |
+| sensitive-exposure-heuristic-source.js:9:16:9:23 | password | sensitive-exposure-heuristic-source.js:8:19:10:9 | {\\n      ...       } [x] | provenance |  |
+nodes
+| sensitive-exposure-heuristic-source.js:6:18:6:69 | `[INFO] ... .env)}` | semmle.label | `[INFO] ... .env)}` |
+| sensitive-exposure-heuristic-source.js:6:41:6:67 | JSON.st ... ss.env) | semmle.label | JSON.st ... ss.env) |
+| sensitive-exposure-heuristic-source.js:6:56:6:66 | process.env | semmle.label | process.env |
+| sensitive-exposure-heuristic-source.js:8:13:8:15 | obj [x] | semmle.label | obj [x] |
+| sensitive-exposure-heuristic-source.js:8:19:10:9 | {\\n      ...       } [x] | semmle.label | {\\n      ...       } [x] |
+| sensitive-exposure-heuristic-source.js:9:16:9:23 | password | semmle.label | password |
+| sensitive-exposure-heuristic-source.js:11:18:11:20 | obj | semmle.label | obj |
+subpaths
+#select
+| sensitive-exposure-heuristic-source.js:6:18:6:69 | `[INFO] ... .env)}` | sensitive-exposure-heuristic-source.js:6:56:6:66 | process.env | sensitive-exposure-heuristic-source.js:6:18:6:69 | `[INFO] ... .env)}` | This logs sensitive data returned by $@ as clear text. | sensitive-exposure-heuristic-source.js:6:56:6:66 | process.env | process environment |
+| sensitive-exposure-heuristic-source.js:11:18:11:20 | obj | sensitive-exposure-heuristic-source.js:9:16:9:23 | password | sensitive-exposure-heuristic-source.js:11:18:11:20 | obj | This logs sensitive data returned by $@ as clear text. | sensitive-exposure-heuristic-source.js:9:16:9:23 | password | an access to password |

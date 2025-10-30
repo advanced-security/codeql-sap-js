@@ -1,0 +1,5 @@
+import javascript
+import advanced_security.javascript.frameworks.cap.RemoteFlowSources
+
+from HandlerParameterOfExposedService handlerParameterOfExposedService
+select handlerParameterOfExposedService

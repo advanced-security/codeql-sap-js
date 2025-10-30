@@ -1,13 +1,10 @@
-nodes
-| XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue |
-| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") |
-| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") |
-| XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue |
-| XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue |
 edges
-| XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue |
-| XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue |
-| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue |
-| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | XSJSUrlRedirect.xsjs:7:7:7:65 | someParameterValue |
+| XSJSUrlRedirect.xsjs:7:7:7:24 | someParameterValue | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue | provenance |  |
+| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | XSJSUrlRedirect.xsjs:7:7:7:24 | someParameterValue | provenance |  |
+nodes
+| XSJSUrlRedirect.xsjs:7:7:7:24 | someParameterValue | semmle.label | someParameterValue |
+| XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | semmle.label | request ... meter") |
+| XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue | semmle.label | someParameterValue |
+subpaths
 #select
 | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue | XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue | $@ depends on a $@. | XSJSUrlRedirect.xsjs:9:38:9:55 | someParameterValue | This URL | XSJSUrlRedirect.xsjs:7:28:7:65 | request ... meter") | user-provided value |

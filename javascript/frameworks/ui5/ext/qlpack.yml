@@ -1,8 +1,8 @@
 ---
 library: true
 name: advanced-security/javascript-sap-ui5-models
-version: 0.6.0
+version: 2.3.0
 extensionTargets:
-  codeql/javascript-all: "^2.0.0"
+  codeql/javascript-all: "^2.4.0"
 dataExtensions:
   - "*.model.yml"

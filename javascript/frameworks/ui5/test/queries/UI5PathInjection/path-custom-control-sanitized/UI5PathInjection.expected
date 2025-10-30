@@ -1,8 +1,8 @@
 nodes
 | webapp/control/xss.js:9:23:9:40 | { type: "string" } |
-| webapp/control/xss.js:15:21:15:46 | value |
+| webapp/control/xss.js:15:21:15:25 | value |
 | webapp/control/xss.js:15:29:15:46 | oControl.getText() |
-| webapp/control/xss.js:17:21:17:59 | xssSanitized |
+| webapp/control/xss.js:17:21:17:32 | xssSanitized |
 | webapp/control/xss.js:17:36:17:59 | encodeX ... value)) |
 | webapp/control/xss.js:17:46:17:58 | String(value) |
 | webapp/control/xss.js:17:53:17:57 | value |
@@ -13,10 +13,10 @@ nodes
 edges
 | webapp/control/xss.js:9:23:9:40 | { type: "string" } | webapp/control/xss.js:15:29:15:46 | oControl.getText() |
 | webapp/control/xss.js:9:23:9:40 | { type: "string" } | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/control/xss.js:15:21:15:46 | value | webapp/control/xss.js:17:53:17:57 | value |
-| webapp/control/xss.js:15:29:15:46 | oControl.getText() | webapp/control/xss.js:15:21:15:46 | value |
-| webapp/control/xss.js:17:21:17:59 | xssSanitized | webapp/control/xss.js:23:43:23:54 | xssSanitized |
-| webapp/control/xss.js:17:36:17:59 | encodeX ... value)) | webapp/control/xss.js:17:21:17:59 | xssSanitized |
+| webapp/control/xss.js:15:21:15:25 | value | webapp/control/xss.js:17:53:17:57 | value |
+| webapp/control/xss.js:15:29:15:46 | oControl.getText() | webapp/control/xss.js:15:21:15:25 | value |
+| webapp/control/xss.js:17:21:17:32 | xssSanitized | webapp/control/xss.js:23:43:23:54 | xssSanitized |
+| webapp/control/xss.js:17:36:17:59 | encodeX ... value)) | webapp/control/xss.js:17:21:17:32 | xssSanitized |
 | webapp/control/xss.js:17:46:17:58 | String(value) | webapp/control/xss.js:17:36:17:59 | encodeX ... value)) |
 | webapp/control/xss.js:17:53:17:57 | value | webapp/control/xss.js:17:46:17:58 | String(value) |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/control/xss.js:9:23:9:40 | { type: "string" } |

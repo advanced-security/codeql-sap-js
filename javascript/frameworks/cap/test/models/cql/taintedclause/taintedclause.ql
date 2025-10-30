@@ -1,5 +1,5 @@
 import javascript
-import advanced_security.javascript.frameworks.cap.CQL
+import advanced_security.javascript.frameworks.cap.CAPCqlInjectionQuery
 
-from ParseCQLTaintedClause clause
+from CqlClauseParserCallWithStringConcat clause
 select clause

@@ -12,8 +12,8 @@ sap.ui.define(
         http.open("POST", url);
         http.send(oEvent.message); // js/ui5-log-injection-to-http
 
-        $('myId').html(oEvent.message) //Xss
-        jQuery.sap.globalEval(oEvent.message); //UI5 Xss
+        $('myId').html(oEvent.message) // Xss
+        jQuery.sap.globalEval(oEvent.message); // UI5 Xss
       },
     });
   },

@@ -1,9 +1,12 @@
 name: advanced-security/javascript-sap-ui5-queries-tests
-version: 0.6.0
+version: 2.3.0
 extractor: javascript
 dependencies:
-  codeql/javascript-all: "^2.0.0"
-  codeql/javascript-queries: "^1.2.0"
-  advanced-security/javascript-sap-ui5-queries: "^0.6.0"
-  advanced-security/javascript-sap-ui5-models: "^0.6.0"
-  advanced-security/javascript-sap-ui5-all: "^0.6.0"
+  codeql/javascript-all: "^2.4.0"
+  # We use this dependency to run the standard Log Injection query to ensure that
+  # no overlap occurs with the SAP UI5 queries. We therefore allow any version
+  # greater than or equal to 1.2.0, as major breaking changes are not a concern.
+  codeql/javascript-queries: ">1.2.0"
+  advanced-security/javascript-sap-ui5-queries: "^2.3.0"
+  advanced-security/javascript-sap-ui5-models: "^2.3.0"
+  advanced-security/javascript-sap-ui5-all: "^2.3.0"

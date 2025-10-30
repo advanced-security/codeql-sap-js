@@ -2,52 +2,85 @@ import javascript
 import advanced_security.javascript.frameworks.cap.CDS
 
 /**
- * A parameter of a handler registered for a service on an event. e.g.
- * ```javascript
- * this.on("SomeEvent", "SomeEntity", (req) => { ... });
- * this.before("SomeEvent", "SomeEntity", (req, next) => { ... }); // only `req` is captured
- * SomeService.on("SomeEvent", "SomeEntity", (msg) => { ... });
- * SomeService.after("SomeEvent", "SomeEntity", (msg) => { ... });
+ * The request parameter of a handler belonging to a service that is exposed to
+ * a protocol. e.g. All parameters named `req` is captured in the below example.
+ * ``` javascript
+ * // srv/service1.js
+ * module.exports = class Service1 extends cds.ApplicationService {
+ *   this.on("SomeEvent", "SomeEntity", (req) => { ... });
+ *   this.before("SomeEvent", "SomeEntity", (req, next) => { ... });
+ * }
  * ```
- * All the parameters named `req` and `msg` are captured in the above example.
+ * ``` cds
+ * // srv/service1.cds
+ * service Service1 @(path: '/service-1') { ... }
+ * ```
+ *
+ * NOTE: CDS extraction can fail for various reasons, and if so the detection
+ * logic falls back on overapproximating on the parameters and assume they are
+ * exposed.
  */
-class HandlerParameter extends ParameterNode, RemoteFlowSource {
-  HandlerParameter() {
-    exists(
-      Handler handler, HandlerRegistration handlerRegistration,
-      UserDefinedApplicationService service
-    |
-      handler = handlerRegistration.getHandler() and
-      this = handler.getParameter(0) and
-      service.getAHandlerRegistration() = handlerRegistration and
-      service.isExposed()
-    )
-  }
+class HandlerParameterOfExposedService extends HandlerParameter {
+  HandlerParameterOfExposedService() {
+    /* 1. The CDS definition is there and we can determine it is exposed. */
+    this.getHandler().getHandlerRegistration().getService().getDefinition().isExposed()
+    or
+    /*
+     * 2. (Fallback) The CDS definition is not there, so no precise service definition
+     * is known.
+     */
 
-  override string getSourceType() {
-    result = "Parameter of an event handler belonging to an exposed service"
+    not exists(
+      this.getHandler().getHandlerRegistration().getService().getDefinition().getCdsDeclaration()
+    )
   }
 }
 
 /**
- * A service may be described only in a CDS file, but event handlers may still be registered in a format such as:
- * ```javascript
- * module.exports = srv => {
- * srv.before('CREATE', 'Media', req => { //an entity name is used to describe which to register this handler to
- * ```
- * parameters named `req` are captured in the above example.
+ * Reads of property belonging to a request parameter that is exposed to a protocol.
+ * It currently models the following access paths:
+ * - `req.data` (from `cds.Event.data`)
+ * - `req.params` (from `cds.Request.params`)
+ * - `req.headers` (from `cds.Event.headers`)
+ * - `req.http.req.*` (from `cds.EventContext.http.req`)
+ * - `req.id` (from `cds.EventContext.id`)
+ *
+ * Note that `req.http.req` has type `require("@express").Request`, so their uses are
+ * completely identical. Subsequently, the models for this access path follow Express'
+ * API descriptions (as far back as 3.x). Also see `Express::RequestInputAccess`,
+ * `Express::RequestHeaderAccess`, and `Express::RequestBodyAccess` of the standard
+ * library.
  */
-class ServiceinCDSHandlerParameter extends ParameterNode, RemoteFlowSource {
-  ServiceinCDSHandlerParameter() {
-    exists(MethodCallNode m, CdlEntity entity, string entityName |
-      entity.getName().regexpReplaceAll(".*\\.", "") = entityName and
-      m.getArgument(1).asExpr().getStringValue().regexpReplaceAll("'", "") = entityName and
-      this = m.getArgument(m.getNumArgument() - 1).(FunctionNode).getParameter(0) and
-      m.getMethodName() in ["on", "before", "after"]
+class UserProvidedPropertyReadOfHandlerParameterOfExposedService extends RemoteFlowSource {
+  HandlerParameterOfExposedService handlerParameterOfExposedService;
+
+  UserProvidedPropertyReadOfHandlerParameterOfExposedService() {
+    /* 1. `req.(data|params|headers|id)` */
+    this =
+      handlerParameterOfExposedService
+          .getAPropertyRead(["data", "params", "headers", "id", "_queryOptions"])
+    or
+    /* 2. APIs stemming from `req.http.req`: Defined by Express.js */
+    exists(PropRead reqHttpReq |
+      reqHttpReq = handlerParameterOfExposedService.getAPropertyRead("http").getAPropertyRead("req")
+    |
+      this = reqHttpReq.getAPropertyRead(["originalUrl", "hostname"]) or
+      this =
+        reqHttpReq
+            .getAPropertyRead(["query", "body", "params", "headers", "cookies"])
+            .getAPropertyRead() or
+      this = reqHttpReq.getAMemberCall(["get", "is", "header", "param"])
     )
   }
 
+  HandlerParameterOfExposedService getHandlerParameter() {
+    result = handlerParameterOfExposedService
+  }
+
+  Handler getHandler() { result = handlerParameterOfExposedService.getHandler() }
+
   override string getSourceType() {
-    result = "Parameter of an event handler belonging to an exposed service defined in a cds file"
+    result =
+      "Tainted property read of the request parameter of an event handler belonging to an exposed service"
   }
 }
