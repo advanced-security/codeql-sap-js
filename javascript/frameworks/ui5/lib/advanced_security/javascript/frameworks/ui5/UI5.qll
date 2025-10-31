@@ -1,6 +1,7 @@
 import javascript
 import DataFlow
 import advanced_security.javascript.frameworks.ui5.JsonParser
+import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
@@ -468,23 +469,17 @@ class CustomController extends SapExtendCall {
   }
 
   Component getOwnerComponent() {
-    exists(ManifestJson manifestJson, JsonObject rootObj | manifestJson = result.getManifestJson() |
-      rootObj
-          .getPropValue("targets")
-          .(JsonObject)
-          // The individual targets
-          .getPropValue(_)
-          .(JsonObject)
-          // The target's "viewName" property
-          .getPropValue("viewName")
-          .(JsonString)
-          .getValue() = name
-    )
+    this = result.getParentManifestJson().getARoutingTarget().getView().getController()
   }
 
   MethodCallNode getOwnerComponentRef() {
     this.getAThisNode() = result.getReceiver() and
     result.getMethodName() = "getOwnerComponent"
+    or
+    exists(CustomController baseController |
+      baseController.getDefine() = this.getDefine().getSuperModule(_) and
+      result = baseController.getOwnerComponentRef()
+    )
   }
 
   /**
@@ -811,7 +806,7 @@ class Component extends SapExtendCall {
 
   string getId() { result = this.getName().regexpCapture("([a-zA-Z0-9.]+).Component", 1) }
 
-  ManifestJson getManifestJson() {
+  ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
     result.getId() = this.getId()
   }
@@ -833,7 +828,7 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getExternalModelDef(string modelName) {
-    result.getFile() = this.getManifestJson() and result.getName() = modelName
+    result.getFile() = this.getParentManifestJson() and result.getName() = modelName
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
@@ -862,9 +857,48 @@ module ManifestJson {
 
     string getName() { result = dataSourceName }
 
-    ManifestJson getManifestJson() { result = manifestJson }
+    ManifestJson getParentManifestJson() { result = manifestJson }
 
     string getType() { result = this.getPropValue("type").(JsonString).getValue() }
+  }
+
+  class RoutingTargetManifest extends JsonObject {
+    /** Note: This is NOT its `viewName` property! */
+    string targetName;
+    ManifestJson manifestJson;
+
+    RoutingTargetManifest() {
+      exists(JsonObject rootObj |
+        this.getJsonFile() = manifestJson and
+        rootObj.getJsonFile() = manifestJson and
+        this =
+          rootObj
+              .getPropValue("sap.ui5")
+              .(JsonObject)
+              .getPropValue("routing")
+              .(JsonObject)
+              .getPropValue("targets")
+              .(JsonObject)
+              .getPropValue(targetName)
+      )
+    }
+
+    /**
+     * Gets the value of the `viewName` property of this target.
+     */
+    string getViewName() { result = this.getPropStringValue("viewName") }
+
+    /**
+     * Gets the view this target is associated with.
+     */
+    UI5View getView() {
+      result.getName() = getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
+    }
+
+    /**
+     * Gets the `manifest.json` file that this routing target is a part of.
+     */
+    ManifestJson getParentManifestJson() { result = manifestJson }
   }
 
   class ODataDataSourceManifest extends DataSourceManifest {
@@ -995,7 +1029,19 @@ module ManifestJson {
       this.getBaseName() = "manifest.json"
     }
 
-    DataSourceManifest getDataSource() { this = result.getManifestJson() }
+    DataSourceManifest getADataSource() { result = this.getDataSource(_) }
+
+    DataSourceManifest getDataSource(string name) {
+      this = result.getParentManifestJson() and
+      result.getName() = name
+    }
+
+    RoutingTargetManifest getARoutingTarget() { result = this.getRoutingTarget(_) }
+
+    RoutingTargetManifest getRoutingTarget(string viewName) {
+      result.getViewName() = viewName and
+      result.getParentManifestJson() = this
+    }
   }
 }
 
@@ -1316,6 +1362,10 @@ class SapExtendCall extends InvokeNode, MethodCallNode {
 
   string getName() { result = this.getArgument(0).asExpr().(StringLiteral).getValue() }
 
+  string getModuleName() {
+    result = getSubstringAfterLastOccurrenceOfCharacter(this.getName(), ".")
+  }
+
   ObjectLiteralNode getContent() { result = this.getArgument(1) }
 
   Metadata getMetadata() {
@@ -1510,18 +1560,19 @@ class PropertyMetadata extends ObjectLiteralNode {
   }
 }
 
-module TypeTrackers {
-  private SourceNode hasDependency(TypeTracker t, string dependencyPath) {
-    t.start() and
-    exists(UserModule d |
-      d.getADependency() = dependencyPath and
-      result = d.getRequiredObject(dependencyPath).asSourceNode()
-    )
-    or
-    exists(TypeTracker t2 | result = hasDependency(t2, dependencyPath).track(t2, t))
-  }
+bindingset[input, character]
+private int countCharacterInString(string input, string character) {
+  result = count(int index | character = input.charAt(index) | index)
+}
 
-  SourceNode hasDependency(string dependencyPath) {
-    result = hasDependency(TypeTracker::end(), dependencyPath)
+bindingset[input, character]
+private string getSubstringAfterLastOccurrenceOfCharacter(string input, string character) {
+  result = input.splitAt(character, countCharacterInString(input, character))
+}
+
+private module Notebook {
+  MethodCallNode test1(CustomController controller) {
+    controller.getModuleName() = "EffortDriver" and
+    result = controller.getOwnerComponentRef()
   }
 }
