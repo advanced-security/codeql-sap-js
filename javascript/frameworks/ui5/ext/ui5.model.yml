@@ -41,7 +41,7 @@ extensions:
       - ["SapUIDom", "sap/ui/dom", ""]
       - ["SapUIDom", "global", "Member[sap].Member[ui].Member[dom]"]
       # model Controls inheritance
-      - ["UI5InputControl", "UI5Control", "Instance"]
+      - ["UI5InputControl", "UI5InputControl", "Instance"]
       - ["UI5InputControl", "sap/m/InputBase", ""]
       - ["UI5InputControl", "sap/m/Input", ""]
       - ["UI5InputControl", "sap/ui/webc/main/Input", ""]
