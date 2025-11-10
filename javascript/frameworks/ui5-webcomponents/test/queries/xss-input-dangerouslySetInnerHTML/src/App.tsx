@@ -1,12 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import "@ui5/webcomponents/dist/Input";
 
-import type Input from "@ui5/webcomponents/dist/Input";
+import { Input, InputDomRef } from "@ui5/webcomponents-react/Input";
+//import { DatePicker } from "@ui5/webcomponents-react/DatePicker";
 
 function App() {
-  const [todo, setTodo] = useState<String>("");
+  const [todo, setTodo] = useState<string>("");
 
-  const todoInput = useRef<Input>();
+  //const todoInput = useRef<typeof DatePicker>();
+  const todoInput = useRef<InputDomRef>(null);
 
   const handleAdd = useCallback(() => {
     setTodo((msg) => todoInput.current?.value || "", [setTodo]);
@@ -23,7 +24,7 @@ function App() {
 
   return (
     <div className="app">
-      <ui5-input placeholder="Type a task..." ref={todoInput} class="add-todo-element-width" id="add-input"></ui5-input>
+  <Input placeholder="Type a task..." ref={todoInput} id="add-input"></Input>
       <div dangerouslySetInnerHTML={{__html: todo}}></div>
     </div>
   );
