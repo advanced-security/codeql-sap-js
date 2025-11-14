@@ -1,0 +1,7 @@
+<mvc:View controllerName="codeql-sap-js.controller.app"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc">
+    <Input id="unit-test-target1" />
+    <Button id="button" press=".doSomething" />
+    <HTML id="htmlControl" />
+</mvc:View>
