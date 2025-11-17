@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Prepare local CodeQL model packs
       run: |
@@ -89,7 +89,7 @@ jobs:
 
     - name: Upload sarif change
       if: steps.validate.outcome != 'success'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: sarif
         path: |

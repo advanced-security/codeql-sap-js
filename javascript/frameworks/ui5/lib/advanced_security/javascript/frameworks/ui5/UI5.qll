@@ -5,6 +5,7 @@ import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
+private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
 private module WebAppResourceRootJsonReader implements JsonParser::MakeJsonReaderSig<WebApp> {
   class JsonReader extends WebApp {
@@ -133,10 +134,11 @@ class WebApp extends HTML::HtmlFile {
 }
 
 /**
- * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui.loader%23methods/sap.ui.loader.config
+ * The global instance of `sap.ui.Core` that represents this UI5 application, as retrieved
+ * by a call to `sap.ui.getCore()`.
  */
-class Loader extends CallNode {
-  Loader() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("loader") }
+class SapUiCore extends MethodCallNode {
+  SapUiCore() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("getCore") }
 }
 
 /**
@@ -212,7 +214,9 @@ class JQuerySap extends DataFlow::SourceNode {
  * A user-defined module through `jQuery.sap.declare`.
  */
 class JQueryDefineModule extends UserModule, MethodCallExpr {
-  JQueryDefineModule() { exists(JQuerySap jquerySap | jquerySap.asExpr() = this.getReceiver()) }
+  JQueryDefineModule() {
+    exists(JQuerySap jQuerySap | this = jQuerySap.getAMemberCall(["declare", "require"]).asExpr())
+  }
 
   override string getADependency() { result = this.getArgument(0).getStringValue() }
 
@@ -227,8 +231,9 @@ class JQueryDefineModule extends UserModule, MethodCallExpr {
 
 class Renderer extends SapExtendCall {
   Renderer() {
-    this.getReceiver().getALocalSource() =
+    this =
       TypeTrackers::hasDependency(["sap/ui/core/Renderer", "sap.ui.core.Renderer"])
+          .getAMemberCall("extend")
   }
 
   FunctionNode getRenderer() {
@@ -242,8 +247,9 @@ class Renderer extends SapExtendCall {
 
 class CustomControl extends SapExtendCall {
   CustomControl() {
-    this.getReceiver().getALocalSource() =
-      TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"]) or
+    this =
+      TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"])
+          .getAMemberCall("extend") or
     exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
   }
 
@@ -293,22 +299,49 @@ class CustomControl extends SapExtendCall {
   }
 }
 
+class ControlPlaceAtCall extends MethodCallNode {
+  ControlPlaceAtCall() {
+    /* 1. `this.placeAt(...)` in a custom control definition. */
+    exists(CustomControl control | this = control.getAThisNode().getAMemberCall("placeAt"))
+    or
+    /*
+     * 2. `new SomeControl(...).placeAt(...)` where `SomeControl` may be UI5
+     * library control or a custom control.
+     */
+
+    exists(ElementInstantiation controlInstantiation |
+      this = controlInstantiation.getAMemberCall("placeAt")
+    )
+    or
+    /*
+     * 3. `oController.getView().byId(...).placeAt(...)` where
+     * `oController.getView().byId(...)` is a reference to a library control
+     * or a custom control.
+     */
+
+    exists(ControlReference controlReference | this = controlReference.getAMemberCall("placeAt"))
+  }
+
+  string getDomElementId() { result = this.getArgument(0).getStringValue() }
+}
+
 abstract class Reference extends MethodCallNode { }
 
 /**
- * A JS reference to a `UI5Control`, commonly obtained via `View.byId(controlId)`.
+ * A JS reference to a `UI5Control`, commonly obtained via its ID.
  */
 class ControlReference extends Reference {
   string controlId;
 
   ControlReference() {
-    exists(CustomController controller |
-      (
-        controller.getAViewReference().flowsTo(this.getReceiver()) or
-        controller.getAThisNode() = this.getReceiver()
-      ) and
-      this.getMethodName() = "byId" and
-      this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = controlId
+    this.getArgument(0).getALocalSource().getStringValue() = controlId and
+    (
+      exists(CustomController controller |
+        this = controller.getAViewReference().getAMemberCall("byId") or
+        this = controller.getAThisNode().getAMemberCall("byId")
+      )
+      or
+      exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
     )
   }
 
@@ -316,6 +349,14 @@ class ControlReference extends Reference {
     exists(UI5Control controlDeclaration |
       this = controlDeclaration.getAReference() and
       result = controlDeclaration.getDefinition()
+    )
+  }
+
+  predicate isLibraryControlReference(string importPath) {
+    exists(XmlView xml, UI5Control control |
+      control = xml.getControl() and
+      control.getQualifiedType() = importPath and
+      controlId = control.getProperty("id").getValue()
     )
   }
 
@@ -389,17 +430,11 @@ class ControlReference extends Reference {
 class ViewReference extends Reference {
   CustomController controller;
 
-  ViewReference() {
-    this.getMethodName() = "getView" and
-    controller.getAThisNode() = this.getReceiver()
-  }
+  ViewReference() { this = controller.getAThisNode().getAMemberCall("getView") }
 
   UI5View getDefinition() { result = controller.getView() }
 
-  MethodCallNode getABindElementCall() {
-    result.getMethodName() = "bindElement" and
-    this.flowsTo(result.getReceiver())
-  }
+  MethodCallNode getABindElementCall() { result = this.getAMemberCall("bindElement") }
 }
 
 /**
@@ -408,7 +443,7 @@ class ViewReference extends Reference {
 class ControllerReference extends Reference {
   ViewReference viewReference;
 
-  ControllerReference() { viewReference.flowsTo(this.getReceiver()) }
+  ControllerReference() { this = viewReference.getAMemberCall("getController") }
 
   CustomController getDefinition() { result = viewReference.getDefinition().getController() }
 }
@@ -417,8 +452,9 @@ class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
-    this.getReceiver().getALocalSource() =
-      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"]) and
+    this =
+      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
+          .getAMemberCall("extend") and
     name = this.getFile().getBaseName().regexpCapture("([a-zA-Z0-9]+).[cC]ontroller.js", 1)
   }
 
@@ -438,68 +474,51 @@ class CustomController extends SapExtendCall {
   }
 
   MethodCallNode getOwnerComponentRef() {
-    this.getAThisNode() = result.getReceiver() and
-    result.getMethodName() = "getOwnerComponent"
+    result = this.getAThisNode().getAMemberCall("getOwnerComponent")
   }
 
   /**
    * Gets a reference to a view object that can be accessed from one of the methods of this controller.
    */
-  ViewReference getAViewReference() {
-    result.getMethodName() = "getView" and
-    result.(MethodCallNode).getReceiver() = this.getAThisNode()
-  }
+  ViewReference getAViewReference() { result = this.getAThisNode().getAMemberCall("getView") }
 
   UI5View getView() { this = result.getController() }
 
   ControlReference getAControlReference() {
-    exists(MethodCallNode viewRef |
-      viewRef = this.getAViewReference() and
-      /* There is a view */
-      viewRef.flowsTo(result.(MethodCallNode).getReceiver()) and
-      /* The result is a member of this view */
-      result.(MethodCallNode).getMethodName() = "byId"
-    )
+    result = this.getAViewReference().getAMemberCall("byId")
   }
 
-  ValueNode getAThisNode() {
-    exists(ThisNode thisNode | thisNode.getBinder() = this.getAMethod() |
-      /* ========== 1. `this` referring to the binder ========== */
-      thisNode.flowsTo(result)
-      or
-      /* 2. ========== `this` bound to an outside `this` ========== */
-      /*
-       * 2-1. The DisplayEventHandler's `this` bound to an outside `this` via
-       * `.attachDisplay` or `.detachDisplay`
-       */
+  override ThisNode getAThisNode() {
+    /* ========== 1. `this` referring to the binder ========== */
+    result = super.getAThisNode()
+    or
+    /* 2. ========== `this` bound to a callback's `this` ========== */
+    /*
+     * 2-1. The this node of `.attachDisplay` or `.detachDisplay` also represents this
+     * controller.
+     */
 
-      exists(DisplayEventHandler handler, ThisNode handlerThis | handlerThis.getBinder() = handler |
-        thisNode.flowsTo(handler.getAssociatedContextObject()) and
-        handlerThis.flowsTo(result)
-      )
+    exists(DisplayEventHandler handler | handler = result.getBinder() |
+      handler.getAssociatedContextObject().getALocalSource() = this.getAThisNode()
     )
   }
 
   UI5Model getModel() {
-    exists(MethodCallNode setModelCall |
-      this.getAViewReference().flowsTo(setModelCall.getReceiver()) and
-      setModelCall.getMethodName() = "setModel" and
-      result.flowsTo(setModelCall.getAnArgument())
-    )
+    result = this.getAViewReference().getAMemberCall("setModel").getAnArgument().getALocalSource()
   }
 
   ModelReference getModelReference(string modelName) {
-    this.getAViewReference().flowsTo(result.getReceiver()) and
-    result.getModelName() = modelName
+    result = this.getAModelReference() and
+    result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = modelName
   }
 
-  ModelReference getAModelReference() { this.getAViewReference().flowsTo(result.getReceiver()) }
+  ModelReference getAModelReference() {
+    result = this.getAViewReference().getAMemberCall("getModel")
+  }
 
   RouterReference getARouterReference() {
-    result.getMethodName() = "getRouter" and
-    exists(ThisNode controllerThis |
-      result.(MethodCallNode).getReceiver() = controllerThis.getALocalUse() and
-      controllerThis.getBinder() = this.getAMethod()
+    exists(ThisNode controllerThis | controllerThis.getBinder() = this.getAMethod() |
+      result = controllerThis.getAMemberCall("getRouter")
     )
   }
 
@@ -514,9 +533,10 @@ class RouteReference extends MethodCallNode {
   string name;
 
   RouteReference() {
-    this.getMethodName() = "getRoute" and
-    this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name and
-    exists(RouterReference routerReference | routerReference.flowsTo(this.getReceiver()))
+    exists(RouterReference routerReference |
+      this = routerReference.getAMemberCall("getRoute") and
+      this.getArgument(0).getALocalSource().getStringValue() = name
+    )
   }
 
   string getName() { result = name }
@@ -544,10 +564,9 @@ class ControllerHandler extends EventHandler {
 
 class RouterReference extends MethodCallNode {
   RouterReference() {
-    this.getMethodName() = "getRouter" and
     exists(CustomController controller |
-      controller.getAThisNode() = this.getReceiver() or
-      controller.getOwnerComponentRef().flowsTo(this.getReceiver())
+      this = controller.getAThisNode().getAMemberCall("getRouter") or
+      this = controller.getOwnerComponentRef().getAMemberCall("getRouter")
     )
   }
 
@@ -564,9 +583,8 @@ class RoutingTarget extends MethodCallNode {
   RouterReference routerReference;
 
   RoutingTarget() {
-    this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name and
-    routerReference = this.getReceiver().getALocalSource() and
-    this.getMethodName() = "getTarget"
+    this.getArgument(0).getALocalSource().getStringValue() = name and
+    this = routerReference.getAMemberCall("getTarget")
   }
 
   RouterReference getRouterReference() { result = routerReference }
@@ -579,13 +597,11 @@ class RoutingTarget extends MethodCallNode {
   }
 
   MethodCallNode getAnAttachDisplayCall() {
-    result.getReceiver().getALocalSource() = routerReference.getATarget() and
-    result.getMethodName() = "attachDisplay"
+    result = routerReference.getATarget().getAMemberCall("attachDisplay")
   }
 
   MethodCallNode getADetachDisplayCall() {
-    result.getReceiver().getALocalSource() = routerReference.getATarget() and
-    result.getMethodName() = "detachDisplay"
+    result = routerReference.getATarget().getAMemberCall("detachDisplay")
   }
 }
 
@@ -614,17 +630,14 @@ class DisplayEventHandler extends EventHandler {
  */
 class ModelReference extends MethodCallNode {
   ModelReference() {
-    this.getMethodName() = "getModel" and
-    (
-      exists(ViewReference view | view.flowsTo(this.getReceiver()))
-      or
-      exists(CustomController controller |
-        controller.getAViewReference().flowsTo(this.getReceiver()) or
-        controller.getOwnerComponentRef().flowsTo(this.getReceiver())
-      )
-      or
-      exists(Component component | component.getAThisNode().flowsTo(this.getReceiver()))
+    exists(ViewReference view | this = view.getAMemberCall("getModel"))
+    or
+    exists(CustomController controller |
+      this = controller.getAViewReference().getAMemberCall("getModel") or
+      this = controller.getOwnerComponentRef().getAMemberCall("getModel")
     )
+    or
+    exists(Component component | this = component.getAThisNode().getAMemberCall("getModel"))
   }
 
   predicate isDefaultModelReference() { this.getNumArgument() = 0 }
@@ -632,9 +645,7 @@ class ModelReference extends MethodCallNode {
   /**
    * Gets the models' name being referred to, given that it can be statically determined.
    */
-  string getModelName() {
-    result = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
-  }
+  string getModelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
 
   predicate isLocalModelReference() {
     exists(InternalModelManifest internalModelManifest |
@@ -703,10 +714,7 @@ class ModelReference extends MethodCallNode {
   /**
    * Gets a `getProperty` or `getObject` method call on this `ModelReference`. These methods read from a single property of the model this refers to.
    */
-  MethodCallNode getARead() {
-    result.getMethodName() = ["getProperty", "getObject"] and
-    result.getReceiver().getALocalSource() = this
-  }
+  MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
 
   /**
    * Gets the resolved model of this `ModelReference` by looking for a matching `setModel` call.
@@ -723,10 +731,7 @@ abstract class UI5Model extends InvokeNode {
   /**
    * A `getProperty` or `getObject` method call on this `UI5Model`. These methods read from a single property of this model.
    */
-  MethodCallNode getARead() {
-    result.getMethodName() = ["getProperty", "getObject"] and
-    result.getReceiver().getALocalSource() = this
-  }
+  MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
 }
 
 /**
@@ -747,16 +752,16 @@ import ManifestJson
  */
 class Component extends SapExtendCall {
   Component() {
-    this.getReceiver().getALocalSource() =
-      /*
-       * Represents models that are loaded from an external source, e.g. OData service.
-       * It is the value flowing to a `setModel` call in a handler of a `CustomController` (which is represented by `ControllerHandler`), since it is the closest we can get to the actual model itself.
-       */
+    /*
+     * Represents models that are loaded from an external source, e.g. OData service.
+     * It is the value flowing to a `setModel` call in a handler of a `CustomController` (which is represented by `ControllerHandler`), since it is the closest we can get to the actual model itself.
+     */
 
+    this =
       TypeTrackers::hasDependency([
           "sap/ui/core/mvc/Component", "sap.ui.core.mvc.Component", "sap/ui/core/UIComponent",
           "sap.ui.core.UIComponent"
-        ])
+        ]).getAMemberCall("extend")
   }
 
   string getId() { result = this.getName().regexpCapture("([a-zA-Z0-9.]+).Component", 1) }
@@ -787,8 +792,6 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
-
-  ThisNode getAThisNode() { result.getBinder() = this.getAMethod() }
 }
 
 module ManifestJson {
@@ -1184,20 +1187,17 @@ class ResourceModel extends UI5Model, ModelReference {
     /* A model reference obtained from this.getOwnerComponent().getModel("i18n") */
     exists(CustomController controller, ResourceModelManifest manifest |
       (
-        controller.getAThisNode() = this.getReceiver() or
-        controller.getOwnerComponentRef().flowsTo(this.(ModelReference).getReceiver())
+        this = controller.getAThisNode().getAMemberCall("getModel") or
+        this = controller.getOwnerComponentRef().getAMemberCall("getModel")
       ) and
       modelName = this.getModelName() and
       manifest.getName() = modelName
     )
   }
 
-  override MethodCallNode getARead() { result = this.(ModelReference).getARead() }
+  override MethodCallNode getARead() { result = ModelReference.super.getARead() }
 
-  MethodCallNode getResourceBundle() {
-    result.getMethodName() = "getResourceBundle" and
-    this = result.getReceiver().getALocalSource()
-  }
+  MethodCallNode getResourceBundle() { result = this.getAMemberCall("getResourceBundle") }
 }
 
 class BindingMode extends RequiredObject {
@@ -1238,21 +1238,18 @@ class RequiredObject extends Expr {
  */
 class SapExtendCall extends InvokeNode, MethodCallNode {
   SapExtendCall() {
-    /* 1. The receiver object is an imported one */
     exists(RequiredObject requiredModule |
-      requiredModule.asSourceNode().flowsTo(this.getReceiver())
-    ) and
-    /* 2. The method name is `extend` */
-    this.(MethodCallNode).getMethodName() = "extend"
+      this = requiredModule.asSourceNode().getAMemberCall("extend")
+    )
   }
 
   FunctionNode getMethod(string methodName) {
-    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName).(FunctionNode)
+    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName)
   }
 
   FunctionNode getAMethod() { result = this.getMethod(_) }
 
-  string getName() { result = this.getArgument(0).asExpr().(StringLiteral).getValue() }
+  string getName() { result = this.getArgument(0).getALocalSource().getStringValue() }
 
   ObjectLiteralNode getContent() { result = this.getArgument(1) }
 
@@ -1267,39 +1264,25 @@ class SapExtendCall extends InvokeNode, MethodCallNode {
 
   /** Gets the `sap.ui.define` call that wraps this extension. */
   SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1) }
+
+  ThisNode getAThisNode() { result.getBinder() = this.getAMethod() }
 }
 
-private newtype TSapElement =
-  DefinitionOfElement(SapExtendCall extension) or
-  ReferenceOfElement(Reference reference)
+class ElementInstantiation extends NewNode {
+  string importPath;
 
-class SapElement extends TSapElement {
-  SapExtendCall asDefinition() { this = DefinitionOfElement(result) }
-
-  Reference asReference() { this = ReferenceOfElement(result) }
-
-  SapElement getParentElement() {
-    result.asReference() = this.asDefinition().(CustomControl).getController().getAViewReference() or
-    result.asReference() =
-      this.asReference().(ControlReference).getDefinition().getController().getAViewReference() or
-    result.asDefinition() = this.asReference().(ViewReference).getDefinition().getController() or
-    result.asDefinition() = this.asDefinition().(CustomController).getOwnerComponent() or
-    result.asDefinition() =
-      this.asReference().(ControllerReference).getDefinition().getOwnerComponent()
+  ElementInstantiation() {
+    exists(RequiredObject requiredObject |
+      this = requiredObject.asSourceNode().getAnInstantiation() and
+      importPath = requiredObject.getDependency()
+    )
   }
 
-  string toString() {
-    result = this.asDefinition().toString() or
-    result = this.asReference().toString()
+  string getId() {
+    result = this.getArgument(0).(SourceNode).getAPropertyWrite("id").getRhs().getStringValue()
   }
 
-  predicate hasLocationInfo(
-    string filepath, int startline, int startcolumn, int endline, int endcolumn
-  ) {
-    this.asDefinition().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
-    or
-    this.asReference().hasLocationInfo(filepath, startline, startcolumn, endline, endcolumn)
-  }
+  string getImportPath() { result = importPath }
 }
 
 /**
@@ -1312,11 +1295,8 @@ class Metadata extends ObjectLiteralNode {
 
   Metadata() { this = extension.getContent().getAPropertySource("metadata") }
 
-  SourceNode getProperty(string name) {
-    result =
-      any(PropertyMetadata property |
-        property.getParentMetadata() = this and property.getName() = name
-      )
+  PropertyMetadata getProperty(string name) {
+    result.getParentMetadata() = this and result.getName() = name
   }
 }
 
@@ -1368,10 +1348,10 @@ class PropertyMetadata extends ObjectLiteralNode {
    */
   predicate isUnrestrictedStringType() {
     /* text : "string" */
-    this.asExpr().(StringLiteral).getValue() = "string"
+    this.getStringValue() = "string"
     or
     /* text: { type: "string" } */
-    this.getAPropertySource("type").asExpr().(StringLiteral).getValue() = "string"
+    this.getAPropertySource("type").getStringValue() = "string"
     or
     /* text: { someOther: "someOtherVal", ... } */
     not exists(this.getAPropertySource("type"))
