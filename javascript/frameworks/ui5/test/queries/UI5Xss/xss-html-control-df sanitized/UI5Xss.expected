@@ -1,0 +1,24 @@
+nodes
+| webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/controller/app.controller.js:10:17:10:28 | output: null |
+| webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
+| webapp/controller/app.controller.js:15:17:15:21 | input |
+| webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:16:43:16:47 | input |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+edges
+| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| webapp/controller/app.controller.js:10:17:10:28 | output: null | webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+| webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) | webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') |
+| webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) | webapp/view/app.view.xml:8:5:8:37 | content={/output} |
+| webapp/controller/app.controller.js:15:17:15:21 | input | webapp/controller/app.controller.js:16:43:16:47 | input |
+| webapp/controller/app.controller.js:15:25:15:52 | oModel. ... input') | webapp/controller/app.controller.js:15:17:15:21 | input |
+| webapp/controller/app.controller.js:16:43:16:47 | input | webapp/controller/app.controller.js:10:17:10:28 | output: null |
+| webapp/controller/app.controller.js:16:43:16:47 | input | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:8:5:8:37 | content={/output} | webapp/controller/app.controller.js:10:17:10:28 | output: null |
+#select
+| webapp/view/app.view.xml:8:5:8:37 | content={/output} | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/view/app.view.xml:8:5:8:37 | content={/output} | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |

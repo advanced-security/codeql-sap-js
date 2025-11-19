@@ -51,6 +51,15 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 - `sap.ui.core.HTML` Control
 - dataflow in the controller
 
+### [xss-html-control-df sanitized](queries/UI5Xss/xss-html-control-df sanitized)
+- `sap.ui.core.HTML` Control
+- sanitization setting `sanitizeContent` property to true programmatically
+  
+### [xss-html-control-df sanitized-disable](queries/UI5Xss/xss-html-control-df sanitized-disable)
+- `sap.ui.core.HTML` Control
+- sanitization using the `sanitizeContent` property set to true
+- sanitization disabled by programmatically setting the `sanitizeContent` property to false 
+
 ### [xss-html-control-oneway](queries/UI5Xss/xss-html-control-oneway)
 - `sap.ui.core.HTML` Control
 - one-way binding makes the xss fail
