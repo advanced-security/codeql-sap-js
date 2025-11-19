@@ -649,14 +649,11 @@ class XmlView extends UI5View instanceof XmlFile {
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getBindingTarget() = control.getAttribute(property) and
-      /* If the control is an `sap.ui.core.HTML` then the control should be missing the `sanitizeContent` attribute */
-      (
-        getASuperType(type) = "HTMLControl"
-        implies
-        (
-          not exists(control.getAttribute("sanitizeContent")) or
-          control.getAttribute("sanitizeContent").getValue() = "false"
-        )
+      not (
+        getASuperType(type) = "UI5HTMLControl" and
+        // `sap.ui.core.HTML` controls are not sinks if the `sanitizeContent` attribute set to true
+        control.getAttribute("sanitizeContent").getValue() = "true"
+        // TODO: unless progeammatically set ot false
       )
     )
   }

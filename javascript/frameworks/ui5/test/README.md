@@ -42,6 +42,10 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-html-control](queries/UI5Xss/xss-html-control)
 - `sap.ui.core.HTML` Control
+  
+### [xss-html-control sanitized](queries/UI5Xss/xss-html-control sanitized)
+- `sap.ui.core.HTML` Control
+- sanitization using the `sanitizeContent` property set to true
 
 ### [xss-html-control-df](queries/UI5Xss/xss-html-control-df)
 - `sap.ui.core.HTML` Control
@@ -57,7 +61,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-html-view](queries/UI5Xss/xss-html-view)
 - `sap.ui.core.mvc.HTMLView` View
-- 
+
 ### [xss-indirect-control](queries/UI5Xss/xss-indirect-control)
 - control accessed indirectly
 
