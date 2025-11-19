@@ -653,7 +653,7 @@ class XmlView extends UI5View instanceof XmlFile {
         getASuperType(type) = "UI5HTMLControl" and
         // `sap.ui.core.HTML` controls are not sinks if the `sanitizeContent` attribute set to true
         control.getAttribute("sanitizeContent").getValue() = "true"
-        // TODO: unless progeammatically set ot false
+        // TODO: unless progeammatically set to false
       )
     )
   }

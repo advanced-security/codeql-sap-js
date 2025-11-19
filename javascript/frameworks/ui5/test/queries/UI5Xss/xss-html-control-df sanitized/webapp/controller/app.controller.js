@@ -13,9 +13,8 @@ sap.ui.define([
             this.getView().setModel(oModel);
             
             // enable sanitization programmatically
-            //this.getView().setProperty("sanitizeContent", true);
-            this.getView().byId("htmlControl").setProperty("sanitizeContent", true);
-            this.getView().byId("htmlControl").sanitizeContent = true;
+            this.getView().byId("htmlControl").setProperty("sanitizeContent", false);
+            this.getView().byId("htmlControl").sanitizeContent = false;
 
             var input = oModel.getProperty('/input');
             oModel.setProperty('/output', input);

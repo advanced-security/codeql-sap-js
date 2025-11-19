@@ -1,0 +1,8 @@
+{
+  "name": "sap-ui5-xss",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "@ui5/cli": "^4.0.26"
+  }
+}

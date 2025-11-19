@@ -1,0 +1,11 @@
+<template data-controller-name="codeql-sap-js.controller.app">
+     <div data-sap-ui-type="sap.m.Input" 
+          data-placeholder="Enter Payload"
+          data-description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+          data-value="{/input}">
+     </div>
+     <div data-sap-ui-type="sap.ui.core.HTML" 
+          data-content="{/input}"
+          data-sanitizeContent="true">
+     </div>
+</template>
