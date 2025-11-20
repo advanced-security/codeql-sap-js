@@ -1,0 +1,82 @@
+name: XSJS Framework Modeling Task
+description: Task for developing CodeQL queries and models for SAP XSJS framework
+title: "[XSJS]: "
+labels: ["xsjs-framework", "agent-task", "codeql"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`xsjs-modeling-agent`** which specializes in CodeQL modeling for SAP XSJS framework.
+
+        The agent follows:
+        - `.github/instructions/javascript_xsjs_ql.instructions.md`
+        - `.github/prompts/xsjs_framework_development.prompt.md`
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Describe the XSJS modeling task
+      placeholder: |
+        Example: Model SQL injection in XSJS database queries
+        Example: Add remote flow sources for $.request parameters
+        Example: Fix XSS detection in $.response.setBody()
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      options:
+        - New Query
+        - Query Improvement
+        - New Library Model
+        - Bug Fix
+        - Test Case Addition
+        - False Positive Fix
+        - False Negative Fix
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vulnerability_type
+    attributes:
+      label: Vulnerability Type (if applicable)
+      options:
+        - SQL Injection
+        - XSS
+        - Path Injection
+        - Information Disclosure
+        - Other
+        - Not Applicable
+
+  - type: textarea
+    id: example_code
+    attributes:
+      label: Example Code
+      description: Provide example XSJS code
+      placeholder: |
+        ```javascript
+        // test.xsjs
+        var userInput = $.request.parameters.get("id");
+        var query = "SELECT * FROM users WHERE id = '" + userInput + "'";
+        var conn = $.db.getConnection();
+        conn.executeQuery(query);
+        ```
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Requirements Checklist
+      options:
+        - label: Test cases use .xsjs extension
+          required: true
+        - label: CodeQL tests pass
+          required: true
+        - label: Query formatted
+          required: true

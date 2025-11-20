@@ -1,0 +1,109 @@
+name: UI5 Framework Modeling Task
+description: Task for developing CodeQL queries and models for SAPUI5 framework
+title: "[UI5]: "
+labels: ["ui5-framework", "agent-task", "codeql"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`ui5-modeling-agent`** which specializes in CodeQL modeling for SAPUI5 framework.
+
+        The agent follows:
+        - `.github/instructions/javascript_ui5_ql.instructions.md`
+        - `.github/prompts/ui5_framework_development.prompt.md`
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Describe the UI5 modeling task
+      placeholder: |
+        Example: Model XSS vulnerability in UI5 view bindings
+        Example: Add support for new UI5 control types
+        Example: Fix binding expression parser for complex cases
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      description: What kind of task is this?
+      options:
+        - New Query
+        - Query Improvement
+        - New Library Model
+        - Bug Fix
+        - Test Case Addition
+        - False Positive Fix
+        - False Negative Fix
+        - Binding Parser Enhancement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vulnerability_type
+    attributes:
+      label: Vulnerability Type (if applicable)
+      description: What type of vulnerability does this relate to?
+      options:
+        - XSS
+        - Path Injection
+        - Formula Injection
+        - Log Injection
+        - Information Disclosure
+        - Other
+        - Not Applicable
+
+  - type: dropdown
+    id: ui5_component
+    attributes:
+      label: UI5 Component
+      description: Which UI5 component does this relate to?
+      options:
+        - View (XML)
+        - View (JS/HTML)
+        - Controller
+        - Model
+        - Routing
+        - Data Binding
+        - Controls
+        - Other
+
+  - type: textarea
+    id: example_code
+    attributes:
+      label: Example Code
+      description: Provide example UI5 code that demonstrates the pattern
+      placeholder: |
+        ```xml
+        <!-- View.view.xml -->
+        <mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+          <HTML content="{/htmlContent}" />
+        </mvc:View>
+        ```
+        
+        ```javascript
+        // Controller.controller.js
+        onInit: function() {
+          this.getView().getModel().setProperty("/htmlContent", userInput);
+        }
+        ```
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Requirements Checklist
+      options:
+        - label: Test cases include both JS and XML files
+          required: true
+        - label: CodeQL tests pass (`codeql test run`)
+          required: true
+        - label: Query formatted (`codeql query format`)
+          required: true
+        - label: Binding expression parser tested if modified
+          required: false
