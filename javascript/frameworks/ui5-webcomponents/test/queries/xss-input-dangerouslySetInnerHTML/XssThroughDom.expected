@@ -1,0 +1,14 @@
+edges
+| src/App.tsx:7:10:7:13 | todo | src/App.tsx:7:10:7:13 | todo | provenance |  |
+| src/App.tsx:7:10:7:13 | todo | src/App.tsx:27:46:27:49 | todo | provenance |  |
+| src/App.tsx:12:22:12:45 | todoInp ... ?.value | src/App.tsx:12:22:12:51 | todoInp ... e \|\| "" | provenance |  |
+| src/App.tsx:12:22:12:51 | todoInp ... e \|\| "" | src/App.tsx:7:10:7:13 | todo | provenance |  |
+nodes
+| src/App.tsx:7:10:7:13 | todo | semmle.label | todo |
+| src/App.tsx:7:10:7:13 | todo | semmle.label | todo |
+| src/App.tsx:12:22:12:45 | todoInp ... ?.value | semmle.label | todoInp ... ?.value |
+| src/App.tsx:12:22:12:51 | todoInp ... e \|\| "" | semmle.label | todoInp ... e \|\| "" |
+| src/App.tsx:27:46:27:49 | todo | semmle.label | todo |
+subpaths
+#select
+| src/App.tsx:27:46:27:49 | todo | src/App.tsx:12:22:12:45 | todoInp ... ?.value | src/App.tsx:27:46:27:49 | todo | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:12:22:12:45 | todoInp ... ?.value | DOM text |
