@@ -285,7 +285,7 @@ class Renderer extends SapExtendCall {
 
 class CustomControl extends SapExtendCall {
   CustomControl() {
-    this.getReceiver().getALocalSource() =
+    this =
       TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"])
           .getAMemberCall("extend") or
     exists(CustomControl superControl |
@@ -493,7 +493,7 @@ class CustomController extends SapExtendCall {
 
   CustomController() {
     (
-      this.getReceiver().getALocalSource() =
+      this =
         TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
             .getAMemberCall("extend")
       or
@@ -895,7 +895,7 @@ module ManifestJson {
      * Gets the view this target is associated with.
      */
     UI5View getView() {
-      result.getControllerName() =
+      result.getController().getModuleName() =
         getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
     }
 
@@ -1549,11 +1549,4 @@ private int countCharacterInString(string input, string character) {
 bindingset[input, character]
 private string getSubstringAfterLastOccurrenceOfCharacter(string input, string character) {
   result = input.splitAt(character, countCharacterInString(input, character))
-}
-
-private module Notebook {
-  MethodCallNode test1(CustomController controller) {
-    controller.getModuleName() = "EffortDriver" and
-    result = controller.getOwnerComponentRef()
-  }
 }
