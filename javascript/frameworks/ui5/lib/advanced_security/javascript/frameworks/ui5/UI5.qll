@@ -286,7 +286,8 @@ class Renderer extends SapExtendCall {
 class CustomControl extends SapExtendCall {
   CustomControl() {
     this.getReceiver().getALocalSource() =
-      TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"]).getAMemberCall("extend") or
+      TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"])
+          .getAMemberCall("extend") or
     exists(CustomControl superControl |
       superControl.getDefine() = this.getDefine().getSuperModule(_)
     )
@@ -494,7 +495,7 @@ class CustomController extends SapExtendCall {
     (
       this.getReceiver().getALocalSource() =
         TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
-        .getAMemberCall("extend")
+            .getAMemberCall("extend")
       or
       exists(CustomController superController |
         superController.getDefine() = this.getDefine().getSuperModule(_)
@@ -894,7 +895,8 @@ module ManifestJson {
      * Gets the view this target is associated with.
      */
     UI5View getView() {
-      result.getName() = getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
+      result.getControllerName() =
+        getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
     }
 
     /**
