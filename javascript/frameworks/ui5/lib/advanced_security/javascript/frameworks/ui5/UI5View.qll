@@ -197,7 +197,6 @@ predicate isBuiltInControl(string qualifiedTypeUri) {
 /**
  * A UI5 View that might include XSS sources and sinks in standard controls.
  */
-/* TODO: Update docstring */
 abstract class UI5View extends File {
   abstract string getControllerName();
 
