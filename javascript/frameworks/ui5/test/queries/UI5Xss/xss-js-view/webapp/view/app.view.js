@@ -19,6 +19,10 @@ sap.ui.jsview("codeql-sap-js.view.app", {
         }),
         new sap.ui.core.HTML({
             content: "{/input}"
+        }),
+        new sap.ui.core.HTML({
+            content: "{/input}",
+            sanitizeContent: true
         })];
     }
 });

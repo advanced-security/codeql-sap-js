@@ -107,6 +107,7 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     }
 
     UI5PathNode getAPrimaryHtmlISink() {
+      not result.asUI5BindingPathNode().getControlDeclaration().isSanitizedControl() and
       if
         this.asDataFlowNode() instanceof LocalModelContentBoundBidirectionallyToHtmlISinkControl or
         this.asDataFlowNode() instanceof UI5ExternalModel // TODO: Narrow it down to ExternalModelBoundToHtmlISinkControl
