@@ -42,23 +42,12 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-html-control](queries/UI5Xss/xss-html-control)
 - `sap.ui.core.HTML` Control
-  
-### [xss-html-control sanitized](queries/UI5Xss/xss-html-control sanitized)
-- `sap.ui.core.HTML` Control
-- sanitization using the `sanitizeContent` property set to true
+- sanitization using the `sanitizeContent` property
+- sanitization disabled by programmatically setting the `sanitizeContent` property to false 
 
 ### [xss-html-control-df](queries/UI5Xss/xss-html-control-df)
 - `sap.ui.core.HTML` Control
 - dataflow in the controller
-
-### [xss-html-control-df sanitized](queries/UI5Xss/xss-html-control-df sanitized)
-- `sap.ui.core.HTML` Control
-- sanitization setting `sanitizeContent` property to true programmatically
-  
-### [xss-html-control-df sanitized-disable](queries/UI5Xss/xss-html-control-df sanitized-disable)
-- `sap.ui.core.HTML` Control
-- sanitization using the `sanitizeContent` property set to true
-- sanitization disabled by programmatically setting the `sanitizeContent` property to false 
 
 ### [xss-html-control-oneway](queries/UI5Xss/xss-html-control-oneway)
 - `sap.ui.core.HTML` Control
@@ -79,6 +68,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-json-view](queries/UI5Xss/xss-json-view)
 - `sap.ui.core.mvc.JSONView` View
+- sanitization using the `sanitizeContent` property
 
 ### [xss-separate-renderer](queries/UI5Xss/xss-separate-renderer)
 - `renderer` property is set to a class name (a string)

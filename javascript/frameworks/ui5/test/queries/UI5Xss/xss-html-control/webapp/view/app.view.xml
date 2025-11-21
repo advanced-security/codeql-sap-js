@@ -4,6 +4,26 @@
     xmlns:mvc="sap.ui.core.mvc">
     <Input placeholder="Enter Payload" 
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
-        value="{/input}" />  <!--User input source sap.m.Input.value -->
-    <core:HTML content="{/input}"/> <!--XSS sink sap.ui.core.HTML.content -->
+        value="{/input0}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML content="{/input0}"/> <!--XSS sink sap.ui.core.HTML.content -->
+    
+    <Input placeholder="Enter Payload (will be sanitized)" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input1}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML id="htmlSanitized" content="{/input1}" sanitizeContent="true"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+        
+    <Input placeholder="Enter Payload (will be sanitized)" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input2}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML id="htmlJsSanitized2" content="{/input2}"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+            
+    <Input placeholder="Enter Payload (will be sanitized)" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input3}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML id="htmlJsSanitized3" content="{/input3}"/> <!--XSS sink sap.ui.core.HTML.content -->
+    
+    <Input placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input4}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML id="htmUnsanitized" content="{/input4}" sanitizeContent="true"/> <!--XSS sink sap.ui.core.HTML.content -->
 </mvc:View>
