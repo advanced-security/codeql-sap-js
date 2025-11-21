@@ -16,7 +16,6 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - ALWAYS follow test-driven development (TDD) practices using CodeQL test commands.
 - ALWAYS run `codeql query format --in-place <file>` before committing changes to QL files.
 - ALWAYS use `codeql test run` to validate query changes before committing.
-- ALWAYS use `codeql test extract` to create test databases for AST exploration.
 - ALWAYS validate query behavior with both positive (should alert) and negative (should not alert) test cases.
 - NEVER make assumptions about UI5 framework behavior - validate with real code and CodeQL CLI.
 - NEVER commit query changes without passing tests.
@@ -49,7 +48,7 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - ALWAYS create comprehensive test cases in `javascript/frameworks/ui5/test/`.
 - ALWAYS include both JavaScript controllers and XML views in tests.
 - ALWAYS verify expected results before accepting with `codeql test accept`.
-- ALWAYS use `codeql test extract` + PrintAST query to understand unfamiliar patterns.
+- ALWAYS use `codeql test run` with a PrintAST query to understand unfamiliar patterns.
 - ALWAYS test binding expression parsing separately.
 
 ## PREFERENCES
