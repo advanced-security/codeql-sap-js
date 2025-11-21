@@ -1,0 +1,96 @@
+name: "Copilot Setup Steps"
+
+on:
+  # Allow manual testing through the repository's "Actions" tab
+  workflow_dispatch: {}
+  # Automatically run the setup steps when an associated workflow is changed.
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/setup-codeql-environment/action.yml
+      - qlt.conf.json
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - .github/actions/setup-codeql-environment/action.yml
+      - qlt.conf.json
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install QLT
+        id: install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        with:
+          qlt-version: 'latest'
+          add-to-path: true
+
+      - name: Install CodeQL
+        id: install-codeql
+        shell: bash
+        run: |
+          echo "Installing CodeQL"
+          qlt codeql run install
+          echo "-----------------------------"
+          echo "CodeQL Home: $QLT_CODEQL_HOME"
+          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+
+      - name: Verify Versions of Tooling
+        shell: bash
+        run: |
+          echo -e "Checking CodeQL Version:"
+          $QLT_CODEQL_PATH --version
+
+          echo -e "Checking QLT Version:"
+          echo "QLT Home: ${{ steps.install-qlt.outputs.qlt-home }}"
+          qlt version
+
+      - name: Install QL Packs
+        shell: bash
+        run: |
+          echo "Installing QL pack dependencies"
+          qlt codeql run pack install --no-strict-mode javascript/frameworks/cap
+          qlt codeql run pack install --no-strict-mode javascript/frameworks/ui5
+          qlt codeql run pack install --no-strict-mode javascript/frameworks/xsjs
+
+      - name: Setup Node.js for CDS Extractor
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: extractors/cds/tools/package-lock.json
+
+      - name: Install CDS Extractor Dependencies
+        shell: bash
+        working-directory: extractors/cds/tools
+        run: |
+          echo "Installing CDS extractor npm dependencies"
+          npm ci
+
+      - name: Build CDS Extractor
+        shell: bash
+        working-directory: extractors/cds/tools
+        run: |
+          echo "Building CDS extractor"
+          npm run build
+
+      - name: Verify Setup Complete
+        shell: bash
+        run: |
+          echo "✅ Setup complete and verified:"
+          echo "  - QLT installed: $(qlt version)"
+          echo "  - CodeQL installed: $($QLT_CODEQL_PATH --version)"
+          echo "  - Node.js: $(node --version)"
+          echo "  - npm: $(npm --version)"
+          echo "  - CDS extractor built successfully"
