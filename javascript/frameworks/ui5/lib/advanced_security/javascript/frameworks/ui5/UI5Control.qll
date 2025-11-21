@@ -140,7 +140,7 @@ class UI5Control extends TUI5Control {
   }
 
   /** Holds if this control reads from or writes to a model. */
-  predicate accessesModel(UI5Model model) { accessesModel(model, _) }
+  predicate accessesModel(UI5Model model) { this.accessesModel(model, _) }
 
   /** Holds if this control reads from or writes to a model with regards to a binding path. */
   predicate accessesModel(UI5Model model, XmlBindingPath bindingPath) {
@@ -171,12 +171,12 @@ class UI5Control extends TUI5Control {
    * is set to true and never set to false anywhere
    */
   predicate isSanitizedControl() {
-    not this = sanitizeContentSetTo(false) and
+    not this = this.sanitizeContentSetTo(false) and
     (
       this.getControlTypeName() = "sap/ui/richttexteditor/RichTextEditor"
       or
       this.getControlTypeName() = "sap/ui/core/HTML" and
-      this = sanitizeContentSetTo(true)
+      this = this.sanitizeContentSetTo(true)
     )
   }
 
