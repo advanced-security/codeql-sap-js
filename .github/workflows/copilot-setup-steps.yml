@@ -47,15 +47,20 @@ jobs:
           echo "Installing CodeQL using configuration from qlt.conf.json"
           qlt codeql run install
           echo "-----------------------------"
-          echo "CodeQL Home: $QLT_CODEQL_HOME"
-          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+          
+          # Get CodeQL paths from QLT
+          CODEQL_HOME=$(qlt codeql get home)
+          CODEQL_PATH=$(qlt codeql get path)
+          
+          echo "CodeQL Home: $CODEQL_HOME"
+          echo "CodeQL Binary: $CODEQL_PATH"
           
           # Add CodeQL to PATH for subsequent steps
-          if [[ -n "$QLT_CODEQL_HOME" ]]; then
-            echo "$QLT_CODEQL_HOME" >> "$GITHUB_PATH"
-            echo "✅ Added CodeQL to PATH: $QLT_CODEQL_HOME"
+          if [[ -n "$CODEQL_HOME" ]]; then
+            echo "$CODEQL_HOME" >> "$GITHUB_PATH"
+            echo "✅ Added CodeQL to PATH: $CODEQL_HOME"
           else
-            echo "❌ QLT_CODEQL_HOME not set"
+            echo "❌ CodeQL home path not found"
             exit 1
           fi
 
