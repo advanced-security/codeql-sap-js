@@ -3,7 +3,7 @@ name: CDS Extractor Distribution Bundle
 on:
   push:
     branches: [ main ]
-    paths: 
+    paths:
       - 'extractors/cds/**'
   pull_request:
     branches: [ main ]
@@ -16,30 +16,30 @@ jobs:
   bundle-validation:
     name: CDS extractor bundle validation
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v5
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v6
       with:
-        node-version: '20'
         cache: 'npm'
         cache-dependency-path: 'extractors/cds/tools/package-lock.json'
-    
+        node-version-file: 'extractors/cds/tools/package.json'
+
     - name: Install node dependencies
       working-directory: extractors/cds/tools
       run: npm ci
-    
+
     - name: Run TS code linter
       working-directory: extractors/cds/tools
       run: npm run lint
-    
+
     - name: Run TS code unit tests with coverage report
       working-directory: extractors/cds/tools
       run: npm run test:coverage
-    
+
     - name: Build and validate the CDS extractor bundle
       working-directory: extractors/cds/tools
       run: npm run build:validate
