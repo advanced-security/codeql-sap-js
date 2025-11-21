@@ -45,9 +45,20 @@ jobs:
         shell: bash
         run: |
           echo "Installing QL pack dependencies"
-          codeql pack install --no-strict-mode javascript/frameworks/cap
-          codeql pack install --no-strict-mode javascript/frameworks/ui5
-          codeql pack install --no-strict-mode javascript/frameworks/xsjs
+          codeql pack install --no-strict-mode javascript/frameworks/cap/ext
+          codeql pack install --no-strict-mode javascript/frameworks/cap/lib
+          codeql pack install --no-strict-mode javascript/frameworks/cap/src
+          codeql pack install --no-strict-mode javascript/frameworks/cap/test
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/ext
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/lib
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/src
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/test
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/ext
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/lib
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/src
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/test
+          codeql pack install --no-strict-mode javascript/heuristic-models/ext
+          codeql pack install --no-strict-mode javascript/heuristic-models/tests
 
       - name: Copilot Setup Steps - Setup NodeJS for CDS extractor
         uses: actions/setup-node@v6
