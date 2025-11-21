@@ -42,7 +42,7 @@ jobs:
             
     - name: Initialize CodeQL
       id: initialize-codeql
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       env:
         # Add our custom extractor to the CodeQL search path
         CODEQL_ACTION_EXTRA_OPTIONS: '{"database":{"init":["--search-path","${{ github.workspace }}/extractors"]}}'
@@ -62,7 +62,7 @@ jobs:
 
     - name: Perform CodeQL Analysis
       id: analyze
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4
       env:
         LGTM_INDEX_XML_MODE: all
         LGTM_INDEX_FILETYPES: ".json:JSON"
