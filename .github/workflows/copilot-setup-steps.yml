@@ -3,21 +3,25 @@ name: "Copilot Setup Steps"
 on:
   # Allow manual testing through the repository's "Actions" tab
   workflow_dispatch: {}
-  # Automatically run the setup steps when an associated workflow is changed.
+  # Automatically run the setup steps when an associated file is changed.
   push:
     branches:
       - main
     paths:
       - .github/workflows/copilot-setup-steps.yml
-      - .github/actions/setup-codeql-environment/action.yml
       - qlt.conf.json
+      - extractors/cds/tools/package.json
+      - extractors/cds/tools/package-lock.json
+      - javascript/frameworks/*/qlpack.yml
   pull_request:
     branches:
       - main
     paths:
       - .github/workflows/copilot-setup-steps.yml
-      - .github/actions/setup-codeql-environment/action.yml
       - qlt.conf.json
+      - extractors/cds/tools/package.json
+      - extractors/cds/tools/package-lock.json
+      - javascript/frameworks/*/qlpack.yml
 
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
