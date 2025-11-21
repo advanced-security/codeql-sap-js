@@ -1,0 +1,106 @@
+name: Dependency Upgrade Task
+description: Task for upgrading CodeQL CLI, QLT, Node.js dependencies, or GitHub Actions
+title: "[DEPS]: "
+labels: ["dependencies", "agent-task"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`dependency-upgrade-agent`** which specializes in dependency maintenance.
+
+        The agent follows:
+        - `.github/instructions/dependency_upgrades.instructions.md`
+        - `.github/prompts/dependency_upgrade.prompt.md`
+
+  - type: dropdown
+    id: dependency_category
+    attributes:
+      label: Dependency Category
+      description: What type of dependency needs upgrading?
+      options:
+        - Node.js Package (CDS Extractor)
+        - CodeQL CLI
+        - QLT CLI
+        - GitHub Actions
+    validations:
+      required: true
+
+  - type: textarea
+    id: packages
+    attributes:
+      label: Package(s) to Upgrade
+      description: List the package(s) and desired versions
+      placeholder: |
+        - @sap/cds: 7.4.0 → 7.5.0
+        - axios: 1.5.0 → 1.6.2
+        
+        Or for CLI:
+        - CodeQL CLI: 2.14.6 → 2.15.4
+        
+        Or for Actions:
+        - actions/checkout: v3 → v4
+    validations:
+      required: true
+
+  - type: dropdown
+    id: upgrade_reason
+    attributes:
+      label: Reason for Upgrade
+      description: Why is this upgrade needed?
+      options:
+        - Security Vulnerability
+        - Bug Fix
+        - New Features
+        - Routine Maintenance
+        - Deprecation Warning
+    validations:
+      required: true
+
+  - type: textarea
+    id: breaking_changes
+    attributes:
+      label: Known Breaking Changes
+      description: Are there any known breaking changes? (Check release notes)
+      placeholder: |
+        - List breaking changes from release notes
+        - Or: "None identified"
+        - Or: "Need to review release notes"
+
+  - type: textarea
+    id: security_info
+    attributes:
+      label: Security Information
+      description: If this is a security fix, provide details
+      placeholder: |
+        - CVE number (if applicable)
+        - npm audit output
+        - Severity level
+        - Description of vulnerability
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional information
+      placeholder: |
+        - Links to release notes
+        - Related issues
+        - Testing considerations
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Validation Checklist
+      options:
+        - label: Release notes reviewed
+          required: true
+        - label: Breaking changes documented
+          required: true
+        - label: Tests will pass after upgrade
+          required: true
+        - label: No new security vulnerabilities introduced
+          required: true

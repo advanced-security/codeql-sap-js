@@ -1,0 +1,94 @@
+name: "Copilot Setup Steps"
+
+on:
+  # Allow manual testing through the repository's "Actions" tab
+  workflow_dispatch: {}
+  # Automatically run the setup steps when an associated file is changed.
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - qlt.conf.json
+      - extractors/cds/tools/package.json
+      - extractors/cds/tools/package-lock.json
+      - javascript/frameworks/*/qlpack.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+      - qlt.conf.json
+      - extractors/cds/tools/package.json
+      - extractors/cds/tools/package-lock.json
+      - javascript/frameworks/*/qlpack.yml
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Copilit Setup Steps - Install codeql and qlt
+        id: setup-codeql-environment
+        uses: advanced-security/codeql-development-template/.github/actions/setup-codeql-environment@main
+        with:
+          install-codeql: true
+          install-language-runtimes: false
+          install-ql-packs: false
+
+      - name: Copilot Setup Steps - Install QL packs
+        shell: bash
+        run: |
+          echo "Installing QL pack dependencies"
+          codeql pack install --no-strict-mode javascript/frameworks/cap/ext
+          codeql pack install --no-strict-mode javascript/frameworks/cap/lib
+          codeql pack install --no-strict-mode javascript/frameworks/cap/src
+          codeql pack install --no-strict-mode javascript/frameworks/cap/test
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/ext
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/lib
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/src
+          codeql pack install --no-strict-mode javascript/frameworks/ui5/test
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/ext
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/lib
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/src
+          codeql pack install --no-strict-mode javascript/frameworks/xsjs/test
+          codeql pack install --no-strict-mode javascript/heuristic-models/ext
+          codeql pack install --no-strict-mode javascript/heuristic-models/tests
+
+      - name: Copilot Setup Steps - Setup NodeJS for CDS extractor
+        uses: actions/setup-node@v6
+        with:
+          cache: npm
+          cache-dependency-path: extractors/cds/tools/package-lock.json
+          node-version-file: extractors/cds/tools/package.json
+
+      - name: Copilot Setup Steps - Install CDS Extractor Dependencies
+        shell: bash
+        working-directory: extractors/cds/tools
+        run: |
+          echo "Installing CDS extractor npm dependencies"
+          npm ci
+
+      - name: Copilot Setup Steps - Build CDS extractor
+        shell: bash
+        working-directory: extractors/cds/tools
+        run: |
+          echo "Building CDS extractor"
+          npm run build
+
+      - name: Copilot Setup Steps - Verify setup complete
+        shell: bash
+        run: |
+          echo "✅ Setup complete and verified:"
+          echo "  - QLT installed: $(qlt version)"
+          echo "  - QLT in PATH: $(which qlt)"
+          echo "  - CodeQL installed: $(codeql --version | head -1)"
+          echo "  - CodeQL in PATH: $(which codeql)"
+          echo "  - Node.js: $(node --version)"
+          echo "  - npm: $(npm --version)"
+          echo "  - CDS extractor built successfully"

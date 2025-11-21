@@ -1,0 +1,99 @@
+name: GitHub Maintenance Task
+description: Task for maintaining .github infrastructure (agents, instructions, prompts, templates, workflows)
+title: "[GITHUB]: "
+labels: ["github-maintenance", "agent-task"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`github-maintenance-agent`** which specializes in maintaining `.github/` infrastructure.
+
+        The agent follows:
+        - `.github/instructions/github_maintenance.instructions.md`
+        - `.github/prompts/github_maintenance.prompt.md`
+
+  - type: dropdown
+    id: maintenance_type
+    attributes:
+      label: Maintenance Type
+      description: What needs to be maintained?
+      options:
+        - Add New Agent
+        - Update Existing Agent
+        - Add New Instruction File
+        - Update Instruction File
+        - Add New Prompt File
+        - Update Prompt File
+        - Add Issue Template
+        - Update Issue Template
+        - Add/Update PR Template
+        - Update Workflow
+        - Update PROMPTS.md
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Describe what needs to be done
+      placeholder: |
+        Example: Create new agent for Java query development
+        Example: Update CAP agent to include new responsibilities
+        Example: Fix broken link in PROMPTS.md diagram
+        Example: Add validation workflow for agent files
+    validations:
+      required: true
+
+  - type: textarea
+    id: files_affected
+    attributes:
+      label: Files Affected
+      description: List the files that will be created, modified, or deleted
+      placeholder: |
+        - .github/agents/new-agent.md (create)
+        - .github/instructions/existing.instructions.md (update)
+        - PROMPTS.md (update diagram)
+
+  - type: textarea
+    id: hierarchy_impact
+    attributes:
+      label: Hierarchy Impact
+      description: How does this change affect the prompts hierarchy?
+      placeholder: |
+        - Adding new connection from issue template to instruction
+        - New prompt linked from instruction file
+        - No hierarchy changes (content update only)
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional information
+      placeholder: |
+        - References to similar agents/templates
+        - Reasons for the change
+        - Expected outcomes
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Validation Checklist
+      options:
+        - label: Agent files have proper frontmatter (if applicable)
+          required: false
+        - label: Instruction files have applyTo pattern (if applicable)
+          required: false
+        - label: PROMPTS.md diagram updated (if structure changed)
+          required: false
+        - label: YAML syntax validated (for templates/workflows)
+          required: false
+        - label: No broken internal links
+          required: true
+        - label: Follows best practices from agents.md guide
+          required: true
