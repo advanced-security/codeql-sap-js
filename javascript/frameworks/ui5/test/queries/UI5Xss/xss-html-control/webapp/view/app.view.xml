@@ -2,8 +2,24 @@
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
     xmlns:mvc="sap.ui.core.mvc">
-    <Input placeholder="Enter Payload" 
+     <Input placeholder="Enter Input Payload" 
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
         value="{/input}" />  <!--User input source sap.m.Input.value -->
+    <ComboBoxTextField placeholder="Enter ComboBoxTextField Payload" 
+        value="{/input}" />  <!--User input source sap.m.ComboBoxTextField.value -->    
+    <DatePicker placeholder="Enter DatePicker Payload" 
+        value="{/input}" />  <!--User input source sap.m.DatePicker.value -->
+    <TextArea placeholder="Enter TextArea Payload" 
+        value="{/input}" />  <!--User input source sap.m.TextArea.value -->
+    <ComboBoxBase placeholder="Enter ComboBoxBase Payload" 
+        value="{/input}" />  <!--User input source sap.m.ComboBoxBase.value -->
+    <SearchField placeholder="Enter SearchField Payload" 
+        value="{/input}" />  <!--User input source sap.m.SearchField.value -->
+    <MultiInput placeholder="Enter MultiInput Payload" 
+        value="{/input}" />  <!--User input source sap.m.MultiInput.value -->
+    <FeedInput placeholder="Enter FeedInput Payload" 
+        value="{/input}" />  <!--User input source sap.m.FeedInput.value -->
+    <InputBase placeholder="Enter InputBase Payload" 
+        value="{/input}" />  <!--User input source sap.m.InputBase.value -->
     <core:HTML content="{/input}"/> <!--XSS sink sap.ui.core.HTML.content -->
 </mvc:View>

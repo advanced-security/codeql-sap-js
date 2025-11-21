@@ -56,6 +56,7 @@ extensions:
       - ["UI5InputControl", "sap/m/MaskEnabler", ""]
       - ["UI5InputControl", "sap/m/MaskInput", ""]
       - ["UI5InputControl", "sap/m/TextArea", ""]
+      - ["UI5InputControl", "sap/m/DatePicker", ""]
       - ["UI5InputControl", "sap/m/ComboBoxBase", ""]
       - ["UI5InputControl", "sap/m/MultiInput", ""]
       - ["UI5InputControl", "sap/ui/webc/main/MultiInput", ""]
