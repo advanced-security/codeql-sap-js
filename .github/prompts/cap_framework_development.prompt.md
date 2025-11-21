@@ -6,6 +6,61 @@ This prompt provides comprehensive guidance for developing CodeQL queries and li
 
 CAP is a framework for building enterprise-grade services and applications. This prompt helps you model CAP-specific patterns in CodeQL to detect security vulnerabilities.
 
+## CAP Framework Documentation
+
+When working with CAP framework modeling, reference these official documentation resources:
+
+### Core Concepts
+- [CAP Best Practices](https://cap.cloud.sap/docs/about/best-practices) - Recommended patterns and approaches
+- [CAP Bad Practices](https://cap.cloud.sap/docs/about/bad-practices) - Anti-patterns to avoid
+- [Conceptual Definition Language (CDL)](https://cap.cloud.sap/docs/cds/cdl) - Domain modeling language
+- [Principles of CDS Models](https://cap.cloud.sap/docs/cds/models) - Model structure and organization
+
+### CDS Language & Schema
+- [CDS Core Schema Notation (CSN)](https://cap.cloud.sap/docs/cds/csn) - Core schema representation
+- [CDS Expression Notation (CXN)](https://cap.cloud.sap/docs/cds/cxn) - Expression syntax
+- [CDS Core / Built-in Types](https://cap.cloud.sap/docs/cds/types) - Type system
+- [CDS Common Reuse Types and Aspects](https://cap.cloud.sap/docs/cds/common) - Reusable components
+- [CDS Common Annotations](https://cap.cloud.sap/docs/cds/annotations) - Metadata annotations
+- [CDS Compiler Messages](https://cap.cloud.sap/docs/cds/compiler/messages) - Compiler diagnostics
+- [CDS Aspect Oriented Modeling](https://cap.cloud.sap/docs/cds/aspects) - Cross-cutting concerns
+
+### Node.js Runtime
+- [CAP Node.js `cds` facade object](https://cap.cloud.sap/docs/node.js/cds-facade) - Main API interface
+- [CAP Node.js Best Practices](https://cap.cloud.sap/docs/node.js/best-practices) - Runtime patterns
+- [CAP Node.js Authentication](https://cap.cloud.sap/docs/node.js/authentication) - Security guide
+- [CAP Node.js Transaction Management](https://cap.cloud.sap/docs/node.js/cds-tx) - Database transactions
+
+Use these resources to understand CAP/CDS patterns when modeling security vulnerabilities.
+
+## Agent Goals for CAP Framework Modeling
+
+When working with CAP framework CodeQL queries and libraries, focus on these primary objectives:
+
+### 1. Identify and Fix Modeling Gaps
+- Review existing CodeQL library modeling in `javascript/frameworks/cap/lib/`
+- Identify missing or incomplete models for CAP/CDS APIs, annotations, and patterns
+- Extend models to cover additional CAP framework components
+- Ensure accurate modeling of data flow through CAP event handlers and services
+
+### 2. Create and Improve Test Cases
+- Develop **COMPLIANT** test cases showing correct/safe CAP usage patterns
+- Develop **NON_COMPLIANT** test cases demonstrating security vulnerabilities
+- Ensure tests cover realistic CAP application scenarios
+- Include both JavaScript service implementations and CDS schema definitions
+
+### 3. Improve Existing Queries
+- Enhance query performance (runtime efficiency)
+- Reduce false positives while maintaining detection coverage
+- Improve result precision and accuracy
+- Only modify queries when specifically requested
+
+### 4. Write New Queries
+- Create queries for distinct problematic CAP/CDS patterns not covered by existing queries
+- Focus on security vulnerabilities specific to CAP framework usage
+- Ensure queries leverage CAP-specific library models
+- Include comprehensive test coverage for new queries
+
 ## CAP Framework Basics
 
 ### Key Concepts
@@ -41,11 +96,11 @@ srv.after('READ', 'Books', async (data, req) => {
 Before modeling, understand how the pattern works:
 
 ```bash
-# Extract a test database
-codeql test extract javascript/frameworks/cap/test/example
+# Create test database and run query in one command
+codeql test run javascript/frameworks/cap/test/example
 
-# Run PrintAST query to see structure
-codeql query run PrintAST.ql --database javascript/frameworks/cap/test/example
+# View test results
+cat javascript/frameworks/cap/test/example/*.expected
 ```
 
 ### 2. Create Test Cases
@@ -111,11 +166,11 @@ private class CapRequestDataStep extends TaintTracking::AdditionalTaintStep {
 ### 5. Test the Model
 
 ```bash
-# Run tests
+# Run tests (extracts database and runs query)
 codeql test run javascript/frameworks/cap/test/sql-injection
 
 # If results differ from expected, review them
-codeql bqrs decode javascript/frameworks/cap/test/sql-injection/.../results.bqrs --format=text
+cat javascript/frameworks/cap/test/sql-injection/*.actual
 
 # Accept if correct
 codeql test accept javascript/frameworks/cap/test/sql-injection

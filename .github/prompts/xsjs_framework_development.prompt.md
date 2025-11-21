@@ -6,6 +6,40 @@ This prompt provides guidance for developing CodeQL queries and library models f
 
 XSJS is SAP's server-side JavaScript runtime for HANA. This prompt helps model XSJS-specific security patterns.
 
+## XSJS Framework Documentation
+
+When working with XSJS framework modeling, reference these official documentation resources:
+
+### Core References
+- [SAP HANA XS JavaScript Reference](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/b907648a90cd49caabb30dc2d5a7de05.html) - Main API reference
+- [XS JavaScript API Documentation](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/2b62a71581794f7ebc782da49d2c8d38.html) - Complete API docs
+
+### Key APIs for Security Modeling
+- [$.request Object](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/cd7dcc4a7e3d4f06b7e8f1f6f3e0f34f.html) - HTTP request handling
+- [$.response Object](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/cd7dcc4a7e3d4f06b7e8f1f6f3e0f34f.html) - HTTP response writing
+- [$.db Connection](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/cd7dcc4a7e3d4f06b7e8f1f6f3e0f34f.html) - Database access
+- [$.session Object](https://help.sap.com/docs/SAP_HANA_PLATFORM/d89d4595fae647eabc14002c0340a999/cd7dcc4a7e3d4f06b7e8f1f6f3e0f34f.html) - Session management
+
+Use these resources to understand XSJS patterns when modeling security vulnerabilities.
+
+## Agent Goals for XSJS Framework Modeling
+
+Focus on security vulnerabilities specific to XSJS:
+
+### 1. SQL Injection
+- Model unsafe database query construction
+- Track tainted data from $.request to $.db operations
+- Identify parameterized vs concatenated queries
+
+### 2. XSS Vulnerabilities
+- Model unsafe $.response output
+- Track tainted data written to HTTP response
+- Identify missing output encoding
+
+### 3. Path Injection
+- Model file system operations with user-controlled paths
+- Track tainted paths in XSJS library access
+
 ## XSJS Framework Basics
 
 ### Key Concepts

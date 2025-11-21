@@ -7,50 +7,46 @@ description: 'Expert in developing CodeQL queries and library models for SAP Clo
 
 My `cap-modeling-agent`:
 
-- Specializes in CodeQL query and library development for SAP CAP framework security analysis.
-- Obeys all `.github/instructions/javascript_cap_ql.instructions.md` instructions from this repository.
-- Utilizes the `.github/prompts/cap_framework_development.prompt.md` prompt as the primary guide for CAP modeling tasks.
-- Follows test-driven development practices for CodeQL queries using `codeql test` commands.
-- Works primarily in the `javascript/frameworks/cap/` directory structure.
-- Understands CAP-specific patterns:
+- Specializes in CodeQL query and library development for SAP CAP framework security analysis
+- Obeys all [CAP framework instructions](../instructions/javascript_cap_ql.instructions.md)
+- Utilizes the [CAP framework development prompt](../prompts/cap_framework_development.prompt.md) as primary guide
+- References [CodeQL test commands](../prompts/codeql_test_commands.prompt.md) for testing workflows
+- Follows test-driven development practices for CodeQL queries
+- Works primarily in the `javascript/frameworks/cap/` directory structure
+- Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
+- Understands CAP-specific patterns (see [CAP development prompt](../prompts/cap_framework_development.prompt.md) for details):
   - Event handlers (srv.on, srv.before, srv.after)
   - Remote flow sources from request parameters
   - CDS service definitions and implementations
   - CAP-specific data flow and taint tracking
-- Creates comprehensive test cases in `javascript/frameworks/cap/test/` with expected results.
-- Uses `codeql test extract` to create test databases for AST exploration.
-- Always runs CodeQL tests before committing query changes.
-- Never makes assumptions - validates everything with CodeQL CLI.
+- Creates comprehensive test cases in `javascript/frameworks/cap/test/` with expected results
+- Never makes assumptions - validates everything with CodeQL CLI
 
 ## Commands
 
-CodeQL testing and development:
+See [CodeQL Test Commands Reference](../prompts/codeql_test_commands.prompt.md) for detailed command usage.
+
+**Primary workflow:**
 ```bash
-# Format QL code
-codeql query format --in-place <query-file.ql>
-
-# Compile query
-codeql query compile <query-file.ql>
-
-# Run tests
+# Run tests (extracts DB and runs query)
 codeql test run javascript/frameworks/cap/test/<test-dir>
 
-# Accept test results (after verification)
+# Accept results after verification
 codeql test accept javascript/frameworks/cap/test/<test-dir>
 
-# Extract test database for AST exploration
-codeql test extract javascript/frameworks/cap/test/<test-dir>
-
-# Run query against test database
-codeql query run <query-file.ql> --database <test-database>
+# Format query files
+codeql query format --in-place <query-file.ql>
 ```
+
+Refer to the [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete command reference and important notes.
 
 ## Testing
 
+Refer to [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete testing workflow.
+
 - Create realistic test cases in `javascript/frameworks/cap/test/`
 - Each test should have source code and expected results
-- Use `codeql test run` to validate query behavior
-- Use `codeql test extract` + AST queries to understand code structure
+- Use `codeql test run` to validate query behavior (see commands reference)
 - Test both positive cases (should alert) and negative cases (should not alert)
 - Update `.expected` files after verifying correctness
 

@@ -6,6 +6,84 @@ This prompt provides comprehensive guidance for developing and maintaining the C
 
 The CDS extractor is a TypeScript-based tool that integrates with CodeQL's JavaScript extractor to analyze CDS files in SAP CAP projects. It compiles CDS files to JavaScript and ensures proper extraction for CodeQL analysis.
 
+## CDS Documentation Resources
+
+When working with the CDS extractor, reference these official documentation resources:
+
+### Core CDS Concepts
+- [CDS Overview](https://cap.cloud.sap/docs/cds/) - Introduction to CDS
+- [Conceptual Definition Language (CDL)](https://cap.cloud.sap/docs/cds/cdl) - CDS syntax and grammar
+- [CDS Compiler](https://cap.cloud.sap/docs/cds/compiler) - Compiler behavior and options
+- [CDS Core Schema Notation (CSN)](https://cap.cloud.sap/docs/cds/csn) - Compiler output format
+
+### CDS Language Features
+- [CDS Types](https://cap.cloud.sap/docs/cds/types) - Built-in types
+- [CDS Annotations](https://cap.cloud.sap/docs/cds/annotations) - Metadata annotations
+- [CDS Aspects](https://cap.cloud.sap/docs/cds/aspects) - Aspect-oriented modeling
+- [CDS Models](https://cap.cloud.sap/docs/cds/models) - Model structure
+
+Use these resources to understand how CDS files should be parsed and compiled.
+
+## CDS Extractor Build and Test
+
+The CDS extractor is built and tested using the workflow defined in `.github/workflows/cds-extractor-dist-bundle.yml`.
+
+### Build Process
+
+```bash
+cd extractors/cds/tools
+
+# Install dependencies
+npm install
+
+# Run linting
+npm run lint:fix
+
+# Run tests
+npm test
+
+# Build distribution bundle
+npm run build
+
+# Complete validation (lint + test + build)
+npm run build:all
+```
+
+### Testing Approach
+
+The extractor uses Jest for unit testing with the following structure:
+
+```
+extractors/cds/tools/
+├── src/                      # Source code
+│   ├── cds/
+│   │   ├── compiler/        # CDS compilation logic
+│   │   └── parser/          # CDS parsing logic
+│   ├── logging/             # Logging utilities
+│   ├── packageManager/      # npm dependency management
+│   ├── codeql.ts           # CodeQL integration
+│   ├── diagnostics.ts      # Error reporting
+│   └── environment.ts      # Environment setup
+└── test/
+    └── src/                 # Unit tests (mirrors src/ structure)
+        ├── cds/
+        ├── logging/
+        └── ...
+```
+
+### Test Execution
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- path/to/test.test.ts
+```
+
 ## Development Workflow
 
 ### 1. Understanding the Architecture

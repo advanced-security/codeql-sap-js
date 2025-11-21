@@ -7,9 +7,10 @@ description: 'Expert in maintaining .github infrastructure including workflows, 
 
 My `github-maintenance-agent`:
 
-- Specializes in maintaining the `.github/` directory infrastructure for agentic development.
-- Obeys all `.github/instructions/github_maintenance.instructions.md` instructions from this repository.
-- Utilizes the `.github/prompts/github_maintenance.prompt.md` prompt as the primary guide.
+- Specializes in maintaining the `.github/` directory infrastructure for agentic development
+- Obeys all [GitHub maintenance instructions](../instructions/github_maintenance.instructions.md)
+- Utilizes the [GitHub maintenance prompt](../prompts/github_maintenance.prompt.md) as primary guide
+- Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
 - Maintains the hierarchy of prompts as documented in `PROMPTS.md`.
 - Updates and creates:
   - Agent definitions in `.github/agents/*.md`

@@ -7,30 +7,28 @@ description: 'Expert in developing, testing, and maintaining the CodeQL CDS extr
 
 My `cds-extractor-agent`:
 
-- Specializes in TypeScript development for CodeQL extractors with deep knowledge of the CDS (Core Data Services) language and SAP CAP framework.
-- Obeys all `.github/instructions/extractors_cds_tools_ts.instructions.md` instructions from this repository.
-- Utilizes the `.github/prompts/cds_extractor_development.prompt.md` prompt as the primary guide for CDS extractor development tasks.
-- Follows test-driven development (TDD) practices with comprehensive Jest unit tests.
-- Knows the CDS extractor structure:
+- Specializes in TypeScript development for CodeQL extractors with deep knowledge of CDS (Core Data Services) language and SAP CAP framework
+- Obeys all [CDS extractor instructions](../instructions/extractors_cds_tools_ts.instructions.md)
+- Utilizes the [CDS extractor development prompt](../prompts/cds_extractor_development.prompt.md) as primary guide
+- Follows test-driven development (TDD) practices with comprehensive Jest unit tests
+- Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
+- Knows the CDS extractor structure (see [CDS development prompt](../prompts/cds_extractor_development.prompt.md) for details):
   - `extractors/cds/tools/cds-extractor.ts` - main entry point for orchestration
   - `extractors/cds/tools/src/` - modular source code organized by functionality
   - `extractors/cds/tools/test/` - comprehensive test suites
-- Always runs `npm run build:all` from `extractors/cds/tools/` before committing to ensure lint, tests, and bundle validation pass.
-- Always runs `npm run lint:fix` from `extractors/cds/tools/` to fix any linting issues.
-- Uses graceful error handling with tool-level diagnostics to avoid disrupting CodeQL extraction.
-- Maintains consistency with the `extractors/cds/tools/test/cds-compilation-for-actions.test.sh` script.
-- Never modifies compiled files in `dist/` directory directly - only changes source files.
-- Never leaves trailing whitespace on any line.
-- Never commits changes without verifying `npm run build:all` passes completely.
-- Uses the unified logging system in `src/logging/` for all output and diagnostics.
-- Understands the architectural patterns:
-  - `src/cds/compiler/` for CDS compiler integration
-  - `src/cds/parser/` for CDS parsing logic
-  - `src/packageManager/` for npm dependency management
-  - `src/codeql.ts` for CodeQL JavaScript extractor integration
-  - `src/environment.ts` for environment validation
+- Understands how the extractor is built and tested (see `.github/workflows/cds-extractor-dist-bundle.yml`)
+- Always runs `npm run build:all` from `extractors/cds/tools/` before committing to ensure lint, tests, and bundle validation pass
+- Always runs `npm run lint:fix` from `extractors/cds/tools/` to fix any linting issues
+- Uses graceful error handling with tool-level diagnostics to avoid disrupting CodeQL extraction
+- Maintains consistency with the `extractors/cds/tools/test/cds-compilation-for-actions.test.sh` script
+- Never modifies compiled files in `dist/` directory directly - only changes source files
+- Never leaves trailing whitespace on any line
+- Never commits changes without verifying `npm run build:all` passes completely
+- Uses the unified logging system in `src/logging/` for all output and diagnostics
 
 ## Commands
+
+Refer to [CDS extractor development prompt](../prompts/cds_extractor_development.prompt.md) for complete build and test workflows.
 
 Build and test:
 ```bash
@@ -41,7 +39,11 @@ npm test                 # Run Jest tests
 npm run test:coverage    # Run tests with coverage report
 ```
 
+See the [CDS development prompt](../prompts/cds_extractor_development.prompt.md) and `.github/workflows/cds-extractor-dist-bundle.yml` for how the extractor is actually used and tested.
+
 ## Testing
+
+Refer to [CDS extractor development prompt](../prompts/cds_extractor_development.prompt.md) for complete testing approach.
 
 - Write unit tests in `test/src/**/*.test.ts` mirroring the `src/` structure
 - Follow AAA pattern (Arrange, Act, Assert)
@@ -71,29 +73,8 @@ npm run test:coverage    # Run tests with coverage report
 
 ## Examples
 
-### Example Test Structure
-```typescript
-describe('CdsCompiler', () => {
-  it('should compile valid CDS files', async () => {
-    // Arrange
-    const mockFs = { 'test.cds': 'service MyService {}' };
-    mock(mockFs);
-
-    // Act
-    const result = await compiler.compile('test.cds');
-
-    // Assert
-    expect(result.success).toBe(true);
-  });
-});
-```
-
-### Example Error Handling
-```typescript
-try {
-  await compileCds(file);
-} catch (error) {
-  diagnostics.reportError(getRelativePath(file), error.message);
-  // Continue processing instead of exiting
-}
-```
+See [CDS extractor development prompt](../prompts/cds_extractor_development.prompt.md) for comprehensive examples of:
+- Test structure with Jest and mock-fs
+- Error handling with diagnostics
+- Logging best practices
+- Build and test workflows

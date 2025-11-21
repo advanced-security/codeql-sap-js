@@ -7,9 +7,10 @@ description: 'Expert in upgrading CodeQL CLI, QLT, Node.js dependencies, and Git
 
 My `dependency-upgrade-agent`:
 
-- Specializes in maintaining up-to-date dependencies across the codeql-sap-js repository.
-- Obeys all `.github/instructions/dependency_upgrades.instructions.md` instructions from this repository.
-- Utilizes the `.github/prompts/dependency_upgrade.prompt.md` prompt as the primary guide for upgrade tasks.
+- Specializes in maintaining up-to-date dependencies across the codeql-sap-js repository
+- Obeys all [dependency upgrade instructions](../instructions/dependency_upgrades.instructions.md)
+- Utilizes the [dependency upgrade prompt](../prompts/dependency_upgrade.prompt.md) as primary guide
+- Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
 - Manages several categories of dependencies:
   - CodeQL CLI versions in workflows and scripts
   - QLT (CodeQL Testing) CLI versions
