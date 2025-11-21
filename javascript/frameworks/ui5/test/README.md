@@ -65,6 +65,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-js-view](queries/UI5Xss/xss-js-view)
 - `sap.ui.core.mvc.JSView` View
+- sanitization using the `sanitizeContent` property
 
 ### [xss-json-view](queries/UI5Xss/xss-json-view)
 - `sap.ui.core.mvc.JSONView` View
