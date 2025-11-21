@@ -46,14 +46,12 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - ALWAYS create comprehensive test cases in `javascript/frameworks/xsjs/test/`.
 - ALWAYS include realistic XSJS code patterns in tests.
 - ALWAYS verify expected results before accepting with `codeql test accept`.
-- ALWAYS use `codeql test run` with a PrintAST query to understand unfamiliar patterns.
 
 ## PREFERENCES
 
 - PREFER using CodeQL's standard library classes and predicates over custom implementations.
 - PREFER precise modeling that minimizes false positives.
 - PREFER test cases that represent real-world XSJS usage patterns.
-- PREFER to explore AST with PrintAST queries before implementing new models.
 
 ## CONSTRAINTS
 

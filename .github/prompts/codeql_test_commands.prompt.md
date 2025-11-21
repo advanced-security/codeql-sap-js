@@ -84,7 +84,6 @@ codeql query format --in-place <query-file.ql>
 
 ## Important Notes
 
-- **Do NOT use** `codeql test extract` in normal workflow - `codeql test run` handles extraction
 - **Do NOT use** `codeql query run` for testing - use `codeql test run` instead
 - Tests automatically handle database extraction, query execution, and result comparison
 - Always review `.actual` files before accepting with `codeql test accept`

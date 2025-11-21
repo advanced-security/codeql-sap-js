@@ -48,7 +48,6 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - ALWAYS create comprehensive test cases in `javascript/frameworks/ui5/test/`.
 - ALWAYS include both JavaScript controllers and XML views in tests.
 - ALWAYS verify expected results before accepting with `codeql test accept`.
-- ALWAYS use `codeql test run` with a PrintAST query to understand unfamiliar patterns.
 - ALWAYS test binding expression parsing separately.
 
 ## PREFERENCES
@@ -56,7 +55,6 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - PREFER using CodeQL's standard library classes and predicates over custom implementations.
 - PREFER precise modeling that minimizes false positives.
 - PREFER test cases that represent real-world UI5 usage patterns.
-- PREFER to explore AST with PrintAST queries before implementing new models.
 - PREFER to test binding expression parser changes thoroughly.
 
 ## CONSTRAINTS
