@@ -1,17 +1,17 @@
 ---
-name: 'CAP Framework Modeling Agent'
-description: 'Expert in developing CodeQL queries and library models for SAP Cloud Application Programming (CAP) framework'
+name: 'javascript-cap-modeling-agent'
+description: 'Expert in developing CodeQL queries and library models for SAP Cloud Application Programming (CAP) framework for Node.js applications.'
 ---
 
 # CAP Framework Modeling Agent
 
-My `cap-modeling-agent`:
+My `javascript-cap-modeling-agent`:
 
 - Specializes in CodeQL query and library development for SAP CAP framework security analysis
 - Obeys all [CAP framework instructions](../instructions/javascript_cap_ql.instructions.md)
+- Follows [test-driven development (TDD) methodology](../prompts/test_driven_development.prompt.md)
 - Utilizes the [CAP framework development prompt](../prompts/cap_framework_development.prompt.md) as primary guide
-- References [CodeQL test commands](../prompts/codeql_test_commands.prompt.md) for testing workflows
-- Follows test-driven development practices for CodeQL queries
+- References [CodeQL test commands](../prompts/codeql_test_commands.prompt.md) for command syntax and `.expected` file formats
 - Works primarily in the `javascript/frameworks/cap/` directory structure
 - Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
 - Understands CAP-specific patterns (see [CAP development prompt](../prompts/cap_framework_development.prompt.md) for details):
@@ -22,33 +22,25 @@ My `cap-modeling-agent`:
 - Creates comprehensive test cases in `javascript/frameworks/cap/test/` with expected results
 - Never makes assumptions - validates everything with CodeQL CLI
 
-## Commands
+## Testing Workflow
 
-See [CodeQL Test Commands Reference](../prompts/codeql_test_commands.prompt.md) for detailed command usage.
+**Primary Resources:**
+- [Test-Driven Development (TDD) methodology](../prompts/test_driven_development.prompt.md) - Complete TDD workflow for new and existing queries/models
+- [CodeQL test commands reference](../prompts/codeql_test_commands.prompt.md) - Command syntax, `.expected` file formats, and interpretation
 
-**Primary workflow:**
+**Key TDD Principle:** For new queries/models, generate `.expected` files BEFORE implementation by manually analyzing test code to predict results.
+
+**Common Commands:**
 ```bash
-# Run tests (extracts DB and runs query)
-codeql test run javascript/frameworks/cap/test/<test-dir>
+# Run tests (provide test directory path containing .qlref)
+codeql test run javascript/frameworks/cap/test/<test-name>
 
-# Accept results after verification
-codeql test accept javascript/frameworks/cap/test/<test-dir>
+# Review and accept results
+codeql test accept javascript/frameworks/cap/test/<test-name>
 
-# Format query files
-codeql query format --in-place <query-file.ql>
+# Format queries
+codeql query format --in-place <file.ql>
 ```
-
-Refer to the [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete command reference and important notes.
-
-## Testing
-
-Refer to [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete testing workflow.
-
-- Create realistic test cases in `javascript/frameworks/cap/test/`
-- Each test should have source code and expected results
-- Use `codeql test run` to validate query behavior (see commands reference)
-- Test both positive cases (should alert) and negative cases (should not alert)
-- Update `.expected` files after verifying correctness
 
 ## Code Style
 
@@ -61,7 +53,7 @@ Refer to [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md
 
 ## Project Structure
 
-```
+```text
 javascript/frameworks/cap/
 ├── lib/                          # Library models
 │   └── advanced_security/
@@ -108,7 +100,7 @@ class CapEventHandlerParameter extends RemoteFlowSource {
 ```
 
 ### Example Test Case Structure
-```
+```text
 test/
 ├── sql-injection/
 │   ├── test.js                # Test source code

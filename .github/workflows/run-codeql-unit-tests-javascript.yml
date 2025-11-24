@@ -1,6 +1,5 @@
 name: ⚙️ CodeQL - Run Unit Tests (javascript)
 
-
 on:
   push:
     branches:
@@ -144,7 +143,6 @@ jobs:
           qlt-version: 'latest'
           add-to-path: true
 
-
       - name: Collect test results
         uses: actions/download-artifact@v6
 
@@ -152,4 +150,3 @@ jobs:
         run: |
           qlt test run validate-unit-tests --pretty-print --results-directory . >> $GITHUB_STEP_SUMMARY
           qlt test run validate-unit-tests --results-directory .
-          

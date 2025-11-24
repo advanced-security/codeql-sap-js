@@ -37,10 +37,10 @@ body:
       placeholder: |
         - @sap/cds: 7.4.0 → 7.5.0
         - axios: 1.5.0 → 1.6.2
-        
+
         Or for CLI:
         - CodeQL CLI: 2.14.6 → 2.15.4
-        
+
         Or for Actions:
         - actions/checkout: v3 → v4
     validations:

@@ -86,7 +86,7 @@ body:
           <HTML content="{/htmlContent}" />
         </mvc:View>
         ```
-        
+
         ```javascript
         // Controller.controller.js
         onInit: function() {

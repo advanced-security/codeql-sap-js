@@ -91,43 +91,111 @@ srv.after('READ', 'Books', async (data, req) => {
 
 ## CodeQL Modeling Workflow
 
-### 1. Understand the Pattern
+### TDD Approach for New Queries/Models
 
-Before modeling, understand how the pattern works:
+Follow this test-driven development approach:
 
-```bash
-# Create test database and run query in one command
-codeql test run javascript/frameworks/cap/test/example
+### 1. Document Detection Goal
 
-# View test results
-cat javascript/frameworks/cap/test/example/*.expected
+Clearly specify what the query/model should detect:
+
+```markdown
+## Detection Goal
+Pattern: SQL injection via CAP srv.run() with user input
+Source: req.data properties in event handlers
+Sink: String argument to srv.run()
+Expected Results: 2 alerts (positive cases), 0 alerts for sanitized input (negative case)
 ```
 
-### 2. Create Test Cases
+### 2. Create Test Code
 
-Always create tests first:
+Write test cases demonstrating both vulnerable and safe patterns:
 
 ```javascript
-// javascript/frameworks/cap/test/sql-injection/test.js
+// javascript/frameworks/cap/test/queries/sql-injection/test.js
 const cds = require('@sap/cds');
 
 module.exports = async (srv) => {
+  // POSITIVE CASE 1: Direct injection
   srv.on('READ', 'Books', async (req) => {
-    const userInput = req.data.title; // Source
-    await srv.run(`SELECT * FROM Books WHERE title = '${userInput}'`); // Sink
+    const userInput = req.data.title; // Source at line 6
+    await srv.run(`SELECT * FROM Books WHERE title = '${userInput}'`); // Sink at line 7
+  });
+
+  // POSITIVE CASE 2: Via variable
+  srv.on('UPDATE', 'Books', async (req) => {
+    const id = req.data.id; // Source at line 12
+    const query = `DELETE FROM Books WHERE id = ${id}`; // Flow at line 13
+    await srv.run(query); // Sink at line 14
+  });
+
+  // NEGATIVE CASE: Parameterized (safe)
+  srv.on('DELETE', 'Books', async (req) => {
+    await srv.run('SELECT * FROM Books WHERE id = ?', [req.data.id]); // Safe
   });
 };
 ```
 
-Expected results:
+### 3. Generate `.expected` File BEFORE Implementation
+
+Manually create the expected results based on your analysis:
+
+**For Model Tests** (validating library modeling):
 ```
-// javascript/frameworks/cap/test/sql-injection/sql-injection.expected
-| test.js:5:12:5:59 | ... + ... | test.js:4:23:4:37 | req.data.title | This query depends on a $@. | test.js:4:23:4:37 | user-provided value | user-provided value |
+// javascript/frameworks/cap/test/models/cql/insert/insert.expected
+| insert.js:2:14:5:2 | insert.js:2 | insert.js:2:14:5:2 | INSERT( ... " },\\n]) |
+| insert.js:6:14:9:2 | insert.js:6 | insert.js:6:14:9:2 | INSERT( ... " },\\n]) |
+```
+Each line = one matched instance of the modeled API/pattern.
+
+**For Query Tests** (validating security queries):
+
+Analyze the test code to predict data flow:
+- Line 6: `req.data.title` is the source
+- Line 7: Template literal flows tainted data to `srv.run()` sink
+- Line 12: `req.data.id` is another source
+- Line 13: Assignment creates intermediate flow node
+- Line 14: `srv.run(query)` is the sink
+- Line 19: Safe case - should have NO alert
+
+Create `.expected` file with predicted results:
+
+```bash
+cat > javascript/frameworks/cap/test/queries/sql-injection/sql-injection.expected << 'EOF'
+edges
+| test.js:6:18:6:32 | req.data.title | test.js:6:11:6:19 | userInput | provenance |  |
+| test.js:6:11:6:19 | userInput | test.js:7:56:7:65 | userInput | provenance |  |
+| test.js:12:15:12:23 | req.data.id | test.js:12:11:12:12 | id | provenance |  |
+| test.js:12:11:12:12 | id | test.js:13:47:13:48 | id | provenance |  |
+| test.js:13:11:13:15 | query | test.js:14:18:14:22 | query | provenance |  |
+
+nodes
+| test.js:6:18:6:32 | req.data.title | semmle.label | req.data.title |
+| test.js:6:11:6:19 | userInput | semmle.label | userInput |
+| test.js:7:56:7:65 | userInput | semmle.label | userInput |
+| test.js:12:15:12:23 | req.data.id | semmle.label | req.data.id |
+| test.js:12:11:12:12 | id | semmle.label | id |
+| test.js:13:47:13:48 | id | semmle.label | id |
+| test.js:13:11:13:15 | query | semmle.label | query |
+| test.js:14:18:14:22 | query | semmle.label | query |
+
+#select
+| test.js:7:11:7:67 | srv.run(...) | test.js:6:18:6:32 | req.data.title | test.js:7:56:7:65 | userInput | This query depends on a $@. | test.js:6:18:6:32 | req.data.title | user-provided value |
+| test.js:14:11:14:23 | srv.run(query) | test.js:12:15:12:23 | req.data.id | test.js:14:18:14:22 | query | This query depends on a $@. | test.js:12:15:12:23 | req.data.id | user-provided value |
+EOF
 ```
 
-### 3. Implement Remote Flow Sources
+**Key Analysis Points:**
+- Count expected alerts: 2 (lines 6-7 and 12-14)
+- Identify all flow steps for `edges` section
+- Include all nodes in data flow for `nodes` section
+- Format `#select` with proper message template
 
-Model sources in `lib/.../RemoteFlowSources.qll`:
+### 4. Implement the Query/Model
+
+Now implement the CodeQL code to detect the pattern:
+
+**For Remote Flow Sources** (`lib/.../RemoteFlowSources.qll`):
 
 ```ql
 private import javascript
@@ -216,6 +284,26 @@ class CdsServiceReference extends Expr {
 2. **Both positive and negative cases**: Test what should and shouldn't alert
 3. **Include CDS files**: When relevant to the pattern
 4. **Document expected behavior**: Comment in test files why something should alert
+5. **Understand .expected files**:
+   - Model tests: Count lines to verify all expected matches are found
+   - Query tests: Focus on `#select` section for actual alerts
+   - Validate data flow paths in `edges` section make logical sense
+6. **Find existing tests**: Use `find javascript/frameworks/cap/ -type f -name "*.expected"` to locate similar tests
+
+### Understanding Test Results
+
+**Model Test Results** (`test/models/`):
+- Simple output: one line per matched API usage
+- Validates that library correctly identifies CAP/CDS patterns
+- Example: Testing `CqlInsert` class finds all `INSERT.into()` calls
+
+**Query Test Results** (`test/queries/`):
+- Complex output with multiple sections:
+  - `edges`: Shows data flow from source → sink
+  - `nodes`: All intermediate taint tracking steps
+  - `#select`: **Final alerts** (this is what users see)
+- Validates end-to-end security vulnerability detection
+- Count lines in `#select` to know how many alerts are expected
 
 ## Validation Checklist
 

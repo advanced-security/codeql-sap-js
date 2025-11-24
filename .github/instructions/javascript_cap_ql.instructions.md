@@ -14,6 +14,8 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 ### COMMON REQUIREMENTS
 
 - ALWAYS follow test-driven development (TDD) practices using CodeQL test commands.
+- ALWAYS generate `.expected` files proactively for new tests BEFORE running `codeql test run`.
+- ALWAYS analyze test code to predict expected results rather than only accepting actual results.
 - ALWAYS run `codeql query format --in-place <file>` before committing changes to QL files.
 - ALWAYS use `codeql test run` to validate query changes before committing.
 - ALWAYS validate query behavior with both positive (should alert) and negative (should not alert) test cases.
@@ -42,7 +44,19 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 
 - ALWAYS create comprehensive test cases in `javascript/frameworks/cap/test/`.
 - ALWAYS include both JavaScript and CDS files in tests when relevant.
-- ALWAYS verify expected results before accepting with `codeql test accept`.
+- FOR NEW TESTS: Generate `.expected` file BEFORE implementing the query/model:
+  1. Document what pattern should be detected
+  2. Create test code demonstrating the pattern
+  3. Manually create `.expected` file with predicted results based on analysis
+  4. Implement the query/model
+  5. Run `codeql test run` - ideally test passes immediately
+- FOR EXISTING TESTS: Verify expected results before accepting with `codeql test accept`.
+- ALWAYS understand the format of `.expected` files:
+  - Model tests: Each line = one matched instance of the modeled API/pattern
+  - Query tests: Multiple sections (edges, nodes, #select) showing data flow and alerts
+- ALWAYS validate that `.expected` files contain the correct number of results.
+- ALWAYS check that `#select` section in query tests shows only legitimate security alerts.
+- ALWAYS use `find javascript/frameworks/cap/ -type f -name "*.expected"` to locate test files.
 
 ## PREFERENCES
 

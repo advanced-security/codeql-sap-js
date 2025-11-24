@@ -46,6 +46,12 @@ This file contains instructions for working with CodeQL query (`.ql`) and librar
 - ALWAYS create comprehensive test cases in `javascript/frameworks/xsjs/test/`.
 - ALWAYS include realistic XSJS code patterns in tests.
 - ALWAYS verify expected results before accepting with `codeql test accept`.
+- ALWAYS understand the format of `.expected` files:
+  - Model tests: Each line = one matched instance of the modeled API/pattern
+  - Query tests: Multiple sections (edges, nodes, #select) showing data flow and alerts
+- ALWAYS validate that `.expected` files contain the correct number of results.
+- ALWAYS check that `#select` section in query tests shows only legitimate security alerts.
+- ALWAYS use `find javascript/frameworks/xsjs/ -type f -name "*.expected"` to locate test files.
 
 ## PREFERENCES
 

@@ -9,9 +9,9 @@ My `javascript-xsjs-modeling-agent`:
 
 - Specializes in CodeQL query and library development for SAP XSJS framework security analysis
 - Obeys all [XSJS framework instructions](../instructions/javascript_xsjs_ql.instructions.md)
+- Follows [test-driven development (TDD) methodology](../prompts/test_driven_development.prompt.md)
 - Utilizes the [XSJS framework development prompt](../prompts/xsjs_framework_development.prompt.md) as primary guide
-- References [CodeQL test commands](../prompts/codeql_test_commands.prompt.md) for testing workflows
-- Follows test-driven development practices for CodeQL queries
+- References [CodeQL test commands](../prompts/codeql_test_commands.prompt.md) for command syntax and `.expected` file formats
 - Works primarily in the `javascript/frameworks/xsjs/` directory structure
 - Uses [Copilot PR template](../PULL_REQUEST_TEMPLATE/copilot-template.md) when creating pull requests
 - Understands XSJS-specific patterns (see [XSJS development prompt](../prompts/xsjs_framework_development.prompt.md) for details):
@@ -43,15 +43,25 @@ codeql query format --in-place <query-file.ql>
 
 Refer to the [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete command reference.
 
-## Testing
+## Testing Workflow
 
-Refer to [CodeQL test commands prompt](../prompts/codeql_test_commands.prompt.md) for complete testing workflow.
+**Primary Resources:**
+- [Test-Driven Development (TDD) methodology](../prompts/test_driven_development.prompt.md) - Complete TDD workflow for new and existing queries/models
+- [CodeQL test commands reference](../prompts/codeql_test_commands.prompt.md) - Command syntax, `.expected` file formats, and interpretation
 
-- Create realistic XSJS test cases in `javascript/frameworks/xsjs/test/`
-- Each test should have source code and expected results
-- Use `codeql test run` to validate query behavior (see commands reference)
-- Test both positive cases (should alert) and negative cases (should not alert)
-- Update `.expected` files after verifying correctness
+**Key TDD Principle:** For new queries/models, generate `.expected` files BEFORE implementation by manually analyzing test code to predict results.
+
+**Common Commands:**
+```bash
+# Run tests (provide test directory path containing .qlref)
+codeql test run javascript/frameworks/xsjs/test/<test-name>
+
+# Review and accept results
+codeql test accept javascript/frameworks/xsjs/test/<test-name>
+
+# Format queries
+codeql query format --in-place <file.ql>
+```
 
 ## Code Style
 
