@@ -366,3 +366,10 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
     logArgumentToListener(start, end)
   }
 }
+
+class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    start = ModelOutput::getATypeNode("UI5PublishedEventData").getInducingNode() and
+    end = ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter").getInducingNode()
+  }
+}

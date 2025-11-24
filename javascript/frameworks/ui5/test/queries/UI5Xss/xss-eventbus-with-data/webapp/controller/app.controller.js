@@ -32,5 +32,4 @@ sap.ui.define([
       oHtmlOutput.setContent(model.message);
     }
   });
-}
-);
+});

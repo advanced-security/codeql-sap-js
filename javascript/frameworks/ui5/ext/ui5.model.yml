@@ -70,6 +70,9 @@ extensions:
       - ["UI5ClientStorage", "global", "Member[jQuery].Member[sap].Member[storage]"]
       - ["UI5ClientStorage", "sap/ui/core/util/File", ""]
       - ["UI5ClientStorage", "global", "Member[sap].Member[ui].Member[core].Member[util].Member[File]"]
+      # Publishing and Subscribing to Events
+      - ["UI5PublishedEventData", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue.Member[publish].Argument[2]"]
+      - ["UI5EventSubscriptionHandlerDataParameter", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue.Member[subscribe].Argument[2].Parameter[2]"]
 
   - addsTo:
       pack: codeql/javascript-all
