@@ -1,11 +1,11 @@
 ---
-name: 'XSJS Framework Modeling Agent'
+name: 'javascript-xsjs-modeling-agent'
 description: 'Expert in developing CodeQL queries and library models for SAP XSJS (XS JavaScript) framework'
 ---
 
 # XSJS Framework Modeling Agent
 
-My `xsjs-modeling-agent`:
+My `javascript-xsjs-modeling-agent`:
 
 - Specializes in CodeQL query and library development for SAP XSJS framework security analysis
 - Obeys all [XSJS framework instructions](../instructions/javascript_xsjs_ql.instructions.md)

@@ -268,7 +268,5 @@ Before committing any changes:
 
 ## Related Resources
 
-- Jest documentation: https://jestjs.io/
-- TypeScript documentation: https://www.typescriptlang.org/
 - SAP CDS documentation: https://cap.cloud.sap/docs/cds/
 - CodeQL extractor documentation: https://codeql.github.com/docs/codeql-cli/extractor-options/

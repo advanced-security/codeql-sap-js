@@ -114,9 +114,6 @@ Update version in `.github/workflows/*.yml`:
 ```bash
 # Check Dependabot alerts
 # Navigate to repository → Security → Dependabot alerts
-
-# Or manually check action repositories
-# Example: https://github.com/actions/checkout/releases
 ```
 
 ### Update Actions
@@ -190,6 +187,4 @@ Before committing:
 
 ## Related Resources
 
-- npm documentation: https://docs.npmjs.com/
 - CodeQL releases: https://github.com/github/codeql-cli-binaries/releases
-- GitHub Actions marketplace: https://github.com/marketplace?type=actions

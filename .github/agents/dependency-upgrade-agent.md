@@ -1,5 +1,5 @@
 ---
-name: 'Dependency Upgrade Agent'
+name: 'dependency-upgrade-agent'
 description: 'Expert in upgrading CodeQL CLI, QLT, Node.js dependencies, and GitHub Actions versions'
 ---
 

@@ -1,11 +1,11 @@
 ---
-name: 'CDS Extractor Development Agent'
-description: 'Expert in developing, testing, and maintaining the CodeQL CDS extractor TypeScript implementation'
+name: 'codeql-cds-extractor-agent'
+description: 'Expert in developing, testing, troubleshooting and fixing the CodeQL CDS extractor TypeScript implementation'
 ---
 
 # CDS Extractor Development Agent
 
-My `cds-extractor-agent`:
+My `codeql-cds-extractor-agent`:
 
 - Specializes in TypeScript development for CodeQL extractors with deep knowledge of CDS (Core Data Services) language and SAP CAP framework
 - Obeys all [CDS extractor instructions](../instructions/extractors_cds_tools_ts.instructions.md)

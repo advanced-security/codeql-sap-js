@@ -47,6 +47,13 @@ jobs:
           install-language-runtimes: false
           install-ql-packs: false
 
+      - name: Copilot Setup Steps - Install apt packages
+        shell: bash
+        run: |
+          echo "Installing apt packages"
+          sudo apt update
+          sudo apt install -y jq yamllint
+
       - name: Copilot Setup Steps - Install QL packs
         shell: bash
         run: |

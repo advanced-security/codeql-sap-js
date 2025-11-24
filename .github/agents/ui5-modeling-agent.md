@@ -1,11 +1,11 @@
 ---
-name: 'UI5 Framework Modeling Agent'
+name: 'javascript-ui5-modeling-agent'
 description: 'Expert in developing CodeQL queries and library models for SAPUI5 framework'
 ---
 
 # UI5 Framework Modeling Agent
 
-My `ui5-modeling-agent`:
+My `javascript-ui5-modeling-agent`:
 
 - Specializes in CodeQL query and library development for SAPUI5 framework security analysis
 - Obeys all [UI5 framework instructions](../instructions/javascript_ui5_ql.instructions.md)

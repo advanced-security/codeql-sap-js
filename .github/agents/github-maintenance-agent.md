@@ -1,5 +1,5 @@
 ---
-name: 'GitHub Maintenance Agent'
+name: 'github-maintenance-agent'
 description: 'Expert in maintaining .github infrastructure including workflows, templates, agents, instructions, and prompts'
 ---
 
@@ -27,13 +27,6 @@ My `github-maintenance-agent`:
 
 Validate GitHub Actions workflows:
 ```bash
-# Install actionlint if not available
-# brew install actionlint  # macOS
-# or download from https://github.com/rhysd/actionlint
-
-# Validate all workflows
-actionlint .github/workflows/*.yml
-
 # Check YAML syntax
 yamllint .github/workflows/*.yml
 ```

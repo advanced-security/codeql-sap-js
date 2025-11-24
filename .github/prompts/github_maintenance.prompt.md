@@ -220,4 +220,3 @@ gh issue create --web
 
 - Agents.md guide: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/
 - GitHub Actions syntax: https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
-- Mermaid diagram syntax: https://mermaid-js.github.io/mermaid/
