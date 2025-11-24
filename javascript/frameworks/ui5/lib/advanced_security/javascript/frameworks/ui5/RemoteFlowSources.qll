@@ -90,42 +90,23 @@ class ODataServiceModel extends UI5ExternalModel {
   override string getSourceType() { result = "ODataServiceModel" }
 
   ODataServiceModel() {
-    exists(MethodCallNode setModelCall, CustomController controller |
-      /*
-       * 1. This flows from a DF node corresponding to the parent component's model
-       * to the `this.setModel` call. e.g.
-       *
-       * `this.getOwnerComponent().getModel("someModelName")` as in
-       * `this.getView().setModel(this.getOwnerComponent().getModel("someModelName"))`.
-       */
-
-      modelName = this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
+    exists(CustomController controller |
       this.getCalleeName() = "getModel" and
-      controller.getOwnerComponentRef().flowsTo(this.(MethodCallNode).getReceiver()) and
-      this.flowsTo(setModelCall.getArgument(0)) and
-      setModelCall = controller.getAViewReference().getAMemberCall("setModel") and
-      /*
-       * 2. The component's `manifest.json` declares the DataSource as being of OData type.
-       */
-
+      modelName = this.getArgument(0).getALocalSource().getStringValue() and
       controller.getOwnerComponent().getExternalModelDef(modelName).getDataSource() instanceof
-        ODataDataSourceManifest
+        ODataDataSourceManifest // A component's `manifest.json` declares the data source as being of OData type.
     )
     or
     /*
-     * A constructor call to sap.ui.model.odata.v2.ODataModel or sap.ui.model.odata.v4.ODataModel.
+     * A constructor call to `sap.ui.model.odata.v2.ODataModel` or `sap.ui.model.odata.v4.ODataModel`.
      */
 
     this instanceof NewNode and
-    (
-      exists(RequiredObject oDataModel |
-        oDataModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-        oDataModel.getDependency() in [
-            "sap/ui/model/odata/v2/ODataModel", "sap/ui/model/odata/v4/ODataModel"
-          ]
-      )
-      or
-      this.getCalleeName() = "ODataModel"
+    exists(RequiredObject oDataModel |
+      oDataModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+      oDataModel.getDependency() in [
+          "sap/ui/model/odata/v2/ODataModel", "sap/ui/model/odata/v4/ODataModel"
+        ]
     ) and
     modelName = "<no name>"
   }

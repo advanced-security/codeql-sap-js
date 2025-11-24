@@ -1,6 +1,7 @@
 import javascript
 import DataFlow
 import advanced_security.javascript.frameworks.ui5.JsonParser
+import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
@@ -167,10 +168,16 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       sap.getName() = "sap" and
       sapUi.getBase() = sap and
       sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine
-      // and this.getMethodName() = "define"
+      this.getReceiver() = sapUiDefine and
+      this.getMethodName() = ["define", "require"] // TODO: Treat sap.ui.declare in its own class
     )
   }
+
+  SapExtendCall getExtendCall() { result.getDefine() = this }
+
+  string getName() { result = this.getExtendCall().getName() }
+
+  Module asModule() { result = this.getTopLevel() }
 
   string getDependency(int i) {
     result = this.(AmdModuleDefinition).getDependencyExpr(i).getStringValue()
@@ -187,17 +194,48 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   WebApp getWebApp() { this.getFile() = result.getAResource() }
 
   /**
-   * Gets the module defined with sap.ui.define that imports and extends this module.
+   * Gets the module defined with sap.ui.define that imports and extends (subclasses) this module.
    */
-  SapDefineModule getExtendingModule() {
-    exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
-      baseExtendCall.getDefine() = this and
-      result = subclassExtendCall.getDefine() and
-      result
-          .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
-          .asSourceNode()
-          .flowsTo(subclassExtendCall.getReceiver())
+  SapDefineModule getExtendingModule() { result.getSuperModule(_) = this }
+
+  /**
+   * Gets the module that this module imports via path `importPath`.
+   */
+  SapDefineModule getImportedModule(string importPath) {
+    /* 1. Absolute import paths: We resolve this ourselves. */
+    exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+      /*
+       *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
+       *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
+       *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
+       *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+       */
+
+      importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
+      importedModuleDefinitionPath = result.getExtendCall().getName() and
+      importedModuleDefinitionPathSlashNormalized =
+        importedModuleDefinitionPath.replaceAll(".", "/") and
+      importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
     )
+    or
+    /*
+     * 2. Relative import paths: We delegate the heaving lifting of resolving to
+     * `Import.resolveImportedPath/0`.
+     */
+
+    exists(Import import_ |
+      importPath = import_.getImportedPathExpr().getStringValue() and
+      import_ = this.asModule().getAnImport() and
+      import_.resolveImportedPath() = result.getTopLevel()
+    )
+  }
+
+  /**
+   * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
+   */
+  SapDefineModule getSuperModule(string importPath) {
+    result = this.getImportedModule(importPath) and
+    this.getRequiredObject(importPath).asSourceNode().flowsTo(this.getExtendCall().getReceiver())
   }
 }
 
@@ -250,7 +288,9 @@ class CustomControl extends SapExtendCall {
     this =
       TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"])
           .getAMemberCall("extend") or
-    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
+    exists(CustomControl superControl |
+      superControl.getDefine() = this.getDefine().getSuperModule(_)
+    )
   }
 
   CustomController getController() { this = result.getAControlReference().getDefinition() }
@@ -452,29 +492,29 @@ class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
-    this =
-      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
-          .getAMemberCall("extend") and
+    (
+      this =
+        TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
+            .getAMemberCall("extend")
+      or
+      exists(CustomController superController |
+        superController.getDefine() = this.getDefine().getSuperModule(_)
+      )
+    ) and
     name = this.getFile().getBaseName().regexpCapture("([a-zA-Z0-9]+).[cC]ontroller.js", 1)
   }
 
   Component getOwnerComponent() {
-    exists(ManifestJson manifestJson, JsonObject rootObj | manifestJson = result.getManifestJson() |
-      rootObj
-          .getPropValue("targets")
-          .(JsonObject)
-          // The individual targets
-          .getPropValue(_)
-          .(JsonObject)
-          // The target's "viewName" property
-          .getPropValue("viewName")
-          .(JsonString)
-          .getValue() = name
-    )
+    this = result.getParentManifestJson().getARoutingTarget().getView().getController()
   }
 
   MethodCallNode getOwnerComponentRef() {
     result = this.getAThisNode().getAMemberCall("getOwnerComponent")
+    or
+    exists(CustomController baseController |
+      baseController.getDefine() = this.getDefine().getSuperModule(_) and
+      result = baseController.getOwnerComponentRef()
+    )
   }
 
   /**
@@ -743,6 +783,11 @@ abstract class UI5InternalModel extends UI5Model, NewNode {
   abstract string getPathString();
 
   abstract string getPathString(Property property);
+
+  /**
+   * Holds if the content of the model is statically determinable.
+   */
+  abstract predicate contentIsStaticallyVisible();
 }
 
 import ManifestJson
@@ -766,7 +811,7 @@ class Component extends SapExtendCall {
 
   string getId() { result = this.getName().regexpCapture("([a-zA-Z0-9.]+).Component", 1) }
 
-  ManifestJson getManifestJson() {
+  ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
     result.getId() = this.getId()
   }
@@ -788,7 +833,7 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getExternalModelDef(string modelName) {
-    result.getFile() = this.getManifestJson() and result.getName() = modelName
+    result.getFile() = this.getParentManifestJson() and result.getName() = modelName
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
@@ -815,9 +860,49 @@ module ManifestJson {
 
     string getName() { result = dataSourceName }
 
-    ManifestJson getManifestJson() { result = manifestJson }
+    ManifestJson getParentManifestJson() { result = manifestJson }
 
     string getType() { result = this.getPropValue("type").(JsonString).getValue() }
+  }
+
+  class RoutingTargetManifest extends JsonObject {
+    /** Note: This is NOT its `viewName` property! */
+    string targetName;
+    ManifestJson manifestJson;
+
+    RoutingTargetManifest() {
+      exists(JsonObject rootObj |
+        this.getJsonFile() = manifestJson and
+        rootObj.getJsonFile() = manifestJson and
+        this =
+          rootObj
+              .getPropValue("sap.ui5")
+              .(JsonObject)
+              .getPropValue("routing")
+              .(JsonObject)
+              .getPropValue("targets")
+              .(JsonObject)
+              .getPropValue(targetName)
+      )
+    }
+
+    /**
+     * Gets the value of the `viewName` property of this target.
+     */
+    string getViewName() { result = this.getPropStringValue("viewName") }
+
+    /**
+     * Gets the view this target is associated with.
+     */
+    UI5View getView() {
+      result.getController().getModuleName() =
+        getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
+    }
+
+    /**
+     * Gets the `manifest.json` file that this routing target is a part of.
+     */
+    ManifestJson getParentManifestJson() { result = manifestJson }
   }
 
   class ODataDataSourceManifest extends DataSourceManifest {
@@ -948,7 +1033,19 @@ module ManifestJson {
       this.getBaseName() = "manifest.json"
     }
 
-    DataSourceManifest getDataSource() { this = result.getManifestJson() }
+    DataSourceManifest getADataSource() { result = this.getDataSource(_) }
+
+    DataSourceManifest getDataSource(string name) {
+      this = result.getParentManifestJson() and
+      result.getName() = name
+    }
+
+    RoutingTargetManifest getARoutingTarget() { result = this.getRoutingTarget(_) }
+
+    RoutingTargetManifest getRoutingTarget(string viewName) {
+      result.getViewName() = viewName and
+      result.getParentManifestJson() = this
+    }
   }
 }
 
@@ -1121,6 +1218,16 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  override predicate contentIsStaticallyVisible() {
+    /* 1. There is at least one path string that can be constructed out of the path string. */
+    exists(this.getPathString())
+    or
+    /* 2. There is a JSON file that can be loaded from. */
+    exists(JsonObject jsonObject |
+      jsonObject = resolveDirectPath(this.getArgument(0).getStringValue())
+    )
+  }
+
   /**
    * A model possibly supporting two-way binding explicitly set as a one-way binding model.
    */
@@ -1178,6 +1285,8 @@ class XmlModel extends UI5InternalModel {
   }
 
   override string getPathString() { result = "TODO" }
+
+  override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
 }
 
 class ResourceModel extends UI5Model, ModelReference {
@@ -1250,6 +1359,10 @@ class SapExtendCall extends InvokeNode, MethodCallNode {
   FunctionNode getAMethod() { result = this.getMethod(_) }
 
   string getName() { result = this.getArgument(0).getALocalSource().getStringValue() }
+
+  string getModuleName() {
+    result = getSubstringAfterLastOccurrenceOfCharacter(this.getName(), ".")
+  }
 
   ObjectLiteralNode getContent() { result = this.getArgument(1) }
 
@@ -1428,18 +1541,12 @@ class PropertyMetadata extends ObjectLiteralNode {
   }
 }
 
-module TypeTrackers {
-  private SourceNode hasDependency(TypeTracker t, string dependencyPath) {
-    t.start() and
-    exists(UserModule d |
-      d.getADependency() = dependencyPath and
-      result = d.getRequiredObject(dependencyPath).asSourceNode()
-    )
-    or
-    exists(TypeTracker t2 | result = hasDependency(t2, dependencyPath).track(t2, t))
-  }
+bindingset[input, character]
+private int countCharacterInString(string input, string character) {
+  result = count(int index | character = input.charAt(index) | index)
+}
 
-  SourceNode hasDependency(string dependencyPath) {
-    result = hasDependency(TypeTracker::end(), dependencyPath)
-  }
+bindingset[input, character]
+private string getSubstringAfterLastOccurrenceOfCharacter(string input, string character) {
+  result = input.splitAt(character, countCharacterInString(input, character))
 }
