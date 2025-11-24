@@ -9,19 +9,25 @@ on:
       - main
     paths:
       - .github/workflows/copilot-setup-steps.yml
-      - qlt.conf.json
       - extractors/cds/tools/package.json
       - extractors/cds/tools/package-lock.json
-      - javascript/frameworks/*/qlpack.yml
+      - javascript/frameworks/*/*/codeql-pack.lock.yml
+      - javascript/frameworks/*/*/qlpack.yml
+      - javascript/heuristic-models/*/codeql-pack.lock.yml
+      - javascript/heuristic-models/*/qlpack.yml
+      - qlt.conf.json
   pull_request:
     branches:
       - main
     paths:
       - .github/workflows/copilot-setup-steps.yml
-      - qlt.conf.json
       - extractors/cds/tools/package.json
       - extractors/cds/tools/package-lock.json
-      - javascript/frameworks/*/qlpack.yml
+      - javascript/frameworks/*/*/codeql-pack.lock.yml
+      - javascript/frameworks/*/*/qlpack.yml
+      - javascript/heuristic-models/*/codeql-pack.lock.yml
+      - javascript/heuristic-models/*/qlpack.yml
+      - qlt.conf.json
 
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
