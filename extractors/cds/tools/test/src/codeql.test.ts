@@ -1,5 +1,6 @@
 import * as childProcess from 'child_process';
 
+import type { CdsDependencyGraph } from '../../src/cds/parser/types';
 import {
   handleEarlyExit,
   runJavaScriptExtractor,
@@ -69,7 +70,6 @@ describe('codeql', () => {
       expect(result).toEqual({ success: true });
       expect(childProcess.spawnSync).toHaveBeenCalledWith(
         '/path/to/autobuild.sh',
-        [],
         expect.objectContaining({
           cwd: '/path/to/source',
           env: process.env,
@@ -185,7 +185,7 @@ describe('codeql', () => {
         '/path/to/source',
         '/path/to/autobuild.sh',
         '/path/to/codeql',
-        dependencyGraph as any,
+        dependencyGraph as CdsDependencyGraph,
       );
 
       expect(result).toBe(true);
@@ -268,7 +268,7 @@ describe('codeql', () => {
         '/path/to/source',
         '/path/to/autobuild.sh',
         '/path/to/codeql',
-        dependencyGraph as any,
+        dependencyGraph as CdsDependencyGraph,
       );
 
       expect(addJavaScriptExtractorDiagnostic).toHaveBeenCalledWith(
@@ -287,7 +287,7 @@ describe('codeql', () => {
     beforeEach(() => {
       mockExit = jest.spyOn(process, 'exit').mockImplementation((() => {
         throw new Error('process.exit called');
-      }) as any);
+      }) as never);
       consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       (filesystem.createMarkerFile as jest.Mock).mockReturnValue('/path/to/marker.js');
       (filesystem.removeMarkerFile as jest.Mock).mockReturnValue(undefined);

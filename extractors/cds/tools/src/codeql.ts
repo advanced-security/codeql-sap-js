@@ -41,7 +41,7 @@ export function runJavaScriptExtractor(
    * the current working directory set to the project (source) root directory
    * because it assumes it is running from there.
    */
-  const result: SpawnSyncReturns<Buffer> = spawnSync(autobuildScriptPath, [], {
+  const result: SpawnSyncReturns<Buffer> = spawnSync(autobuildScriptPath, {
     cwd: sourceRoot,
     env: process.env,
     shell: true,
