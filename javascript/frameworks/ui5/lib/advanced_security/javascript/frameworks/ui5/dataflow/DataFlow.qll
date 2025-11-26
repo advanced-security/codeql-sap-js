@@ -7,9 +7,11 @@ import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import PatchDataFlow
 
 /**
- * A statically visible part of a local model's content that has a binding path referring to it in a control declaration acting as an HTML injection sink.
+ * A statically visible part of a local model's content that has a binding path referring to it in a
+ * control declaration acting as an HTML injection sink.
  *
- * e.g.1. Given a JSON model `oModel` declared in a controller handler and an HTML injection sink `SomeSinkControl` as:
+ * e.g.1. Given a JSON model `oModel` declared in a controller handler and an HTML injection sink
+ * `SomeSinkControl` as:
  * ```javascript
  * let oModel = new JSONModel({ y: null });
  * ```
@@ -19,7 +21,8 @@ private import PatchDataFlow
  * ```
  * The content `y: null` of `oModel` is recognized as an instance of this class.
  *
- * e.g.2. Given a JSON model `oModel` which gains its content from a JSON file and an HTML injection sink `SomeSinkControl` as:
+ * e.g.2. Given a JSON model `oModel` which gains its content from a JSON file and an HTML injection
+ * sink `SomeSinkControl` as:
  * ```javascript
  * let oModel = new JSONModel("controller/contents.json");
  * ```
@@ -155,8 +158,11 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     }
 
     /**
-     * An edge from a content of an internal model to the corresponding binding path in a view, which makes it an edge in the opposite direction as of `bindingPathToInternalModelContent` above.
-     * In order to ensure that the edge indeed holds, we check if the model's binding mode is declared as two-way.
+     * An edge from a content of an internal model to the corresponding binding path in a view,
+     * which makes it an edge in the opposite direction as of `bindingPathToInternalModelContent`
+     * above.
+     * In order to ensure that the edge indeed holds, we check if the model's binding mode is
+     * declared as two-way.
      *
      * c.f. `FlowSteps::InternalModelContentToCustomMetadataPropertyStep`.
      */
@@ -210,5 +216,62 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     or
     ui5PathNodeSucc.asUI5BindingPathNode().getModel() = ui5PathNodePred.asDataFlowNode() and
     ui5PathNodeSucc.asUI5BindingPathNode() = any(UI5View view).getAnHtmlISink()
+  }
+}
+
+module TrackPlaceAtCallConfig implements DataFlow::ConfigSig {
+  /**
+   * A child element instantiation.
+   */
+  predicate isSource(DataFlow::Node node) { node instanceof ElementInstantiation }
+
+  /**
+   * An "extension point" exposed from a parent element instantiation to
+   * register a child to itself.
+   */
+  predicate isSink(DataFlow::Node node) { node instanceof ControlPlaceAtCall }
+
+  /**
+   * Step from data being written and the property that is being written to.
+   * Needed to express the fact that the child control is usually written to
+   * a property of a parent control to establish the child-parent relationship.
+   *
+   * NOTE: The "extension point" exposed by the parent control can come in the
+   * form of:
+   *
+   * 1. `new Parent({ children: [ new Child( ... ) ] })`
+   * 2. `new Parent(...).children[0] = new Child( ... )`
+   * 3. `new Parent(...).addChild(new Child( ... ))`
+   *
+   * The first and second cases are (nested) `PropWrite`s to `getArgument(0)`
+   * and are easily covered. But the third case poses a new problem of identifying
+   * methods that writes to the `children` property, which CodeQL can't verify
+   * because its definition is in the library.
+   *
+   * - [X] Mark all method calls: overgeneralizes, can infer dumb things
+   *       (`sap.m.FlexBox.removeItem` comes to mind), but would still work for all
+   *       true cases
+   * - [ ] Heuristic by prefix: not an attractive option since heuristics can fail
+   */
+  predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
+    exists(DataFlow::PropWrite propWrite |
+      start = propWrite.getRhs() and
+      end = propWrite.getBase()
+    )
+    or
+    exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
+      start = maybeAddingChildAPICall.getAnArgument() and
+      end = maybeAddingChildAPICall.getReceiver()
+    )
+    or
+    exists(DataFlow::MethodCallNode call |
+      start = call.getReceiver() and
+      end = call
+    )
+    or
+    exists(DataFlow::NewNode new |
+      start = new.getAnArgument() and
+      end = new
+    )
   }
 }
