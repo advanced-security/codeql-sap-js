@@ -4,3 +4,4 @@
 //
 // We import under alias to avoid any potential naming conflicts
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources as UI5RemoteFlowSources
+import advanced_security.javascript.frameworks.ui5.Sanitizers

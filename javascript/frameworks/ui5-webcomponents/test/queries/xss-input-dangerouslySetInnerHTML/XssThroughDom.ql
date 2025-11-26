@@ -12,12 +12,13 @@
  *       external/cwe/cwe-116
  */
 
-//an exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
+//a exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
 //included for testing purposes only
-
+//tests the use of customizations to filter results via sanitizer
 import javascript
 import semmle.javascript.security.dataflow.XssThroughDomQuery
 import XssThroughDomFlow::PathGraph
+import advanced_security.javascript_sap_ui5_all.Customizations
 
 from XssThroughDomFlow::PathNode source, XssThroughDomFlow::PathNode sink
 where
