@@ -1,5 +1,0 @@
-| controlledcomponent.tsx:11:49:11:71 | inputRe ... t.value |  |
-| controlledcomponent.tsx:12:24:12:46 | inputRe ... t.value |  |
-| controlledcomponent.tsx:16:23:16:40 | event.target.value |  |
-| functionalcomponentsetstate.tsx:7:23:7:40 | event.target.value |  |
-| uncontrolledcomponent.tsx:9:24:9:41 | event.target.value |  |
