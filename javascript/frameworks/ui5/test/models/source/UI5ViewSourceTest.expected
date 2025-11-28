@@ -1,1 +1,11 @@
 | source1.xml:5:5:7:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:8:5:10:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:11:5:13:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:14:5:16:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:17:5:19:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:20:5:22:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:23:5:25:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:26:5:28:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:29:5:31:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:32:5:34:28 | value={/input} | The binding path `/input` is a user input source. |
+| source1.xml:35:5:37:28 | value={/input} | The binding path `/input` is a user input source. |
