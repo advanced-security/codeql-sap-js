@@ -1,6 +1,7 @@
 import javascript
 import DataFlow
 import advanced_security.javascript.frameworks.ui5.JsonParser
+import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
@@ -1425,21 +1426,5 @@ class PropertyMetadata extends ObjectLiteralNode {
       result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
     ) and
     inSameWebApp(this.getFile(), result.getFile())
-  }
-}
-
-module TypeTrackers {
-  private SourceNode hasDependency(TypeTracker t, string dependencyPath) {
-    t.start() and
-    exists(UserModule d |
-      d.getADependency() = dependencyPath and
-      result = d.getRequiredObject(dependencyPath).asSourceNode()
-    )
-    or
-    exists(TypeTracker t2 | result = hasDependency(t2, dependencyPath).track(t2, t))
-  }
-
-  SourceNode hasDependency(string dependencyPath) {
-    result = hasDependency(TypeTracker::end(), dependencyPath)
   }
 }
