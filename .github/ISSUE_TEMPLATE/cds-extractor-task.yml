@@ -1,0 +1,82 @@
+name: CDS Extractor Development Task
+description: Task for developing, testing, or maintaining the CodeQL CDS extractor
+title: "[CDS-EXTRACTOR]: "
+labels: ["cds-extractor", "agent-task"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`cds-extractor-agent`** which specializes in TypeScript development for the CodeQL CDS extractor.
+
+        The agent follows:
+        - `.github/instructions/extractors_cds_tools_ts.instructions.md`
+        - `.github/prompts/cds_extractor_development.prompt.md`
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Describe what needs to be done with the CDS extractor
+      placeholder: |
+        Example: Add support for parsing CDS annotations
+        Example: Fix failing test in compiler module
+        Example: Upgrade @sap/cds dependency to latest version
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      description: What kind of task is this?
+      options:
+        - New Feature
+        - Bug Fix
+        - Dependency Upgrade
+        - Performance Improvement
+        - Refactoring
+        - Testing
+        - Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional information, error messages, or relevant files
+      placeholder: |
+        - Error messages
+        - Relevant file paths
+        - Related issues or PRs
+        - Expected vs actual behavior
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance Criteria
+      description: How will we know this task is complete?
+      placeholder: |
+        - [ ] Tests pass
+        - [ ] Build succeeds
+        - [ ] Feature works as expected
+        - [ ] Documentation updated
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Requirements Checklist
+      description: Verify these will be met
+      options:
+        - label: All tests must pass (`npm run build:all`)
+          required: true
+        - label: No trailing whitespace
+          required: true
+        - label: Follows TypeScript best practices
+          required: true
+        - label: Test-driven development approach
+          required: false
