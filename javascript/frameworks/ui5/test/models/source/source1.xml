@@ -5,4 +5,34 @@
     <Input placeholder="Enter Payload" 
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
         value="{/input}" />  <!--User input source sap.m.Input.value -->
+    <ComboBoxTextField placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.ComboBoxTextField.value -->
+    <MaskEnabler placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.MaskEnabler.value -->
+    <MaskInput placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.MaskInput.value -->
+    <TextArea placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.TextArea.value -->
+    <DatePicker placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.DatePicker.value -->
+    <ComboBoxBase placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.ComboBoxBase.value -->
+    <SearchField placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.SearchField.value -->
+    <MultiInput placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.MultiInput.value -->
+    <FeedInput placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.FeedInput.value -->
+    <InputBase placeholder="Enter Payload" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input}" />  <!--User input source sap.m.InputBase.value -->
 </mvc:View>
