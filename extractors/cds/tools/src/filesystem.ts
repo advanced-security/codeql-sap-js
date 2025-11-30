@@ -1,6 +1,7 @@
-import { existsSync, readdirSync, renameSync, statSync } from 'fs';
+import { existsSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import { format, join, parse } from 'path';
 
+import { cdsExtractorMarkerFileContent, cdsExtractorMarkerFileName } from './constants';
 import { cdsExtractorLog } from './logging';
 
 /**
@@ -53,6 +54,39 @@ export function recursivelyRenameJsonFiles(dirPath: string): void {
       const newPath = format({ ...parse(fullPath), base: '', ext: '.cds.json' });
       renameSync(fullPath, newPath);
       cdsExtractorLog('info', `Renamed CDS output file from ${fullPath} to ${newPath}`);
+    }
+  }
+}
+
+/**
+ * Create the marker file with dummy content.
+ * This file is required by the JavaScript extractor starting with CodeQL CLI v2.23.5.
+ * @param sourceRoot The source root directory where the marker file should be created
+ * @returns The path to the created marker file
+ */
+export function createMarkerFile(sourceRoot: string): string {
+  const markerFilePath = join(sourceRoot, cdsExtractorMarkerFileName);
+  try {
+    writeFileSync(markerFilePath, cdsExtractorMarkerFileContent, 'utf8');
+    cdsExtractorLog('info', `Created marker file: ${markerFilePath}`);
+  } catch (error) {
+    cdsExtractorLog('warn', `Failed to create marker file: ${String(error)}`);
+  }
+  return markerFilePath;
+}
+
+/**
+ * Remove the cdsExtractorMarkerFileName file if it exists.
+ * This cleanup prevents the marker file from being accidentally committed.
+ * @param markerFilePath The path to the marker file to remove
+ */
+export function removeMarkerFile(markerFilePath: string): void {
+  if (existsSync(markerFilePath)) {
+    try {
+      unlinkSync(markerFilePath);
+      cdsExtractorLog('info', `Removed marker file: ${markerFilePath}`);
+    } catch (error) {
+      cdsExtractorLog('warn', `Failed to remove marker file: ${String(error)}`);
     }
   }
 }

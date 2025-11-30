@@ -58,7 +58,7 @@ describe('CDS Extractor Exit Code Safety', () => {
       expect(extractorContent).toMatch(/addEnvironmentSetupDiagnostic/);
       expect(extractorContent).toMatch(/addDependencyGraphDiagnostic/);
       expect(extractorContent).toMatch(/addNoCdsProjectsDiagnostic/);
-      expect(extractorContent).toMatch(/addJavaScriptExtractorDiagnostic/);
+      expect(extractorContent).toMatch(/addCompilationDiagnostic/);
     });
   });
 
@@ -67,10 +67,10 @@ describe('CDS Extractor Exit Code Safety', () => {
       const extractorPath = join(__dirname, '..', 'cds-extractor.ts');
       const extractorContent = readFileSync(extractorPath, 'utf8');
 
-      // Should have patterns that continue processing instead of hard exits
-      expect(extractorContent).toMatch(/continue.*instead.*of.*exiting/i);
+      // Should have patterns that skip CDS processing and continue with JavaScript extraction
       expect(extractorContent).toMatch(/skip.*CDS.*processing/i);
-      expect(extractorContent).toMatch(/JavaScript.*extractor.*proceed/i);
+      expect(extractorContent).toMatch(/handleEarlyExit/);
+      expect(extractorContent).toMatch(/continuing with limited functionality/i);
     });
 
     it('should end with graceful completion message', () => {

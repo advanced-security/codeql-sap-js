@@ -27,7 +27,7 @@ describe('version.ts', () => {
       const version = getCdsVersion('cds');
 
       expect(version).toBe('6.1.3');
-      expect(mockSpawnSync).toHaveBeenCalledWith('cds', ['--version'], {
+      expect(mockSpawnSync).toHaveBeenCalledWith('cds --version', {
         shell: true,
         stdio: 'pipe',
         env: { ...process.env },
@@ -122,7 +122,7 @@ describe('version.ts', () => {
       const version = getCdsVersion('cds', cacheDir);
 
       expect(version).toBe('6.1.3');
-      expect(mockSpawnSync).toHaveBeenCalledWith('cds', ['--version'], {
+      expect(mockSpawnSync).toHaveBeenCalledWith('cds --version', {
         shell: true,
         stdio: 'pipe',
         env: {
@@ -153,7 +153,7 @@ describe('version.ts', () => {
       const version = getCdsVersion('cds', cacheDir);
 
       expect(version).toBe('6.1.3');
-      expect(mockSpawnSync).toHaveBeenCalledWith('cds', ['--version'], {
+      expect(mockSpawnSync).toHaveBeenCalledWith('cds --version', {
         shell: true,
         stdio: 'pipe',
         env: expect.objectContaining({
@@ -230,7 +230,7 @@ describe('version.ts', () => {
       const version = getCdsVersion('npx cds');
 
       expect(version).toBe('6.1.3');
-      expect(mockSpawnSync).toHaveBeenCalledWith('npx cds', ['--version'], expect.any(Object));
+      expect(mockSpawnSync).toHaveBeenCalledWith('npx cds --version', expect.any(Object));
     });
 
     it('should handle multiline version output', () => {
