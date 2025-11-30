@@ -12,7 +12,7 @@
  *       external/cwe/cwe-116
  */
 
-//a exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
+//an exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
 //included for testing purposes only
 //tests the use of customizations to filter results via sanitizer
 import javascript
