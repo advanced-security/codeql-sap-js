@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import {Input, TextArea, Search, ShellBarSearch, ComboBox, MultiComboBox, Select, DatePicker, DateRangePicker, DateTimePicker, TimePicker, ColorPicker, ColorPaletteItem, CalendarDate, FileUploader, CheckBox, RadioButton, Switch, Option, OptionCustom, RatingIndicator, Slider, ProgressIndicator, StepInput, DynamicDateRange } from "@ui5/webcomponents-react";
+import {Input, TextArea, Search, ShellBarSearch, ComboBox, MultiComboBox, Select, DatePicker, DateRangePicker, DateTimePicker, TimePicker, ColorPicker, ColorPaletteItem, CalendarDate, FileUploader, CheckBox, RadioButton, Switch, Option, OptionCustom, RatingIndicator, Slider, ProgressIndicator, StepInput, DynamicDateRange, RangeSlider, Button, MessageViewButton, SegmentedButton, SplitButton, ToggleButton } from "@ui5/webcomponents-react";
 import '@ui5/webcomponents/dist/Assets.js';
 
 function App() {
@@ -403,6 +403,102 @@ function App() {
     };
   }, [handleDynamicDateRangeChange]);
 
+  //RangeSlider component usage
+  const [rangeSliderValue, setRangeSliderValue] = useState<string>("");
+  const rangeSliderRef = useRef<typeof RangeSlider>(null);
+
+  const handleRangeSliderChange = useCallback(() => {
+    setRangeSliderValue((msg) => rangeSliderRef.current?.value || ""); {/* Safe - numeric */}
+  }, [setRangeSliderValue]);
+
+  useEffect(() => {
+    const currentRangeSlider = rangeSliderRef.current;
+    currentRangeSlider?.addEventListener("change", handleRangeSliderChange);
+    return () => {
+      currentRangeSlider?.removeEventListener("change", handleRangeSliderChange);
+    };
+  }, [handleRangeSliderChange]);
+
+  // Button component usage
+  const [buttonValue, setButtonValue] = useState<string>("");
+  const buttonRef = useRef<typeof Button>(null);
+
+  const handleButtonChange = useCallback(() => {
+    setButtonValue((msg) => buttonRef.current?.value || ""); {/* Safe */}
+  }, [setButtonValue]);
+
+  useEffect(() => {
+    const currentButton = buttonRef.current;
+    currentButton?.addEventListener("change", handleButtonChange);
+    return () => {
+      currentButton?.removeEventListener("change", handleButtonChange);
+    };
+  }, [handleButtonChange]);
+
+  // MessageViewButton component usage
+  const [messageViewButtonValue, setMessageViewButtonValue] = useState<string>("");
+  const messageViewButtonRef = useRef<typeof MessageViewButton>(null);
+
+  const handleMessageViewButtonChange = useCallback(() => {
+    setMessageViewButtonValue((msg) => messageViewButtonRef.current?.value || ""); {/* Safe */}
+  }, [setMessageViewButtonValue]);
+
+  useEffect(() => {
+    const currentMessageViewButton = messageViewButtonRef.current;
+    currentMessageViewButton?.addEventListener("change", handleMessageViewButtonChange);
+    return () => {
+      currentMessageViewButton?.removeEventListener("change", handleMessageViewButtonChange);
+    };
+  }, [handleMessageViewButtonChange]);
+
+  // SegmentedButton component usage
+  const [segmentedButtonValue, setSegmentedButtonValue] = useState<string>("");
+  const segmentedButtonRef = useRef<typeof SegmentedButton>(null);
+
+  const handleSegmentedButtonChange = useCallback(() => {
+    setSegmentedButtonValue((msg) => segmentedButtonRef.current?.value || ""); {/* Safe */}
+  }, [setSegmentedButtonValue]);
+
+  useEffect(() => {
+    const currentSegmentedButton = segmentedButtonRef.current;
+    currentSegmentedButton?.addEventListener("change", handleSegmentedButtonChange);
+    return () => {
+      currentSegmentedButton?.removeEventListener("change", handleSegmentedButtonChange);
+    };
+  }, [handleSegmentedButtonChange]);
+
+  // SplitButton component usage
+  const [splitButtonValue, setSplitButtonValue] = useState<string>("");
+  const splitButtonRef = useRef<typeof SplitButton>(null);
+
+  const handleSplitButtonChange = useCallback(() => {
+    setSplitButtonValue((msg) => splitButtonRef.current?.value || ""); {/* Safe */}
+  }, [setSplitButtonValue]);
+
+  useEffect(() => {
+    const currentSplitButton = splitButtonRef.current;
+    currentSplitButton?.addEventListener("change", handleSplitButtonChange);
+    return () => {
+      currentSplitButton?.removeEventListener("change", handleSplitButtonChange);
+    };
+  }, [handleSplitButtonChange]);
+
+  // ToggleButton component usage
+  const [toggleButtonValue, setToggleButtonValue] = useState<string>("");
+  const toggleButtonRef = useRef<typeof ToggleButton>(null);
+
+  const handleToggleButtonChange = useCallback(() => {
+    setToggleButtonValue((msg) => toggleButtonRef.current?.value || ""); {/* Safe */}
+  }, [setToggleButtonValue]);
+
+  useEffect(() => {
+    const currentToggleButton = toggleButtonRef.current;
+    currentToggleButton?.addEventListener("change", handleToggleButtonChange);
+    return () => {
+      currentToggleButton?.removeEventListener("change", handleToggleButtonChange);
+    };
+  }, [handleToggleButtonChange]);
+
   
   return (
     <div className="app">
@@ -431,6 +527,12 @@ function App() {
       <ProgressIndicator ref={progressIndicatorRef} id="progressindicator-field"></ProgressIndicator> {/* Safe - numeric */}
       <StepInput ref={stepInputRef} id="stepinput-field"></StepInput> {/* Safe - numeric */}
       <DynamicDateRange ref={dynamicDateRangeRef} id="dynamicdaterange-field"></DynamicDateRange> {/* Safe - numeric */}
+      <RangeSlider ref={rangeSliderRef} id="rangeslider-field"></RangeSlider> {/* Safe - numeric */}
+      <Button ref={buttonRef} id="button-field">Button</Button> {/* Safe */}
+      <MessageViewButton ref={messageViewButtonRef} id="messageviewbutton-field"></MessageViewButton> {/* Safe */}
+      <SegmentedButton ref={segmentedButtonRef} id="segmentedbutton-field"></SegmentedButton> {/* Safe */}
+      <SplitButton ref={splitButtonRef} id="splitbutton-field">Split</SplitButton> {/* Safe */}
+      <ToggleButton ref={toggleButtonRef} id="togglebutton-field">Toggle</ToggleButton> {/* Safe */}
 
       <div dangerouslySetInnerHTML={{__html: inputValue}}></div>
       <div dangerouslySetInnerHTML={{__html: textAreaValue}}></div>
@@ -457,6 +559,12 @@ function App() {
       <div dangerouslySetInnerHTML={{__html: progressIndicatorValue}}></div>
       <div dangerouslySetInnerHTML={{__html: stepInputValue}}></div>
       <div dangerouslySetInnerHTML={{__html: dynamicDateRangeValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: rangeSliderValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: buttonValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: messageViewButtonValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: segmentedButtonValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: splitButtonValue}}></div>
+      <div dangerouslySetInnerHTML={{__html: toggleButtonValue}}></div>
     </div>
   );
 }

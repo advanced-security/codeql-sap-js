@@ -17,7 +17,8 @@ class ExcludedSource extends DomBasedXss::Sanitizer {
       source.getElement().getName() in [
           "MultiComboBox", "Select", "ColorPicker", "ColorPaletteItem", "CalendarDate",
           "FileUploader", "CheckBox", "RadioButton", "Switch", "RatingIndicator", "Slider",
-          "ProgressIndicator", "StepInput", "DynamicDateRange", "RangeSlider"
+          "ProgressIndicator", "StepInput", "DynamicDateRange", "RangeSlider", "Button",
+          "MessageViewButton", "SegmentedButton", "SplitButton", "ToggleButton"
         ] and
       this.(DataFlow::PropRead).getBase() = source
     )
