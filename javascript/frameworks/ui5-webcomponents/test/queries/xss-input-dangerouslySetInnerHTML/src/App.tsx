@@ -8,7 +8,7 @@ function App() {
   const inputRef = useRef<typeof Input>(null);
 
   const handleInputChange = useCallback(() => {
-    setInputValue((msg) => inputRef.current?.value || "");
+    setInputValue((msg) => inputRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setInputValue]);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ function App() {
   const textAreaRef = useRef<typeof TextArea>(null);
 
   const handleTextAreaChange = useCallback(() => {
-    setTextAreaValue((msg) => textAreaRef.current?.value || "");
+    setTextAreaValue((msg) => textAreaRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setTextAreaValue]);
 
   useEffect(() => {
@@ -40,7 +40,7 @@ function App() {
   const searchRef = useRef<typeof Search>(null);
 
   const handleSearchChange = useCallback(() => {
-    setSearchValue((msg) => searchRef.current?.value || "");
+    setSearchValue((msg) => searchRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setSearchValue]);
 
   useEffect(() => {
@@ -56,7 +56,7 @@ function App() {
   const shellBarSearchRef = useRef<typeof ShellBarSearch>(null);
 
   const handleShellBarSearchChange = useCallback(() => {
-    setShellBarSearchValue((msg) => shellBarSearchRef.current?.value || "");
+    setShellBarSearchValue((msg) => shellBarSearchRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setShellBarSearchValue]);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ function App() {
   const comboBoxRef = useRef<typeof ComboBox>(null);
 
   const handleComboBoxChange = useCallback(() => {
-    setComboBoxValue((msg) => comboBoxRef.current?.value || "");
+    setComboBoxValue((msg) => comboBoxRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setComboBoxValue]);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ function App() {
   const multiComboBoxRef = useRef<typeof MultiComboBox>(null);
 
   const handleMultiComboBoxChange = useCallback(() => {
-    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || "");
+    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || ""); {/* Safe */}
   }, [setMultiComboBoxValue]);
 
   useEffect(() => {
@@ -104,7 +104,7 @@ function App() {
   const selectRef = useRef<typeof Select>(null);
 
   const handleSelectChange = useCallback(() => {
-    setSelectValue((msg) => selectRef.current?.value || "");
+    setSelectValue((msg) => selectRef.current?.value || ""); {/* Safe */}
   }, [setSelectValue]);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ function App() {
   const datePickerRef = useRef<typeof DatePicker>(null);
 
   const handleDatePickerChange = useCallback(() => {
-    setDatePickerValue((msg) => datePickerRef.current?.value || "");
+    setDatePickerValue((msg) => datePickerRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setDatePickerValue]);
 
   useEffect(() => {
@@ -136,7 +136,7 @@ function App() {
   const dateRangePickerRef = useRef<typeof DateRangePicker>(null);
 
   const handleDateRangePickerChange = useCallback(() => {
-    setDateRangePickerValue((msg) => dateRangePickerRef.current?.value || "");
+    setDateRangePickerValue((msg) => dateRangePickerRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setDateRangePickerValue]);
 
   useEffect(() => {
@@ -152,7 +152,7 @@ function App() {
   const dateTimePickerRef = useRef<typeof DateTimePicker>(null);
 
   const handleDateTimePickerChange = useCallback(() => {
-    setDateTimePickerValue((msg) => dateTimePickerRef.current?.value || "");
+    setDateTimePickerValue((msg) => dateTimePickerRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setDateTimePickerValue]);
 
   useEffect(() => {
@@ -168,7 +168,7 @@ function App() {
   const timePickerRef = useRef<typeof TimePicker>(null);
 
   const handleTimePickerChange = useCallback(() => {
-    setTimePickerValue((msg) => timePickerRef.current?.value || "");
+    setTimePickerValue((msg) => timePickerRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setTimePickerValue]);
 
   useEffect(() => {
@@ -184,7 +184,7 @@ function App() {
   const colorPickerRef = useRef<typeof ColorPicker>(null);
 
   const handleColorPickerChange = useCallback(() => {
-    setColorPickerValue((msg) => colorPickerRef.current?.value || "");
+    setColorPickerValue((msg) => colorPickerRef.current?.value || ""); {/* Safe */}
   }, [setColorPickerValue]);
 
   useEffect(() => {
@@ -200,7 +200,7 @@ function App() {
   const colorPaletteItemRef = useRef<typeof ColorPaletteItem>(null);
 
   const handleColorPaletteItemChange = useCallback(() => {
-    setColorPaletteItemValue((msg) => colorPaletteItemRef.current?.value || "");
+    setColorPaletteItemValue((msg) => colorPaletteItemRef.current?.value || ""); {/* Safe */}
   }, [setColorPaletteItemValue]);
 
   useEffect(() => {
@@ -216,7 +216,7 @@ function App() {
   const calendarDateRef = useRef<typeof CalendarDate>(null);
 
   const handleCalendarDateChange = useCallback(() => {
-    setCalendarDateValue((msg) => calendarDateRef.current?.value || "");
+    setCalendarDateValue((msg) => calendarDateRef.current?.value || ""); {/* Safe */}
   }, [setCalendarDateValue]);
 
   useEffect(() => {
@@ -232,7 +232,7 @@ function App() {
   const fileUploaderRef = useRef<typeof FileUploader>(null);
 
   const handleFileUploaderChange = useCallback(() => {
-    setFileUploaderValue((msg) => fileUploaderRef.current?.value || "");
+    setFileUploaderValue((msg) => fileUploaderRef.current?.value || ""); {/* Safe */}
   }, [setFileUploaderValue]);
 
   useEffect(() => {
@@ -248,7 +248,7 @@ function App() {
   const checkBoxRef = useRef<typeof CheckBox>(null);
 
   const handleCheckBoxChange = useCallback(() => {
-    setCheckBoxValue((msg) => checkBoxRef.current?.value || "");
+    setCheckBoxValue((msg) => checkBoxRef.current?.value || ""); {/* Safe */}
   }, [setCheckBoxValue]);
 
   useEffect(() => {
@@ -264,7 +264,7 @@ function App() {
   const radioButtonRef = useRef<typeof RadioButton>(null);
 
   const handleRadioButtonChange = useCallback(() => {
-    setRadioButtonValue((msg) => radioButtonRef.current?.value || "");
+    setRadioButtonValue((msg) => radioButtonRef.current?.value || ""); {/* Safe */}
   }, [setRadioButtonValue]);
 
   useEffect(() => {
@@ -280,7 +280,7 @@ function App() {
   const switchRef = useRef<typeof Switch>(null);
 
   const handleSwitchChange = useCallback(() => {
-    setSwitchValue((msg) => switchRef.current?.value || "");
+    setSwitchValue((msg) => switchRef.current?.value || ""); {/* Safe */}
   }, [setSwitchValue]);
 
   useEffect(() => {
@@ -296,7 +296,7 @@ function App() {
   const optionRef = useRef<typeof Option>(null);
 
   const handleOptionChange = useCallback(() => {
-    setOptionValue((msg) => optionRef.current?.value || "");
+    setOptionValue((msg) => optionRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setOptionValue]);
 
   useEffect(() => {
@@ -312,7 +312,7 @@ function App() {
   const optionCustomRef = useRef<typeof OptionCustom>(null);
 
   const handleOptionCustomChange = useCallback(() => {
-    setOptionCustomValue((msg) => optionCustomRef.current?.value || "");
+    setOptionCustomValue((msg) => optionCustomRef.current?.value || "");  {/* Potentially Unsafe */}
   }, [setOptionCustomValue]);
 
   useEffect(() => {
@@ -328,7 +328,7 @@ function App() {
   const ratingIndicatorRef = useRef<typeof RatingIndicator>(null);
 
   const handleRatingIndicatorChange = useCallback(() => {
-    setRatingIndicatorValue((msg) => ratingIndicatorRef.current?.value || "");
+    setRatingIndicatorValue((msg) => ratingIndicatorRef.current?.value || ""); {/* Safe - numeric */}
   }, [setRatingIndicatorValue]);
 
   useEffect(() => {
@@ -344,7 +344,7 @@ function App() {
   const sliderRef = useRef<typeof Slider>(null);
 
   const handleSliderChange = useCallback(() => {
-    setSliderValue((msg) => sliderRef.current?.value || "");
+    setSliderValue((msg) => sliderRef.current?.value || ""); {/* Safe - numeric */}
   }, [setSliderValue]);
 
   useEffect(() => {
@@ -360,7 +360,7 @@ function App() {
   const progressIndicatorRef = useRef<typeof ProgressIndicator>(null);
 
   const handleProgressIndicatorChange = useCallback(() => {
-    setProgressIndicatorValue((msg) => progressIndicatorRef.current?.value || "");
+    setProgressIndicatorValue((msg) => progressIndicatorRef.current?.value || ""); {/* Safe - numeric */}
   }, [setProgressIndicatorValue]);
 
   useEffect(() => {
@@ -376,7 +376,7 @@ function App() {
   const stepInputRef = useRef<typeof StepInput>(null);
 
   const handleStepInputChange = useCallback(() => {
-    setStepInputValue((msg) => stepInputRef.current?.value || "");
+    setStepInputValue((msg) => stepInputRef.current?.value || ""); {/* Safe - numeric */}
   }, [setStepInputValue]);
 
   useEffect(() => {
@@ -392,7 +392,7 @@ function App() {
   const dynamicDateRangeRef = useRef<typeof DynamicDateRange>(null);
 
   const handleDynamicDateRangeChange = useCallback(() => {
-    setDynamicDateRangeValue((msg) => dynamicDateRangeRef.current?.value || "");
+    setDynamicDateRangeValue((msg) => dynamicDateRangeRef.current?.value || ""); {/* Safe - numeric */}
   }, [setDynamicDateRangeValue]);
 
   useEffect(() => {
@@ -406,31 +406,31 @@ function App() {
   
   return (
     <div className="app">
-      <Input placeholder="Input" ref={inputRef} id="input-field"></Input>
-      <TextArea placeholder="TextArea" ref={textAreaRef} id="textarea-field"></TextArea>
-      <Search placeholder="Search" ref={searchRef} id="search-field"></Search>
-      <ShellBarSearch placeholder="ShellBarSearch" ref={shellBarSearchRef} id="shellbarsearch-field"></ShellBarSearch>
-      <ComboBox placeholder="ComboBox" ref={comboBoxRef} id="combobox-field"></ComboBox>
-      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field"></MultiComboBox> {/* FP */}
-      <Select ref={selectRef} id="select-field"></Select> {/* FP */}
-      <DatePicker placeholder="DatePicker" ref={datePickerRef} id="datepicker-field"></DatePicker>
-      <DateRangePicker placeholder="DateRangePicker" ref={dateRangePickerRef} id="daterangepicker-field"></DateRangePicker>
-      <DateTimePicker placeholder="DateTimePicker" ref={dateTimePickerRef} id="datetimepicker-field"></DateTimePicker>
-      <TimePicker placeholder="TimePicker" ref={timePickerRef} id="timepicker-field"></TimePicker>
-      <ColorPicker ref={colorPickerRef} id="colorpicker-field"></ColorPicker> {/* FP */}
-      <ColorPaletteItem value="color" ref={colorPaletteItemRef} id="colorpaletteitem-field"></ColorPaletteItem> {/* FP */}
-      <CalendarDate value="20250101" ref={calendarDateRef} id="calendardate-field"></CalendarDate> {/* FP - not a standalone component */}
-      <FileUploader ref={fileUploaderRef} id="fileuploader-field"></FileUploader> {/* FP */}
-      <CheckBox ref={checkBoxRef} id="checkbox-field"></CheckBox> {/* FP */}
-      <RadioButton ref={radioButtonRef} id="radiobutton-field"></RadioButton> {/* FP */}
-      <Switch ref={switchRef} id="switch-field"></Switch> {/* FP */}
-      <Option value="option" ref={optionRef} id="option-field"></Option>
-      <OptionCustom value="custom" ref={optionCustomRef} id="optioncustom-field"></OptionCustom>
-      <RatingIndicator ref={ratingIndicatorRef} id="ratingindicator-field"></RatingIndicator> {/* FP - numeric */}
-      <Slider ref={sliderRef} id="slider-field"></Slider> {/* FP - numeric */}
-      <ProgressIndicator ref={progressIndicatorRef} id="progressindicator-field"></ProgressIndicator> {/* FP - numeric */}
-      <StepInput ref={stepInputRef} id="stepinput-field"></StepInput> {/* FP - numeric */}
-      <DynamicDateRange ref={dynamicDateRangeRef} id="dynamicdaterange-field"></DynamicDateRange> {/* FP - numeric */}
+      <Input placeholder="Input" ref={inputRef} id="input-field"></Input>  {/* Potentially Unsafe */}
+      <TextArea placeholder="TextArea" ref={textAreaRef} id="textarea-field"></TextArea>  {/* Potentially Unsafe */}
+      <Search placeholder="Search" ref={searchRef} id="search-field"></Search>  {/* Potentially Unsafe */}
+      <ShellBarSearch placeholder="ShellBarSearch" ref={shellBarSearchRef} id="shellbarsearch-field"></ShellBarSearch>  {/* Potentially Unsafe */}
+      <ComboBox placeholder="ComboBox" ref={comboBoxRef} id="combobox-field"></ComboBox>  {/* Potentially Unsafe */}
+      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field"></MultiComboBox> {/* Safe */}
+      <Select ref={selectRef} id="select-field"></Select> {/* Safe */}
+      <DatePicker placeholder="DatePicker" ref={datePickerRef} id="datepicker-field"></DatePicker>  {/* Potentially Unsafe */}
+      <DateRangePicker placeholder="DateRangePicker" ref={dateRangePickerRef} id="daterangepicker-field"></DateRangePicker>  {/* Potentially Unsafe */}
+      <DateTimePicker placeholder="DateTimePicker" ref={dateTimePickerRef} id="datetimepicker-field"></DateTimePicker>  {/* Potentially Unsafe */}
+      <TimePicker placeholder="TimePicker" ref={timePickerRef} id="timepicker-field"></TimePicker>  {/* Potentially Unsafe */}
+      <ColorPicker ref={colorPickerRef} id="colorpicker-field"></ColorPicker> {/* Safe */}
+      <ColorPaletteItem value="color" ref={colorPaletteItemRef} id="colorpaletteitem-field"></ColorPaletteItem> {/* Safe */}
+      <CalendarDate value="20250101" ref={calendarDateRef} id="calendardate-field"></CalendarDate> {/* Safe - not a standalone component */}
+      <FileUploader ref={fileUploaderRef} id="fileuploader-field"></FileUploader> {/* Safe */}
+      <CheckBox ref={checkBoxRef} id="checkbox-field"></CheckBox> {/* Safe */}
+      <RadioButton ref={radioButtonRef} id="radiobutton-field"></RadioButton> {/* Safe */}
+      <Switch ref={switchRef} id="switch-field"></Switch> {/* Safe */}
+      <Option value="option" ref={optionRef} id="option-field"></Option> {/* Potentially Unsafe */}
+      <OptionCustom value="custom" ref={optionCustomRef} id="optioncustom-field"></OptionCustom> {/* Potentially Unsafe */}
+      <RatingIndicator ref={ratingIndicatorRef} id="ratingindicator-field"></RatingIndicator> {/* Safe - numeric */}
+      <Slider ref={sliderRef} id="slider-field"></Slider> {/* Safe - numeric */}
+      <ProgressIndicator ref={progressIndicatorRef} id="progressindicator-field"></ProgressIndicator> {/* Safe - numeric */}
+      <StepInput ref={stepInputRef} id="stepinput-field"></StepInput> {/* Safe - numeric */}
+      <DynamicDateRange ref={dynamicDateRangeRef} id="dynamicdaterange-field"></DynamicDateRange> {/* Safe - numeric */}
 
       <div dangerouslySetInnerHTML={{__html: inputValue}}></div>
       <div dangerouslySetInnerHTML={{__html: textAreaValue}}></div>
