@@ -1,3 +1,9 @@
+/**
+ * A module to describe santizers that should be applied to out of the box queries.
+ * To include various frameworks and concepts as need be.
+ * Extension points will depend very much on which query is the intended affected one.
+ */
+
 import advanced_security.javascript.frameworks.ui5.UI5WebcomponentsReact
 
 /**
@@ -11,7 +17,7 @@ class ExcludedSource extends DomBasedXss::Sanitizer {
       source.getElement().getName() in [
           "MultiComboBox", "Select", "ColorPicker", "ColorPaletteItem", "CalendarDate",
           "FileUploader", "CheckBox", "RadioButton", "Switch", "RatingIndicator", "Slider",
-          "ProgressIndicator", "StepInput", "DynamicDateRange"
+          "ProgressIndicator", "StepInput", "DynamicDateRange", "RangeSlider"
         ] and
       this.(DataFlow::PropRead).getBase() = source
     )
