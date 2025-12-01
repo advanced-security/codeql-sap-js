@@ -30,7 +30,8 @@ export function getCdsVersion(cdsCommand: string, cacheDir?: string): string | u
     }
 
     // Execute the CDS command with the --version flag
-    const result = spawnSync(cdsCommand, ['--version'], spawnOptions);
+    // When shell: true is used, concatenate command and args to avoid DEP0190 deprecation warning
+    const result = spawnSync(`${cdsCommand} --version`, spawnOptions);
     if (result.status === 0 && result.stdout) {
       const versionOutput = result.stdout.toString().trim();
       // Extract version number, which is typically in formats like "@sap/cds: 6.1.3" or similar

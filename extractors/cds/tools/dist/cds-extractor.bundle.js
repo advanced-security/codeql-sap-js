@@ -358,8 +358,11 @@ var parseClass = (glob2, position) => {
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/unescape.js
-var unescape = (s, { windowsPathsNoEscape = false } = {}) => {
-  return windowsPathsNoEscape ? s.replace(/\[([^\/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, "$1$2").replace(/\\([^\/])/g, "$1");
+var unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
+  if (magicalBraces) {
+    return windowsPathsNoEscape ? s.replace(/\[([^\/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, "$1$2").replace(/\\([^\/])/g, "$1");
+  }
+  return windowsPathsNoEscape ? s.replace(/\[([^\/\\{}])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\{}])\]/g, "$1$2").replace(/\\([^\/{}])/g, "$1");
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/ast.js
@@ -713,7 +716,7 @@ var AST = class _AST {
     if (this.#root === this)
       this.#fillNegs();
     if (!this.type) {
-      const noEmpty = this.isStart() && this.isEnd();
+      const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => typeof s !== "string");
       const src = this.#parts.map((p) => {
         const [re, _, hasMagic2, uflag] = typeof p === "string" ? _AST.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot);
         this.#hasMagic = this.#hasMagic || hasMagic2;
@@ -823,10 +826,7 @@ var AST = class _AST {
         }
       }
       if (c === "*") {
-        if (noEmpty && glob2 === "*")
-          re += starNoEmpty;
-        else
-          re += star;
+        re += noEmpty && glob2 === "*" ? starNoEmpty : star;
         hasMagic2 = true;
         continue;
       }
@@ -842,7 +842,10 @@ var AST = class _AST {
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/escape.js
-var escape = (s, { windowsPathsNoEscape = false } = {}) => {
+var escape = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
+  if (magicalBraces) {
+    return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
+  }
   return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
 };
 
@@ -1483,16 +1486,27 @@ var Minimatch = class {
             pp[i] = twoStar;
           }
         } else if (next === void 0) {
-          pp[i - 1] = prev + "(?:\\/|" + twoStar + ")?";
+          pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + ")?";
         } else if (next !== GLOBSTAR) {
           pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + "\\/)" + next;
           pp[i + 1] = GLOBSTAR;
         }
       });
-      return pp.filter((p) => p !== GLOBSTAR).join("/");
+      const filtered = pp.filter((p) => p !== GLOBSTAR);
+      if (this.partial && filtered.length >= 1) {
+        const prefixes = [];
+        for (let i = 1; i <= filtered.length; i++) {
+          prefixes.push(filtered.slice(0, i).join("/"));
+        }
+        return "(?:" + prefixes.join("|") + ")";
+      }
+      return filtered.join("/");
     }).join("|");
     const [open, close] = set.length > 1 ? ["(?:", ")"] : ["", ""];
     re = "^" + open + re + close + "$";
+    if (this.partial) {
+      re = "^(?:\\/|" + open + re.slice(1, -1) + close + ")$";
+    }
     if (this.negate)
       re = "^(?!" + re + ").+$";
     try {
@@ -6634,6 +6648,11 @@ var import_path2 = require("path");
 var import_fs2 = require("fs");
 var import_path = require("path");
 
+// src/constants.ts
+var modelCdsJsonFile = "model.cds.json";
+var cdsExtractorMarkerFileName = "cds-extractor-marker.js";
+var cdsExtractorMarkerFileContent = '"Placeholder content created by the CDS extractor. This file can be safely deleted.";';
+
 // src/logging/cdsExtractorLog.ts
 var sourceRootDirectory;
 var sessionId = Date.now().toString();
@@ -6691,13 +6710,13 @@ function logExtractorStart(sourceRoot2) {
 }
 function logExtractorStop(success = true, additionalSummary) {
   const endTime = Date.now();
-  const totalDuration2 = formatDuration(extractorStartTime, endTime);
+  const totalDuration = formatDuration(extractorStartTime, endTime);
   const status = success ? "SUCCESS" : "FAILURE";
   if (additionalSummary) {
     cdsExtractorLog("info", additionalSummary);
   }
   cdsExtractorLog("info", `=== CDS EXTRACTOR END [${sessionId}] - ${status} ===`);
-  cdsExtractorLog("info", `Total Duration: ${totalDuration2}`);
+  cdsExtractorLog("info", `Total Duration: ${totalDuration}`);
 }
 function logPerformanceMilestone(milestone, additionalInfo) {
   const currentTime = Date.now();
@@ -6821,6 +6840,26 @@ function recursivelyRenameJsonFiles(dirPath) {
       const newPath = (0, import_path.format)({ ...(0, import_path.parse)(fullPath), base: "", ext: ".cds.json" });
       (0, import_fs2.renameSync)(fullPath, newPath);
       cdsExtractorLog("info", `Renamed CDS output file from ${fullPath} to ${newPath}`);
+    }
+  }
+}
+function createMarkerFile(sourceRoot2) {
+  const markerFilePath = (0, import_path.join)(sourceRoot2, cdsExtractorMarkerFileName);
+  try {
+    (0, import_fs2.writeFileSync)(markerFilePath, cdsExtractorMarkerFileContent, "utf8");
+    cdsExtractorLog("info", `Created marker file: ${markerFilePath}`);
+  } catch (error) {
+    cdsExtractorLog("warn", `Failed to create marker file: ${String(error)}`);
+  }
+  return markerFilePath;
+}
+function removeMarkerFile(markerFilePath) {
+  if ((0, import_fs2.existsSync)(markerFilePath)) {
+    try {
+      (0, import_fs2.unlinkSync)(markerFilePath);
+      cdsExtractorLog("info", `Removed marker file: ${markerFilePath}`);
+    } catch (error) {
+      cdsExtractorLog("warn", `Failed to remove marker file: ${String(error)}`);
     }
   }
 }
@@ -7152,7 +7191,7 @@ function getCdsVersion(cdsCommand, cacheDir) {
         npm_config_prefix: cacheDir
       };
     }
-    const result = (0, import_child_process2.spawnSync)(cdsCommand, ["--version"], spawnOptions);
+    const result = (0, import_child_process2.spawnSync)(`${cdsCommand} --version`, spawnOptions);
     if (result.status === 0 && result.stdout) {
       const versionOutput = result.stdout.toString().trim();
       const match2 = versionOutput.match(/@sap\/cds[^0-9]*([0-9]+\.[0-9]+\.[0-9]+)/);
@@ -7166,9 +7205,6 @@ function getCdsVersion(cdsCommand, cacheDir) {
     return void 0;
   }
 }
-
-// src/constants.ts
-var modelCdsJsonFile = "model.cds.json";
 
 // src/cds/compiler/compile.ts
 function parseCommandForSpawn(commandString) {
@@ -9096,44 +9132,10 @@ function buildCdsProjectDependencyGraph(sourceRootDir) {
 }
 
 // src/codeql.ts
-var import_child_process8 = require("child_process");
-function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2) {
-  cdsExtractorLog(
-    "info",
-    `Extracting the .cds.json files by running the 'javascript' extractor autobuild script:
-        ${autobuildScriptPath2}`
-  );
-  const result = (0, import_child_process8.spawnSync)(autobuildScriptPath2, [], {
-    cwd: sourceRoot2,
-    env: process.env,
-    shell: true,
-    stdio: "inherit"
-  });
-  if (result.error) {
-    const errorMessage = `Error running JavaScript extractor: ${result.error.message}`;
-    if (codeqlExePath2) {
-      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
-    }
-    return {
-      success: false,
-      error: errorMessage
-    };
-  }
-  if (result.status !== 0) {
-    const errorMessage = `JavaScript extractor failed with exit code ${String(result.status)}`;
-    if (codeqlExePath2) {
-      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
-    }
-    return {
-      success: false,
-      error: errorMessage
-    };
-  }
-  return { success: true };
-}
+var import_child_process9 = require("child_process");
 
 // src/environment.ts
-var import_child_process9 = require("child_process");
+var import_child_process8 = require("child_process");
 var import_fs7 = require("fs");
 var import_os = require("os");
 var import_path12 = require("path");
@@ -9170,7 +9172,7 @@ function getCodeQLExePath() {
     'CODEQL_DIST environment variable not set or invalid. Attempting to find CodeQL executable via system PATH using "codeql version --format=json".'
   );
   try {
-    const versionOutput = (0, import_child_process9.execFileSync)(codeqlExeName, ["version", "--format=json"], {
+    const versionOutput = (0, import_child_process8.execFileSync)(codeqlExeName, ["version", "--format=json"], {
       encoding: "utf8",
       timeout: 5e3,
       // 5 seconds timeout
@@ -9235,7 +9237,7 @@ function getJavaScriptExtractorRoot(codeqlExePath2) {
     return "";
   }
   try {
-    jsExtractorRoot = (0, import_child_process9.execFileSync)(
+    jsExtractorRoot = (0, import_child_process8.execFileSync)(
       codeqlExePath2,
       ["resolve", "extractor", "--language=javascript"],
       { stdio: "pipe" }
@@ -9289,6 +9291,7 @@ ${process.env.LGTM_INDEX_FILTERS}`
     (0, import_path12.join)("exclude:**", "*.*"),
     (0, import_path12.join)("include:**", "*.cds.json"),
     (0, import_path12.join)("include:**", "*.cds"),
+    (0, import_path12.join)("include:**", cdsExtractorMarkerFileName),
     (0, import_path12.join)("exclude:**", "node_modules", "**", "*.*")
   ].join("\n");
   process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
@@ -9334,6 +9337,83 @@ function setupAndValidateEnvironment(sourceRoot2) {
     autobuildScriptPath: autobuildScriptPath2,
     platformInfo: platformInfo2
   };
+}
+
+// src/codeql.ts
+function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2) {
+  cdsExtractorLog(
+    "info",
+    `Extracting the .cds.json files by running the 'javascript' extractor autobuild script:
+        ${autobuildScriptPath2}`
+  );
+  const result = (0, import_child_process9.spawnSync)(autobuildScriptPath2, {
+    cwd: sourceRoot2,
+    env: process.env,
+    shell: true,
+    stdio: "inherit"
+  });
+  if (result.error) {
+    const errorMessage = `Error running JavaScript extractor: ${result.error.message}`;
+    if (codeqlExePath2) {
+      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
+    }
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+  if (result.status !== 0) {
+    const errorMessage = `JavaScript extractor failed with exit code ${String(result.status)}`;
+    if (codeqlExePath2) {
+      addJavaScriptExtractorDiagnostic(sourceRoot2, errorMessage, codeqlExePath2, sourceRoot2);
+    }
+    return {
+      success: false,
+      error: errorMessage
+    };
+  }
+  return { success: true };
+}
+function runJavaScriptExtractionWithMarker(sourceRoot2, autobuildScriptPath2, codeqlExePath2, dependencyGraph2) {
+  configureLgtmIndexFilters();
+  const markerFilePath = createMarkerFile(sourceRoot2);
+  try {
+    logPerformanceTrackingStart("JavaScript Extraction");
+    const extractionStartTime = Date.now();
+    const extractorResult = runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2);
+    const extractionEndTime = Date.now();
+    logPerformanceTrackingStop("JavaScript Extraction");
+    if (dependencyGraph2) {
+      dependencyGraph2.statusSummary.performance.extractionDurationMs = extractionEndTime - extractionStartTime;
+      dependencyGraph2.statusSummary.performance.totalDurationMs = dependencyGraph2.statusSummary.performance.parsingDurationMs + dependencyGraph2.statusSummary.performance.compilationDurationMs + dependencyGraph2.statusSummary.performance.extractionDurationMs;
+    }
+    if (!extractorResult.success && extractorResult.error) {
+      cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult.error}`);
+      if (codeqlExePath2) {
+        let representativeFile = sourceRoot2;
+        if (dependencyGraph2 && dependencyGraph2.projects.size > 0) {
+          const firstProject = Array.from(dependencyGraph2.projects.values())[0];
+          representativeFile = firstProject.cdsFiles[0] ?? sourceRoot2;
+        }
+        addJavaScriptExtractorDiagnostic(
+          representativeFile,
+          extractorResult.error,
+          codeqlExePath2,
+          sourceRoot2
+        );
+      }
+      return false;
+    }
+    return true;
+  } finally {
+    removeMarkerFile(markerFilePath);
+  }
+}
+function handleEarlyExit(sourceRoot2, autobuildScriptPath2, codeqlExePath2, skipMessage) {
+  const success = runJavaScriptExtractionWithMarker(sourceRoot2, autobuildScriptPath2, codeqlExePath2);
+  logExtractorStop(success, success ? skipMessage : "JavaScript extractor failed");
+  console.log(`Completed run of the cds-extractor.js script for the CDS extractor.`);
+  process.exit(0);
 }
 
 // src/utils.ts
@@ -9399,9 +9479,7 @@ var {
 logPerformanceTrackingStop("Environment Setup");
 if (!envSetupSuccess) {
   const codeqlExe = platformInfo.isWindows ? "codeql.exe" : "codeql";
-  const errorMessage = `'${codeqlExe} database index-files --language cds' terminated early due to: ${errorMessages.join(
-    ", "
-  )}.`;
+  const errorMessage = `'${codeqlExe} database index-files --language cds' terminated early due to: ${errorMessages.join(", ")}.`;
   cdsExtractorLog("warn", errorMessage);
   if (codeqlExePath) {
     addEnvironmentSetupDiagnostic(sourceRoot, errorMessage, codeqlExePath);
@@ -9474,31 +9552,12 @@ try {
       addNoCdsProjectsDiagnostic(sourceRoot, warningMessage, codeqlExePath);
     }
     logExtractorStop(false, "Warning: No CDS projects detected, skipping CDS-specific processing");
-    configureLgtmIndexFilters();
-    logPerformanceTrackingStart("JavaScript Extraction");
-    const extractorResult2 = runJavaScriptExtractor(
+    handleEarlyExit(
       sourceRoot,
       autobuildScriptPath || "",
-      // Use empty string if autobuildScriptPath is undefined
-      codeqlExePath
+      codeqlExePath,
+      "JavaScript extraction completed (CDS processing was skipped)"
     );
-    logPerformanceTrackingStop("JavaScript Extraction");
-    if (!extractorResult2.success && extractorResult2.error) {
-      cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult2.error}`);
-      if (codeqlExePath) {
-        addJavaScriptExtractorDiagnostic(
-          sourceRoot,
-          extractorResult2.error,
-          codeqlExePath,
-          sourceRoot
-        );
-      }
-      logExtractorStop(false, "JavaScript extractor failed");
-    } else {
-      logExtractorStop(true, "JavaScript extraction completed (CDS processing was skipped)");
-    }
-    console.log(`Completed run of the cds-extractor.js script for the CDS extractor.`);
-    process.exit(0);
   }
 } catch (error) {
   const errorMessage = `Failed to build CDS dependency graph: ${String(error)}`;
@@ -9510,31 +9569,12 @@ try {
     false,
     "Warning: Dependency graph build failed, skipping CDS-specific processing"
   );
-  configureLgtmIndexFilters();
-  logPerformanceTrackingStart("JavaScript Extraction");
-  const extractorResult2 = runJavaScriptExtractor(
+  handleEarlyExit(
     sourceRoot,
     autobuildScriptPath || "",
-    // Use empty string if autobuildScriptPath is undefined
-    codeqlExePath
+    codeqlExePath,
+    "JavaScript extraction completed (CDS processing was skipped)"
   );
-  logPerformanceTrackingStop("JavaScript Extraction");
-  if (!extractorResult2.success && extractorResult2.error) {
-    cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult2.error}`);
-    if (codeqlExePath) {
-      addJavaScriptExtractorDiagnostic(
-        sourceRoot,
-        extractorResult2.error,
-        codeqlExePath,
-        sourceRoot
-      );
-    }
-    logExtractorStop(false, "JavaScript extractor failed");
-  } else {
-    logExtractorStop(true, "JavaScript extraction completed (CDS processing was skipped)");
-  }
-  console.log(`Completed run of the cds-extractor.js script for the CDS extractor.`);
-  process.exit(0);
 }
 logPerformanceTrackingStart("Dependency Installation");
 var projectCacheDirMap = cacheInstallDependencies(dependencyGraph, sourceRoot, codeqlExePath);
@@ -9588,38 +9628,22 @@ try {
   if (cdsFilePathsToProcess.length > 0) {
     addCompilationDiagnostic(
       cdsFilePathsToProcess[0],
-      // Use first file as representative
       `Compilation orchestration failed: ${String(error)}`,
       codeqlExePath,
       sourceRoot
     );
   }
 }
-configureLgtmIndexFilters();
-logPerformanceTrackingStart("JavaScript Extraction");
-var extractionStartTime = Date.now();
-var extractorResult = runJavaScriptExtractor(sourceRoot, autobuildScriptPath, codeqlExePath);
-var extractionEndTime = Date.now();
-logPerformanceTrackingStop("JavaScript Extraction");
-dependencyGraph.statusSummary.performance.extractionDurationMs = extractionEndTime - extractionStartTime;
-var totalDuration = dependencyGraph.statusSummary.performance.parsingDurationMs + dependencyGraph.statusSummary.performance.compilationDurationMs + dependencyGraph.statusSummary.performance.extractionDurationMs;
-dependencyGraph.statusSummary.performance.totalDurationMs = totalDuration;
-if (!extractorResult.success && extractorResult.error) {
-  cdsExtractorLog("error", `Error running JavaScript extractor: ${extractorResult.error}`);
-  if (codeqlExePath && dependencyGraph.projects.size > 0) {
-    const firstProject = Array.from(dependencyGraph.projects.values())[0];
-    const representativeFile = firstProject.cdsFiles[0] || sourceRoot;
-    addJavaScriptExtractorDiagnostic(
-      representativeFile,
-      extractorResult.error,
-      codeqlExePath,
-      sourceRoot
-    );
-  }
-  logExtractorStop(false, "JavaScript extractor failed");
-} else {
-  logExtractorStop(true, "CDS extraction completed successfully");
-}
+var extractionSuccess = runJavaScriptExtractionWithMarker(
+  sourceRoot,
+  autobuildScriptPath,
+  codeqlExePath,
+  dependencyGraph
+);
+logExtractorStop(
+  extractionSuccess,
+  extractionSuccess ? "CDS extraction completed successfully" : "JavaScript extractor failed"
+);
 cdsExtractorLog(
   "info",
   "CDS Extractor Status Report : Final...\n" + generateStatusReport(dependencyGraph)
