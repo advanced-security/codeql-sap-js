@@ -366,3 +366,29 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
     logArgumentToListener(start, end)
   }
 }
+
+/**
+ * A step within an object wrapped in an `sap.ui.extend` call. Jumps from
+ * the value written to a property of the object to the read of it.
+ *
+ * This step is only established only if the property read and property writes
+ * are in different methods, so as not to jump to a property read that comes
+ * before the property write in the same method.
+ */
+class ThisNodePropertyWriteToThisNodePropertyRead extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(
+      SapExtendCall sapExtendCall, ThisNode propReadThisNode, ThisNode propWriteThisNode,
+      PropRead propRead, PropWrite propWrite, string propName
+    |
+      propReadThisNode = sapExtendCall.getAThisNode() and
+      propWriteThisNode = sapExtendCall.getAThisNode() and
+      propRead = propReadThisNode.getAPropertyRead(propName) and
+      propWrite = propWriteThisNode.getAPropertyWrite(propName) and
+      start = propWrite.getRhs() and
+      end = propRead and
+      /* They belong to different methods of the object. */
+      propReadThisNode.getBinder() != propWriteThisNode.getBinder()
+    )
+  }
+}
