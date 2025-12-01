@@ -18,10 +18,12 @@ import type { CdsDependencyGraph, CdsProject } from '../parser';
  * Add diagnostics only for tasks with `status: failed` in the {@link CdsDependencyGraph}.
  * @param dependencyGraph The dependency graph to use as the source of truth for task status
  * @param codeqlExePath Path to CodeQL executable used to add a diagnostic notification
+ * @param sourceRoot Source root directory to use for making file paths relative
  */
 function addCompilationDiagnosticsForFailedTasks(
   dependencyGraph: CdsDependencyGraph,
   codeqlExePath: string,
+  sourceRoot: string,
 ): void {
   for (const project of dependencyGraph.projects.values()) {
     for (const task of project.compilationTasks) {
@@ -38,6 +40,7 @@ function addCompilationDiagnosticsForFailedTasks(
               sourceFile,
               task.errorSummary ?? 'Compilation failed',
               codeqlExePath,
+              sourceRoot,
             );
           }
         }
@@ -191,7 +194,11 @@ export function orchestrateRetryAttempts(
     updateDependencyGraphWithRetryResults(dependencyGraph, result);
 
     // Phase 5: Add diagnostics for definitively failed tasks.
-    addCompilationDiagnosticsForFailedTasks(dependencyGraph, codeqlExePath);
+    addCompilationDiagnosticsForFailedTasks(
+      dependencyGraph,
+      codeqlExePath,
+      dependencyGraph.sourceRootDir,
+    );
 
     result.success = result.totalSuccessfulRetries > 0 || result.totalTasksRequiringRetry === 0;
   } catch (error) {
