@@ -852,15 +852,14 @@ class UI5Control extends TUI5Control {
     )
   }
 
-  bindingset[val]
-  private UI5Control sanitizeContentSetTo(boolean val) {
-    /* 1. `sanitizeContent` attribute is set declaratively. */
-    result.getProperty("sanitizeContent").toString() = val.toString()
+  private predicate sanitizeContentSetTo(boolean val) {
+    this.getAReference().getAPropertyWrite("sanitizeContent").getRhs().mayHaveBooleanValue(val)
     or
-    /* 2. `sanitizeContent` attribute is set programmatically using setProperty(). */
-    exists(CallNode node | node = result.getAReference().getAMemberCall("setProperty") |
-      node.getArgument(0).getStringValue() = "sanitizeContent" and
-      not node.getArgument(1).mayHaveBooleanValue(val.booleanNot())
+    exists(CallNode setPropertyCall |
+      setPropertyCall = this.getAReference().getAMemberCall("setProperty")
+    |
+      setPropertyCall.getArgument(0).getStringValue() = "sanitizeContent" and
+      setPropertyCall.getArgument(1).mayHaveBooleanValue(val)
     )
   }
 }
