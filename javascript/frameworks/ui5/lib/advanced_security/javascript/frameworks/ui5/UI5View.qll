@@ -684,7 +684,7 @@ class XmlView extends UI5View instanceof XmlFile {
 }
 
 private newtype TUI5Control =
-  TXmlControl(XmlElement control) or
+  TXmlControl(XmlElement control) { control.getFile().getName().matches("%.view.xml") } or
   TJsonControl(JsonObject control) {
     exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
   } or
