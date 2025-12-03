@@ -5,17 +5,14 @@ import semmle.javascript.security.dataflow.DomBasedXssCustomizations
  * import { Input, Button } from '@ui5/webcomponents-react';
  * ```
  */
-class WebComponentImport extends API::Node {
-  WebComponentImport() { this = API::moduleImport("@ui5/webcomponents-react") }
-}
+class WebComponentImport extends DataFlow::SourceNode {
+  string typeName;
 
-private DataFlow::SourceNode isUI5WebComponentReact(DataFlow::TypeTracker t) {
-  exists(WebComponentImport i | result = i.getMember(_).asSource()) or
-  exists(DataFlow::TypeTracker t2 | result = isUI5WebComponentReact(t).track(t2, t))
-}
+  WebComponentImport() {
+    this = API::moduleImport("@ui5/webcomponents-react").getMember(typeName).asSource()
+  }
 
-DataFlow::SourceNode isUI5WebComponentReact() {
-  result = isUI5WebComponentReact(DataFlow::TypeTracker::end())
+  string getTypeName() { result = typeName }
 }
 
 /**
@@ -31,13 +28,12 @@ class RefAttribute extends JsxAttribute {
  */
 predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
   exists(
-    Variable refVar, JsxElement jsx, RefAttribute attr, VarRef componentVar, DataFlow::Node decl
+    Variable refVar, JsxElement jsx, RefAttribute attr, VarRef componentVar, WebComponentImport decl
   |
     source.getElement() = jsx and
     // The JSX element uses a UI5 webcomponent for react
     jsx.getNameExpr() = componentVar and
     decl.asExpr() = componentVar.getVariable().getADefinition() and
-    isUI5WebComponentReact() = decl and
     // The JSX element has a ref attribute pointing to our ref variable
     jsx.getAnAttribute() = attr and
     attr.getValue().(VarRef).getVariable() = refVar

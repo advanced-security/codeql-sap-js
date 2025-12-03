@@ -2,7 +2,7 @@
  * @name DOM text reinterpreted as HTML
  * @description Reinterpreting text from the DOM as HTML
  *              can lead to a cross-site scripting vulnerability.
- * @ kind path-problem
+ * @kind path-problem
  * @problem.severity warning
  * @security-severity 6.1
  * @precision high
@@ -12,10 +12,12 @@
  *       external/cwe/cwe-116
  */
 
-//an exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
-//at commit sha: 7b6720c
-//included for testing purposes only
-//tests the use of customizations to filter results via sanitizer
+/*
+ * This file is an exact copy of - https://github.com/github/codeql/blob/main/javascript/ql/src/Security/CWE-079/XssThroughDom.ql
+ * replicated at commit sha: 7b6720c , included for testing purposes only.
+ * Its purpose is to test the use of customizations to filter results via the sanitizers.
+ */
+
 import javascript
 import semmle.javascript.security.dataflow.XssThroughDomQuery
 import XssThroughDomFlow::PathGraph

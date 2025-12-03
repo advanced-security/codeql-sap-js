@@ -3,12 +3,12 @@ import {Input, TextArea, Search, ShellBarSearch, ComboBox, MultiComboBox, Select
 import '@ui5/webcomponents/dist/Assets.js';
 
 function App() {
-  // Input component usage
+  /* `Input`: Accepts unrestricted string */
   const [inputValue, setInputValue] = useState<string>("");
   const inputRef = useRef<typeof Input>(null);
 
   const handleInputChange = useCallback(() => {
-    setInputValue((msg) => inputRef.current?.value || "");  {/* Potentially Unsafe */}
+    setInputValue((msg) => inputRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setInputValue]);
 
   useEffect(() => {
@@ -19,12 +19,12 @@ function App() {
     };
   }, [handleInputChange]);
 
-  // TextArea component usage
+  /* `TextArea`: Accepts unrestricted string */
   const [textAreaValue, setTextAreaValue] = useState<string>("");
   const textAreaRef = useRef<typeof TextArea>(null);
 
   const handleTextAreaChange = useCallback(() => {
-    setTextAreaValue((msg) => textAreaRef.current?.value || "");  {/* Potentially Unsafe */}
+    setTextAreaValue((msg) => textAreaRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setTextAreaValue]);
 
   useEffect(() => {
@@ -35,12 +35,12 @@ function App() {
     };
   }, [handleTextAreaChange]);
 
-  // Search component usage
+  /* `Search`: Accepts unrestricted string */
   const [searchValue, setSearchValue] = useState<string>("");
   const searchRef = useRef<typeof Search>(null);
 
   const handleSearchChange = useCallback(() => {
-    setSearchValue((msg) => searchRef.current?.value || "");  {/* Potentially Unsafe */}
+    setSearchValue((msg) => searchRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setSearchValue]);
 
   useEffect(() => {
@@ -51,12 +51,12 @@ function App() {
     };
   }, [handleSearchChange]);
 
-  // ShellBarSearch component usage
+  /* `ShellBarSearch`: Accepts unrestricted string */
   const [shellBarSearchValue, setShellBarSearchValue] = useState<string>("");
   const shellBarSearchRef = useRef<typeof ShellBarSearch>(null);
 
   const handleShellBarSearchChange = useCallback(() => {
-    setShellBarSearchValue((msg) => shellBarSearchRef.current?.value || "");  {/* Potentially Unsafe */}
+    setShellBarSearchValue((msg) => shellBarSearchRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setShellBarSearchValue]);
 
   useEffect(() => {
@@ -67,12 +67,12 @@ function App() {
     };
   }, [handleShellBarSearchChange]);
 
-  // ComboBox component usage
+  /* `ComboBox`: Accepts unrestricted string */
   const [comboBoxValue, setComboBoxValue] = useState<string>("");
   const comboBoxRef = useRef<typeof ComboBox>(null);
 
   const handleComboBoxChange = useCallback(() => {
-    setComboBoxValue((msg) => comboBoxRef.current?.value || "");  {/* Potentially Unsafe */}
+    setComboBoxValue((msg) => comboBoxRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setComboBoxValue]);
 
   useEffect(() => {
@@ -83,12 +83,12 @@ function App() {
     };
   }, [handleComboBoxChange]);
 
-  // MultiComboBox component usage
+  /* `MultiComboBox`: component usage */
   const [multiComboBoxValue, setMultiComboBoxValue] = useState<string>("");
   const multiComboBoxRef = useRef<typeof MultiComboBox>(null);
 
   const handleMultiComboBoxChange = useCallback(() => {
-    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || ""); {/* Safe */}
+    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setMultiComboBoxValue]);
 
   useEffect(() => {
@@ -99,12 +99,12 @@ function App() {
     };
   }, [handleMultiComboBoxChange]);
 
-  // Select component usage
+  /* `Select` component usage */
   const [selectValue, setSelectValue] = useState<string>("");
   const selectRef = useRef<typeof Select>(null);
 
   const handleSelectChange = useCallback(() => {
-    setSelectValue((msg) => selectRef.current?.value || ""); {/* Safe */}
+    setSelectValue((msg) => selectRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setSelectValue]);
 
   useEffect(() => {
@@ -115,12 +115,12 @@ function App() {
     };
   }, [handleSelectChange]);
 
-  // DatePicker component usage
+  /* `DatePicker`: Accepts unrestricted string */
   const [datePickerValue, setDatePickerValue] = useState<string>("");
   const datePickerRef = useRef<typeof DatePicker>(null);
 
   const handleDatePickerChange = useCallback(() => {
-    setDatePickerValue((msg) => datePickerRef.current?.value || "");  {/* Potentially Unsafe */}
+    setDatePickerValue((msg) => datePickerRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setDatePickerValue]);
 
   useEffect(() => {
@@ -131,12 +131,12 @@ function App() {
     };
   }, [handleDatePickerChange]);
 
-  // DateRangePicker component usage
+  /* `DateRangePicker`: Accepts unrestricted string */
   const [dateRangePickerValue, setDateRangePickerValue] = useState<string>("");
   const dateRangePickerRef = useRef<typeof DateRangePicker>(null);
 
   const handleDateRangePickerChange = useCallback(() => {
-    setDateRangePickerValue((msg) => dateRangePickerRef.current?.value || "");  {/* Potentially Unsafe */}
+    setDateRangePickerValue((msg) => dateRangePickerRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setDateRangePickerValue]);
 
   useEffect(() => {
@@ -147,12 +147,12 @@ function App() {
     };
   }, [handleDateRangePickerChange]);
 
-  // DateTimePicker component usage
+  /* `DateTimePicker`: Accepts unrestricted string */
   const [dateTimePickerValue, setDateTimePickerValue] = useState<string>("");
   const dateTimePickerRef = useRef<typeof DateTimePicker>(null);
 
   const handleDateTimePickerChange = useCallback(() => {
-    setDateTimePickerValue((msg) => dateTimePickerRef.current?.value || "");  {/* Potentially Unsafe */}
+    setDateTimePickerValue((msg) => dateTimePickerRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setDateTimePickerValue]);
 
   useEffect(() => {
@@ -163,12 +163,12 @@ function App() {
     };
   }, [handleDateTimePickerChange]);
 
-  // TimePicker component usage
+  /* `TimePicker`: Accepts unrestricted string */
   const [timePickerValue, setTimePickerValue] = useState<string>("");
   const timePickerRef = useRef<typeof TimePicker>(null);
 
   const handleTimePickerChange = useCallback(() => {
-    setTimePickerValue((msg) => timePickerRef.current?.value || "");  {/* Potentially Unsafe */}
+    setTimePickerValue((msg) => timePickerRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setTimePickerValue]);
 
   useEffect(() => {
@@ -179,12 +179,12 @@ function App() {
     };
   }, [handleTimePickerChange]);
 
-  // ColorPicker component usage
+  /* `ColorPicker` component usage */
   const [colorPickerValue, setColorPickerValue] = useState<string>("");
   const colorPickerRef = useRef<typeof ColorPicker>(null);
 
   const handleColorPickerChange = useCallback(() => {
-    setColorPickerValue((msg) => colorPickerRef.current?.value || ""); {/* Safe */}
+    setColorPickerValue((msg) => colorPickerRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setColorPickerValue]);
 
   useEffect(() => {
@@ -195,12 +195,12 @@ function App() {
     };
   }, [handleColorPickerChange]);
 
-  // ColorPaletteItem component usage
+  /* `ColorPaletteItem` component usage */
   const [colorPaletteItemValue, setColorPaletteItemValue] = useState<string>("");
   const colorPaletteItemRef = useRef<typeof ColorPaletteItem>(null);
 
   const handleColorPaletteItemChange = useCallback(() => {
-    setColorPaletteItemValue((msg) => colorPaletteItemRef.current?.value || ""); {/* Safe */}
+    setColorPaletteItemValue((msg) => colorPaletteItemRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setColorPaletteItemValue]);
 
   useEffect(() => {
@@ -211,12 +211,12 @@ function App() {
     };
   }, [handleColorPaletteItemChange]);
 
-  // CalendarDate component usage
+  /* `CalendarDate` component usage */
   const [calendarDateValue, setCalendarDateValue] = useState<string>("");
   const calendarDateRef = useRef<typeof CalendarDate>(null);
 
   const handleCalendarDateChange = useCallback(() => {
-    setCalendarDateValue((msg) => calendarDateRef.current?.value || ""); {/* Safe */}
+    setCalendarDateValue((msg) => calendarDateRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setCalendarDateValue]);
 
   useEffect(() => {
@@ -227,12 +227,12 @@ function App() {
     };
   }, [handleCalendarDateChange]);
 
-  // FileUploader component usage
+  /* `FileUploader` component usage */
   const [fileUploaderValue, setFileUploaderValue] = useState<string>("");
   const fileUploaderRef = useRef<typeof FileUploader>(null);
 
   const handleFileUploaderChange = useCallback(() => {
-    setFileUploaderValue((msg) => fileUploaderRef.current?.value || ""); {/* Safe */}
+    setFileUploaderValue((msg) => fileUploaderRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setFileUploaderValue]);
 
   useEffect(() => {
@@ -243,12 +243,12 @@ function App() {
     };
   }, [handleFileUploaderChange]);
 
-  // CheckBox component usage
+  /* `CheckBox` component usage */
   const [checkBoxValue, setCheckBoxValue] = useState<string>("");
   const checkBoxRef = useRef<typeof CheckBox>(null);
 
   const handleCheckBoxChange = useCallback(() => {
-    setCheckBoxValue((msg) => checkBoxRef.current?.value || ""); {/* Safe */}
+    setCheckBoxValue((msg) => checkBoxRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setCheckBoxValue]);
 
   useEffect(() => {
@@ -259,12 +259,12 @@ function App() {
     };
   }, [handleCheckBoxChange]);
 
-  // RadioButton component usage
+  /* `RadioButton` component usage */
   const [radioButtonValue, setRadioButtonValue] = useState<string>("");
   const radioButtonRef = useRef<typeof RadioButton>(null);
 
   const handleRadioButtonChange = useCallback(() => {
-    setRadioButtonValue((msg) => radioButtonRef.current?.value || ""); {/* Safe */}
+    setRadioButtonValue((msg) => radioButtonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setRadioButtonValue]);
 
   useEffect(() => {
@@ -275,12 +275,12 @@ function App() {
     };
   }, [handleRadioButtonChange]);
 
-  // Switch component usage
+  /* `Switch` component usage */
   const [switchValue, setSwitchValue] = useState<string>("");
   const switchRef = useRef<typeof Switch>(null);
 
   const handleSwitchChange = useCallback(() => {
-    setSwitchValue((msg) => switchRef.current?.value || ""); {/* Safe */}
+    setSwitchValue((msg) => switchRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setSwitchValue]);
 
   useEffect(() => {
@@ -291,12 +291,12 @@ function App() {
     };
   }, [handleSwitchChange]);
 
-  // Option component usage
+  /* `Option`: Accepts unrestricted string */
   const [optionValue, setOptionValue] = useState<string>("");
   const optionRef = useRef<typeof Option>(null);
 
   const handleOptionChange = useCallback(() => {
-    setOptionValue((msg) => optionRef.current?.value || "");  {/* Potentially Unsafe */}
+    setOptionValue((msg) => optionRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setOptionValue]);
 
   useEffect(() => {
@@ -307,12 +307,12 @@ function App() {
     };
   }, [handleOptionChange]);
 
-  // OptionCustom component usage
+  /* `OptionCustom`: Accepts unrestricted string */
   const [optionCustomValue, setOptionCustomValue] = useState<string>("");
   const optionCustomRef = useRef<typeof OptionCustom>(null);
 
   const handleOptionCustomChange = useCallback(() => {
-    setOptionCustomValue((msg) => optionCustomRef.current?.value || "");  {/* Potentially Unsafe */}
+    setOptionCustomValue((msg) => optionCustomRef.current?.value || "");  // UNSAFE: Unrestricted string set as content
   }, [setOptionCustomValue]);
 
   useEffect(() => {
@@ -323,12 +323,12 @@ function App() {
     };
   }, [handleOptionCustomChange]);
 
-  // RatingIndicator component usage
+  /* `RatingIndicator` component usage */
   const [ratingIndicatorValue, setRatingIndicatorValue] = useState<string>("");
   const ratingIndicatorRef = useRef<typeof RatingIndicator>(null);
 
   const handleRatingIndicatorChange = useCallback(() => {
-    setRatingIndicatorValue((msg) => ratingIndicatorRef.current?.value || ""); {/* Safe - numeric */}
+    setRatingIndicatorValue((msg) => ratingIndicatorRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setRatingIndicatorValue]);
 
   useEffect(() => {
@@ -339,12 +339,12 @@ function App() {
     };
   }, [handleRatingIndicatorChange]);
 
-  // Slider component usage
+  /* `Slider` component usage */
   const [sliderValue, setSliderValue] = useState<string>("");
   const sliderRef = useRef<typeof Slider>(null);
 
   const handleSliderChange = useCallback(() => {
-    setSliderValue((msg) => sliderRef.current?.value || ""); {/* Safe - numeric */}
+    setSliderValue((msg) => sliderRef.current?.value || ""); // SAFE: Does not take unrestricted string (numeric input)
   }, [setSliderValue]);
 
   useEffect(() => {
@@ -355,12 +355,12 @@ function App() {
     };
   }, [handleSliderChange]);
 
-  // ProgressIndicator component usage
+  /* `ProgressIndicator` component usage */
   const [progressIndicatorValue, setProgressIndicatorValue] = useState<string>("");
   const progressIndicatorRef = useRef<typeof ProgressIndicator>(null);
 
   const handleProgressIndicatorChange = useCallback(() => {
-    setProgressIndicatorValue((msg) => progressIndicatorRef.current?.value || ""); {/* Safe - numeric */}
+    setProgressIndicatorValue((msg) => progressIndicatorRef.current?.value || ""); // SAFE: Does not take unrestricted string (numeric input)
   }, [setProgressIndicatorValue]);
 
   useEffect(() => {
@@ -371,12 +371,12 @@ function App() {
     };
   }, [handleProgressIndicatorChange]);
 
-  // StepInput component usage
+  /* `StepInput` component usage */
   const [stepInputValue, setStepInputValue] = useState<string>("");
   const stepInputRef = useRef<typeof StepInput>(null);
 
   const handleStepInputChange = useCallback(() => {
-    setStepInputValue((msg) => stepInputRef.current?.value || ""); {/* Safe - numeric */}
+    setStepInputValue((msg) => stepInputRef.current?.value || ""); // SAFE: Does not take unrestricted string (numeric input)
   }, [setStepInputValue]);
 
   useEffect(() => {
@@ -387,12 +387,12 @@ function App() {
     };
   }, [handleStepInputChange]);
 
-  // DynamicDateRange component usage
+  /* `DynamicDateRange` component usage */
   const [dynamicDateRangeValue, setDynamicDateRangeValue] = useState<string>("");
   const dynamicDateRangeRef = useRef<typeof DynamicDateRange>(null);
 
   const handleDynamicDateRangeChange = useCallback(() => {
-    setDynamicDateRangeValue((msg) => dynamicDateRangeRef.current?.value || ""); {/* Safe - numeric */}
+    setDynamicDateRangeValue((msg) => dynamicDateRangeRef.current?.value || ""); // SAFE: Does not take unrestricted string (numeric input)
   }, [setDynamicDateRangeValue]);
 
   useEffect(() => {
@@ -403,12 +403,12 @@ function App() {
     };
   }, [handleDynamicDateRangeChange]);
 
-  //RangeSlider component usage
+  /* `RangeSlider` component usage */
   const [rangeSliderValue, setRangeSliderValue] = useState<string>("");
   const rangeSliderRef = useRef<typeof RangeSlider>(null);
 
   const handleRangeSliderChange = useCallback(() => {
-    setRangeSliderValue((msg) => rangeSliderRef.current?.value || ""); {/* Safe - numeric */}
+    setRangeSliderValue((msg) => rangeSliderRef.current?.value || ""); // SAFE: Does not take unrestricted string (numeric input)
   }, [setRangeSliderValue]);
 
   useEffect(() => {
@@ -419,12 +419,12 @@ function App() {
     };
   }, [handleRangeSliderChange]);
 
-  // Button component usage
+  /* `Button` component usage */
   const [buttonValue, setButtonValue] = useState<string>("");
   const buttonRef = useRef<typeof Button>(null);
 
   const handleButtonChange = useCallback(() => {
-    setButtonValue((msg) => buttonRef.current?.value || ""); {/* Safe */}
+    setButtonValue((msg) => buttonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setButtonValue]);
 
   useEffect(() => {
@@ -435,12 +435,12 @@ function App() {
     };
   }, [handleButtonChange]);
 
-  // MessageViewButton component usage
+  /* `MessageViewButton` component usage */
   const [messageViewButtonValue, setMessageViewButtonValue] = useState<string>("");
   const messageViewButtonRef = useRef<typeof MessageViewButton>(null);
 
   const handleMessageViewButtonChange = useCallback(() => {
-    setMessageViewButtonValue((msg) => messageViewButtonRef.current?.value || ""); {/* Safe */}
+    setMessageViewButtonValue((msg) => messageViewButtonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setMessageViewButtonValue]);
 
   useEffect(() => {
@@ -451,12 +451,12 @@ function App() {
     };
   }, [handleMessageViewButtonChange]);
 
-  // SegmentedButton component usage
+  /* `SegmentedButton` component usage */
   const [segmentedButtonValue, setSegmentedButtonValue] = useState<string>("");
   const segmentedButtonRef = useRef<typeof SegmentedButton>(null);
 
   const handleSegmentedButtonChange = useCallback(() => {
-    setSegmentedButtonValue((msg) => segmentedButtonRef.current?.value || ""); {/* Safe */}
+    setSegmentedButtonValue((msg) => segmentedButtonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setSegmentedButtonValue]);
 
   useEffect(() => {
@@ -467,12 +467,12 @@ function App() {
     };
   }, [handleSegmentedButtonChange]);
 
-  // SplitButton component usage
+  /* `SplitButton` component usage */
   const [splitButtonValue, setSplitButtonValue] = useState<string>("");
   const splitButtonRef = useRef<typeof SplitButton>(null);
 
   const handleSplitButtonChange = useCallback(() => {
-    setSplitButtonValue((msg) => splitButtonRef.current?.value || ""); {/* Safe */}
+    setSplitButtonValue((msg) => splitButtonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setSplitButtonValue]);
 
   useEffect(() => {
@@ -483,12 +483,12 @@ function App() {
     };
   }, [handleSplitButtonChange]);
 
-  // ToggleButton component usage
+  /* `ToggleButton` component usage */
   const [toggleButtonValue, setToggleButtonValue] = useState<string>("");
   const toggleButtonRef = useRef<typeof ToggleButton>(null);
 
   const handleToggleButtonChange = useCallback(() => {
-    setToggleButtonValue((msg) => toggleButtonRef.current?.value || ""); {/* Safe */}
+    setToggleButtonValue((msg) => toggleButtonRef.current?.value || ""); // SAFE: Does not take unrestricted string
   }, [setToggleButtonValue]);
 
   useEffect(() => {
@@ -502,24 +502,24 @@ function App() {
   
   return (
     <div className="app">
-      <Input placeholder="Input" ref={inputRef} id="input-field"></Input>  {/* Potentially Unsafe */}
+      <Input placeholder="Input" ref={inputRef} id="input-field"></Input> {/* Potentially Unsafe */}
       <TextArea placeholder="TextArea" ref={textAreaRef} id="textarea-field"></TextArea>  {/* Potentially Unsafe */}
       <Search placeholder="Search" ref={searchRef} id="search-field"></Search>  {/* Potentially Unsafe */}
       <ShellBarSearch placeholder="ShellBarSearch" ref={shellBarSearchRef} id="shellbarsearch-field"></ShellBarSearch>  {/* Potentially Unsafe */}
       <ComboBox placeholder="ComboBox" ref={comboBoxRef} id="combobox-field"></ComboBox>  {/* Potentially Unsafe */}
-      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field"></MultiComboBox> {/* Safe */}
-      <Select ref={selectRef} id="select-field"></Select> {/* Safe */}
+      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field"></MultiComboBox> {/* Safe - accepts a fixed set of strings */}
+      <Select ref={selectRef} id="select-field"></Select> {/* Safe - accepts a fixed set of strings */}
       <DatePicker placeholder="DatePicker" ref={datePickerRef} id="datepicker-field"></DatePicker>  {/* Potentially Unsafe */}
       <DateRangePicker placeholder="DateRangePicker" ref={dateRangePickerRef} id="daterangepicker-field"></DateRangePicker>  {/* Potentially Unsafe */}
       <DateTimePicker placeholder="DateTimePicker" ref={dateTimePickerRef} id="datetimepicker-field"></DateTimePicker>  {/* Potentially Unsafe */}
       <TimePicker placeholder="TimePicker" ref={timePickerRef} id="timepicker-field"></TimePicker>  {/* Potentially Unsafe */}
-      <ColorPicker ref={colorPickerRef} id="colorpicker-field"></ColorPicker> {/* Safe */}
-      <ColorPaletteItem value="color" ref={colorPaletteItemRef} id="colorpaletteitem-field"></ColorPaletteItem> {/* Safe */}
+      <ColorPicker ref={colorPickerRef} id="colorpicker-field"></ColorPicker> {/* Safe - does not accept any string input */}
+      <ColorPaletteItem value="color" ref={colorPaletteItemRef} id="colorpaletteitem-field"></ColorPaletteItem> {/* Safe - does not accept any string input */}
       <CalendarDate value="20250101" ref={calendarDateRef} id="calendardate-field"></CalendarDate> {/* Safe - not a standalone component */}
-      <FileUploader ref={fileUploaderRef} id="fileuploader-field"></FileUploader> {/* Safe */}
-      <CheckBox ref={checkBoxRef} id="checkbox-field"></CheckBox> {/* Safe */}
-      <RadioButton ref={radioButtonRef} id="radiobutton-field"></RadioButton> {/* Safe */}
-      <Switch ref={switchRef} id="switch-field"></Switch> {/* Safe */}
+      <FileUploader ref={fileUploaderRef} id="fileuploader-field"></FileUploader> {/* Safe - accepts a fixed set of strings */}
+      <CheckBox ref={checkBoxRef} id="checkbox-field"></CheckBox> {/* Safe - does not accept any string input */}
+      <RadioButton ref={radioButtonRef} id="radiobutton-field"></RadioButton> {/* Safe - does not accept any input */}
+      <Switch ref={switchRef} id="switch-field"></Switch> {/* Safe - does not accept any input */}
       <Option value="option" ref={optionRef} id="option-field"></Option> {/* Potentially Unsafe */}
       <OptionCustom value="custom" ref={optionCustomRef} id="optioncustom-field"></OptionCustom> {/* Potentially Unsafe */}
       <RatingIndicator ref={ratingIndicatorRef} id="ratingindicator-field"></RatingIndicator> {/* Safe - numeric */}
@@ -528,11 +528,11 @@ function App() {
       <StepInput ref={stepInputRef} id="stepinput-field"></StepInput> {/* Safe - numeric */}
       <DynamicDateRange ref={dynamicDateRangeRef} id="dynamicdaterange-field"></DynamicDateRange> {/* Safe - numeric */}
       <RangeSlider ref={rangeSliderRef} id="rangeslider-field"></RangeSlider> {/* Safe - numeric */}
-      <Button ref={buttonRef} id="button-field">Button</Button> {/* Safe */}
-      <MessageViewButton ref={messageViewButtonRef} id="messageviewbutton-field"></MessageViewButton> {/* Safe */}
-      <SegmentedButton ref={segmentedButtonRef} id="segmentedbutton-field"></SegmentedButton> {/* Safe */}
-      <SplitButton ref={splitButtonRef} id="splitbutton-field">Split</SplitButton> {/* Safe */}
-      <ToggleButton ref={toggleButtonRef} id="togglebutton-field">Toggle</ToggleButton> {/* Safe */}
+      <Button ref={buttonRef} id="button-field">Button</Button> {/* Safe - does not accept any input */}
+      <MessageViewButton ref={messageViewButtonRef} id="messageviewbutton-field"></MessageViewButton> {/* Safe - does not accept any input */}
+      <SegmentedButton ref={segmentedButtonRef} id="segmentedbutton-field"></SegmentedButton> {/* Safe - does not accept any input */}
+      <SplitButton ref={splitButtonRef} id="splitbutton-field">Split</SplitButton> {/* Safe - does not accept any input */}
+      <ToggleButton ref={toggleButtonRef} id="togglebutton-field">Toggle</ToggleButton> {/* Safe - does not accept any input */}
 
       <div dangerouslySetInnerHTML={{__html: inputValue}}></div>
       <div dangerouslySetInnerHTML={{__html: textAreaValue}}></div>
