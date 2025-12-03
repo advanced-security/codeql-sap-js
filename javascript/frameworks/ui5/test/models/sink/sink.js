@@ -8,7 +8,8 @@ sap.ui.define(
     "sap/base/util/Properties",
     "sap/ui/core/RenderManager",
     "sap/ui/util/Storage",
-    "sap/ui/core/util/File"
+    "sap/ui/core/util/File",
+    "sap/ui/richtexteditor/RichTextEditor"
   ],
   function (
     LoaderExtensions,
@@ -19,13 +20,12 @@ sap.ui.define(
     Properties,
     RenderManager,
     Storage,
-    File
+    File,
+    RichTextEditor
   ) {
     var value = jQuery.sap.log.fatal(code0, code1, code2);
     var value = jQuery.sap.log.error(code0, code1, code2);
-
     var value = jQuery.sap.log.warning(code0, code1, code2);
-
     var value = jQuery.sap.log.info(code0, code1, code2);
 
     var value = jQuery.sap.log.debug(code0, code1, code2);
@@ -94,7 +94,7 @@ sap.ui.define(
     var value = obj.registerResourcePath(code0, code1);
     var obj = new Properties();
     var value = obj.create(code0);
-    var obj = new HTML({content: code0});
+    var obj = new HTML({ content: code0 });
     obj.content = code0;
     obj.setContent(code0);
     var obj = new Patcher();
@@ -125,5 +125,12 @@ sap.ui.define(
     var value = sap.ui.core.util.File.save(code0, code1, "csv", "text/csv", code4, code5);
     var value = sap.ui.core.util.File.save(code0, code1, "csv", "text/plain", code4, code5);
     var value = sap.ui.core.util.File.save(code0, code1, code2, code3, code4, code5);
+
+    var obj = new HTML({ content: code0, sanitizeContent: true });
+    var obj = new HTML({ content: code0, sanitizeContent: false });
+
+    var obj = new RichTextEditor({ value: code0 });
+    var obj = new RichTextEditor({ value: code0, sanitizeValue: true });
+    var obj = new RichTextEditor({ value: code0, sanitizeValue: false });
   },
 );
