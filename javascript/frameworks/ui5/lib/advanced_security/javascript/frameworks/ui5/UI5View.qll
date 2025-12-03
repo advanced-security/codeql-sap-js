@@ -838,28 +838,29 @@ class UI5Control extends TUI5Control {
   string getControlTypeName() { result = this.getQualifiedType().replaceAll(".", "/") }
 
   /**
-   * Holds if the attribute `sanitizeContent`
-   * in controls `sap.ui.core.HTML` and `sap.ui.richttexteditor.RichTextEditor`
-   * is set to true and never set to false anywhere
+   * Holds if the control content is sanitized for HTML
+   * 'sap/ui/core/HTML' sanitized using the property 'sanitizeContent'
+   * 'sap/ui/richttexteditor/RichTextEditor' sanitized using the property 'sanitizeValue'
    */
-  predicate isSanitizedControl() {
-    not this = this.sanitizeContentSetTo(false) and
-    (
-      this.getControlTypeName() = "sap/ui/richttexteditor/RichTextEditor"
-      or
-      this.getControlTypeName() = "sap/ui/core/HTML" and
-      this = this.sanitizeContentSetTo(true)
-    )
+  predicate isHTMLSanitized() {
+    this.getControlTypeName() = "sap/ui/richttexteditor/RichTextEditor" and
+    this.isSanitizePropertySetTo("sanitizeValue", true) and
+    not this.isSanitizePropertySetTo("sanitizeValue", false)
+    or
+    this.getControlTypeName() = "sap/ui/core/HTML" and
+    this.isSanitizePropertySetTo("sanitizeContent", true) and
+    not this.isSanitizePropertySetTo("sanitizeContent", false)
   }
 
-  private predicate sanitizeContentSetTo(boolean val) {
-    this.getAReference().getAPropertyWrite("sanitizeContent").getRhs().mayHaveBooleanValue(val)
+  bindingset[propName, val]
+  private predicate isSanitizePropertySetTo(string propName, boolean val) {
+    /* 1. `sanitizeContent` attribute is set declaratively. */
+    this.getProperty(propName).toString() = val.toString()
     or
-    exists(CallNode setPropertyCall |
-      setPropertyCall = this.getAReference().getAMemberCall("setProperty")
-    |
-      setPropertyCall.getArgument(0).getStringValue() = "sanitizeContent" and
-      setPropertyCall.getArgument(1).mayHaveBooleanValue(val)
+    /* 2. `sanitizeContent` attribute is set programmatically using setProperty(). */
+    exists(CallNode node | node = this.getAReference().getAMemberCall("setProperty") |
+      node.getArgument(0).getStringValue() = propName and
+      not node.getArgument(1).mayHaveBooleanValue(val.booleanNot())
     )
   }
 }
