@@ -41,7 +41,7 @@ predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
 }
 
 /**
- * A custom version of the `UseRefDomValueSource` in the out of the box libraries
+ * A custom version of the `React::UseRefDomValueSource` in the out of the box libraries
  * this version exposes its JSX element and also is not private
  */
 class UseRefDomValueSource extends DOM::DomValueSource::Range {
