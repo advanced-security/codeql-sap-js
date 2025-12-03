@@ -5,6 +5,6 @@
     xmlns:rte="sap.ui.richtexteditor">
     <core:HTML content="{path: '/input'}"/> <!--XSS sink sap.ui.core.HTML.content -->
     <core:HTML content="{path: '/input'}" sanitizeContent="true"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
-    <rte:RichTextEditor value="{path: '/input'}"/> <!--XSS sink sap.ui.core.HTML.content -->
-    <rte:RichTextEditor value="{path: '/input'}" sanitizeValue="true"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+    <rte:RichTextEditor value="{path: '/input'}" sanitizeValue="false"/> <!--XSS sink sap.ui.core.HTML.content -->
+    <rte:RichTextEditor value="{path: '/input'}"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
 </mvc:View>

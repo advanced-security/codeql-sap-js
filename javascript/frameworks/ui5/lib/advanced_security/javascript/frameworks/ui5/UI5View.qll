@@ -844,7 +844,6 @@ class UI5Control extends TUI5Control {
    */
   predicate isHTMLSanitized() {
     this.getControlTypeName() = "sap/ui/richtexteditor/RichTextEditor" and
-    this.isSanitizePropertySetTo("sanitizeValue", true) and
     not this.isSanitizePropertySetTo("sanitizeValue", false)
     or
     this.getControlTypeName() = "sap/ui/core/HTML" and
