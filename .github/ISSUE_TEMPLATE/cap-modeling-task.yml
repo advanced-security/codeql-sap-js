@@ -1,0 +1,98 @@
+name: CAP Framework Modeling Task
+description: Task for developing CodeQL queries and models for SAP CAP framework
+title: "[CAP]: "
+labels: ["cap-framework", "agent-task", "codeql"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🤖 Agent Assignment
+
+        This issue will be handled by the **`cap-modeling-agent`** which specializes in CodeQL modeling for SAP CAP framework.
+
+        The agent follows:
+        - `.github/instructions/javascript_cap_ql.instructions.md`
+        - `.github/prompts/cap_framework_development.prompt.md`
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Task Description
+      description: Describe the CAP modeling task
+      placeholder: |
+        Example: Model new CAP event handler pattern for remote flow sources
+        Example: Fix false positive in SQL injection query for CAP
+        Example: Add test case for CAP authorization bypass
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Task Type
+      description: What kind of task is this?
+      options:
+        - New Query
+        - Query Improvement
+        - New Library Model
+        - Bug Fix
+        - Test Case Addition
+        - False Positive Fix
+        - False Negative Fix
+    validations:
+      required: true
+
+  - type: dropdown
+    id: vulnerability_type
+    attributes:
+      label: Vulnerability Type (if applicable)
+      description: What type of vulnerability does this relate to?
+      options:
+        - SQL Injection
+        - XSS
+        - Path Injection
+        - Log Injection
+        - Authorization Bypass
+        - Information Disclosure
+        - Other
+        - Not Applicable
+
+  - type: textarea
+    id: example_code
+    attributes:
+      label: Example Code
+      description: Provide example CAP code that demonstrates the pattern
+      placeholder: |
+        ```javascript
+        srv.on('READ', 'Books', async (req) => {
+          const userInput = req.data.query;
+          await srv.run(`SELECT * FROM Books WHERE title = '${userInput}'`);
+        });
+        ```
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any additional information or related resources
+      placeholder: |
+        - Related CAP documentation
+        - Similar patterns in other frameworks
+        - Test database considerations
+
+  - type: checkboxes
+    id: requirements
+    attributes:
+      label: Requirements Checklist
+      description: Verify these will be met
+      options:
+        - label: Test cases created with expected results
+          required: true
+        - label: CodeQL tests pass (`codeql test run`)
+          required: true
+        - label: Query formatted (`codeql query format`)
+          required: true
+        - label: Follows test-driven development
+          required: false
