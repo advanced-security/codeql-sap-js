@@ -1,5 +1,5 @@
 | sink.js:61:39:61:43 | code0 | code0 |
-| sink.js:97:34:97:38 | code0 | code0 |
+| sink.js:97:35:97:39 | code0 | code0 |
 | sink.js:98:19:98:23 | code0 | code0 |
 | sink.js:99:20:99:24 | code0 | code0 |
 | sink.js:101:32:101:36 | code0 | code0 |
@@ -10,3 +10,5 @@
 | sink.js:109:37:109:41 | code1 | code1 |
 | sink.js:111:30:111:34 | code0 | code0 |
 | sink.js:113:32:113:36 | code0 | code0 |
+| sink.js:129:35:129:39 | code0 | code0 |
+| sink.js:130:35:130:39 | code0 | code0 |

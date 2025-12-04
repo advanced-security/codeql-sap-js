@@ -1,7 +1,6 @@
 import javascript
 import semmle.javascript.dataflow.DataFlow as StdLibDataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
-import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import PatchDataFlow
@@ -107,6 +106,7 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     }
 
     UI5PathNode getAPrimaryHtmlISink() {
+      not result.asUI5BindingPathNode().getControlDeclaration().isHTMLSanitized() and
       if
         this.asDataFlowNode() instanceof LocalModelContentBoundBidirectionallyToHtmlISinkControl or
         this.asDataFlowNode() instanceof UI5ExternalModel // TODO: Narrow it down to ExternalModelBoundToHtmlISinkControl
