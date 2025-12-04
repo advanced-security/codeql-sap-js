@@ -3,6 +3,7 @@ import { existsSync } from 'fs';
 import { arch, platform } from 'os';
 import { join, resolve } from 'path';
 
+import { cdsExtractorMarkerFileName } from './constants';
 import { dirExists } from './filesystem';
 import { cdsExtractorLog } from './logging';
 
@@ -239,10 +240,15 @@ ${process.env.LGTM_INDEX_FILTERS}`,
   }
 
   // Enable extraction of the .cds.json files only.
+  //
+  // The cdsExtractorMarkerFileName file is auto-created by the CDS extractor in order
+  // to force the underlying JS extractor to see at least one .js file, which became a
+  // requirement starting with v2.23.5 of the CodeQL CLI.
   const lgtmIndexFiltersPatterns = [
     join('exclude:**', '*.*'),
     join('include:**', '*.cds.json'),
     join('include:**', '*.cds'),
+    join('include:**', cdsExtractorMarkerFileName),
     join('exclude:**', 'node_modules', '**', '*.*'),
   ].join('\n');
 
