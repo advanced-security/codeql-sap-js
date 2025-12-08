@@ -23,7 +23,7 @@ class XSJSDollarTypeModel extends ModelInput::TypeModel {
   /**
    * Prevents model pruning for type `XsjsDollar`
    */
-  override predicate isTypeUsed(string type) { type = "XsjsDollar" }
+  override[local?] predicate isTypeUsed(string type) { type = "XsjsDollar" }
 }
 
 /**

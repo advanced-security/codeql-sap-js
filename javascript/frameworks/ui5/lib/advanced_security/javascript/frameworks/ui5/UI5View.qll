@@ -940,5 +940,5 @@ class ControlTypeInHandlerModel extends ModelInput::TypeModel {
    * Prevents model pruning for `ControlType`types
    */
   bindingset[type]
-  override predicate isTypeUsed(string type) { any() }
+  override[local?] predicate isTypeUsed(string type) { any() }
 }
