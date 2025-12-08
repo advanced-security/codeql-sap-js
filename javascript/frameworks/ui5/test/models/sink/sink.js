@@ -94,7 +94,7 @@ sap.ui.define(
     var value = obj.registerResourcePath(code0, code1);
     var obj = new Properties();
     var value = obj.create(code0);
-    var obj = new HTML({ content: code0 });
+    var obj = new HTML({ content: code0 }); // UNSAFE: Content is not sanitized
     obj.content = code0;
     obj.setContent(code0);
     var obj = new Patcher();
