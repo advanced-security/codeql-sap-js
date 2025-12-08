@@ -126,11 +126,11 @@ sap.ui.define(
     var value = sap.ui.core.util.File.save(code0, code1, "csv", "text/plain", code4, code5);
     var value = sap.ui.core.util.File.save(code0, code1, code2, code3, code4, code5);
 
-    var obj = new HTML({ content: code0, sanitizeContent: true }); // FP
-    var obj = new HTML({ content: code0, sanitizeContent: false });
+    var obj = new HTML({ content: code0, sanitizeContent: true }); // SAFE: Content is sanitized
+    var obj = new HTML({ content: code0, sanitizeContent: false }); // UNSAFE: Content is explicitly not sanitized
 
-    var obj = new RichTextEditor({ value: code0 });
-    var obj = new RichTextEditor({ value: code0, sanitizeValue: true }); 
-    var obj = new RichTextEditor({ value: code0, sanitizeValue: false }); // FN
+    var obj = new RichTextEditor({ value: code0 }); // SAFE: Content is sanitized by default
+    var obj = new RichTextEditor({ value: code0, sanitizeValue: true }); // SAFE: Content is sanitized
+    var obj = new RichTextEditor({ value: code0, sanitizeValue: false }); // UNSAFE: Content is explicitly not sanitized
   },
 );
