@@ -83,7 +83,7 @@ function App() {
     };
   }, [handleComboBoxChange]);
 
-  /* `MultiComboBox`: component usage */
+  /* `MultiComboBox`: Accepts unrestricted string */
   const [multiComboBoxValue, setMultiComboBoxValue] = useState<string>("");
   const multiComboBoxRef = useRef<typeof MultiComboBox>(null);
 
@@ -99,7 +99,7 @@ function App() {
     };
   }, [handleMultiComboBoxChange]);
 
-  /* `Select` component usage */
+  /* `Select`: Accepts enum-like string */
   const [selectValue, setSelectValue] = useState<string>("");
   const selectRef = useRef<typeof Select>(null);
 
@@ -179,7 +179,7 @@ function App() {
     };
   }, [handleTimePickerChange]);
 
-  /* `ColorPicker` component usage */
+  /* `ColorPicker`: Accepts restricted values only */
   const [colorPickerValue, setColorPickerValue] = useState<string>("");
   const colorPickerRef = useRef<typeof ColorPicker>(null);
 
@@ -195,7 +195,7 @@ function App() {
     };
   }, [handleColorPickerChange]);
 
-  /* `ColorPaletteItem` component usage */
+  /* `ColorPaletteItem`: Accepts restricted values only */
   const [colorPaletteItemValue, setColorPaletteItemValue] = useState<string>("");
   const colorPaletteItemRef = useRef<typeof ColorPaletteItem>(null);
 
@@ -211,7 +211,7 @@ function App() {
     };
   }, [handleColorPaletteItemChange]);
 
-  /* `CalendarDate` component usage */
+  /* `CalendarDate` Accepts restricted values only */
   const [calendarDateValue, setCalendarDateValue] = useState<string>("");
   const calendarDateRef = useRef<typeof CalendarDate>(null);
 
@@ -227,7 +227,7 @@ function App() {
     };
   }, [handleCalendarDateChange]);
 
-  /* `FileUploader` component usage */
+  /* `FileUploader`: does not accept values other than file picker based input */
   const [fileUploaderValue, setFileUploaderValue] = useState<string>("");
   const fileUploaderRef = useRef<typeof FileUploader>(null);
 
@@ -243,7 +243,7 @@ function App() {
     };
   }, [handleFileUploaderChange]);
 
-  /* `CheckBox` component usage */
+  /* `CheckBox`: does not accept arbitrary values */
   const [checkBoxValue, setCheckBoxValue] = useState<string>("");
   const checkBoxRef = useRef<typeof CheckBox>(null);
 
@@ -259,7 +259,7 @@ function App() {
     };
   }, [handleCheckBoxChange]);
 
-  /* `RadioButton` component usage */
+  /* `RadioButton`: does not accept arbitrary values */
   const [radioButtonValue, setRadioButtonValue] = useState<string>("");
   const radioButtonRef = useRef<typeof RadioButton>(null);
 
@@ -275,7 +275,7 @@ function App() {
     };
   }, [handleRadioButtonChange]);
 
-  /* `Switch` component usage */
+  /* `Switch`: does not accept arbitrary values */
   const [switchValue, setSwitchValue] = useState<string>("");
   const switchRef = useRef<typeof Switch>(null);
 
@@ -323,7 +323,7 @@ function App() {
     };
   }, [handleOptionCustomChange]);
 
-  /* `RatingIndicator` component usage */
+  /* `RatingIndicator`: does not accept arbitrary values */
   const [ratingIndicatorValue, setRatingIndicatorValue] = useState<string>("");
   const ratingIndicatorRef = useRef<typeof RatingIndicator>(null);
 
@@ -339,7 +339,7 @@ function App() {
     };
   }, [handleRatingIndicatorChange]);
 
-  /* `Slider` component usage */
+  /* `Slider`: does not accept arbitrary values */
   const [sliderValue, setSliderValue] = useState<string>("");
   const sliderRef = useRef<typeof Slider>(null);
 
@@ -355,7 +355,7 @@ function App() {
     };
   }, [handleSliderChange]);
 
-  /* `ProgressIndicator` component usage */
+  /* `ProgressIndicator`: does not accept arbitrary values */
   const [progressIndicatorValue, setProgressIndicatorValue] = useState<string>("");
   const progressIndicatorRef = useRef<typeof ProgressIndicator>(null);
 
@@ -371,7 +371,7 @@ function App() {
     };
   }, [handleProgressIndicatorChange]);
 
-  /* `StepInput` component usage */
+  /* `StepInput`: does not accept arbitrary values */
   const [stepInputValue, setStepInputValue] = useState<string>("");
   const stepInputRef = useRef<typeof StepInput>(null);
 
@@ -387,7 +387,7 @@ function App() {
     };
   }, [handleStepInputChange]);
 
-  /* `DynamicDateRange` component usage */
+  /* `DynamicDateRange`: does not accept arbitrary values */
   const [dynamicDateRangeValue, setDynamicDateRangeValue] = useState<string>("");
   const dynamicDateRangeRef = useRef<typeof DynamicDateRange>(null);
 
@@ -403,7 +403,7 @@ function App() {
     };
   }, [handleDynamicDateRangeChange]);
 
-  /* `RangeSlider` component usage */
+  /* `RangeSlider`: does not accept arbitrary values */
   const [rangeSliderValue, setRangeSliderValue] = useState<string>("");
   const rangeSliderRef = useRef<typeof RangeSlider>(null);
 
@@ -419,7 +419,7 @@ function App() {
     };
   }, [handleRangeSliderChange]);
 
-  /* `Button` component usage */
+  /* `Button`: does not accept arbitrary values */
   const [buttonValue, setButtonValue] = useState<string>("");
   const buttonRef = useRef<typeof Button>(null);
 
@@ -435,7 +435,7 @@ function App() {
     };
   }, [handleButtonChange]);
 
-  /* `MessageViewButton` component usage */
+  /* `MessageViewButton`: does not accept arbitrary values */
   const [messageViewButtonValue, setMessageViewButtonValue] = useState<string>("");
   const messageViewButtonRef = useRef<typeof MessageViewButton>(null);
 
@@ -451,7 +451,7 @@ function App() {
     };
   }, [handleMessageViewButtonChange]);
 
-  /* `SegmentedButton` component usage */
+  /* `SegmentedButton`: does not accept arbitrary values */
   const [segmentedButtonValue, setSegmentedButtonValue] = useState<string>("");
   const segmentedButtonRef = useRef<typeof SegmentedButton>(null);
 
@@ -467,7 +467,7 @@ function App() {
     };
   }, [handleSegmentedButtonChange]);
 
-  /* `SplitButton` component usage */
+  /* `SplitButton`: does not accept arbitrary values */
   const [splitButtonValue, setSplitButtonValue] = useState<string>("");
   const splitButtonRef = useRef<typeof SplitButton>(null);
 
@@ -483,7 +483,7 @@ function App() {
     };
   }, [handleSplitButtonChange]);
 
-  /* `ToggleButton` component usage */
+  /* `ToggleButton`: does not accept arbitrary values */
   const [toggleButtonValue, setToggleButtonValue] = useState<string>("");
   const toggleButtonRef = useRef<typeof ToggleButton>(null);
 
