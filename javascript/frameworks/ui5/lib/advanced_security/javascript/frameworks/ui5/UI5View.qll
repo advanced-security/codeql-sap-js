@@ -188,6 +188,17 @@ predicate isBuiltInControl(string qualifiedTypeUri) {
 }
 
 /**
+ * A UI5 Fragment that might include XSS sources and sinks in standard controls.
+ */
+abstract class UI5Fragment extends File {
+  abstract UI5Control getControl();
+
+  abstract UI5BindingPath getASource();
+
+  abstract UI5BindingPath getAnHtmlISink();
+}
+
+/**
  * A UI5 View that might include XSS sources and sinks in standard controls.
  */
 abstract class UI5View extends File {
@@ -683,8 +694,50 @@ class XmlView extends UI5View instanceof XmlFile {
   }
 }
 
+/**
+ * TODO - consider - if this just copies all predicates - maybe this should be a subtype of XmlView
+ * and we dont need a separate/parallel type for fragments vs views. this will become clear once 
+ */
+class XmlFragment extends UI5Fragment instanceof XmlFile {
+  XmlRootElement root;
+
+  XmlFragment() {
+    root = this.getARootElement() and
+    (
+      root.getNamespace().getUri() = "sap.m"
+      or
+      root.getNamespace().getUri() = "sap.ui.core"
+    ) and
+    root.hasName("FragmentDefinition")
+  }
+
+  override UI5Control getControl() {
+    exists(XmlElement element |
+      result.asXmlControl() = element and
+      /* Use getAChild+ because some controls nest other controls inside them as aggregations */
+      element = root.getAChild+() and
+      (
+        /* 1. A builtin control provided by UI5 */
+        isBuiltInControl(element.getNamespace().getUri())
+        or
+        /* 2. A custom control with implementation code found in the webapp */
+        exists(CustomControl control |
+          control.getName() = element.getNamespace().getUri() + "." + element.getName() and
+          inSameWebApp(control.getFile(), element.getFile())
+        )
+      )
+    )
+  }
+
+  override XmlBindingPath getASource() { none() }
+
+  override XmlBindingPath getAnHtmlISink() { none() }
+}
+
 private newtype TUI5Control =
-  TXmlControl(XmlElement control) or
+  TXmlControl(XmlElement control) {
+    control.getFile().getName().matches(["%.view.xml", "%.fragment.xml"])
+  } or
   TJsonControl(JsonObject control) {
     exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
   } or
