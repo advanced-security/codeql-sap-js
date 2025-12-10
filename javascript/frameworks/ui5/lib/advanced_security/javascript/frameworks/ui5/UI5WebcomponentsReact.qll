@@ -1,6 +1,8 @@
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 
 /**
+ * Classes imported from `@ui5/webcomponents-react`. e.g.
+ *
  * ``` javascript
  * import { Input, Button } from '@ui5/webcomponents-react';
  * ```
@@ -16,8 +18,11 @@ class WebComponentImport extends DataFlow::SourceNode {
 }
 
 /**
- * Refers to the ref attribute
+ * The `ref` attribute of a JSX attribute. e.g.
+ * 
+ * ``` javascript
  * <SomeElement ref={x}>
+ * ```
  */
 class RefAttribute extends JsxAttribute {
   RefAttribute() { this.getName() = "ref" }
