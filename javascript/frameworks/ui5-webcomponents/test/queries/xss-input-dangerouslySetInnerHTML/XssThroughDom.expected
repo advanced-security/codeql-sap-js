@@ -19,6 +19,10 @@ edges
 | src/App.tsx:71:10:71:22 | comboBoxValue | src/App.tsx:541:46:541:58 | comboBoxValue | provenance |  |
 | src/App.tsx:75:31:75:56 | comboBo ... ?.value | src/App.tsx:75:31:75:62 | comboBo ... e \|\| "" | provenance |  |
 | src/App.tsx:75:31:75:62 | comboBo ... e \|\| "" | src/App.tsx:71:10:71:22 | comboBoxValue | provenance |  |
+| src/App.tsx:87:10:87:27 | multiComboBoxValue | src/App.tsx:87:10:87:27 | multiComboBoxValue | provenance |  |
+| src/App.tsx:87:10:87:27 | multiComboBoxValue | src/App.tsx:542:46:542:63 | multiComboBoxValue | provenance |  |
+| src/App.tsx:91:36:91:66 | multiCo ... ?.value | src/App.tsx:91:36:91:72 | multiCo ... e \|\| "" | provenance |  |
+| src/App.tsx:91:36:91:72 | multiCo ... e \|\| "" | src/App.tsx:87:10:87:27 | multiComboBoxValue | provenance |  |
 | src/App.tsx:119:10:119:24 | datePickerValue | src/App.tsx:119:10:119:24 | datePickerValue | provenance |  |
 | src/App.tsx:119:10:119:24 | datePickerValue | src/App.tsx:544:46:544:60 | datePickerValue | provenance |  |
 | src/App.tsx:123:33:123:60 | datePic ... ?.value | src/App.tsx:123:33:123:66 | datePic ... e \|\| "" | provenance |  |
@@ -64,6 +68,10 @@ nodes
 | src/App.tsx:71:10:71:22 | comboBoxValue | semmle.label | comboBoxValue |
 | src/App.tsx:75:31:75:56 | comboBo ... ?.value | semmle.label | comboBo ... ?.value |
 | src/App.tsx:75:31:75:62 | comboBo ... e \|\| "" | semmle.label | comboBo ... e \|\| "" |
+| src/App.tsx:87:10:87:27 | multiComboBoxValue | semmle.label | multiComboBoxValue |
+| src/App.tsx:87:10:87:27 | multiComboBoxValue | semmle.label | multiComboBoxValue |
+| src/App.tsx:91:36:91:66 | multiCo ... ?.value | semmle.label | multiCo ... ?.value |
+| src/App.tsx:91:36:91:72 | multiCo ... e \|\| "" | semmle.label | multiCo ... e \|\| "" |
 | src/App.tsx:119:10:119:24 | datePickerValue | semmle.label | datePickerValue |
 | src/App.tsx:119:10:119:24 | datePickerValue | semmle.label | datePickerValue |
 | src/App.tsx:123:33:123:60 | datePic ... ?.value | semmle.label | datePic ... ?.value |
@@ -93,6 +101,7 @@ nodes
 | src/App.tsx:539:46:539:56 | searchValue | semmle.label | searchValue |
 | src/App.tsx:540:46:540:64 | shellBarSearchValue | semmle.label | shellBarSearchValue |
 | src/App.tsx:541:46:541:58 | comboBoxValue | semmle.label | comboBoxValue |
+| src/App.tsx:542:46:542:63 | multiComboBoxValue | semmle.label | multiComboBoxValue |
 | src/App.tsx:544:46:544:60 | datePickerValue | semmle.label | datePickerValue |
 | src/App.tsx:545:46:545:65 | dateRangePickerValue | semmle.label | dateRangePickerValue |
 | src/App.tsx:546:46:546:64 | dateTimePickerValue | semmle.label | dateTimePickerValue |
@@ -106,6 +115,7 @@ subpaths
 | src/App.tsx:539:46:539:56 | searchValue | src/App.tsx:43:29:43:52 | searchR ... ?.value | src/App.tsx:539:46:539:56 | searchValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:43:29:43:52 | searchR ... ?.value | DOM text |
 | src/App.tsx:540:46:540:64 | shellBarSearchValue | src/App.tsx:59:37:59:68 | shellBa ... ?.value | src/App.tsx:540:46:540:64 | shellBarSearchValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:59:37:59:68 | shellBa ... ?.value | DOM text |
 | src/App.tsx:541:46:541:58 | comboBoxValue | src/App.tsx:75:31:75:56 | comboBo ... ?.value | src/App.tsx:541:46:541:58 | comboBoxValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:75:31:75:56 | comboBo ... ?.value | DOM text |
+| src/App.tsx:542:46:542:63 | multiComboBoxValue | src/App.tsx:91:36:91:66 | multiCo ... ?.value | src/App.tsx:542:46:542:63 | multiComboBoxValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:91:36:91:66 | multiCo ... ?.value | DOM text |
 | src/App.tsx:544:46:544:60 | datePickerValue | src/App.tsx:123:33:123:60 | datePic ... ?.value | src/App.tsx:544:46:544:60 | datePickerValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:123:33:123:60 | datePic ... ?.value | DOM text |
 | src/App.tsx:545:46:545:65 | dateRangePickerValue | src/App.tsx:139:38:139:70 | dateRan ... ?.value | src/App.tsx:545:46:545:65 | dateRangePickerValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:139:38:139:70 | dateRan ... ?.value | DOM text |
 | src/App.tsx:546:46:546:64 | dateTimePickerValue | src/App.tsx:155:37:155:68 | dateTim ... ?.value | src/App.tsx:546:46:546:64 | dateTimePickerValue | $@ is reinterpreted as HTML without escaping meta-characters. | src/App.tsx:155:37:155:68 | dateTim ... ?.value | DOM text |

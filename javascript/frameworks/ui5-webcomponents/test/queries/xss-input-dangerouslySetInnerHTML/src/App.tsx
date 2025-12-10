@@ -88,7 +88,7 @@ function App() {
   const multiComboBoxRef = useRef<typeof MultiComboBox>(null);
 
   const handleMultiComboBoxChange = useCallback(() => {
-    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || ""); // SAFE: Does not take unrestricted string
+    setMultiComboBoxValue((msg) => multiComboBoxRef.current?.value || ""); // UNSAFE: Unrestricted string set as content
   }, [setMultiComboBoxValue]);
 
   useEffect(() => {
@@ -507,7 +507,7 @@ function App() {
       <Search placeholder="Search" ref={searchRef} id="search-field"></Search>  {/* Potentially Unsafe */}
       <ShellBarSearch placeholder="ShellBarSearch" ref={shellBarSearchRef} id="shellbarsearch-field"></ShellBarSearch>  {/* Potentially Unsafe */}
       <ComboBox placeholder="ComboBox" ref={comboBoxRef} id="combobox-field"></ComboBox>  {/* Potentially Unsafe */}
-      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field"></MultiComboBox> {/* Safe - accepts a fixed set of strings */}
+      <MultiComboBox placeholder="MultiComboBox" ref={multiComboBoxRef} id="multicombobox-field" noValidation="true"></MultiComboBox> {/* Potentially Unsafe */}
       <Select ref={selectRef} id="select-field"></Select> {/* Safe - accepts a fixed set of strings */}
       <DatePicker placeholder="DatePicker" ref={datePickerRef} id="datepicker-field"></DatePicker>  {/* Potentially Unsafe */}
       <DateRangePicker placeholder="DateRangePicker" ref={dateRangePickerRef} id="daterangepicker-field"></DateRangePicker>  {/* Potentially Unsafe */}

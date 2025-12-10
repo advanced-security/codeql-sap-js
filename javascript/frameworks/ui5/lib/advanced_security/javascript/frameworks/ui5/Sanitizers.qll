@@ -15,10 +15,10 @@ class ExcludedSource extends DomBasedXss::Sanitizer {
       // exclude components with this name from @ui5/webcomponents-react only
       isRefAssignedToUI5Component(source) and
       source.getElement().getName() in [
-          "MultiComboBox", "Select", "ColorPicker", "ColorPaletteItem", "CalendarDate",
-          "FileUploader", "CheckBox", "RadioButton", "Switch", "RatingIndicator", "Slider",
-          "ProgressIndicator", "StepInput", "DynamicDateRange", "RangeSlider", "Button",
-          "MessageViewButton", "SegmentedButton", "SplitButton", "ToggleButton"
+          "Select", "ColorPicker", "ColorPaletteItem", "CalendarDate", "FileUploader", "CheckBox",
+          "RadioButton", "Switch", "RatingIndicator", "Slider", "ProgressIndicator", "StepInput",
+          "DynamicDateRange", "RangeSlider", "Button", "MessageViewButton", "SegmentedButton",
+          "SplitButton", "ToggleButton"
         ] and
       this.(DataFlow::PropRead).getBase() = source
     )
