@@ -940,6 +940,7 @@ class UI5Handler extends FunctionNode {
 /**
  * Models controller references in event handlers as types
  */
+overlay[local?]
 class ControlTypeInHandlerModel extends ModelInput::TypeModel {
   override DataFlow::CallNode getASource(string type) {
     // oEvent.getSource() is of the type of the Control calling the handler
