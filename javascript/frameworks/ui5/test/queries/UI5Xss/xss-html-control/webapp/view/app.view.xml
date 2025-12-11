@@ -1,8 +1,8 @@
 <mvc:View controllerName="codeql-sap-js.controller.app"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:mvc="sap.ui.core.mvc">
-    
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:rte="sap.ui.richtexteditor">    
     <Input placeholder="Enter Payload" 
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;"
         value="{/input}" />  <!--User input source sap.m.Input.value -->
@@ -47,5 +47,13 @@
     <Input placeholder="Enter Payload" 
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
         value="{/input4}" />  <!--User input source sap.m.Input.value -->
-    <core:HTML id="htmUnsanitized" content="{/input4}" sanitizeContent="true"/> <!--XSS sink sap.ui.core.HTML.content -->
+    <core:HTML id="htmlUnsanitized" content="{/input4}" sanitizeContent="true"/> <!--XSS sink sap.ui.core.HTML.content -->
+
+    <Input placeholder="Enter Payload (will be sanitized with setSanitizeContent)" 
+        description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt;" 
+        value="{/input5}" />  <!--User input source sap.m.Input.value -->
+    <core:HTML id="htmlJsSanitized5" content="{/input5}"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+
+    <rte:RichTextEditor value="{/input}"/> <!-- sanitized by default sink sap.ui.richtexteditor.RichTextEditor.value -->
+    <rte:RichTextEditor id="rteUnsanitized"  value="{/input6}"/> <!-- XSS unsinitized programmatically sap.ui.richtexteditor.RichTextEditor.value -->
 </mvc:View>
