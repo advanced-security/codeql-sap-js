@@ -3,6 +3,7 @@ extensions:
       pack: codeql/javascript-all
       extensible: "typeModel"
     data:
+      - ["SapUICoreInstance", "global", "Member[sap].Member[ui].Member[getCore].ReturnValue"]
       - ["Control", "Control", "Instance"]
       - ["Control", "sap/ui/core/Control", ""]
       - ["Control", "global", "Member[sap].Member[ui].Member[core].Member[Control]"]
@@ -72,10 +73,18 @@ extensions:
       - ["UI5ClientStorage", "sap/ui/core/util/File", ""]
       - ["UI5ClientStorage", "global", "Member[sap].Member[ui].Member[core].Member[util].Member[File]"]
       # Publishing and Subscribing to Events
-      - ["UI5EventBusPublish", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue.Member[publish]"]
+      - ["UI5EventBusInstance", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue"]
+      - ["UI5EventBusPublish", "UI5EventBusInstance", "Member[publish]"]
       - ["UI5EventBusPublishedEventData", "UI5EventBusPublish", "Argument[2]"]
-      - ["UI5EventBusSubscribe", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue.Member[subscribe]"]
+      - ["UI5EventBusSubscribe", "UI5EventBusInstance", "Member[subscribe]"]
       - ["UI5EventSubscriptionHandlerDataParameter", "UI5EventBusSubscribe", "Argument[2].Parameter[2]"]
+      - ["SapUICoreEventBusInstance", "SapUICoreInstance", "Member[getEventBus].ReturnValue"]
+      - ["SapUICoreEventBusPublish", "SapUICoreEventBusInstance", "Member[publish]"]
+      - ["SapUICoreEventBusPublishedEventData", "SapUICoreEventBusPublish", "Argument[2]"]
+      - ["SapUICoreEventBusSubscribe", "SapUICoreEventBusInstance", "Member[subscribe]"]
+      - ["SapUICoreEventSubscriptionHandlerDataParameter", "SapUICoreEventBusSubscribe", "Argument[2].Parameter[2]"]
+      # Extend Calls
+      # -
 
   - addsTo:
       pack: codeql/javascript-all

@@ -139,6 +139,15 @@ class WebApp extends HTML::HtmlFile {
  * by a call to `sap.ui.getCore()`.
  */
 class SapUiCore extends MethodCallNode {
+  /*
+   * NOTE: Ideally, we'd like to use `ModelOutput::getATypeNode("SapUICore").asSource()` to
+   * take advantage of the inter-procedural flexibility of MaD, but doing so causes
+   * non-monotomic recursion.
+   *
+   * So, we opt to use `SourceNode.getAPropertyRead/1` and `SourceNode.getAMethodCall/1`
+   * instead and get away with local flow tracking they provide.
+   */
+
   SapUiCore() { this = globalVarRef("sap").getAPropertyRead("ui").getAMethodCall("getCore") }
 }
 
@@ -1426,5 +1435,161 @@ class PropertyMetadata extends ObjectLiteralNode {
       result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
     ) and
     inSameWebApp(this.getFile(), result.getFile())
+  }
+}
+
+module EventBus {
+  abstract class EventBusPublishCall extends CallNode {
+    abstract EventBusSubscribeCall getMatchingSubscribeCall();
+
+    abstract DataFlow::Node getPublishedData();
+
+    string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
+
+    string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
+  }
+
+  abstract class EventBusSubscribeCall extends CallNode {
+    abstract EventBusPublishCall getMatchingPublishCall();
+
+    abstract DataFlow::Node getSubscriptionData();
+
+    string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
+
+    string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
+  }
+
+  class GlobalEventBusPublishCall extends EventBusPublishCall {
+    API::Node publishMethod;
+
+    GlobalEventBusPublishCall() {
+      publishMethod = ModelOutput::getATypeNode("UI5EventBusPublish") and
+      this = publishMethod.getACall()
+    }
+
+    override GlobalEventBusSubscribeCall getMatchingSubscribeCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType()
+    }
+
+    override DataFlow::Node getPublishedData() {
+      exists(API::Node publishedData |
+        publishedData = ModelOutput::getATypeNode("UI5EventBusPublishedEventData")
+      |
+        publishMethod.getASuccessor*() = publishedData and
+        result = publishedData.getInducingNode()
+      )
+    }
+  }
+
+  class SapUICoreEventBusPublishCall extends EventBusPublishCall {
+    API::Node publishMethod;
+
+    SapUICoreEventBusPublishCall() {
+      publishMethod = ModelOutput::getATypeNode("SapUICoreEventBusPublish") and
+      this = publishMethod.getACall()
+    }
+
+    override SapUICoreEventBusSubscribeCall getMatchingSubscribeCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType()
+    }
+
+    override DataFlow::Node getPublishedData() {
+      exists(API::Node publishedData |
+        publishedData = ModelOutput::getATypeNode("SapUICoreEventBusPublishedEventData")
+      |
+        publishMethod.getASuccessor*() = publishedData and
+        result = publishedData.getInducingNode()
+      )
+    }
+  }
+
+  class ComponentEventBusPublishCall extends EventBusPublishCall {
+    CustomController controller;
+    Component component;
+
+    ComponentEventBusPublishCall() {
+      component = controller.getOwnerComponent() and
+      this = controller.getOwnerComponentRef().getAMemberCall("publish")
+    }
+
+    override ComponentEventBusSubscribeCall getMatchingSubscribeCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType() and
+      result.getComponent() = this.getComponent()
+    }
+
+    override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
+
+    Component getComponent() { result = component }
+  }
+
+  class GlobalEventBusSubscribeCall extends EventBusSubscribeCall {
+    API::Node subscribeMethod;
+
+    GlobalEventBusSubscribeCall() {
+      subscribeMethod = ModelOutput::getATypeNode("UI5EventBusSubscribe") and
+      this = subscribeMethod.getACall()
+    }
+
+    override GlobalEventBusPublishCall getMatchingPublishCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType()
+    }
+
+    override DataFlow::Node getSubscriptionData() {
+      exists(API::Node subscribeMethodCallbackDataParameter |
+        subscribeMethodCallbackDataParameter =
+          ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter")
+      |
+        subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
+        result = subscribeMethodCallbackDataParameter.getInducingNode()
+      )
+    }
+  }
+
+  class SapUICoreEventBusSubscribeCall extends EventBusSubscribeCall {
+    API::Node subscribeMethod;
+
+    SapUICoreEventBusSubscribeCall() {
+      subscribeMethod = ModelOutput::getATypeNode("SapUICoreInstance") and
+      this = subscribeMethod.getACall()
+    }
+
+    override SapUICoreEventBusPublishCall getMatchingPublishCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType()
+    }
+
+    override DataFlow::Node getSubscriptionData() {
+      exists(API::Node subscribeMethodCallbackDataParameter |
+        subscribeMethodCallbackDataParameter =
+          ModelOutput::getATypeNode("SapUICoreEventSubscriptionHandlerDataParameter")
+      |
+        subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
+        result = subscribeMethodCallbackDataParameter.getInducingNode()
+      )
+    }
+  }
+
+  class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
+    CustomController controller;
+    Component component;
+
+    ComponentEventBusSubscribeCall() {
+      component = controller.getOwnerComponent() and
+      this = controller.getOwnerComponentRef().getAMemberCall("subscribe")
+    }
+
+    override ComponentEventBusPublishCall getMatchingPublishCall() {
+      result.getChannelName() = this.getChannelName() and
+      result.getMessageType() = this.getMessageType() and
+      result.getComponent() = this.getComponent()
+    }
+
+    override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
+
+    Component getComponent() { result = component }
   }
 }

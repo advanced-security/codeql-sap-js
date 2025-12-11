@@ -370,28 +370,12 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
 class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
     exists(
-      API::Node publishMethod, API::Node publishedData, API::Node subscribeMethod,
-      API::Node subscribeMethodCallbackDataParameter
+      EventBus::EventBusPublishCall publishCall, EventBus::EventBusSubscribeCall subscribeCall
     |
-      publishMethod = ModelOutput::getATypeNode("UI5EventBusPublish") and
-      publishedData = ModelOutput::getATypeNode("UI5EventBusPublishedEventData") and
-      subscribeMethod = ModelOutput::getATypeNode("UI5EventBusSubscribe") and
-      subscribeMethodCallbackDataParameter =
-        ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter")
+      publishCall.getMatchingSubscribeCall() = subscribeCall
     |
-      /* Ensure that `publishedData` belongs to `publishMethod`. */
-      publishMethod.getASuccessor*() = publishedData and
-      /* Ensure that `subscribeMethodCallbackDataParameter` belongs to `subscribeMethod`. */
-      subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
-      /* Ensure that the published and subscribed channels are the same. */
-      publishMethod.getACall().getArgument(0).getALocalSource().getStringValue() =
-        subscribeMethod.getACall().getArgument(0).getALocalSource().getStringValue() and
-      /* Ensure that the published and subscribed message types are the same. */
-      publishMethod.getACall().getArgument(1).getALocalSource().getStringValue() =
-        subscribeMethod.getACall().getArgument(1).getALocalSource().getStringValue() and
-      /* Wire into the start and end of this step. */
-      start = publishedData.getInducingNode() and
-      end = subscribeMethodCallbackDataParameter.getInducingNode()
+      start = publishCall.getPublishedData() and
+      end = subscribeCall.getSubscriptionData()
     )
   }
 }
