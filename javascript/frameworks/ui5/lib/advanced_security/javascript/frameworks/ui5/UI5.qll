@@ -1440,7 +1440,7 @@ class PropertyMetadata extends ObjectLiteralNode {
 
 module EventBus {
   abstract class EventBusPublishCall extends CallNode {
-    abstract EventBusSubscribeCall getMatchingSubscribeCall();
+    abstract EventBusSubscribeCall getAMatchingSubscribeCall();
 
     abstract DataFlow::Node getPublishedData();
 
@@ -1467,7 +1467,7 @@ module EventBus {
       this = publishMethod.getACall()
     }
 
-    override GlobalEventBusSubscribeCall getMatchingSubscribeCall() {
+    override GlobalEventBusSubscribeCall getAMatchingSubscribeCall() {
       result.getChannelName() = this.getChannelName() and
       result.getMessageType() = this.getMessageType()
     }
@@ -1490,7 +1490,7 @@ module EventBus {
       this = publishMethod.getACall()
     }
 
-    override SapUICoreEventBusSubscribeCall getMatchingSubscribeCall() {
+    override SapUICoreEventBusSubscribeCall getAMatchingSubscribeCall() {
       result.getChannelName() = this.getChannelName() and
       result.getMessageType() = this.getMessageType()
     }
@@ -1514,7 +1514,7 @@ module EventBus {
       this = controller.getOwnerComponentRef().getAMemberCall("publish")
     }
 
-    override ComponentEventBusSubscribeCall getMatchingSubscribeCall() {
+    override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
       result.getChannelName() = this.getChannelName() and
       result.getMessageType() = this.getMessageType() and
       result.getComponent() = this.getComponent()

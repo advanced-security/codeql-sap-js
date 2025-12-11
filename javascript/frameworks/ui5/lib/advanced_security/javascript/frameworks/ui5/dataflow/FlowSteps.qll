@@ -372,7 +372,7 @@ class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep 
     exists(
       EventBus::EventBusPublishCall publishCall, EventBus::EventBusSubscribeCall subscribeCall
     |
-      publishCall.getMatchingSubscribeCall() = subscribeCall
+      publishCall.getAMatchingSubscribeCall() = subscribeCall
     |
       start = publishCall.getPublishedData() and
       end = subscribeCall.getSubscriptionData()
