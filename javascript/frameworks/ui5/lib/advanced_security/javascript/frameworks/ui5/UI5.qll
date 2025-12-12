@@ -1508,7 +1508,6 @@ module EventBus {
 
   class ComponentEventBusPublishCall extends EventBusPublishCall {
     API::Node customController;
-    CustomController customController_;
 
     ComponentEventBusPublishCall() {
       exists(API::Node customControllerGetOwnerComponentEventBusPublish |
@@ -1516,7 +1515,6 @@ module EventBus {
           ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusPublish")
       |
         customController = ModelOutput::getATypeNode("CustomController") and
-        customController_ = customController.getInducingNode() and
         customControllerGetOwnerComponentEventBusPublish = customController.getASuccessor+() and
         this = customControllerGetOwnerComponentEventBusPublish.getACall()
       )
@@ -1524,13 +1522,10 @@ module EventBus {
 
     override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
       result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType() and
-      result.getComponent() = this.getComponent()
+      result.getMessageType() = this.getMessageType()
     }
 
     override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
-
-    Component getComponent() { result = customController_.getOwnerComponent() }
   }
 
   class GlobalEventBusSubscribeCall extends EventBusSubscribeCall {
@@ -1561,7 +1556,7 @@ module EventBus {
     API::Node subscribeMethod;
 
     SapUICoreEventBusSubscribeCall() {
-      subscribeMethod = ModelOutput::getATypeNode("SapUICoreInstance") and
+      subscribeMethod = ModelOutput::getATypeNode("SapUICoreEventBusSubscribe") and
       this = subscribeMethod.getACall()
     }
 
@@ -1575,7 +1570,7 @@ module EventBus {
         subscribeMethodCallbackDataParameter =
           ModelOutput::getATypeNode("SapUICoreEventSubscriptionHandlerDataParameter")
       |
-        subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
+        subscribeMethod.getASuccessor+() = subscribeMethodCallbackDataParameter and
         result = subscribeMethodCallbackDataParameter.getInducingNode()
       )
     }
@@ -1584,11 +1579,11 @@ module EventBus {
   class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
     API::Node customController;
 
-    // CustomController customController_;
     ComponentEventBusSubscribeCall() {
       exists(API::Node customControllerGetOwnerComponentEventBusSubscribe |
         customControllerGetOwnerComponentEventBusSubscribe =
-          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe") and
+          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe")
+      |
         customController = ModelOutput::getATypeNode("CustomController") and
         customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
         this = customControllerGetOwnerComponentEventBusSubscribe.getACall()
@@ -1597,15 +1592,23 @@ module EventBus {
 
     override ComponentEventBusPublishCall getMatchingPublishCall() {
       result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType() and
-      result.getComponent() = this.getComponent()
+      result.getMessageType() = this.getMessageType()
     }
 
     override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
-
-    Component getComponent() {
-      //  result = customController_.getOwnerComponent()
-      none()
-    }
   }
+}
+
+private predicate test1(DataFlow::CallNode node) {
+  exists(API::Node customControllerGetOwnerComponentEventBusSubscribe, API::Node customController |
+    customControllerGetOwnerComponentEventBusSubscribe =
+      ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe") and
+    customController = ModelOutput::getATypeNode("CustomController") and
+    customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
+    node = customControllerGetOwnerComponentEventBusSubscribe.getACall()
+  )
+}
+
+private predicate test2(DataFlow::CallNode node) {
+  node = ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe").getACall()
 }
