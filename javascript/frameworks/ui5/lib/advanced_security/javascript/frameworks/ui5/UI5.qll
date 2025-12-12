@@ -257,9 +257,8 @@ class Renderer extends SapExtendCall {
 
 class CustomControl extends SapExtendCall {
   CustomControl() {
-    this =
-      TypeTrackers::hasDependency(["sap/ui/core/Control", "sap.ui.core.Control"])
-          .getAMemberCall("extend") or
+    this = ModelOutput::getATypeNode("CustomControl").getACall()
+    or
     exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
   }
 
@@ -459,13 +458,13 @@ class ControllerReference extends Reference {
 }
 
 class CustomController extends SapExtendCall {
+  API::Node customController;
   string name;
 
   CustomController() {
-    this =
-      TypeTrackers::hasDependency(["sap/ui/core/mvc/Controller", "sap.ui.core.mvc.Controller"])
-          .getAMemberCall("extend") and
-    name = this.getFile().getBaseName().regexpCapture("([a-zA-Z0-9]+).[cC]ontroller.js", 1)
+    customController = ModelOutput::getATypeNode("CustomController") and
+    this = customController.getACall() and
+    name = this.getFile().getBaseName().regexpCapture("(.+).[cC]ontroller.js", 1)
   }
 
   Component getOwnerComponent() {
@@ -485,7 +484,12 @@ class CustomController extends SapExtendCall {
   }
 
   MethodCallNode getOwnerComponentRef() {
-    result = this.getAThisNode().getAMemberCall("getOwnerComponent")
+    exists(API::Node getOwnerComponent |
+      getOwnerComponent = ModelOutput::getATypeNode("CustomControllerGetOwnerComponent")
+    |
+      customController.getASuccessor+() = getOwnerComponent and
+      result = getOwnerComponent.getACall()
+    )
   }
 
   /**
@@ -768,11 +772,7 @@ class Component extends SapExtendCall {
      * It is the value flowing to a `setModel` call in a handler of a `CustomController` (which is represented by `ControllerHandler`), since it is the closest we can get to the actual model itself.
      */
 
-    this =
-      TypeTrackers::hasDependency([
-          "sap/ui/core/mvc/Component", "sap.ui.core.mvc.Component", "sap/ui/core/UIComponent",
-          "sap.ui.core.UIComponent"
-        ]).getAMemberCall("extend")
+    this = ModelOutput::getATypeNode("CustomComponent").getACall()
   }
 
   string getId() { result = this.getName().regexpCapture("(.+).Component", 1) }
@@ -1507,12 +1507,19 @@ module EventBus {
   }
 
   class ComponentEventBusPublishCall extends EventBusPublishCall {
-    CustomController controller;
-    Component component;
+    API::Node customController;
+    CustomController customController_;
 
     ComponentEventBusPublishCall() {
-      component = controller.getOwnerComponent() and
-      this = controller.getOwnerComponentRef().getAMemberCall("publish")
+      exists(API::Node customControllerGetOwnerComponentEventBusPublish |
+        customControllerGetOwnerComponentEventBusPublish =
+          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusPublish")
+      |
+        customController = ModelOutput::getATypeNode("CustomController") and
+        customController_ = customController.getInducingNode() and
+        customControllerGetOwnerComponentEventBusPublish = customController.getASuccessor+() and
+        this = customControllerGetOwnerComponentEventBusPublish.getACall()
+      )
     }
 
     override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
@@ -1523,7 +1530,7 @@ module EventBus {
 
     override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
 
-    Component getComponent() { result = component }
+    Component getComponent() { result = customController_.getOwnerComponent() }
   }
 
   class GlobalEventBusSubscribeCall extends EventBusSubscribeCall {
@@ -1575,12 +1582,17 @@ module EventBus {
   }
 
   class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
-    CustomController controller;
-    Component component;
+    API::Node customController;
 
+    // CustomController customController_;
     ComponentEventBusSubscribeCall() {
-      component = controller.getOwnerComponent() and
-      this = controller.getOwnerComponentRef().getAMemberCall("subscribe")
+      exists(API::Node customControllerGetOwnerComponentEventBusSubscribe |
+        customControllerGetOwnerComponentEventBusSubscribe =
+          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe") and
+        customController = ModelOutput::getATypeNode("CustomController") and
+        customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
+        this = customControllerGetOwnerComponentEventBusSubscribe.getACall()
+      )
     }
 
     override ComponentEventBusPublishCall getMatchingPublishCall() {
@@ -1591,6 +1603,9 @@ module EventBus {
 
     override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
 
-    Component getComponent() { result = component }
+    Component getComponent() {
+      //  result = customController_.getOwnerComponent()
+      none()
+    }
   }
 }

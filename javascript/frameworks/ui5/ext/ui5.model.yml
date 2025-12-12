@@ -7,9 +7,13 @@ extensions:
       - ["Control", "Control", "Instance"]
       - ["Control", "sap/ui/core/Control", ""]
       - ["Control", "global", "Member[sap].Member[ui].Member[core].Member[Control]"]
+      - ["Controller", "Controller", "Instance"]
+      - ["Controller", "sap/ui/core/mvc/Controller", ""]
+      - ["Component", "sap/ui/core/mvc/Component", ""]
+      - ["Component", "sap/ui/core/UIComponent", ""]
       - ["Renderer", "Control", "Member[extend].Argument[1].Member[renderer]"]
       - ["Renderer", "sap/ui/core/RenderManager", "Member[extend].Argument[1].Member[renderer]"]
-      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]
+      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]  # ?
       - ["RenderManager", "RenderManager", "Instance"]
       - ["RenderManager", "sap/ui/core/RenderManager", ""]
       - ["RenderManager", "Renderer", "Parameter[0]"]
@@ -84,7 +88,17 @@ extensions:
       - ["SapUICoreEventBusSubscribe", "SapUICoreEventBusInstance", "Member[subscribe]"]
       - ["SapUICoreEventSubscriptionHandlerDataParameter", "SapUICoreEventBusSubscribe", "Argument[2].Parameter[2]"]
       # Extend Calls
-      # -
+      - ["CustomControl", "Control", "Member[extend]"]
+      - ["CustomController", "Controller", "Member[extend]"]
+      - ["CustomControllerContent", "Controller", "Member[extend].Argument[1]"]
+      - ["CustomControllerGetOwnerComponent", "CustomControllerContent", "Fuzzy.Member[getOwnerComponent].ReturnValue"]
+      - ["CustomControllerGetOwnerComponentEventBus", "CustomControllerGetOwnerComponent", "Member[getEventBus].ReturnValue"]
+      - ["CustomControllerGetOwnerComponentEventBusPublish", "CustomControllerGetOwnerComponentEventBus", "Member[publish]"]
+      - ["CustomControllerGetOwnerComponentEventBusPublishedData", "CustomControllerGetOwnerComponentEventBusPublish", "Argument[2]"]
+      - ["CustomControllerGetOwnerComponentEventBusSubscribe", "CustomControllerGetOwnerComponentEventBus", "Member[subscribe]"]
+      - ["CustomControllerGetOwnerComponentEventBusSubscriptionHandlerDataParameter", "CustomControllerGetOwnerComponentEventBusSubscribe", "Argument[2].Parameter[2]"]
+      - ["CustomComponent", "Component", "Member[extend]"]
+      - ["CustomRenderer", "Renderer", "Member[extend]"]
 
   - addsTo:
       pack: codeql/javascript-all
