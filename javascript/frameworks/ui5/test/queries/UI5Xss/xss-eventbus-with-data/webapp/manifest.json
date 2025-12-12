@@ -1,5 +1,94 @@
 {
-    "sap.app": {
-        "id": "sap-ui5-xss"
+  "_version": "0.0.1",
+  "sap.app": {
+    "id": "codeql-sap-js",
+    "type": "application",
+    "applicationVersion": {
+      "version": "0.0.1"
+    },
+    "title": "{{appTitle}}",
+    "description": "{{appDescription}}",
+    "dataSources": {
+      "someDataSource": {
+        "uri": "some/path/to/dataSource",
+        "type": "OData",
+        "settings": {
+          "odataVersion": "2.0"
+        }
+      }
     }
+  },
+  "sap.ui": {
+    "technology": "UI5"
+  },
+  "sap.ui5": {
+    "rootView": "codeql-sap-js.controller.App",
+    "dependencies": {
+      "minUI5Version": "1.30",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.layout": {}
+      }
+    },
+
+    "models": {
+      "someRemoteModel": {
+        "dataSource": "someDataSource",
+        "settings": {
+          "defaultBindingMode": "TwoWay"
+        }
+      }
+    },
+    "config": {
+      "someDataSource": "some/path/to/dataSource"
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "async": true,
+        "viewPath": "codeql-sap-js.view"
+      },
+      "routes": [
+        {
+          "pattern": "somePattern1",
+          "name": "someName1",
+          "target": "someTarget1"
+        },
+        {
+          "pattern": "somePattern2",
+          "name": "someName2",
+          "target": "someTarget2"
+        },
+        {
+          "pattern": "somePattern3",
+          "name": "someName3",
+          "target": "someTarget3"
+        },
+        {
+          "pattern": "somePattern4",
+          "name": "someName4",
+          "target": "someTarget4"
+        }
+      ],
+      "targets": {
+        "someTarget1": {
+          "viewName": "App1",
+          "viewLevel": 1
+        },
+        "someTarget2": {
+          "viewName": "App2",
+          "viewLevel": 1
+        },
+        "someTarget3": {
+          "viewName": "App3",
+          "viewLevel": 1
+        },
+        "someTarget4": {
+          "viewName": "App4",
+          "viewLevel": 1
+        }
+      }
+    }
+  }
 }
