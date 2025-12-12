@@ -950,12 +950,12 @@ overlay[local?]
 class ControlTypeInHandlerModel extends ModelInput::TypeModel {
   override DataFlow::CallNode getASource(string type) {
     // oEvent.getSource() is of the type of the Control calling the handler
-    exists(UI5Handler h |
-      type = h.getControl().getImportPath() and
-      result.getCalleeName() = "getSource" and
-      result.getReceiver().getALocalSource() = h.getParameter(0)
-    )
-    or
+    // exists(UI5Handler h |
+    //   type = h.getControl().getImportPath() and
+    //   result.getCalleeName() = "getSource" and
+    //   result.getReceiver().getALocalSource() = h.getParameter(0)
+    // )
+    // or
     // this.getView().byId("id") is of the type of the Control with id="id"
     exists(UI5Control c |
       type = c.getImportPath() and

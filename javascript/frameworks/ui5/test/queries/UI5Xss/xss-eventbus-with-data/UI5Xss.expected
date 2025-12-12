@@ -1,0 +1,105 @@
+nodes
+| webapp/controller/App1.controller.js:26:11:26:15 | value |
+| webapp/controller/App1.controller.js:26:19:26:35 | oInput.getValue() |
+| webapp/controller/App1.controller.js:27:45:27:62 | { message: value } |
+| webapp/controller/App1.controller.js:27:56:27:60 | value |
+| webapp/controller/App1.controller.js:30:34:30:38 | model |
+| webapp/controller/App1.controller.js:32:30:32:34 | model |
+| webapp/controller/App1.controller.js:32:30:32:42 | model.message |
+| webapp/controller/App2.controller.js:26:11:26:15 | value |
+| webapp/controller/App2.controller.js:26:19:26:35 | oInput.getValue() |
+| webapp/controller/App2.controller.js:27:45:27:62 | { message: value } |
+| webapp/controller/App2.controller.js:27:56:27:60 | value |
+| webapp/controller/App2.controller.js:30:34:30:38 | model |
+| webapp/controller/App2.controller.js:32:30:32:34 | model |
+| webapp/controller/App2.controller.js:32:30:32:42 | model.message |
+| webapp/controller/App3.controller.js:25:11:25:15 | value |
+| webapp/controller/App3.controller.js:25:19:25:35 | oInput.getValue() |
+| webapp/controller/App3.controller.js:26:45:26:62 | { message: value } |
+| webapp/controller/App3.controller.js:26:56:26:60 | value |
+| webapp/controller/App4.controller.js:24:34:24:38 | model |
+| webapp/controller/App4.controller.js:26:30:26:34 | model |
+| webapp/controller/App4.controller.js:26:30:26:42 | model.message |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} |
+| webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} |
+| webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} |
+| webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+edges
+| webapp/controller/App1.controller.js:15:9:15:19 | input: null | webapp/view/App1.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App1.controller.js:15:9:15:19 | input: null | webapp/view/App2.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App1.controller.js:15:9:15:19 | input: null | webapp/view/App3.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App1.controller.js:16:9:16:21 | output1: null | webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App1.controller.js:16:9:16:21 | output1: null | webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App1.controller.js:16:9:16:21 | output1: null | webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+| webapp/controller/App1.controller.js:18:20:18:39 | new JSONModel(oData) | webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App1.controller.js:26:11:26:15 | value | webapp/controller/App1.controller.js:27:56:27:60 | value |
+| webapp/controller/App1.controller.js:26:19:26:35 | oInput.getValue() | webapp/controller/App1.controller.js:26:11:26:15 | value |
+| webapp/controller/App1.controller.js:27:45:27:62 | { message: value } | webapp/controller/App1.controller.js:30:34:30:38 | model |
+| webapp/controller/App1.controller.js:27:56:27:60 | value | webapp/controller/App1.controller.js:27:45:27:62 | { message: value } |
+| webapp/controller/App1.controller.js:30:34:30:38 | model | webapp/controller/App1.controller.js:32:30:32:34 | model |
+| webapp/controller/App1.controller.js:32:30:32:34 | model | webapp/controller/App1.controller.js:32:30:32:42 | model.message |
+| webapp/controller/App2.controller.js:15:9:15:19 | input: null | webapp/view/App1.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App2.controller.js:15:9:15:19 | input: null | webapp/view/App2.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App2.controller.js:15:9:15:19 | input: null | webapp/view/App3.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App2.controller.js:16:9:16:21 | output1: null | webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App2.controller.js:16:9:16:21 | output1: null | webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App2.controller.js:16:9:16:21 | output1: null | webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+| webapp/controller/App2.controller.js:18:20:18:39 | new JSONModel(oData) | webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App2.controller.js:26:11:26:15 | value | webapp/controller/App2.controller.js:27:56:27:60 | value |
+| webapp/controller/App2.controller.js:26:19:26:35 | oInput.getValue() | webapp/controller/App2.controller.js:26:11:26:15 | value |
+| webapp/controller/App2.controller.js:27:45:27:62 | { message: value } | webapp/controller/App2.controller.js:30:34:30:38 | model |
+| webapp/controller/App2.controller.js:27:56:27:60 | value | webapp/controller/App2.controller.js:27:45:27:62 | { message: value } |
+| webapp/controller/App2.controller.js:30:34:30:38 | model | webapp/controller/App2.controller.js:32:30:32:34 | model |
+| webapp/controller/App2.controller.js:32:30:32:34 | model | webapp/controller/App2.controller.js:32:30:32:42 | model.message |
+| webapp/controller/App3.controller.js:15:9:15:19 | input: null | webapp/view/App1.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App3.controller.js:15:9:15:19 | input: null | webapp/view/App2.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App3.controller.js:15:9:15:19 | input: null | webapp/view/App3.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App3.controller.js:16:9:16:21 | output1: null | webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App3.controller.js:16:9:16:21 | output1: null | webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App3.controller.js:16:9:16:21 | output1: null | webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+| webapp/controller/App3.controller.js:25:11:25:15 | value | webapp/controller/App3.controller.js:26:56:26:60 | value |
+| webapp/controller/App3.controller.js:25:19:25:35 | oInput.getValue() | webapp/controller/App3.controller.js:25:11:25:15 | value |
+| webapp/controller/App3.controller.js:26:45:26:62 | { message: value } | webapp/controller/App4.controller.js:24:34:24:38 | model |
+| webapp/controller/App3.controller.js:26:56:26:60 | value | webapp/controller/App3.controller.js:26:45:26:62 | { message: value } |
+| webapp/controller/App4.controller.js:15:9:15:19 | input: null | webapp/view/App1.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App4.controller.js:15:9:15:19 | input: null | webapp/view/App2.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App4.controller.js:15:9:15:19 | input: null | webapp/view/App3.view.xml:5:3:8:29 | value={/input} |
+| webapp/controller/App4.controller.js:16:9:16:21 | output1: null | webapp/view/App1.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App4.controller.js:16:9:16:21 | output1: null | webapp/view/App2.view.xml:11:3:12:37 | content={/output1} |
+| webapp/controller/App4.controller.js:16:9:16:21 | output1: null | webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+| webapp/controller/App4.controller.js:18:20:18:39 | new JSONModel(oData) | webapp/view/App4.view.xml:5:3:6:37 | content={/output1} |
+| webapp/controller/App4.controller.js:24:34:24:38 | model | webapp/controller/App4.controller.js:26:30:26:34 | model |
+| webapp/controller/App4.controller.js:26:30:26:34 | model | webapp/controller/App4.controller.js:26:30:26:42 | model.message |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} | webapp/controller/App1.controller.js:15:9:15:19 | input: null |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} | webapp/controller/App1.controller.js:18:20:18:39 | new JSONModel(oData) |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} | webapp/controller/App2.controller.js:15:9:15:19 | input: null |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} | webapp/controller/App3.controller.js:15:9:15:19 | input: null |
+| webapp/view/App1.view.xml:5:3:8:29 | value={/input} | webapp/controller/App4.controller.js:15:9:15:19 | input: null |
+| webapp/view/App1.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App1.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App1.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App2.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App1.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App3.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App1.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App4.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} | webapp/controller/App1.controller.js:15:9:15:19 | input: null |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} | webapp/controller/App2.controller.js:15:9:15:19 | input: null |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} | webapp/controller/App2.controller.js:18:20:18:39 | new JSONModel(oData) |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} | webapp/controller/App3.controller.js:15:9:15:19 | input: null |
+| webapp/view/App2.view.xml:5:3:8:29 | value={/input} | webapp/controller/App4.controller.js:15:9:15:19 | input: null |
+| webapp/view/App2.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App1.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App2.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App2.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App2.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App3.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App2.view.xml:11:3:12:37 | content={/output1} | webapp/controller/App4.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} | webapp/controller/App1.controller.js:15:9:15:19 | input: null |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} | webapp/controller/App2.controller.js:15:9:15:19 | input: null |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} | webapp/controller/App3.controller.js:15:9:15:19 | input: null |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} | webapp/controller/App3.controller.js:18:20:18:39 | new JSONModel(oData) |
+| webapp/view/App3.view.xml:5:3:8:29 | value={/input} | webapp/controller/App4.controller.js:15:9:15:19 | input: null |
+| webapp/view/App4.view.xml:5:3:6:37 | content={/output1} | webapp/controller/App1.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App4.view.xml:5:3:6:37 | content={/output1} | webapp/controller/App2.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App4.view.xml:5:3:6:37 | content={/output1} | webapp/controller/App3.controller.js:16:9:16:21 | output1: null |
+| webapp/view/App4.view.xml:5:3:6:37 | content={/output1} | webapp/controller/App4.controller.js:16:9:16:21 | output1: null |
+#select
+| webapp/controller/App1.controller.js:32:30:32:42 | model.message | webapp/controller/App1.controller.js:26:19:26:35 | oInput.getValue() | webapp/controller/App1.controller.js:32:30:32:42 | model.message | XSS vulnerability due to $@. | webapp/controller/App1.controller.js:26:19:26:35 | oInput.getValue() | user-provided value |
+| webapp/controller/App2.controller.js:32:30:32:42 | model.message | webapp/controller/App2.controller.js:26:19:26:35 | oInput.getValue() | webapp/controller/App2.controller.js:32:30:32:42 | model.message | XSS vulnerability due to $@. | webapp/controller/App2.controller.js:26:19:26:35 | oInput.getValue() | user-provided value |
+| webapp/controller/App4.controller.js:26:30:26:42 | model.message | webapp/controller/App3.controller.js:25:19:25:35 | oInput.getValue() | webapp/controller/App4.controller.js:26:30:26:42 | model.message | XSS vulnerability due to $@. | webapp/controller/App3.controller.js:25:19:25:35 | oInput.getValue() | user-provided value |

@@ -366,3 +366,16 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
     logArgumentToListener(start, end)
   }
 }
+
+class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(
+      EventBus::EventBusPublishCall publishCall, EventBus::EventBusSubscribeCall subscribeCall
+    |
+      publishCall.getAMatchingSubscribeCall() = subscribeCall
+    |
+      start = publishCall.getPublishedData() and
+      end = subscribeCall.getSubscriptionData()
+    )
+  }
+}

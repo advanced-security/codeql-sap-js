@@ -1,0 +1,11 @@
+<mvc:View controllerName="codeql-sap-js.controller.App3"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core"
+          xmlns:mvc="sap.ui.core.mvc">
+  <Input id="input"
+         placeholder="Enter Payload"
+         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt; and press a button"
+         value="{/input}" />  <!--User input source sap.m.Input.value -->
+  <Button text="Press me for XSS"
+          press=".doSomething1" />
+</mvc:View>

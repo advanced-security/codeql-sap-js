@@ -1,0 +1,7 @@
+<mvc:View controllerName="codeql-sap-js.controller.App4"
+          xmlns="sap.m"
+          xmlns:core="sap.ui.core"
+          xmlns:mvc="sap.ui.core.mvc">
+  <core:HTML id="htmlOutput"
+             content="{/output1}" /> <!--XSS sink sap.ui.core.HTML.content -->
+</mvc:View>
