@@ -469,7 +469,8 @@ class CustomController extends SapExtendCall {
   }
 
   Component getOwnerComponent() {
-    exists(ManifestJson manifestJson, JsonObject rootObj | manifestJson = result.getManifestJson() |
+    exists(ManifestJson manifestJson, JsonObject rootObj |
+      manifestJson = result.getManifestJson() and
       rootObj
           .getPropValue("targets")
           .(JsonObject)
@@ -774,7 +775,7 @@ class Component extends SapExtendCall {
         ]).getAMemberCall("extend")
   }
 
-  string getId() { result = this.getName().regexpCapture("([a-zA-Z0-9.]+).Component", 1) }
+  string getId() { result = this.getName().regexpCapture("(.+).Component", 1) }
 
   ManifestJson getManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
