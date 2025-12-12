@@ -99,6 +99,8 @@ extensions:
       - ["CustomControllerGetOwnerComponentEventBusSubscriptionHandlerDataParameter", "CustomControllerGetOwnerComponentEventBusSubscribe", "Argument[2].Parameter[2]"]
       - ["CustomComponent", "Component", "Member[extend]"]
       - ["CustomRenderer", "Renderer", "Member[extend]"]
+      - ["ViewReference", "CustomController", "Member[getView].ReturnValue"]
+      - ["ControlReference", "ViewReference", "Member[byId].ReturnValue"]
 
   - addsTo:
       pack: codeql/javascript-all
