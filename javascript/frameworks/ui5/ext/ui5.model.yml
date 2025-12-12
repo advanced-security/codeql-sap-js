@@ -93,6 +93,8 @@ extensions:
       - ["UI5HTMLControl", "Argument[0].Member[content]", "ui5-html-injection"]
       - ["UI5HTMLControl", "Member[content]", "ui5-html-injection"]
       - ["UI5HTMLControl", "Member[setContent].Argument[0]", "ui5-html-injection"]
+      - ["sap/ui/richtexteditor/RichTextEditor", "Member[value]", "ui5-html-injection"]
+      - ["sap/ui/richtexteditor/RichTextEditor", "Member[setValue].Argument[0]", "ui5-html-injection"]
       - ["Patcher", "Member[unsafeHtml].Argument[0..]", "ui5-html-injection"]
       - ["RenderManager", "Member[write,unsafeHtml].Argument[0..]", "ui5-html-injection"]
       - ["RenderManager", "Member[writeAttribute,addStyle].Argument[0..1]", "ui5-html-injection"]

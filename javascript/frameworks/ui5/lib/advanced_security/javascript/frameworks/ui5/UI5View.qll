@@ -1,5 +1,3 @@
-import javascript
-import DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
@@ -648,16 +646,7 @@ class XmlView extends UI5View instanceof XmlFile {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property) and
-      /* If the control is an `sap.ui.core.HTML` then the control should be missing the `sanitizeContent` attribute */
-      (
-        getASuperType(type) = "HTMLControl"
-        implies
-        (
-          not exists(control.getAttribute("sanitizeContent")) or
-          control.getAttribute("sanitizeContent").getValue() = "false"
-        )
-      )
+      result.getBindingTarget() = control.getAttribute(property)
     )
   }
 
@@ -823,7 +812,7 @@ class UI5Control extends TUI5Control {
   }
 
   /** Holds if this control reads from or writes to a model. */
-  predicate accessesModel(UI5Model model) { accessesModel(model, _) }
+  predicate accessesModel(UI5Model model) { this.accessesModel(model, _) }
 
   /** Holds if this control reads from or writes to a model with regards to a binding path. */
   predicate accessesModel(UI5Model model, XmlBindingPath bindingPath) {
@@ -842,6 +831,43 @@ class UI5Control extends TUI5Control {
 
   /** Get the controller that manages this control. */
   CustomController getController() { result = this.getView().getController() }
+
+  /**
+   * Gets the full import path of the associated control.
+   */
+  string getControlTypeName() { result = this.getQualifiedType().replaceAll(".", "/") }
+
+  /**
+   * Holds if the control content is sanitized for HTML
+   * 'sap/ui/core/HTML' sanitized using the property 'sanitizeContent'
+   * 'sap/ui/richttexteditor/RichTextEditor' sanitized using the property 'sanitizeValue'
+   */
+  predicate isHTMLSanitized() {
+    this.getControlTypeName() = "sap/ui/richtexteditor/RichTextEditor" and
+    not this.isSanitizePropertySetTo("sanitizeValue", false)
+    or
+    this.getControlTypeName() = "sap/ui/core/HTML" and
+    this.isSanitizePropertySetTo("sanitizeContent", true) and
+    not this.isSanitizePropertySetTo("sanitizeContent", false)
+  }
+
+  bindingset[propName, val]
+  private predicate isSanitizePropertySetTo(string propName, boolean val) {
+    /* 1. `sanitizeContent` attribute is set declaratively. */
+    this.getProperty(propName).toString() = val.toString()
+    or
+    /* 2. `sanitizeContent` attribute is set programmatically using setProperty(). */
+    exists(CallNode node | node = this.getAReference().getAMemberCall("setProperty") |
+      node.getArgument(0).getStringValue() = propName and
+      not node.getArgument(1).mayHaveBooleanValue(val.booleanNot())
+    )
+    or
+    /* 3. `sanitizeContent` attribute is set programmatically using a setter. */
+    exists(CallNode node |
+      node = this.getAReference().getAMemberCall("setS" + propName.suffix(1)) and
+      not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
+    )
+  }
 }
 
 private newtype TUI5ControlProperty =
@@ -857,7 +883,7 @@ class UI5ControlProperty extends TUI5ControlProperty {
   ValueNode asJsControlProperty() { this = TJsControlProperty(result) }
 
   string toString() {
-    result = this.asXmlControlProperty().toString() or
+    result = this.asXmlControlProperty().getValue().toString() or
     result = this.asJsonControlProperty().toString() or
     result = this.asJsControlProperty().toString()
   }
