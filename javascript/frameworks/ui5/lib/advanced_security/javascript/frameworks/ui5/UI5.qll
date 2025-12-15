@@ -492,7 +492,7 @@ class CustomController extends SapExtendCall {
       getOwnerComponent = ModelOutput::getATypeNode("CustomControllerGetOwnerComponent")
     |
       customController.getASuccessor+() = getOwnerComponent and
-      result = getOwnerComponent.getACall()
+      result = getOwnerComponent.asSource()
     )
   }
 
@@ -1602,3 +1602,7 @@ module EventBus {
     override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
   }
 }
+
+// private predicate test1(DataFlow::Node node) {
+//   node = ModelOutput::getATypeNode("CustomController").getInducingNode()
+// }

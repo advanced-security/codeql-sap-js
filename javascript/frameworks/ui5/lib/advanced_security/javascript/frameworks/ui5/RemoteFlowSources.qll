@@ -12,12 +12,26 @@ private class DataFromRemoteControlReference extends RemoteFlowSource {
       sourceControl.getAReference() = controlReference and
       (
         this = controlReference.getAMemberCall("getValue") or
+        this = controlReference.getAMemberCall("getCurrentValue") or
         this = controlReference.getAPropertyRead("value")
       )
     )
   }
 
   override string getSourceType() { result = "Data from a remote control" }
+}
+
+private class UI5ControlHandlerParameter extends RemoteFlowSource {
+  UI5ControlHandlerParameter() {
+    exists(UI5Control sourceControl, string typeAlias, UI5Handler handler |
+      typeModel(typeAlias, sourceControl.getImportPath(), _) and
+      sourceModel(typeAlias, _, "remote", _) and
+      handler.getControl() = sourceControl and
+      this = handler.getParameter(0).getAMemberCall("getSource")
+    )
+  }
+
+  override string getSourceType() { result = "Event parameter of a remote control" }
 }
 
 private class InputControlInstantiation extends ElementInstantiation {

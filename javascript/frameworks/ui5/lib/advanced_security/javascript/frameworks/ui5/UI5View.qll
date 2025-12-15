@@ -917,29 +917,29 @@ class UI5Handler extends FunctionNode {
   UI5Control getControl() { result = control }
 }
 
-/**
- * Models controller references in event handlers as types
- */
-overlay[local?]
-class ControlTypeInHandlerModel extends ModelInput::TypeModel {
-  override DataFlow::CallNode getASource(string type) {
-    // oEvent.getSource() is of the type of the Control calling the handler
-    // exists(UI5Handler h |
-    //   type = h.getControl().getImportPath() and
-    //   result.getCalleeName() = "getSource" and
-    //   result.getReceiver().getALocalSource() = h.getParameter(0)
-    // )
-    // or
-    // this.getView().byId("id") is of the type of the Control with id="id"
-    exists(UI5Control c |
-      type = c.getImportPath() and
-      result = c.getAReference()
-    )
-  }
+// /**
+//  * Models controller references in event handlers as types
+//  */
+// overlay[local?]
+// class ControlTypeInHandlerModel extends ModelInput::TypeModel {
+//   override DataFlow::CallNode getASource(string type) {
+//     // oEvent.getSource() is of the type of the Control calling the handler
+//     // exists(UI5Handler h |
+//     //   type = h.getControl().getImportPath() and
+//     //   result.getCalleeName() = "getSource" and
+//     //   result.getReceiver().getALocalSource() = h.getParameter(0)
+//     // )
+//     // or
+//     // this.getView().byId("id") is of the type of the Control with id="id"
+//     exists(UI5Control c |
+//       type = c.getImportPath() and
+//       result = c.getAReference()
+//     )
+//   }
 
-  /**
-   * Prevents model pruning for `ControlType`types
-   */
-  bindingset[type]
-  override predicate isTypeUsed(string type) { any() }
-}
+//   /**
+//    * Prevents model pruning for `ControlType`types
+//    */
+//   bindingset[type]
+//   override predicate isTypeUsed(string type) { any() }
+// }

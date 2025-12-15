@@ -70,8 +70,17 @@ class UI5ModelHtmlISink extends DataFlow::Node {
  */
 private class UI5ExtHtmlISink extends DataFlow::Node {
   UI5ExtHtmlISink() {
-    this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
-    /* Exclude property writes to HTML controls; they are covered in a separate class below. */
+    exists(UI5Control sinkControl, string typeAlias, ControlReference controlReference |
+      typeModel(typeAlias, sinkControl.getImportPath(), _) and
+      sinkModel(typeAlias, _, "ui5-html-injection", _) and
+      sinkControl.getAReference() = controlReference and
+      (
+        this = controlReference.getAMemberCall("setContent").getArgument(0) or
+        this = controlReference.getAPropertyWrite("content").getRhs()
+      )
+    ) and
+    // this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
+    /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
     not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 }
