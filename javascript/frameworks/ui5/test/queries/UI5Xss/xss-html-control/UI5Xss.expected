@@ -1,53 +1,90 @@
 nodes
-| webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:5:6:7:28 | value={/input} |
-| webapp/view/app.view.xml:8:5:9:28 | value={/input} |
-| webapp/view/app.view.xml:10:5:11:28 | value={/input} |
-| webapp/view/app.view.xml:12:5:13:28 | value={/input} |
-| webapp/view/app.view.xml:14:5:15:28 | value={/input} |
-| webapp/view/app.view.xml:16:5:17:28 | value={/input} |
-| webapp/view/app.view.xml:18:5:19:28 | value={/input} |
-| webapp/view/app.view.xml:20:5:21:28 | value={/input} |
-| webapp/view/app.view.xml:22:5:23:28 | value={/input} |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} |
+| webapp/controller/app.controller.js:9:17:9:28 | input0: null |
+| webapp/controller/app.controller.js:10:17:10:28 | input1: null |
+| webapp/controller/app.controller.js:11:17:11:28 | input2: null |
+| webapp/controller/app.controller.js:12:17:12:28 | input3: null |
+| webapp/controller/app.controller.js:13:17:13:28 | input4: null |
+| webapp/controller/app.controller.js:14:17:14:28 | input5: null |
+| webapp/controller/app.controller.js:15:17:15:28 | input6: null |
+| webapp/view/app.view.xml:6:5:8:28 | value={/input} |
+| webapp/view/app.view.xml:9:5:10:28 | value={/input} |
+| webapp/view/app.view.xml:11:5:12:28 | value={/input} |
+| webapp/view/app.view.xml:13:5:14:28 | value={/input} |
+| webapp/view/app.view.xml:15:5:16:28 | value={/input} |
+| webapp/view/app.view.xml:17:5:18:28 | value={/input} |
+| webapp/view/app.view.xml:19:5:20:28 | value={/input} |
+| webapp/view/app.view.xml:21:5:22:28 | value={/input} |
+| webapp/view/app.view.xml:23:5:24:28 | value={/input} |
+| webapp/view/app.view.xml:25:5:25:36 | content={/input} |
+| webapp/view/app.view.xml:27:5:29:29 | value={/input0} |
+| webapp/view/app.view.xml:30:5:30:37 | content={/input0} |
+| webapp/view/app.view.xml:32:5:34:29 | value={/input1} |
+| webapp/view/app.view.xml:35:5:35:79 | content={/input1} |
+| webapp/view/app.view.xml:37:5:39:29 | value={/input2} |
+| webapp/view/app.view.xml:40:5:40:59 | content={/input2} |
+| webapp/view/app.view.xml:42:5:44:29 | value={/input3} |
+| webapp/view/app.view.xml:45:5:45:59 | content={/input3} |
+| webapp/view/app.view.xml:47:5:49:29 | value={/input4} |
+| webapp/view/app.view.xml:50:5:50:81 | content={/input4} |
+| webapp/view/app.view.xml:52:5:54:29 | value={/input5} |
+| webapp/view/app.view.xml:55:5:55:59 | content={/input5} |
+| webapp/view/app.view.xml:57:5:57:43 | value={/input} |
+| webapp/view/app.view.xml:58:5:58:65 | value={/input6} |
 edges
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:5:6:7:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:8:5:9:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:10:5:11:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:12:5:13:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:14:5:15:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:16:5:17:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:18:5:19:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:20:5:21:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:22:5:23:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:24:5:24:36 | content={/input} |
-| webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) | webapp/view/app.view.xml:24:5:24:36 | content={/input} |
-| webapp/view/app.view.xml:5:6:7:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:5:6:7:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:8:5:9:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:8:5:9:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:10:5:11:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:10:5:11:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:12:5:13:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:12:5:13:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:14:5:15:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:14:5:15:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:16:5:17:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:16:5:17:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:18:5:19:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:18:5:19:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:20:5:21:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:20:5:21:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:22:5:23:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:22:5:23:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/controller/app.controller.js:9:17:9:28 | input0: null | webapp/view/app.view.xml:27:5:29:29 | value={/input0} |
+| webapp/controller/app.controller.js:9:17:9:28 | input0: null | webapp/view/app.view.xml:30:5:30:37 | content={/input0} |
+| webapp/controller/app.controller.js:10:17:10:28 | input1: null | webapp/view/app.view.xml:32:5:34:29 | value={/input1} |
+| webapp/controller/app.controller.js:10:17:10:28 | input1: null | webapp/view/app.view.xml:35:5:35:79 | content={/input1} |
+| webapp/controller/app.controller.js:11:17:11:28 | input2: null | webapp/view/app.view.xml:37:5:39:29 | value={/input2} |
+| webapp/controller/app.controller.js:11:17:11:28 | input2: null | webapp/view/app.view.xml:40:5:40:59 | content={/input2} |
+| webapp/controller/app.controller.js:12:17:12:28 | input3: null | webapp/view/app.view.xml:42:5:44:29 | value={/input3} |
+| webapp/controller/app.controller.js:12:17:12:28 | input3: null | webapp/view/app.view.xml:45:5:45:59 | content={/input3} |
+| webapp/controller/app.controller.js:13:17:13:28 | input4: null | webapp/view/app.view.xml:47:5:49:29 | value={/input4} |
+| webapp/controller/app.controller.js:13:17:13:28 | input4: null | webapp/view/app.view.xml:50:5:50:81 | content={/input4} |
+| webapp/controller/app.controller.js:14:17:14:28 | input5: null | webapp/view/app.view.xml:52:5:54:29 | value={/input5} |
+| webapp/controller/app.controller.js:14:17:14:28 | input5: null | webapp/view/app.view.xml:55:5:55:59 | content={/input5} |
+| webapp/controller/app.controller.js:15:17:15:28 | input6: null | webapp/view/app.view.xml:58:5:58:65 | value={/input6} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:25:5:25:36 | content={/input} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:30:5:30:37 | content={/input0} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:35:5:35:79 | content={/input1} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:40:5:40:59 | content={/input2} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:45:5:45:59 | content={/input3} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:50:5:50:81 | content={/input4} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:55:5:55:59 | content={/input5} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:57:5:57:43 | value={/input} |
+| webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) | webapp/view/app.view.xml:58:5:58:65 | value={/input6} |
+| webapp/view/app.view.xml:6:5:8:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:9:5:10:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:11:5:12:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:13:5:14:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:15:5:16:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:17:5:18:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:19:5:20:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:21:5:22:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:23:5:24:28 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:27:5:29:29 | value={/input0} | webapp/controller/app.controller.js:9:17:9:28 | input0: null |
+| webapp/view/app.view.xml:27:5:29:29 | value={/input0} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:30:5:30:37 | content={/input0} | webapp/controller/app.controller.js:9:17:9:28 | input0: null |
+| webapp/view/app.view.xml:32:5:34:29 | value={/input1} | webapp/controller/app.controller.js:10:17:10:28 | input1: null |
+| webapp/view/app.view.xml:32:5:34:29 | value={/input1} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:35:5:35:79 | content={/input1} | webapp/controller/app.controller.js:10:17:10:28 | input1: null |
+| webapp/view/app.view.xml:37:5:39:29 | value={/input2} | webapp/controller/app.controller.js:11:17:11:28 | input2: null |
+| webapp/view/app.view.xml:37:5:39:29 | value={/input2} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:40:5:40:59 | content={/input2} | webapp/controller/app.controller.js:11:17:11:28 | input2: null |
+| webapp/view/app.view.xml:42:5:44:29 | value={/input3} | webapp/controller/app.controller.js:12:17:12:28 | input3: null |
+| webapp/view/app.view.xml:42:5:44:29 | value={/input3} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:45:5:45:59 | content={/input3} | webapp/controller/app.controller.js:12:17:12:28 | input3: null |
+| webapp/view/app.view.xml:47:5:49:29 | value={/input4} | webapp/controller/app.controller.js:13:17:13:28 | input4: null |
+| webapp/view/app.view.xml:47:5:49:29 | value={/input4} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:50:5:50:81 | content={/input4} | webapp/controller/app.controller.js:13:17:13:28 | input4: null |
+| webapp/view/app.view.xml:52:5:54:29 | value={/input5} | webapp/controller/app.controller.js:14:17:14:28 | input5: null |
+| webapp/view/app.view.xml:52:5:54:29 | value={/input5} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:55:5:55:59 | content={/input5} | webapp/controller/app.controller.js:14:17:14:28 | input5: null |
+| webapp/view/app.view.xml:57:5:57:43 | value={/input} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
+| webapp/view/app.view.xml:58:5:58:65 | value={/input6} | webapp/controller/app.controller.js:15:17:15:28 | input6: null |
+| webapp/view/app.view.xml:58:5:58:65 | value={/input6} | webapp/controller/app.controller.js:17:26:17:45 | new JSONModel(oData) |
 #select
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:5:6:7:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:6:7:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:8:5:9:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:8:5:9:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:10:5:11:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:10:5:11:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:12:5:13:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:12:5:13:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:14:5:15:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:14:5:15:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:16:5:17:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:16:5:17:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:18:5:19:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:18:5:19:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:20:5:21:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:20:5:21:28 | value={/input} | user-provided value |
-| webapp/view/app.view.xml:24:5:24:36 | content={/input} | webapp/view/app.view.xml:22:5:23:28 | value={/input} | webapp/view/app.view.xml:24:5:24:36 | content={/input} | XSS vulnerability due to $@. | webapp/view/app.view.xml:22:5:23:28 | value={/input} | user-provided value |
+| webapp/view/app.view.xml:30:5:30:37 | content={/input0} | webapp/view/app.view.xml:27:5:29:29 | value={/input0} | webapp/view/app.view.xml:30:5:30:37 | content={/input0} | XSS vulnerability due to $@. | webapp/view/app.view.xml:27:5:29:29 | value={/input0} | user-provided value |
+| webapp/view/app.view.xml:45:5:45:59 | content={/input3} | webapp/view/app.view.xml:42:5:44:29 | value={/input3} | webapp/view/app.view.xml:45:5:45:59 | content={/input3} | XSS vulnerability due to $@. | webapp/view/app.view.xml:42:5:44:29 | value={/input3} | user-provided value |
+| webapp/view/app.view.xml:50:5:50:81 | content={/input4} | webapp/view/app.view.xml:47:5:49:29 | value={/input4} | webapp/view/app.view.xml:50:5:50:81 | content={/input4} | XSS vulnerability due to $@. | webapp/view/app.view.xml:47:5:49:29 | value={/input4} | user-provided value |
+| webapp/view/app.view.xml:58:5:58:65 | value={/input6} | webapp/view/app.view.xml:58:5:58:65 | value={/input6} | webapp/view/app.view.xml:58:5:58:65 | value={/input6} | XSS vulnerability due to $@. | webapp/view/app.view.xml:58:5:58:65 | value={/input6} | user-provided value |
