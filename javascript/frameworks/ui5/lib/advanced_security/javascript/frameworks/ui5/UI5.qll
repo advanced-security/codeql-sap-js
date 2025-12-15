@@ -343,20 +343,16 @@ class ControlReference extends Reference {
   string controlId;
 
   ControlReference() {
-    this.getArgument(0).getALocalSource().getStringValue() = controlId
-    /*
-     *  and
-     *  (
-     *    exists(CustomController controller |
-     *      this = controller.getAViewReference().getAMemberCall("byId") or
-     *      this = controller.getAThisNode().getAMemberCall("byId")
-     *    )
-     *    or
-     *    exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
-     *  )
-     */
-
-    }
+    this.getArgument(0).getALocalSource().getStringValue() = controlId and
+    (
+      exists(CustomController controller |
+        this = controller.getAViewReference().getAMemberCall("byId") or
+        this = controller.getAThisNode().getAMemberCall("byId")
+      )
+      or
+      exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
+    )
+  }
 
   CustomControl getDefinition() {
     exists(UI5Control controlDeclaration |
