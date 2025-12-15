@@ -27,7 +27,7 @@ private class UI5ControlHandlerParameter extends RemoteFlowSource {
       typeModel(typeAlias, sourceControl.getImportPath(), _) and
       sourceModel(typeAlias, _, "remote", _) and
       handler.getControl() = sourceControl and
-      this = handler.getParameter(0).getAMemberCall("getSource")
+      this = handler.getParameter(0).getAMemberCall("getSource").getAMemberCall("getValue")
     )
   }
 
