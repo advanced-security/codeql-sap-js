@@ -1602,17 +1602,3 @@ module EventBus {
     override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
   }
 }
-
-private predicate test1(DataFlow::CallNode node) {
-  exists(API::Node customControllerGetOwnerComponentEventBusSubscribe, API::Node customController |
-    customControllerGetOwnerComponentEventBusSubscribe =
-      ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe") and
-    customController = ModelOutput::getATypeNode("CustomController") and
-    customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
-    node = customControllerGetOwnerComponentEventBusSubscribe.getACall()
-  )
-}
-
-private predicate test2(DataFlow::CallNode node) {
-  node = ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe").getACall()
-}
