@@ -30,9 +30,15 @@ private class RemoteControlHandlerParameter extends RemoteControlAPISource, Call
 private class UserDataFromRemoteControlAPISource extends RemoteFlowSource {
   UserDataFromRemoteControlAPISource() {
     exists(RemoteControlAPISource remoteControlAPISource |
+      /*
+       * 1. The `value` or its getter of `HTML` control reference, `CodeEditor` control reference,
+       * or handler parameters.
+       */
+
+      this = remoteControlAPISource.getAPropertyRead("value") or
       this = remoteControlAPISource.getAMemberCall("getValue") or
-      this = remoteControlAPISource.getAMemberCall("getCurrentValue") or
-      this = remoteControlAPISource.getAPropertyRead("value")
+      /* 2. The `getCurrentValue` method call on `CodeEditor` control reference. */
+      this = remoteControlAPISource.getAMemberCall("getCurrentValue")
     )
   }
 
