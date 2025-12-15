@@ -36,6 +36,7 @@ module UI5Xss implements DataFlow::ConfigSig {
   predicate isSink(DataFlow::Node node) {
     node instanceof UI5ExtHtmlISink or
     node instanceof UI5ModelHtmlISink or
+    node instanceof UI5HTMLControlReferenceContentAPI or
     node instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
 
@@ -68,8 +69,8 @@ class UI5ModelHtmlISink extends DataFlow::Node {
 /**
  * An HTML injection sink typically for custom controls whose RenderManager calls acting as sinks.
  */
-private class UI5ExtHtmlISink extends DataFlow::Node {
-  UI5ExtHtmlISink() {
+private class UI5HTMLControlReferenceContentAPI extends DataFlow::Node {
+  UI5HTMLControlReferenceContentAPI() {
     exists(UI5Control sinkControl, string typeAlias, ControlReference controlReference |
       typeModel(typeAlias, sinkControl.getImportPath(), _) and
       sinkModel(typeAlias, _, "ui5-html-injection", _) and
@@ -79,7 +80,14 @@ private class UI5ExtHtmlISink extends DataFlow::Node {
         this = controlReference.getAPropertyWrite("content").getRhs()
       )
     ) and
-    // this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
+    /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
+    not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
+  }
+}
+
+private class UI5ExtHtmlISink extends DataFlow::Node {
+  UI5ExtHtmlISink() {
+    this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
     /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
     not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
