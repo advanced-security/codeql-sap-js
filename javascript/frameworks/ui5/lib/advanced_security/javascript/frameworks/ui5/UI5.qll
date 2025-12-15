@@ -1598,6 +1598,3 @@ module EventBus {
     override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
   }
 }
-// private predicate test1(DataFlow::Node node) {
-//   node = ModelOutput::getATypeNode("CustomController").getInducingNode()
-// }
