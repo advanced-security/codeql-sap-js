@@ -696,7 +696,7 @@ class XmlView extends UI5View instanceof XmlFile {
 
 /**
  * TODO - consider - if this just copies all predicates - maybe this should be a subtype of XmlView
- * and we dont need a separate/parallel type for fragments vs views. this will become clear once 
+ * and we dont need a separate/parallel type for fragments vs views. this will become clear once
  */
 class XmlFragment extends UI5Fragment instanceof XmlFile {
   XmlRootElement root;
@@ -736,7 +736,11 @@ class XmlFragment extends UI5Fragment instanceof XmlFile {
 
 private newtype TUI5Control =
   TXmlControl(XmlElement control) {
-    control.getFile().getName().matches(["%.view.xml", "%.fragment.xml"])
+    control
+        .(Locatable)
+        .getFile()
+        .getBaseName()
+        .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
   } or
   TJsonControl(JsonObject control) {
     exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
