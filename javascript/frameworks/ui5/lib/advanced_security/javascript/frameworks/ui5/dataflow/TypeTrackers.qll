@@ -16,18 +16,6 @@ module TypeTrackers {
     result = hasDependency(TypeTracker::end(), dependencyPath)
   }
 
-  private MethodCallNode getOwnerComponentRef(TypeTracker t, CustomController customController) {
-    customController.getAThisNode() = result.getReceiver() and
-    result.getMethodName() = "getOwnerComponent"
-    or
-    exists(TypeTracker t2 | result = getOwnerComponentRef(t2, customController).track(t2, t))
-  }
-
-  /* owner component ref */
-  MethodCallNode getOwnerComponentRef(CustomController customController) {
-    result = getOwnerComponentRef(TypeTracker::end(), customController)
-  }
-
   private class ObjFieldStep extends SharedTypeTrackingStep {
     override predicate step(DataFlow::Node start, DataFlow::Node end) {
       exists(SapExtendCall sapExtendCall, ObjectLiteralNode wrappedObject, string name |
