@@ -984,7 +984,9 @@ class UI5Control extends TUI5Control {
     or
     /* 3. `sanitizeContent` attribute is set programmatically using a setter. */
     exists(CallNode node |
-      node = this.getAReference().getAMemberCall("setS" + propName.suffix(1)) and
+      node =
+        this.getAReference()
+            .getAMemberCall("set" + propName.prefix(1).toUpperCase() + propName.suffix(1)) and
       not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
     )
   }
