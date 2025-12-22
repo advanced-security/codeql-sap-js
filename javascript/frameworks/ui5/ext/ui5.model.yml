@@ -3,12 +3,17 @@ extensions:
       pack: codeql/javascript-all
       extensible: "typeModel"
     data:
+      - ["SapUICoreInstance", "global", "Member[sap].Member[ui].Member[getCore].ReturnValue"]
       - ["Control", "Control", "Instance"]
       - ["Control", "sap/ui/core/Control", ""]
       - ["Control", "global", "Member[sap].Member[ui].Member[core].Member[Control]"]
+      - ["Controller", "Controller", "Instance"]
+      - ["Controller", "sap/ui/core/mvc/Controller", ""]
+      - ["Component", "sap/ui/core/mvc/Component", ""]
+      - ["Component", "sap/ui/core/UIComponent", ""]
       - ["Renderer", "Control", "Member[extend].Argument[1].Member[renderer]"]
       - ["Renderer", "sap/ui/core/RenderManager", "Member[extend].Argument[1].Member[renderer]"]
-      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]
+      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]  # ?
       - ["RenderManager", "RenderManager", "Instance"]
       - ["RenderManager", "sap/ui/core/RenderManager", ""]
       - ["RenderManager", "Renderer", "Parameter[0]"]
@@ -71,6 +76,31 @@ extensions:
       - ["UI5ClientStorage", "global", "Member[jQuery].Member[sap].Member[storage]"]
       - ["UI5ClientStorage", "sap/ui/core/util/File", ""]
       - ["UI5ClientStorage", "global", "Member[sap].Member[ui].Member[core].Member[util].Member[File]"]
+      # Publishing and Subscribing to Events
+      - ["UI5EventBusInstance", "sap/ui/core/EventBus", "Member[getInstance].ReturnValue"]
+      - ["UI5EventBusPublish", "UI5EventBusInstance", "Member[publish]"]
+      - ["UI5EventBusPublishedEventData", "UI5EventBusPublish", "Argument[2]"]
+      - ["UI5EventBusSubscribe", "UI5EventBusInstance", "Member[subscribe,subscribeOnce]"]
+      - ["UI5EventSubscriptionHandlerDataParameter", "UI5EventBusSubscribe", "Argument[2].Parameter[2]"]
+      - ["SapUICoreEventBusInstance", "SapUICoreInstance", "Member[getEventBus].ReturnValue"]
+      - ["SapUICoreEventBusPublish", "SapUICoreEventBusInstance", "Member[publish]"]
+      - ["SapUICoreEventBusPublishedEventData", "SapUICoreEventBusPublish", "Argument[2]"]
+      - ["SapUICoreEventBusSubscribe", "SapUICoreEventBusInstance", "Member[subscribe,subscribeOnce]"]
+      - ["SapUICoreEventSubscriptionHandlerDataParameter", "SapUICoreEventBusSubscribe", "Argument[2].Parameter[2]"]
+      # Extend Calls
+      - ["CustomControl", "Control", "Member[extend]"]
+      - ["CustomController", "Controller", "Member[extend]"]
+      - ["CustomControllerContent", "Controller", "Member[extend].Argument[1]"]
+      - ["CustomControllerGetOwnerComponent", "CustomControllerContent", "Fuzzy.Member[getOwnerComponent].ReturnValue"]
+      - ["CustomControllerGetOwnerComponentEventBus", "CustomControllerGetOwnerComponent", "Member[getEventBus].ReturnValue"]
+      - ["CustomControllerGetOwnerComponentEventBusPublish", "CustomControllerGetOwnerComponentEventBus", "Member[publish]"]
+      - ["CustomControllerGetOwnerComponentEventBusPublishedData", "CustomControllerGetOwnerComponentEventBusPublish", "Argument[2]"]
+      - ["CustomControllerGetOwnerComponentEventBusSubscribe", "CustomControllerGetOwnerComponentEventBus", "Member[subscribe,subscribeOnce]"]
+      - ["CustomControllerGetOwnerComponentEventBusSubscriptionHandlerDataParameter", "CustomControllerGetOwnerComponentEventBusSubscribe", "Argument[2].Parameter[2]"]
+      - ["CustomComponent", "Component", "Member[extend]"]
+      - ["CustomRenderer", "Renderer", "Member[extend]"]
+      - ["ViewReference", "CustomController", "Member[getView].ReturnValue"]
+      - ["ControlReference", "ViewReference", "Member[byId].ReturnValue"]
 
   - addsTo:
       pack: codeql/javascript-all

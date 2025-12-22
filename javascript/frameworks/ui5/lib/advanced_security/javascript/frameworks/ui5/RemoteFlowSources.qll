@@ -4,20 +4,47 @@ import advanced_security.javascript.frameworks.ui5.UI5View
 import semmle.javascript.security.dataflow.XssThroughDomCustomizations
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 
-private class DataFromRemoteControlReference extends RemoteFlowSource {
-  DataFromRemoteControlReference() {
-    exists(UI5Control sourceControl, string typeAlias, ControlReference controlReference |
+abstract private class RemoteControlAPISource extends SourceNode { }
+
+private class RemoteControlReference extends RemoteControlAPISource, ControlReference {
+  RemoteControlReference() {
+    exists(UI5Control sourceControl, string typeAlias |
       typeModel(typeAlias, sourceControl.getImportPath(), _) and
       sourceModel(typeAlias, _, "remote", _) and
-      sourceControl.getAReference() = controlReference and
-      (
-        this = controlReference.getAMemberCall("getValue") or
-        this = controlReference.getAPropertyRead("value")
-      )
+      sourceControl.getAReference() = this
+    )
+  }
+}
+
+private class RemoteControlHandlerParameter extends RemoteControlAPISource, CallNode {
+  RemoteControlHandlerParameter() {
+    exists(UI5Control sourceControl, string typeAlias, UI5Handler handler |
+      typeModel(typeAlias, sourceControl.getImportPath(), _) and
+      sourceModel(typeAlias, _, "remote", _) and
+      handler.getControl() = sourceControl and
+      this = handler.getParameter(0).getAMemberCall("getSource")
+    )
+  }
+}
+
+private class UserDataFromRemoteControlAPISource extends RemoteFlowSource {
+  UserDataFromRemoteControlAPISource() {
+    exists(RemoteControlAPISource remoteControlAPISource |
+      /*
+       * 1. The `value` or its getter of `HTML` control reference, `CodeEditor` control reference,
+       * or handler parameters.
+       */
+
+      this = remoteControlAPISource.getAPropertyRead("value") or
+      this = remoteControlAPISource.getAMemberCall("getValue") or
+      /* 2. The `getCurrentValue` method call on `CodeEditor` control reference. */
+      this = remoteControlAPISource.getAMemberCall("getCurrentValue")
     )
   }
 
-  override string getSourceType() { result = "Data from a remote control" }
+  override string getSourceType() {
+    result = "User-provided data fetched from an input control via JavaScript API"
+  }
 }
 
 private class InputControlInstantiation extends ElementInstantiation {
