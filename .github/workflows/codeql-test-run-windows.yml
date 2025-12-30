@@ -7,13 +7,19 @@ name: ⚙️ CodeQL - Run Unit Tests (Windows)
 # Manual trigger only to conserve CI resources since Windows runners are slower.
 
 on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/codeql-test-run-windows.yml'
+      - 'qlt.conf.json'
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/codeql-test-run-windows.yml'
+      - 'qlt.conf.json'
   workflow_dispatch:
-    inputs:
-      codeql_version:
-        description: 'CodeQL CLI version (e.g., "latest", "v2.19.0", or specific version)'
-        required: false
-        default: 'latest'
-        type: string
 
 permissions:
   contents: read
@@ -66,14 +72,18 @@ jobs:
         id: setup-codeql
         shell: pwsh
         run: |
-          $version = "${{ github.event.inputs.codeql_version }}"
-          if ($version -eq "" -or $version -eq "latest") {
-            # Get the latest release version from GitHub API
-            $releaseInfo = Invoke-RestMethod -Uri "https://api.github.com/repos/github/codeql-cli-binaries/releases/latest"
-            $version = $releaseInfo.tag_name
+          # Read CodeQL CLI version from qlt.conf.json
+          $qltConfig = Get-Content "qlt.conf.json" | ConvertFrom-Json
+          $cliVersion = $qltConfig.CodeQLCLI
+
+          # Ensure version has 'v' prefix for GitHub releases
+          if (-not $cliVersion.StartsWith("v")) {
+            $version = "v$cliVersion"
+          } else {
+            $version = $cliVersion
           }
 
-          Write-Host "Installing CodeQL CLI version: $version"
+          Write-Host "Installing CodeQL CLI version: $version (from qlt.conf.json)"
 
           # Determine download URL for Windows
           $downloadUrl = "https://github.com/github/codeql-cli-binaries/releases/download/$version/codeql-win64.zip"
