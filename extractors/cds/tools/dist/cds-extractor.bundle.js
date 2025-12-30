@@ -4972,7 +4972,7 @@ var PathScurryBase = class {
    *
    * @internal
    */
-  constructor(cwd = process.cwd(), pathImpl, sep4, { nocase, childrenCacheSize = 16 * 1024, fs = defaultFS } = {}) {
+  constructor(cwd = process.cwd(), pathImpl, sep5, { nocase, childrenCacheSize = 16 * 1024, fs = defaultFS } = {}) {
     this.#fs = fsFromOption(fs);
     if (cwd instanceof URL || cwd.startsWith("file://")) {
       cwd = (0, import_node_url.fileURLToPath)(cwd);
@@ -4983,7 +4983,7 @@ var PathScurryBase = class {
     this.#resolveCache = new ResolveCache();
     this.#resolvePosixCache = new ResolveCache();
     this.#children = new ChildrenCache(childrenCacheSize);
-    const split = cwdPath.substring(this.rootPath.length).split(sep4);
+    const split = cwdPath.substring(this.rootPath.length).split(sep5);
     if (split.length === 1 && !split[0]) {
       split.pop();
     }
@@ -7331,7 +7331,9 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
     stdio: "pipe",
     env: { ...process.env }
   };
-  const isDirectBinary = cdsCommand.includes("node_modules/.bin/");
+  const binPathNative = `node_modules${import_path4.sep}.bin${import_path4.sep}`;
+  const binPathPosix = "node_modules/.bin/";
+  const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
   if (cacheDir && !isDirectBinary) {
     const nodePath = (0, import_path4.join)(cacheDir, "node_modules");
     spawnOptions.env = {
@@ -7491,7 +7493,7 @@ function convertToRelativePath(filePath, sourceRoot2) {
   }
   try {
     const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
-    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    const resolvedFilePath = (0, import_path6.isAbsolute)(filePath) ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath === resolvedSourceRoot) {
       return ".";
     }
@@ -7509,7 +7511,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
   let finalMessage = message;
   if (sourceRoot2 && finalFilePath === "." && filePath !== sourceRoot2) {
     const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
-    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    const resolvedFilePath = (0, import_path6.isAbsolute)(filePath) ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath !== resolvedSourceRoot) {
       finalMessage = `${message}
 
