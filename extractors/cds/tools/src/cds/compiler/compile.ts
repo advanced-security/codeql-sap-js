@@ -1,5 +1,5 @@
 import { spawnSync, SpawnSyncOptions } from 'child_process';
-import { resolve, join, delimiter, relative, dirname, basename } from 'path';
+import { basename, delimiter, dirname, join, relative, resolve, sep } from 'path';
 
 import { CdsCompilationResult } from './types';
 import { getCdsVersion } from './version';
@@ -245,8 +245,11 @@ function createSpawnOptions(
     env: { ...process.env },
   };
 
-  // Check if we're using a direct binary path (contains node_modules/.bin/) or npx-style command
-  const isDirectBinary = cdsCommand.includes('node_modules/.bin/');
+  // Check if we're using a direct binary path (contains node_modules/.bin/ or node_modules\.bin\) or npx-style command
+  // Check both platform-native separator and forward slash for cross-platform compatibility
+  const binPathNative = `node_modules${sep}.bin${sep}`;
+  const binPathPosix = 'node_modules/.bin/';
+  const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
 
   // Only set up Node.js environment for npx-style commands, not for direct binary execution
   if (cacheDir && !isDirectBinary) {

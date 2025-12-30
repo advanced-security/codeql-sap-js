@@ -914,7 +914,7 @@ var path = {
 };
 var sep = defaultPlatform === "win32" ? path.win32.sep : path.posix.sep;
 minimatch.sep = sep;
-var GLOBSTAR = Symbol("globstar **");
+var GLOBSTAR = /* @__PURE__ */ Symbol("globstar **");
 minimatch.GLOBSTAR = GLOBSTAR;
 var qmark2 = "[^/]";
 var star2 = qmark2 + "*?";
@@ -1625,7 +1625,6 @@ if (typeof AC === "undefined") {
   };
 }
 var shouldWarn = (code) => !warned.has(code);
-var TYPE = Symbol("type");
 var isPosInt = (n) => n && n === Math.floor(n) && n > 0 && isFinite(n);
 var getUintArray = (max) => !isPosInt(max) ? null : max <= Math.pow(2, 8) ? Uint8Array : max <= Math.pow(2, 16) ? Uint16Array : max <= Math.pow(2, 32) ? Uint32Array : max <= Number.MAX_SAFE_INTEGER ? ZeroArray : null;
 var ZeroArray = class extends Array {
@@ -2987,37 +2986,37 @@ var isStream = (s) => !!s && typeof s === "object" && (s instanceof Minipass || 
 var isReadable = (s) => !!s && typeof s === "object" && s instanceof import_node_events.EventEmitter && typeof s.pipe === "function" && // node core Writable streams have a pipe() method, but it throws
 s.pipe !== import_node_stream.default.Writable.prototype.pipe;
 var isWritable = (s) => !!s && typeof s === "object" && s instanceof import_node_events.EventEmitter && typeof s.write === "function" && typeof s.end === "function";
-var EOF = Symbol("EOF");
-var MAYBE_EMIT_END = Symbol("maybeEmitEnd");
-var EMITTED_END = Symbol("emittedEnd");
-var EMITTING_END = Symbol("emittingEnd");
-var EMITTED_ERROR = Symbol("emittedError");
-var CLOSED = Symbol("closed");
-var READ = Symbol("read");
-var FLUSH = Symbol("flush");
-var FLUSHCHUNK = Symbol("flushChunk");
-var ENCODING = Symbol("encoding");
-var DECODER = Symbol("decoder");
-var FLOWING = Symbol("flowing");
-var PAUSED = Symbol("paused");
-var RESUME = Symbol("resume");
-var BUFFER = Symbol("buffer");
-var PIPES = Symbol("pipes");
-var BUFFERLENGTH = Symbol("bufferLength");
-var BUFFERPUSH = Symbol("bufferPush");
-var BUFFERSHIFT = Symbol("bufferShift");
-var OBJECTMODE = Symbol("objectMode");
-var DESTROYED = Symbol("destroyed");
-var ERROR = Symbol("error");
-var EMITDATA = Symbol("emitData");
-var EMITEND = Symbol("emitEnd");
-var EMITEND2 = Symbol("emitEnd2");
-var ASYNC = Symbol("async");
-var ABORT = Symbol("abort");
-var ABORTED = Symbol("aborted");
-var SIGNAL = Symbol("signal");
-var DATALISTENERS = Symbol("dataListeners");
-var DISCARDED = Symbol("discarded");
+var EOF = /* @__PURE__ */ Symbol("EOF");
+var MAYBE_EMIT_END = /* @__PURE__ */ Symbol("maybeEmitEnd");
+var EMITTED_END = /* @__PURE__ */ Symbol("emittedEnd");
+var EMITTING_END = /* @__PURE__ */ Symbol("emittingEnd");
+var EMITTED_ERROR = /* @__PURE__ */ Symbol("emittedError");
+var CLOSED = /* @__PURE__ */ Symbol("closed");
+var READ = /* @__PURE__ */ Symbol("read");
+var FLUSH = /* @__PURE__ */ Symbol("flush");
+var FLUSHCHUNK = /* @__PURE__ */ Symbol("flushChunk");
+var ENCODING = /* @__PURE__ */ Symbol("encoding");
+var DECODER = /* @__PURE__ */ Symbol("decoder");
+var FLOWING = /* @__PURE__ */ Symbol("flowing");
+var PAUSED = /* @__PURE__ */ Symbol("paused");
+var RESUME = /* @__PURE__ */ Symbol("resume");
+var BUFFER = /* @__PURE__ */ Symbol("buffer");
+var PIPES = /* @__PURE__ */ Symbol("pipes");
+var BUFFERLENGTH = /* @__PURE__ */ Symbol("bufferLength");
+var BUFFERPUSH = /* @__PURE__ */ Symbol("bufferPush");
+var BUFFERSHIFT = /* @__PURE__ */ Symbol("bufferShift");
+var OBJECTMODE = /* @__PURE__ */ Symbol("objectMode");
+var DESTROYED = /* @__PURE__ */ Symbol("destroyed");
+var ERROR = /* @__PURE__ */ Symbol("error");
+var EMITDATA = /* @__PURE__ */ Symbol("emitData");
+var EMITEND = /* @__PURE__ */ Symbol("emitEnd");
+var EMITEND2 = /* @__PURE__ */ Symbol("emitEnd2");
+var ASYNC = /* @__PURE__ */ Symbol("async");
+var ABORT = /* @__PURE__ */ Symbol("abort");
+var ABORTED = /* @__PURE__ */ Symbol("aborted");
+var SIGNAL = /* @__PURE__ */ Symbol("signal");
+var DATALISTENERS = /* @__PURE__ */ Symbol("dataListeners");
+var DISCARDED = /* @__PURE__ */ Symbol("discarded");
 var defer = (fn) => Promise.resolve().then(fn);
 var nodefer = (fn) => fn();
 var isEndish = (ev) => ev === "end" || ev === "finish" || ev === "prefinish";
@@ -3930,7 +3929,7 @@ var ChildrenCache = class extends LRUCache {
     });
   }
 };
-var setAsCwd = Symbol("PathScurry setAsCwd");
+var setAsCwd = /* @__PURE__ */ Symbol("PathScurry setAsCwd");
 var PathBase = class {
   /**
    * the basename of this path
@@ -4972,7 +4971,7 @@ var PathScurryBase = class {
    *
    * @internal
    */
-  constructor(cwd = process.cwd(), pathImpl, sep4, { nocase, childrenCacheSize = 16 * 1024, fs = defaultFS } = {}) {
+  constructor(cwd = process.cwd(), pathImpl, sep5, { nocase, childrenCacheSize = 16 * 1024, fs = defaultFS } = {}) {
     this.#fs = fsFromOption(fs);
     if (cwd instanceof URL || cwd.startsWith("file://")) {
       cwd = (0, import_node_url.fileURLToPath)(cwd);
@@ -4983,7 +4982,7 @@ var PathScurryBase = class {
     this.#resolveCache = new ResolveCache();
     this.#resolvePosixCache = new ResolveCache();
     this.#children = new ChildrenCache(childrenCacheSize);
-    const split = cwdPath.substring(this.rootPath.length).split(sep4);
+    const split = cwdPath.substring(this.rootPath.length).split(sep5);
     if (split.length === 1 && !split[0]) {
       split.pop();
     }
@@ -7331,7 +7330,9 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
     stdio: "pipe",
     env: { ...process.env }
   };
-  const isDirectBinary = cdsCommand.includes("node_modules/.bin/");
+  const binPathNative = `node_modules${import_path4.sep}.bin${import_path4.sep}`;
+  const binPathPosix = "node_modules/.bin/";
+  const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
   if (cacheDir && !isDirectBinary) {
     const nodePath = (0, import_path4.join)(cacheDir, "node_modules");
     spawnOptions.env = {
@@ -7491,7 +7492,7 @@ function convertToRelativePath(filePath, sourceRoot2) {
   }
   try {
     const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
-    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    const resolvedFilePath = (0, import_path6.isAbsolute)(filePath) ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath === resolvedSourceRoot) {
       return ".";
     }
@@ -7509,7 +7510,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
   let finalMessage = message;
   if (sourceRoot2 && finalFilePath === "." && filePath !== sourceRoot2) {
     const resolvedSourceRoot = (0, import_path6.resolve)(sourceRoot2);
-    const resolvedFilePath = filePath.startsWith("/") ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
+    const resolvedFilePath = (0, import_path6.isAbsolute)(filePath) ? (0, import_path6.resolve)(filePath) : (0, import_path6.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath !== resolvedSourceRoot) {
       finalMessage = `${message}
 
