@@ -4,6 +4,7 @@ import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
+import advanced_security.javascript.frameworks.ui5.Fragment
 
 /**
  * Gets the immediate supertype of a given type from the extensible predicate `typeModel` provided by
@@ -695,10 +696,9 @@ class XmlView extends UI5View instanceof XmlFile {
 }
 
 /**
- * TODO - consider - if this just copies all predicates - maybe this should be a subtype of XmlView
- * and we dont need a separate/parallel type for fragments vs views. this will become clear once
+ * An xml fragment. It may or may not have controllers associated.
  */
-class XmlFragment extends UI5Fragment instanceof XmlFile {
+class XmlFragment extends UI5View instanceof XmlFile {
   XmlRootElement root;
 
   XmlFragment() {
@@ -709,6 +709,35 @@ class XmlFragment extends UI5Fragment instanceof XmlFile {
       root.getNamespace().getUri() = "sap.ui.core"
     ) and
     root.hasName("FragmentDefinition")
+  }
+
+  override XmlBindingPath getASource() {
+    exists(XmlElement control, string type, string path, string property |
+      type = result.getControlTypeName() and
+      this = control.getFile() and
+      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
+      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getBindingTarget() = control.getAttribute(property)
+    )
+  }
+
+  override XmlBindingPath getAnHtmlISink() {
+    exists(XmlElement control, string type, string path, string property |
+      this = control.getFile() and
+      type = result.getControlTypeName() and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getBindingTarget() = control.getAttribute(property) and
+      /* If the control is an `sap.ui.core.HTML` then the control should be missing the `sanitizeContent` attribute */
+      (
+        getASuperType(type) = "HTMLControl"
+        implies
+        (
+          not exists(control.getAttribute("sanitizeContent")) or
+          control.getAttribute("sanitizeContent").getValue() = "false"
+        )
+      )
+    )
   }
 
   override UI5Control getControl() {
@@ -729,9 +758,33 @@ class XmlFragment extends UI5Fragment instanceof XmlFile {
     )
   }
 
-  override XmlBindingPath getASource() { none() }
+  /**
+   * This is either known in the location from which `loadFragment` is called (in a controller's init function)
+   * OR in the optional controller param of `Fragment.load`.
+   * This MAY return no value, when the fragment is not associated to any controller.
+   * When this returns a value it is guaranteed that this xml fragment is instantiated.
+   */
+  override string getControllerName() {
+    exists(CustomController controller, MethodCallNode loadFragmentCall |
+      loadFragmentCall.getMethodName() = "loadFragment" and
+      controller.getAThisNode().flowsTo(loadFragmentCall.getReceiver()) and
+      controller.getName() = result
+    )
+    or
+    exists(CustomController controller, FragmentLoad fragmentLoad |
+      controller.getAThisNode().flowsTo(fragmentLoad.getControllerArgument()) and
+      /*
+       * extracting just the base name of the fragment (not the fully qualified)
+       * otherwise difficult to know which part of absolute path is only for the qualified name
+       */
 
-  override XmlBindingPath getAnHtmlISink() { none() }
+      fragmentLoad
+          .getNameArgument()
+          .getStringValue()
+          .matches("%" + this.getBaseName().replaceAll(".fragment.xml", "")) and
+      controller.getName() = result
+    )
+  }
 }
 
 private newtype TUI5Control =
