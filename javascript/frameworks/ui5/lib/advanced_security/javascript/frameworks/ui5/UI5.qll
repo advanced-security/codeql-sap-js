@@ -142,6 +142,16 @@ class SapUiCore extends MethodCallNode {
 }
 
 /**
+ * A reference to the Fragment module (`sap/ui/core/Fragment`).
+ * Used for static methods like `Fragment.byId(viewId, controlId)`.
+ */
+class FragmentModule extends DataFlow::SourceNode {
+  FragmentModule() {
+    this = DataFlow::moduleImport("sap/ui/core/Fragment")
+  }
+}
+
+/**
  * A user-defined module through `sap.ui.define` or `jQuery.sap.declare`.
  */
 abstract class UserModule extends CallExpr {
@@ -334,14 +344,25 @@ class ControlReference extends Reference {
   string controlId;
 
   ControlReference() {
-    this.getArgument(0).getALocalSource().getStringValue() = controlId and
     (
-      exists(CustomController controller |
-        this = controller.getAViewReference().getAMemberCall("byId") or
-        this = controller.getAThisNode().getAMemberCall("byId")
+      // Standard byId patterns: this.byId("id"), this.getView().byId("id"), sap.ui.getCore().byId("id")
+      this.getArgument(0).getALocalSource().getStringValue() = controlId and
+      (
+        exists(CustomController controller |
+          this = controller.getAViewReference().getAMemberCall("byId") or
+          this = controller.getAThisNode().getAMemberCall("byId")
+        )
+        or
+        exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
       )
-      or
-      exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
+    )
+    or
+    // Fragment.byId(viewId, controlId) - static method with 2 arguments
+    (
+      this.getNumArgument() = 2 and
+      this.getArgument(1).getALocalSource().getStringValue() = controlId and
+      this.getMethodName() = "byId" and
+      exists(FragmentModule fragment | this = fragment.getAMemberCall("byId"))
     )
   }
 

@@ -71,6 +71,10 @@ extensions:
       - ["UI5ClientStorage", "global", "Member[jQuery].Member[sap].Member[storage]"]
       - ["UI5ClientStorage", "sap/ui/core/util/File", ""]
       - ["UI5ClientStorage", "global", "Member[sap].Member[ui].Member[core].Member[util].Member[File]"]
+      # Fragment API - byId returns a Control (models static Fragment.byId() calls)
+      - ["Fragment", "Fragment", "Instance"]
+      - ["Fragment", "sap/ui/core/Fragment", ""]
+      - ["UI5InputControl", "Fragment", "Member[byId].ReturnValue"]
 
   - addsTo:
       pack: codeql/javascript-all
