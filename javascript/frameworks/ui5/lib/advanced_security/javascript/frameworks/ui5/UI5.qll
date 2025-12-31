@@ -11,8 +11,10 @@ private module WebAppResourceRootJsonReader implements JsonParser::MakeJsonReade
   class JsonReader extends WebApp {
     string getJson() {
       // We match on the lowercase to cover all the possible variants of writing the attribute name.
+      // Support both "data-sap-ui-resourceroots" and "data-sap-ui-resource-roots" (with hyphen)
       exists(string resourceRootAttributeName |
-        resourceRootAttributeName.toLowerCase() = "data-sap-ui-resourceroots"
+        resourceRootAttributeName.toLowerCase() =
+          ["data-sap-ui-resourceroots", "data-sap-ui-resource-roots"]
       |
         result = this.getCoreScript().getAttributeByName(resourceRootAttributeName).getValue()
       )
@@ -146,9 +148,7 @@ class SapUiCore extends MethodCallNode {
  * Used for static methods like `Fragment.byId(viewId, controlId)`.
  */
 class FragmentModule extends DataFlow::SourceNode {
-  FragmentModule() {
-    this = DataFlow::moduleImport("sap/ui/core/Fragment")
-  }
+  FragmentModule() { this = DataFlow::moduleImport("sap/ui/core/Fragment") }
 }
 
 /**
@@ -344,26 +344,22 @@ class ControlReference extends Reference {
   string controlId;
 
   ControlReference() {
+    // Standard byId patterns: this.byId("id"), this.getView().byId("id"), sap.ui.getCore().byId("id")
+    this.getArgument(0).getALocalSource().getStringValue() = controlId and
     (
-      // Standard byId patterns: this.byId("id"), this.getView().byId("id"), sap.ui.getCore().byId("id")
-      this.getArgument(0).getALocalSource().getStringValue() = controlId and
-      (
-        exists(CustomController controller |
-          this = controller.getAViewReference().getAMemberCall("byId") or
-          this = controller.getAThisNode().getAMemberCall("byId")
-        )
-        or
-        exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
+      exists(CustomController controller |
+        this = controller.getAViewReference().getAMemberCall("byId") or
+        this = controller.getAThisNode().getAMemberCall("byId")
       )
+      or
+      exists(SapUiCore sapUiCore | this = sapUiCore.getAMemberCall("byId"))
     )
     or
     // Fragment.byId(viewId, controlId) - static method with 2 arguments
-    (
-      this.getNumArgument() = 2 and
-      this.getArgument(1).getALocalSource().getStringValue() = controlId and
-      this.getMethodName() = "byId" and
-      exists(FragmentModule fragment | this = fragment.getAMemberCall("byId"))
-    )
+    this.getNumArgument() = 2 and
+    this.getArgument(1).getALocalSource().getStringValue() = controlId and
+    this.getMethodName() = "byId" and
+    exists(FragmentModule fragment | this = fragment.getAMemberCall("byId"))
   }
 
   CustomControl getDefinition() {
