@@ -1,0 +1,12 @@
+nodes
+| webapp/controller/Main.controller.js:20:17:20:29 | sAttackerData |
+| webapp/controller/Main.controller.js:20:33:20:97 | Fragmen ... Value() |
+| webapp/controller/Main.controller.js:24:34:24:69 | "<span> ... /span>" |
+| webapp/controller/Main.controller.js:24:45:24:57 | sAttackerData |
+| webapp/view/Main.view.html:4:10:4:34 | data-content={/payload} |
+edges
+| webapp/controller/Main.controller.js:20:17:20:29 | sAttackerData | webapp/controller/Main.controller.js:24:45:24:57 | sAttackerData |
+| webapp/controller/Main.controller.js:20:33:20:97 | Fragmen ... Value() | webapp/controller/Main.controller.js:20:17:20:29 | sAttackerData |
+| webapp/controller/Main.controller.js:24:45:24:57 | sAttackerData | webapp/controller/Main.controller.js:24:34:24:69 | "<span> ... /span>" |
+#select
+| webapp/controller/Main.controller.js:24:34:24:69 | "<span> ... /span>" | webapp/controller/Main.controller.js:20:33:20:97 | Fragmen ... Value() | webapp/controller/Main.controller.js:24:34:24:69 | "<span> ... /span>" | XSS vulnerability due to $@. | webapp/controller/Main.controller.js:20:33:20:97 | Fragmen ... Value() | user-provided value |

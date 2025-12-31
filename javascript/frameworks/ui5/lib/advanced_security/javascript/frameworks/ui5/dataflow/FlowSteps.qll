@@ -1,5 +1,36 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
+import advanced_security.javascript.frameworks.ui5.UI5View
+
+/**
+ * Step from a value assigned to a JSONModel property to the binding path that reads it.
+ * This enables tracking data flowing INTO a model constructor argument and OUT through XML bindings.
+ *
+ * e.g. Given:
+ * ```javascript
+ * var userInput = getUntrustedData();
+ * var oModel = new JSONModel({ payload: userInput });
+ * this.getView().setModel(oModel);
+ * ```
+ * and
+ * ```xml
+ * <core:HTML content="{/payload}" />
+ * ```
+ *
+ * Creates a flow step from `userInput` (the RHS of the property) to the binding path `{/payload}`.
+ */
+class JsonModelPropertyValueToBindingStep extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(UI5BindingPath bindingPath, DataFlow::PropWrite propWrite |
+      // The binding path resolves to a property write in a JSONModel
+      bindingPath.getNode() = propWrite and
+      // The start is the RHS value being assigned to that property
+      start = propWrite.getRhs() and
+      // The end is the binding path itself (as a node representing where data flows to)
+      end = propWrite
+    )
+  }
+}
 
 /**
  * Step from a part of internal model to a relevant control property.

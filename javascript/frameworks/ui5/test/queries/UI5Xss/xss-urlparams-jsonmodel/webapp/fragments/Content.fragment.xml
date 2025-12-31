@@ -1,0 +1,9 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <VBox class="sapUiSmallMargin">
+        <Label text="Message from URL:" />
+        <!-- XSS sink: HTML content bound to user-controlled model property -->
+        <core:HTML content="{/remotePayload}" />
+    </VBox>
+</core:FragmentDefinition>
