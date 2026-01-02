@@ -1,6 +1,12 @@
 <mvc:View controllerName="codeql-sap-js.controller.app"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
-    xmlns:mvc="sap.ui.core.mvc">
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:rte="sap.ui.richtexteditor">
+    <core:HTML content="{path: '/input'}" sanitizeContent="true"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+    <core:HTML content="{path: '/input'}" sanitizeContent="false"/> <!--XSS sink sap.ui.core.HTML.content -->
     <core:HTML content="{path: '/input'}"/> <!--XSS sink sap.ui.core.HTML.content -->
+    <rte:RichTextEditor value="{path: '/input'}" sanitizeValue="true"/> <!--sanitized XSS sink sap.ui.core.HTML.content -->
+    <rte:RichTextEditor value="{path: '/input'}" sanitizeValue="false"/> <!--XSS sink sap.ui.core.HTML.content -->
+    <rte:RichTextEditor value="{path: '/input'}"/> <!--default sanitized XSS sink sap.ui.core.HTML.content -->
 </mvc:View>

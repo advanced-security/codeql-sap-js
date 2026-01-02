@@ -14,6 +14,7 @@ class XSJSDollarNamespace extends GlobalVarRefNode {
 /**
  * `TypeModel` for `XSJSDollarNamespace`.
  */
+overlay[local?]
 class XSJSDollarTypeModel extends ModelInput::TypeModel {
   override DataFlow::Node getASource(string type) {
     type = "XsjsDollar" and
