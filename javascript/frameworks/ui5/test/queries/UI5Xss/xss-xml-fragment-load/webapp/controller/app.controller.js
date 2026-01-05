@@ -3,7 +3,7 @@ sap.ui.define([
     "sap/ui/model/json/JSONModel",
     "sap/ui/core/Fragment"
 ], function (Controller, JSONModel, Fragment) {
-    "use strict"
+    "use strict";
     return Controller.extend("codeql-sap-js.controller.app", {
         onInit: function () {
             var oData = {
