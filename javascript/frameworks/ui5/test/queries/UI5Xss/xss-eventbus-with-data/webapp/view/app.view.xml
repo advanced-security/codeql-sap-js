@@ -1,0 +1,9 @@
+<mvc:View
+   controllerName="codeql-sap-js.controller.App"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc">
+   <App id="app">
+      <pages>
+      </pages>
+   </App>
+</mvc:View>
