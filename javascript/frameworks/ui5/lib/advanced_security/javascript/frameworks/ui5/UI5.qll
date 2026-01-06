@@ -358,7 +358,6 @@ class ControlReference extends Reference {
     // Fragment.byId(viewId, controlId) - static method with 2 arguments
     this.getNumArgument() = 2 and
     this.getArgument(1).getALocalSource().getStringValue() = controlId and
-    this.getMethodName() = "byId" and
     exists(FragmentModule fragment | this = fragment.getAMemberCall("byId"))
   }
 

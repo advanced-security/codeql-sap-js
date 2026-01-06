@@ -173,22 +173,3 @@ private class UI5ExtRemoteSource extends RemoteFlowSource {
     result = "Remote flow" // Don't discriminate between UI5-specific remote flows and vanilla ones
   }
 }
-
-/**
- * URLSearchParams.get() and getAll() return URL query parameter values which are user-controlled.
- * e.g., `new URLSearchParams(window.location.search).get("param")`
- */
-private class UrlSearchParamsSource extends RemoteFlowSource {
-  UrlSearchParamsSource() {
-    exists(DataFlow::NewNode newCall, DataFlow::MethodCallNode getCall |
-      // Match: new URLSearchParams(...)
-      newCall.getCalleeName() = "URLSearchParams" and
-      // Match: .get() or .getAll() on the URLSearchParams instance
-      getCall.getMethodName() = ["get", "getAll"] and
-      newCall.flowsTo(getCall.getReceiver()) and
-      this = getCall
-    )
-  }
-
-  override string getSourceType() { result = "URL query parameter" }
-}
