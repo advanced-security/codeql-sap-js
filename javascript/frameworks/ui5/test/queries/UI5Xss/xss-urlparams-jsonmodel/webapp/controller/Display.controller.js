@@ -20,7 +20,7 @@ sap.ui.define([
             });
             this.getView().setModel(oViewModel);
             
-            // Test 3: Flow through JSONModel to Fragment XML binding (mirrors app6c pattern)
+            // Test 3: Flow through JSONModel to Fragment XML binding
             Fragment.load({
                 id: this.getView().getId(),
                 name: "ui5-xss-urlparams-jsonmodel.fragments.Content",
