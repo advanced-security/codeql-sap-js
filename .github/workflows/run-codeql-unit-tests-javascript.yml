@@ -10,6 +10,9 @@ on:
       - 'main'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   create-unit-test-matrix:
     name: Create CodeQL Unit Test Matrix
@@ -18,7 +21,7 @@ jobs:
       matrix: ${{ steps.export-unit-test-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install QLT
         id: install-qlt
@@ -43,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install QLT
         id: install-qlt
@@ -80,7 +83,7 @@ jobs:
       - name: Setup Node.js for CDS compilation
         uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: 'extractors/cds/tools/package-lock.json'
 
@@ -121,7 +124,7 @@ jobs:
           --work-dir $RUNNER_TMP
 
       - name: Upload test results
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-${{ runner.os }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}
           path: |
@@ -135,7 +138,7 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Install QLT
         id: install-qlt
@@ -146,10 +149,9 @@ jobs:
 
 
       - name: Collect test results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
 
       - name: Validate test results
         run: |
           qlt test run validate-unit-tests --pretty-print --results-directory . >> $GITHUB_STEP_SUMMARY
           qlt test run validate-unit-tests --results-directory .
-          

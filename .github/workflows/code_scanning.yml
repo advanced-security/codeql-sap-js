@@ -10,6 +10,9 @@ on:
     - cron: '39 12 * * 2'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   CODEQL_ACTION_DIFF_INFORMED_QUERIES: false
 
@@ -39,7 +42,7 @@ jobs:
     - name: Extract CodeQL bundle version from qlt.conf.json
       run: |
         echo "BUNDLE_VERSION=$(jq .CodeQLCLIBundle qlt.conf.json -r)" >> $GITHUB_ENV
-            
+
     - name: Initialize CodeQL
       id: initialize-codeql
       uses: github/codeql-action/init@v4
@@ -52,7 +55,7 @@ jobs:
         db-location: ${{ runner.temp }}/codeql-database
         tools: https://github.com/github/codeql-action/releases/download/${{env.BUNDLE_VERSION}}/codeql-bundle-linux64.tar.gz
         debug: true
-    
+
     - name: Run CDS extractor
       shell: bash
       run: |
