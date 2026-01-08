@@ -187,17 +187,6 @@ predicate isBuiltInControl(string qualifiedTypeUri) {
 }
 
 /**
- * A UI5 Fragment that might include XSS sources and sinks in standard controls.
- */
-abstract class UI5Fragment extends File {
-  abstract UI5Control getControl();
-
-  abstract UI5BindingPath getASource();
-
-  abstract UI5BindingPath getAnHtmlISink();
-}
-
-/**
  * A UI5 View that might include XSS sources and sinks in standard controls.
  */
 abstract class UI5View extends File {
