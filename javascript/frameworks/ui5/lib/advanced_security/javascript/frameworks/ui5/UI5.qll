@@ -146,6 +146,9 @@ class SapUiCore extends MethodCallNode {
 /**
  * A reference to the Fragment module (`sap/ui/core/Fragment`).
  * Used for static methods like `Fragment.byId(viewId, controlId)`.
+ *
+ * Use of `DataFlow::moduleImport` may not cover byId references
+ * coming from sources with es6 style imports of Fragments.
  */
 class FragmentModule extends DataFlow::SourceNode {
   FragmentModule() { this = DataFlow::moduleImport("sap/ui/core/Fragment") }
