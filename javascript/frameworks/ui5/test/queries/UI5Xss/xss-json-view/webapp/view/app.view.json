@@ -11,6 +11,11 @@
 		{
 			"Type": "sap.ui.core.HTML",
 			"content": "{/input}"
+		},
+		{
+			"Type": "sap.ui.core.HTML",
+			"content": "{/input}",
+			"sanitizeContent": true
 		}
 	]
 }
