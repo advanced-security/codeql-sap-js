@@ -206,18 +206,43 @@ jobs:
             exit 0
           }
 
-          # Find all test directories containing .qlref files in this test path
-          $testDirs = Get-ChildItem -Path $testPath -Recurse -Filter "*.qlref" -ErrorAction SilentlyContinue |
-            Select-Object -ExpandProperty DirectoryName |
-            Sort-Object -Unique
+          # Use CodeQL's strict test discovery to find valid tests
+          Write-Host "Resolving tests with strict test discovery in: $testPath"
+
+          $resolveOutputFile = Join-Path $resultsDir "resolve-output.txt"
+          $resolveErrorFile = Join-Path $resultsDir "resolve-errors.txt"
+
+          # Run codeql resolve tests with strict discovery
+          $resolveProcess = Start-Process -FilePath "codeql" `
+            -ArgumentList @("resolve", "tests", "--strict-test-discovery", "--format=text", "--", $testPath) `
+            -Wait `
+            -PassThru `
+            -NoNewWindow `
+            -RedirectStandardOutput $resolveOutputFile `
+            -RedirectStandardError $resolveErrorFile
+
+          # Check if resolve succeeded
+          if ($resolveProcess.ExitCode -ne 0) {
+            Write-Host "❌ Failed to resolve tests"
+            if (Test-Path $resolveErrorFile) {
+              Get-Content $resolveErrorFile | Write-Host
+            }
+            exit $resolveProcess.ExitCode
+          }
+
+          # Read discovered test directories
+          $testDirs = @()
+          if (Test-Path $resolveOutputFile) {
+            $testDirs = Get-Content $resolveOutputFile | Where-Object { $_.Trim() -ne "" }
+          }
 
           if ($testDirs.Count -eq 0) {
-            Write-Host "⚠️ No test directories found in: $testPath"
+            Write-Host "⚠️ No valid test directories found in: $testPath"
             Write-Host "Skipping tests for this suite"
             exit 0
           }
 
-          Write-Host "Found $($testDirs.Count) test directory(ies) in $testPath :"
+          Write-Host "Found $($testDirs.Count) valid test directory(ies):"
           $testDirs | ForEach-Object { Write-Host "  - $_" }
           Write-Host ""
 
