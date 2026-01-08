@@ -879,11 +879,23 @@ class UI5Control extends TUI5Control {
 
   /**
    * Gets a reference to this control. Currently supports only such references made through `byId`.
+   * Handles both:
+   * - `this.byId("controlId")` or `this.getView().byId("controlId")` - ID in argument 0
+   * - `Fragment.byId(viewId, "controlId")` - ID in argument 1
    */
   ControlReference getAReference() {
     result.getMethodName() = "byId" and
-    result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
-      this.getProperty("id").getValue()
+    (
+      // Standard byId: ID in first argument
+      result.getNumArgument() = 1 and
+      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
+        this.getProperty("id").getValue()
+      or
+      // Fragment.byId: ID in second argument
+      result.getNumArgument() = 2 and
+      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
+        this.getProperty("id").getValue()
+    )
   }
 
   /** Gets a property of this control having the name. */
