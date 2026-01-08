@@ -1,0 +1,317 @@
+name: QL Unit Tests (Windows)
+
+# This workflow runs CodeQL unit tests for the 'javascript' language on Windows.
+# The 'qlt' CLI is not supported on Windows, so this workflow uses 'codeql test run'
+# directly, following the pattern from the Actions language unit tests workflow.
+#
+# Tests are run in parallel using a matrix strategy for improved performance.
+
+on:
+  pull_request:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/ql-unit-tests-windows.yml'
+      - 'qlt.conf.json'
+      - 'extractors/cds/**'
+      - 'extractors/javascript/tools/**'
+      - 'javascript/**'
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/ql-unit-tests-windows.yml'
+      - 'qlt.conf.json'
+      - 'extractors/cds/**'
+      - 'extractors/javascript/tools/**'
+      - 'javascript/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-windows-tests:
+    name: ${{ matrix.test_suite }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test_suite:
+          - cap-models
+          - cap-queries
+          - ui5-lib
+          - ui5-models
+          - ui5-queries
+          - ui5-webcomponents-queries
+          - xsjs-models
+          - xsjs-queries
+          - heuristic-models
+        include:
+          - test_suite: cap-models
+            test_path: javascript/frameworks/cap/test/models
+          - test_suite: cap-queries
+            test_path: javascript/frameworks/cap/test/queries
+          - test_suite: ui5-lib
+            test_path: javascript/frameworks/ui5/test/lib
+          - test_suite: ui5-models
+            test_path: javascript/frameworks/ui5/test/models
+          - test_suite: ui5-queries
+            test_path: javascript/frameworks/ui5/test/queries
+          - test_suite: ui5-webcomponents-queries
+            test_path: javascript/frameworks/ui5-webcomponents/test/queries
+          - test_suite: xsjs-models
+            test_path: javascript/frameworks/xsjs/test/models
+          - test_suite: xsjs-queries
+            test_path: javascript/frameworks/xsjs/test/queries
+          - test_suite: heuristic-models
+            test_path: javascript/heuristic-models/tests
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup CodeQL CLI
+        id: setup-codeql
+        shell: pwsh
+        run: |
+          # Read CodeQL CLI version from qlt.conf.json
+          $qltConfig = Get-Content "qlt.conf.json" | ConvertFrom-Json
+          $cliVersion = $qltConfig.CodeQLCLI
+
+          # Ensure version has 'v' prefix for GitHub releases
+          if (-not $cliVersion.StartsWith("v")) {
+            $version = "v$cliVersion"
+          } else {
+            $version = $cliVersion
+          }
+
+          Write-Host "Installing CodeQL CLI version: $version (from qlt.conf.json)"
+
+          # Determine download URL for Windows
+          $downloadUrl = "https://github.com/github/codeql-cli-binaries/releases/download/$version/codeql-win64.zip"
+
+          # Create installation directory
+          $installDir = "$env:RUNNER_TOOL_CACHE\codeql"
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+
+          # Download and extract CodeQL CLI
+          $zipPath = "$env:RUNNER_TEMP\codeql.zip"
+          Write-Host "Downloading from: $downloadUrl"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
+
+          Write-Host "Extracting CodeQL CLI to: $installDir"
+          Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
+
+          # Set up environment
+          $codeqlPath = "$installDir\codeql"
+          $codeqlExe = "$codeqlPath\codeql.exe"
+
+          if (-not (Test-Path $codeqlExe)) {
+            Write-Error "CodeQL executable not found at: $codeqlExe"
+            exit 1
+          }
+
+          Write-Host "CodeQL executable: $codeqlExe"
+
+          # Add to PATH for subsequent steps
+          echo "$codeqlPath" >> $env:GITHUB_PATH
+          echo "CODEQL_HOME=$codeqlPath" >> $env:GITHUB_ENV
+          echo "codeql-path=$codeqlPath" >> $env:GITHUB_OUTPUT
+
+          # Verify installation
+          & $codeqlExe --version
+
+      - name: Verify CodeQL Installation
+        shell: pwsh
+        run: |
+          Write-Host "CodeQL version:"
+          codeql --version
+
+          Write-Host ""
+          Write-Host "CodeQL resolve languages:"
+          codeql resolve languages
+
+      - name: Install QL Packs
+        shell: pwsh
+        run: |
+          Write-Host "Installing QL packs from qlpack.yml files..."
+
+          # Find all qlpack.yml files and install dependencies
+          $qlpacks = Get-ChildItem -Path "javascript" -Filter "qlpack.yml" -Recurse
+
+          foreach ($qlpack in $qlpacks) {
+            $dir = $qlpack.DirectoryName
+            Write-Host "Installing packs for: $dir"
+            Push-Location $dir
+            try {
+              codeql pack install
+            } catch {
+              Write-Warning "Failed to install packs in $dir : $_"
+            }
+            Pop-Location
+          }
+
+          Write-Host "QL pack installation complete"
+
+      - name: Setup Node.js for CDS compilation
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+
+      - name: Verify Node.js and npm tools
+        shell: pwsh
+        run: |
+          Write-Host "Node.js version: $(node --version)"
+          Write-Host "npm version: $(npm --version)"
+          Write-Host "npx version: $(npx --version)"
+
+          # Verify npx can access @sap/cds-dk
+          Write-Host "Testing npx access to @sap/cds-dk..."
+          try {
+            npx --yes --package @sap/cds-dk@latest cds --version
+          } catch {
+            Write-Host "CDS will be installed per-project as needed"
+          }
+
+      - name: Compile CAP CDS files
+        shell: cmd
+        run: |
+          REM Use the dedicated CDS compilation script that follows the same logic
+          REM as the CDS extractor's resolveCdsVersions function
+          call extractors\cds\tools\workflow\cds-compilation-for-actions.cmd
+
+      - name: Run CodeQL unit tests
+        id: run-tests
+        shell: pwsh
+        env:
+          LGTM_INDEX_XML_MODE: all
+          LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
+        run: |
+          Write-Host "Running CodeQL unit tests for: ${{ matrix.test_suite }}"
+
+          # Create results directory
+          $resultsDir = Join-Path $env:RUNNER_TEMP "test-results"
+          New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
+
+          # Get the test path for this matrix job
+          $testPath = "${{ matrix.test_path }}"
+
+          # Check if test path exists
+          if (-not (Test-Path $testPath)) {
+            Write-Host "⚠️ Test path does not exist: $testPath"
+            Write-Host "Skipping tests for this suite"
+            exit 0
+          }
+
+          # Find all test directories containing .qlref files in this test path
+          $testDirs = Get-ChildItem -Path $testPath -Recurse -Filter "*.qlref" -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty DirectoryName |
+            Sort-Object -Unique
+
+          if ($testDirs.Count -eq 0) {
+            Write-Host "⚠️ No test directories found in: $testPath"
+            Write-Host "Skipping tests for this suite"
+            exit 0
+          }
+
+          Write-Host "Found $($testDirs.Count) test directory(ies) in $testPath :"
+          $testDirs | ForEach-Object { Write-Host "  - $_" }
+          Write-Host ""
+
+          # Run tests using codeql test run
+          Write-Host "Running: codeql test run --format=text -- $($testDirs -join ' ')"
+
+          $outputFile = Join-Path $resultsDir "test-output.txt"
+          $errorFile = Join-Path $resultsDir "test-errors.txt"
+
+          # Build argument list for codeql test run
+          $codeqlArgs = @("test", "run", "--format=text", "--")
+          $codeqlArgs += $testDirs
+
+          # Run tests and capture output
+          $testProcess = Start-Process -FilePath "codeql" `
+            -ArgumentList $codeqlArgs `
+            -Wait `
+            -PassThru `
+            -NoNewWindow `
+            -RedirectStandardOutput $outputFile `
+            -RedirectStandardError $errorFile
+
+          # Display output
+          if (Test-Path $outputFile) {
+            Get-Content $outputFile | Write-Host
+          }
+
+          if (Test-Path $errorFile) {
+            $errors = Get-Content $errorFile
+            if ($errors) {
+              Write-Host "Standard Error Output:"
+              $errors | Write-Host
+            }
+          }
+
+          # Check exit code
+          if ($testProcess.ExitCode -ne 0) {
+            Write-Host "❌ Tests failed with exit code: $($testProcess.ExitCode)"
+            exit $testProcess.ExitCode
+          }
+
+          Write-Host "✅ Tests completed successfully"
+
+      - name: Upload test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-test-results-${{ matrix.test_suite }}
+          path: |
+            ${{ runner.temp }}/test-results/
+          if-no-files-found: warn
+
+  validate-results:
+    name: Validate Windows Test Results
+    needs: [run-windows-tests]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download test results
+        uses: actions/download-artifact@v7
+        with:
+          pattern: windows-test-results-*
+          path: test-results/
+          merge-multiple: true
+
+      - name: Display test results
+        shell: bash
+        run: |
+          echo "=== Windows Unit Test Results ==="
+
+          # Check if results exist
+          if [ ! -d "test-results/" ] || [ -z "$(find test-results/ -type f 2>/dev/null)" ]; then
+            echo "❌ No test results found"
+            exit 1
+          fi
+
+          # Display test output
+          if [ -f "test-results/test-output.txt" ]; then
+            echo "Test output:"
+            cat test-results/test-output.txt
+            echo ""
+          fi
+
+          # Check for failures
+          if [ -f "test-results/test-output.txt" ]; then
+            if grep -q "FAILED" test-results/test-output.txt 2>/dev/null; then
+              echo "❌ Some tests failed"
+              exit 1
+            else
+              echo "✅ All tests passed"
+            fi
+          fi
+
+          echo "================================="

@@ -1,5 +1,4 @@
-name: ⚙️ CodeQL - Run Unit Tests (javascript)
-
+name: QL Unit Tests (Linux)
 
 on:
   push:
