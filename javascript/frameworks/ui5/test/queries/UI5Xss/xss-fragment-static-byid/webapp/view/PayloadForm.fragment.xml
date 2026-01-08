@@ -1,0 +1,11 @@
+<core:FragmentDefinition
+	xmlns="sap.m"
+	xmlns:core="sap.ui.core"
+>
+<Input xmlns="sap.m"
+       id="attackerInput"
+       placeholder="Enter malicious payload">
+</Input>
+<Button text="Submit" press=".onSubmitPayload" />
+<core:HTML id="vulnerableOutput" />
+</core:FragmentDefinition>
