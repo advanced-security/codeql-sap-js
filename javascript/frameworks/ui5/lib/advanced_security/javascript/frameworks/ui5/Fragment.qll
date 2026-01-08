@@ -17,7 +17,7 @@ class FragmentLoad extends InvokeNode, MethodCallNode {
     or
     exists(RequiredObject requiredModule, SapDefineModule sapModule |
       this = requiredModule.asSourceNode().getAMemberCall("load") and
-      //ensure it is an sap module define
+      /* ensure it is an sap module define */
       requiredModule.getEnclosingFunction() = sapModule.getArgument(1)
     )
   }

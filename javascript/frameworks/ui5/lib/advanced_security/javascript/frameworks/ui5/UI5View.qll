@@ -187,17 +187,6 @@ predicate isBuiltInControl(string qualifiedTypeUri) {
 }
 
 /**
- * A UI5 Fragment that might include XSS sources and sinks in standard controls.
- */
-abstract class UI5Fragment extends File {
-  abstract UI5Control getControl();
-
-  abstract UI5BindingPath getASource();
-
-  abstract UI5BindingPath getAnHtmlISink();
-}
-
-/**
  * A UI5 View that might include XSS sources and sinks in standard controls.
  */
 abstract class UI5View extends File {
@@ -716,16 +705,7 @@ class XmlFragment extends UI5View instanceof XmlFile {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property) and
-      /* If the control is an `sap.ui.core.HTML` then the control should be missing the `sanitizeContent` attribute */
-      (
-        getASuperType(type) = "HTMLControl"
-        implies
-        (
-          not exists(control.getAttribute("sanitizeContent")) or
-          control.getAttribute("sanitizeContent").getValue() = "false"
-        )
-      )
+      result.getBindingTarget() = control.getAttribute(property)
     )
   }
 
