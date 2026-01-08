@@ -1,5 +1,5 @@
 import { execFileSync } from 'child_process';
-import { relative, resolve } from 'path';
+import { isAbsolute, relative, resolve } from 'path';
 
 import { cdsExtractorLog } from './logging';
 
@@ -29,7 +29,8 @@ export function convertToRelativePath(filePath: string, sourceRoot: string): str
     const resolvedSourceRoot = resolve(sourceRoot);
 
     // If filePath is absolute, resolve it directly; otherwise resolve relative to sourceRoot
-    const resolvedFilePath = filePath.startsWith('/')
+    // Use path.isAbsolute() for cross-platform compatibility (Unix and Windows paths)
+    const resolvedFilePath = isAbsolute(filePath)
       ? resolve(filePath)
       : resolve(resolvedSourceRoot, filePath);
 
@@ -84,7 +85,8 @@ function addDiagnostic(
   let finalMessage = message;
   if (sourceRoot && finalFilePath === '.' && filePath !== sourceRoot) {
     const resolvedSourceRoot = resolve(sourceRoot);
-    const resolvedFilePath = filePath.startsWith('/')
+    // Use path.isAbsolute() for cross-platform compatibility (Unix and Windows paths)
+    const resolvedFilePath = isAbsolute(filePath)
       ? resolve(filePath)
       : resolve(resolvedSourceRoot, filePath);
 
