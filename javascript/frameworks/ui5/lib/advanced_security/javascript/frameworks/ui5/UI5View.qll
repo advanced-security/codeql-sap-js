@@ -800,6 +800,8 @@ private newtype TUI5Control =
             .(ArrayLiteralNode)
             .asExpr()
     )
+    or
+    control = ModelOutput::getATypeNode("Control").getAnInvocation()
   }
 
 class UI5Control extends TUI5Control {
@@ -847,7 +849,9 @@ class UI5Control extends TUI5Control {
     )
     or
     exists(NewNode control | control = this.asJsControl() |
-      result = this.asJsControl().asExpr().getAChildExpr().(DotExpr).getQualifiedName()
+      result = control.asExpr().getAChildExpr().(PropAccess).getQualifiedName()
+      or
+      control = API::moduleImport(result).getAnInvocation()
     )
   }
 
@@ -983,11 +987,12 @@ class UI5Control extends TUI5Control {
     )
     or
     /* 3. `sanitizeContent` attribute is set programmatically using a setter. */
-    exists(CallNode node |
-      node =
-        this.getAReference()
-            .getAMemberCall("set" + propName.prefix(1).toUpperCase() + propName.suffix(1)) and
+    exists(CallNode node, string setterName |
+      setterName = "set" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
       not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
+    |
+      node = this.getAReference().getAMemberCall(setterName) or
+      node = this.asJsControl().getAMemberCall(setterName)
     )
   }
 }
