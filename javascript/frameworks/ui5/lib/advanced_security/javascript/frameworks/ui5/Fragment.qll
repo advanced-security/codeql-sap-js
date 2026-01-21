@@ -48,4 +48,9 @@ class FragmentLoad extends InvokeNode, MethodCallNode {
       result = config.getAPropertyWrite("controller").getRhs()
     )
   }
+
+  DataFlow::ParameterNode getCallbackObjectReference() {
+    //the load invoke node is actually just a part of the chained load.then.bind
+    result = this.getAMemberCall(_).getABoundCallbackParameter(_, _)
+  }
 }
