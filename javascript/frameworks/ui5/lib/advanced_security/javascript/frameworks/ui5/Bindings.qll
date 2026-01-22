@@ -597,6 +597,8 @@ class BindingTarget extends TBindingTarget {
         this = TLateJavaScriptBindingTarget(target, _)
         or
         this = TEarlyJavaScriptPropertyBindingTarget(target, _)
+        or
+        this = TLateJavaScriptBindingTarget(target.(BindElementMethodCallNode).getReceiver(), _)
       ) and
       result = target
     )
@@ -724,6 +726,22 @@ class Binding extends TBinding {
     exists(JsonValue value, string key |
       this = TJsonPropertyBinding(value, key, _) and
       result = value.getLocation()
+    )
+  }
+
+  DataFlow::Node asDataFlowNode() {
+    exists(DataFlow::Node target |
+      (
+        this = TEarlyJavaScriptPropertyBinding(_, target)
+        or
+        this = TLateJavaScriptPropertyBinding(_, target)
+        or
+        exists(BindElementMethodCallNode bindElementCall |
+          target = bindElementCall.getReceiver() and
+          this = TLateJavaScriptContextBinding(bindElementCall, _)
+        )
+      ) and
+      result = target
     )
   }
 
