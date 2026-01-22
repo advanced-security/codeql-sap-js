@@ -1,0 +1,33 @@
+nodes
+| webapp/controller/Display.controller.js:10:17:10:25 | oUrlQuery |
+| webapp/controller/Display.controller.js:10:29:10:71 | new URL ... search) |
+| webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search |
+| webapp/controller/Display.controller.js:11:17:11:30 | sRemotePayload |
+| webapp/controller/Display.controller.js:11:34:11:42 | oUrlQuery |
+| webapp/controller/Display.controller.js:11:34:11:57 | oUrlQue ... yload") |
+| webapp/controller/Display.controller.js:14:51:14:85 | "<div>" ... </div>" |
+| webapp/controller/Display.controller.js:14:61:14:74 | sRemotePayload |
+| webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload |
+| webapp/controller/Display.controller.js:19:32:19:45 | sRemotePayload |
+| webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} |
+| webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} |
+edges
+| webapp/controller/Display.controller.js:10:17:10:25 | oUrlQuery | webapp/controller/Display.controller.js:11:34:11:42 | oUrlQuery |
+| webapp/controller/Display.controller.js:10:29:10:71 | new URL ... search) | webapp/controller/Display.controller.js:10:17:10:25 | oUrlQuery |
+| webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | webapp/controller/Display.controller.js:10:29:10:71 | new URL ... search) |
+| webapp/controller/Display.controller.js:11:17:11:30 | sRemotePayload | webapp/controller/Display.controller.js:14:61:14:74 | sRemotePayload |
+| webapp/controller/Display.controller.js:11:17:11:30 | sRemotePayload | webapp/controller/Display.controller.js:19:32:19:45 | sRemotePayload |
+| webapp/controller/Display.controller.js:11:34:11:42 | oUrlQuery | webapp/controller/Display.controller.js:11:34:11:57 | oUrlQue ... yload") |
+| webapp/controller/Display.controller.js:11:34:11:57 | oUrlQue ... yload") | webapp/controller/Display.controller.js:11:17:11:30 | sRemotePayload |
+| webapp/controller/Display.controller.js:14:61:14:74 | sRemotePayload | webapp/controller/Display.controller.js:14:51:14:85 | "<div>" ... </div>" |
+| webapp/controller/Display.controller.js:18:30:20:14 | new JSO ...      }) | webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} |
+| webapp/controller/Display.controller.js:18:30:20:14 | new JSO ...      }) | webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} |
+| webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload | webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} |
+| webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload | webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} |
+| webapp/controller/Display.controller.js:19:32:19:45 | sRemotePayload | webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload |
+| webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} | webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload |
+| webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} | webapp/controller/Display.controller.js:19:17:19:45 | remoteP ... Payload |
+#select
+| webapp/controller/Display.controller.js:14:51:14:85 | "<div>" ... </div>" | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | webapp/controller/Display.controller.js:14:51:14:85 | "<div>" ... </div>" | XSS vulnerability due to $@. | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | user-provided value |
+| webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | webapp/fragments/Content.fragment.xml:7:9:7:49 | content={/remotePayload} | XSS vulnerability due to $@. | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | user-provided value |
+| webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | webapp/view/Display.view.xml:6:13:6:53 | content={/remotePayload} | XSS vulnerability due to $@. | webapp/controller/Display.controller.js:10:49:10:70 | window. ... .search | user-provided value |
