@@ -133,10 +133,13 @@ abstract class UI5BindingPath extends BindingPath {
         not exists(this.getModelName())
       )
       or
-      /* 5.  There is no call to `setModel` at all and a default model exists that is related to the binding path this refers to */
+      /* 5.  There is no call to `setModel` in the same webapp and a default model exists that is related to the binding path this refers to */
       exists(DefaultODataServiceModel defaultModel |
         result = defaultModel and
-        not exists(MethodCallNode viewSetModelCall | viewSetModelCall.getMethodName() = "setModel") and
+        not exists(MethodCallNode viewSetModelCall |
+          viewSetModelCall.getMethodName() = "setModel" and
+          inSameWebApp(this.getLocation().getFile(), viewSetModelCall.getFile())
+        ) and
         /*
          * this binding path can occur in a fragment that is the receiver object for the bindElement model approximation
          * i.e. checks that the default model is relevant

@@ -126,7 +126,12 @@ class DefaultODataServiceModel extends UI5ExternalModel {
 
   override string getName() { result = "" }
 
-  Binding asBinding() { result.getBindingTarget().asDataFlowNode() = this }
+  /**
+   * Gets bindings associated with this default OData model source.
+   * Since `DefaultODataServiceModel` represents a `bindElement` call,
+   * we match context bindings whose `bindElement` call is this node.
+   */
+  Binding asBinding() { result.getBindElementCall() = this }
 }
 
 /** Model which gains content from an SAP OData service. */

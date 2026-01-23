@@ -748,4 +748,9 @@ class Binding extends TBinding {
   BindingPath getBindingPath() { result.getBinding() = this }
 
   BindingTarget getBindingTarget() { result.getBinding() = this }
+
+  /**
+   * Gets the `BindElementMethodCallNode` for this binding, if it is a context binding via `bindElement`.
+   */
+  BindElementMethodCallNode getBindElementCall() { this = TLateJavaScriptContextBinding(result, _) }
 }
