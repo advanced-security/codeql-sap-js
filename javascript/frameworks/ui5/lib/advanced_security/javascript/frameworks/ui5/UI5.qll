@@ -944,8 +944,11 @@ module ManifestJson {
       exists(JsonObject models |
         this = models.getPropValue(modelName) and
         dataSourceName = this.getPropStringValue("dataSource") and
-        /* This data source can be found in the "dataSources" property */
-        exists(DataSourceManifest dataSource | dataSource.getName() = dataSourceName)
+        /* This data source can be found in the "dataSources" property of the same manifest */
+        exists(DataSourceManifest dataSource |
+          dataSource.getName() = dataSourceName and
+          dataSource.getManifestJson() = this.getJsonFile()
+        )
       )
     }
 
@@ -953,7 +956,11 @@ module ManifestJson {
 
     string getDataSourceName() { result = dataSourceName }
 
-    DataSourceManifest getDataSource() { result.getName() = dataSourceName }
+    /** Gets the data source for this external model from the same manifest file. */
+    DataSourceManifest getDataSource() {
+      result.getName() = dataSourceName and
+      result.getManifestJson() = this.getJsonFile()
+    }
   }
 
   class ManifestJson extends File {

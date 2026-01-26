@@ -150,7 +150,9 @@ abstract class UI5BindingPath extends BindingPath {
           load.getNameArgument()
               .getStringValue()
               .matches("%" +
-                  this.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%")
+                  this.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
+          // The fragment load call must be in the same webapp as the fragment file
+          inSameWebApp(this.getLocation().getFile(), load.getFile())
         )
       )
     )

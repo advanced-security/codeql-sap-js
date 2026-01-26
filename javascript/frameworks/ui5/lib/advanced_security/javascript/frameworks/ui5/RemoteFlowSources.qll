@@ -113,12 +113,15 @@ abstract class UI5ExternalModel extends UI5Model, RemoteFlowSource {
 /** Default model which gains content from an SAP OData service (ie no model name is explicitly specified). */
 class DefaultODataServiceModel extends UI5ExternalModel {
   DefaultODataServiceModel() {
-    exists(ExternalModelManifest model |
+    exists(ExternalModelManifest model, WebApp webapp |
       //an OData default model exists
       model.getName() = "" and
       model.getDataSource() instanceof ODataDataSourceManifest and
       //therefore the bindElement calls that exist may be sources and also approximates the model itself
-      this.getCalleeName() = "bindElement"
+      this.getCalleeName() = "bindElement" and
+      // The bindElement call must be in the same webapp as the manifest that declares the default model
+      webapp.getAResource() = this.getFile() and
+      webapp.getManifest() = model.getJsonFile()
     )
   }
 
