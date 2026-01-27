@@ -88,6 +88,10 @@ bindingset[f1, f2]
 pragma[inline_late]
 predicate inSameWebApp(File f1, File f2) {
   exists(WebApp webApp | webApp.getAResource() = f1 and webApp.getAResource() = f2)
+  or
+  exists(WebApp webApp | webApp.getManifest() = f1 and webApp.getAResource() = f2)
+  or
+  exists(WebApp webApp | webApp.getManifest() = f2 and webApp.getAResource() = f1)
 }
 
 /** A UI5 bootstrapped web application. */
@@ -944,8 +948,11 @@ module ManifestJson {
       exists(JsonObject models |
         this = models.getPropValue(modelName) and
         dataSourceName = this.getPropStringValue("dataSource") and
-        /* This data source can be found in the "dataSources" property */
-        exists(DataSourceManifest dataSource | dataSource.getName() = dataSourceName)
+        /* This data source can be found in the "dataSources" property of the same manifest */
+        exists(DataSourceManifest dataSource |
+          dataSource.getName() = dataSourceName and
+          dataSource.getManifestJson() = this.getJsonFile()
+        )
       )
     }
 
@@ -953,7 +960,11 @@ module ManifestJson {
 
     string getDataSourceName() { result = dataSourceName }
 
-    DataSourceManifest getDataSource() { result.getName() = dataSourceName }
+    /** Gets the data source for this external model from the same manifest file. */
+    DataSourceManifest getDataSource() {
+      result.getName() = dataSourceName and
+      result.getManifestJson() = this.getJsonFile()
+    }
   }
 
   class ManifestJson extends File {

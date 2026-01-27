@@ -1,0 +1,5 @@
+{
+  "name": "xss-fragment-odata-default-model",
+  "version": "1.0.0",
+  "description": "Test case for XSS vulnerability via default OData model in fragment with bindElement"
+}
