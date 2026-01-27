@@ -88,6 +88,10 @@ bindingset[f1, f2]
 pragma[inline_late]
 predicate inSameWebApp(File f1, File f2) {
   exists(WebApp webApp | webApp.getAResource() = f1 and webApp.getAResource() = f2)
+  or
+  exists(WebApp webApp | webApp.getManifest() = f1 and webApp.getAResource() = f2)
+  or
+  exists(WebApp webApp | webApp.getManifest() = f2 and webApp.getAResource() = f1)
 }
 
 /** A UI5 bootstrapped web application. */
