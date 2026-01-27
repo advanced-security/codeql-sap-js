@@ -17,9 +17,7 @@ import semmle.javascript.RestrictedLocations
 private import advanced_security.javascript.frameworks.ui5.UI5
 
 class FirstLineOfDocumentElementWebApp extends HTML::DocumentElement, FirstLineOf {
-  FirstLineOfDocumentElementWebApp() {
-    exists(WebApp app | app.getDocument() = this)
-  }
+  FirstLineOfDocumentElementWebApp() { exists(WebApp app | app.getDocument() = this) }
 }
 
 private newtype TAlertLocation =
