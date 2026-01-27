@@ -19,7 +19,7 @@ class WebComponentImport extends DataFlow::SourceNode {
 
 /**
  * The `ref` attribute of a JSX attribute. e.g.
- * 
+ *
  * ``` javascript
  * <SomeElement ref={x}>
  * ```

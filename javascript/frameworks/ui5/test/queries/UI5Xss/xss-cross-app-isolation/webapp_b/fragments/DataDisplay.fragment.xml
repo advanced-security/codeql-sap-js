@@ -1,0 +1,9 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <VBox class="sapUiSmallMargin">
+        <Label text="Message from OData in App B:" />
+        <!-- XSS vulnerability: HTML content bound to OData property containing unsanitized data -->
+        <core:HTML content="{messageB}" />
+    </VBox>
+</core:FragmentDefinition>
