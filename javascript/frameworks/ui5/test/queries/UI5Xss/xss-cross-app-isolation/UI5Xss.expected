@@ -1,0 +1,13 @@
+nodes
+| webapp_a/controller/App.controller.js:21:17:21:54 | oFragme ... sA(1)") |
+| webapp_a/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageA} |
+| webapp_b/controller/App.controller.js:21:17:21:54 | oFragme ... sB(1)") |
+| webapp_b/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageB} |
+edges
+| webapp_a/controller/App.controller.js:21:17:21:54 | oFragme ... sA(1)") | webapp_a/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageA} |
+| webapp_a/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageA} | webapp_a/controller/App.controller.js:21:17:21:54 | oFragme ... sA(1)") |
+| webapp_b/controller/App.controller.js:21:17:21:54 | oFragme ... sB(1)") | webapp_b/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageB} |
+| webapp_b/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageB} | webapp_b/controller/App.controller.js:21:17:21:54 | oFragme ... sB(1)") |
+#select
+| webapp_a/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageA} | webapp_a/controller/App.controller.js:21:17:21:54 | oFragme ... sA(1)") | webapp_a/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageA} | XSS vulnerability due to $@. | webapp_a/controller/App.controller.js:21:17:21:54 | oFragme ... sA(1)") | user-provided value |
+| webapp_b/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageB} | webapp_b/controller/App.controller.js:21:17:21:54 | oFragme ... sB(1)") | webapp_b/fragments/DataDisplay.fragment.xml:7:9:7:43 | content={messageB} | XSS vulnerability due to $@. | webapp_b/controller/App.controller.js:21:17:21:54 | oFragme ... sB(1)") | user-provided value |
