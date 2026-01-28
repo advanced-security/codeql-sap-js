@@ -152,7 +152,12 @@ class ServiceInstanceFromCdsConnectTo extends ServiceInstance {
   override UserDefinedApplicationService getDefinition() {
     exists(RequiredService serviceDecl |
       serviceDecl.getName() = serviceDesignator and
-      result.hasLocationInfo(serviceDecl.getImplementationFile().getAbsolutePath(), _, _, _, _)
+      // Normalize path separators for cross-platform compatibility
+      result
+          .hasLocationInfo(serviceDecl
+                .getImplementationFile()
+                .getAbsolutePath()
+                .regexpReplaceAll("\\\\", "/"), _, _, _, _)
     )
     or
     result.getUnqualifiedName() = serviceDesignator
@@ -546,7 +551,11 @@ abstract class UserDefinedApplicationService extends UserDefinedService {
    */
   string getManifestName() {
     exists(RequiredService serviceManifest |
-      this.hasLocationInfo(serviceManifest.getImplementationFile().getAbsolutePath(), _, _, _, _) and
+      // Normalize path separators for cross-platform compatibility
+      this.hasLocationInfo(serviceManifest
+            .getImplementationFile()
+            .getAbsolutePath()
+            .regexpReplaceAll("\\\\", "/"), _, _, _, _) and
       result = serviceManifest.getName()
     )
   }

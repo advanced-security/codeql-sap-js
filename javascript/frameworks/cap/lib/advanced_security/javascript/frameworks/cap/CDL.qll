@@ -20,9 +20,17 @@ abstract class CdlObject extends JsonObject {
         // performed and `.cds.json` files are stored in that base project directory. The
         // `$location` values in the generated JSON data are, therefore, relative to the
         // base directory of the project.
+        //
+        // Note: We normalize path separators for cross-platform compatibility.
+        // On Windows, getAbsolutePath() returns backslashes, but the CDS JSON uses
+        // forward slashes, so we convert backslashes to forward slashes.
         path =
-          locValue.getJsonFile().getParentContainer().getAbsolutePath().regexpReplaceAll("/$", "") +
-            "/" + locValue.getPropValue("file").getStringValue() and
+          locValue
+                .getJsonFile()
+                .getParentContainer()
+                .getAbsolutePath()
+                .regexpReplaceAll("\\\\", "/")
+                .regexpReplaceAll("/$", "") + "/" + locValue.getPropValue("file").getStringValue() and
         if
           not exists(locValue.getPropValue("line")) and
           not exists(locValue.getPropValue("col"))
@@ -167,11 +175,19 @@ class CdlService extends CdlElement {
     exists(JsonValue jsonFileLocation |
       jsonFileLocation = this.getPropValue("$location").getPropValue("file")
     |
-      result.getFile().getAbsolutePath().regexpReplaceAll("\\.[^.]+$", ".cds") =
+      // Normalize path separators for cross-platform compatibility.
+      // On Windows, getAbsolutePath() returns backslashes, but the CDS JSON uses
+      // forward slashes, so we convert backslashes to forward slashes.
+      result
+          .getFile()
+          .getAbsolutePath()
+          .regexpReplaceAll("\\\\", "/")
+          .regexpReplaceAll("\\.[^.]+$", ".cds") =
         jsonFileLocation
               .getJsonFile()
               .getParentContainer()
               .getAbsolutePath()
+              .regexpReplaceAll("\\\\", "/")
               .regexpReplaceAll("/$", "") + "/" + jsonFileLocation.getStringValue()
     )
   }
