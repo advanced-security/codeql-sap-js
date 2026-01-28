@@ -1,0 +1,14 @@
+<mvc:View
+    controllerName="app.a.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    <App id="app">
+        <Page id="page" title="App A - XSS Cross-App Isolation Test">
+            <content>
+                <!-- Fragment will be loaded here dynamically -->
+            </content>
+        </Page>
+    </App>
+</mvc:View>

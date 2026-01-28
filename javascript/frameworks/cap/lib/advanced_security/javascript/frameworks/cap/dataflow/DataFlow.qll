@@ -110,7 +110,11 @@ class AsyncStyleCommunication extends InterServiceCommunication {
       [
         srvEmit.getEmitter().getDefinition().getManifestName(),
         srvEmit.getEmitter().getDefinition().getUnqualifiedName()
-      ] = orchestratingRegistration.getReceiver().(ServiceInstanceFromCdsConnectTo).getServiceDesignator() and
+      ] =
+        orchestratingRegistration
+            .getReceiver()
+            .(ServiceInstanceFromCdsConnectTo)
+            .getServiceDesignator() and
       recipient = methodCallOnReceiver.getReceiver() and
       methodCallOnReceiver.getEnclosingFunction() = orchestratingRegistration.getHandler().asExpr()
     )

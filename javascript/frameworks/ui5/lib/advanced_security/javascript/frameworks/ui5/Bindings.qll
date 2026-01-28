@@ -597,6 +597,8 @@ class BindingTarget extends TBindingTarget {
         this = TLateJavaScriptBindingTarget(target, _)
         or
         this = TEarlyJavaScriptPropertyBindingTarget(target, _)
+        or
+        this = TLateJavaScriptBindingTarget(target.(BindElementMethodCallNode).getReceiver(), _)
       ) and
       result = target
     )
@@ -727,7 +729,28 @@ class Binding extends TBinding {
     )
   }
 
+  DataFlow::Node asDataFlowNode() {
+    exists(DataFlow::Node target |
+      (
+        this = TEarlyJavaScriptPropertyBinding(_, target)
+        or
+        this = TLateJavaScriptPropertyBinding(_, target)
+        or
+        exists(BindElementMethodCallNode bindElementCall |
+          target = bindElementCall.getReceiver() and
+          this = TLateJavaScriptContextBinding(bindElementCall, _)
+        )
+      ) and
+      result = target
+    )
+  }
+
   BindingPath getBindingPath() { result.getBinding() = this }
 
   BindingTarget getBindingTarget() { result.getBinding() = this }
+
+  /**
+   * Gets the `BindElementMethodCallNode` for this binding, if it is a context binding via `bindElement`.
+   */
+  BindElementMethodCallNode getBindElementCall() { this = TLateJavaScriptContextBinding(result, _) }
 }

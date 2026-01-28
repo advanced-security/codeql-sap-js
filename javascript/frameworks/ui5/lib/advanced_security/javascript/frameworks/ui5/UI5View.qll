@@ -2,6 +2,7 @@ import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
+import advanced_security.javascript.frameworks.ui5.Fragment
 
 /**
  * Gets the immediate supertype of a given type from the extensible predicate `typeModel` provided by
@@ -130,6 +131,29 @@ abstract class UI5BindingPath extends BindingPath {
         this.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
         not exists(controlSetModelCall.getArgument(1)) and
         not exists(this.getModelName())
+      )
+      or
+      /* 5.  There is no call to `setModel` in the same webapp and a default model exists that is related to the binding path this refers to */
+      exists(DefaultODataServiceModel defaultModel |
+        result = defaultModel and
+        not exists(MethodCallNode viewSetModelCall |
+          viewSetModelCall.getMethodName() = "setModel" and
+          inSameWebApp(this.getLocation().getFile(), viewSetModelCall.getFile())
+        ) and
+        /*
+         * this binding path can occur in a fragment that is the receiver object for the bindElement model approximation
+         * i.e. checks that the default model is relevant
+         */
+
+        exists(FragmentLoad load |
+          load.getCallbackObjectReference().flowsTo(defaultModel.asBinding().asDataFlowNode()) and
+          load.getNameArgument()
+              .getStringValue()
+              .matches("%" +
+                  this.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
+          // The fragment load call must be in the same webapp as the fragment file
+          inSameWebApp(this.getLocation().getFile(), load.getFile())
+        )
       )
     )
     // and
@@ -672,8 +696,97 @@ class XmlView extends UI5View instanceof XmlFile {
   }
 }
 
+/**
+ * An xml fragment. It may or may not have controllers associated.
+ */
+class XmlFragment extends UI5View instanceof XmlFile {
+  XmlRootElement root;
+
+  XmlFragment() {
+    root = this.getARootElement() and
+    (
+      root.getNamespace().getUri() = "sap.m"
+      or
+      root.getNamespace().getUri() = "sap.ui.core"
+    ) and
+    root.hasName("FragmentDefinition")
+  }
+
+  override XmlBindingPath getASource() {
+    exists(XmlElement control, string type, string path, string property |
+      type = result.getControlTypeName() and
+      this = control.getFile() and
+      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
+      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getBindingTarget() = control.getAttribute(property)
+    )
+  }
+
+  override XmlBindingPath getAnHtmlISink() {
+    exists(XmlElement control, string type, string path, string property |
+      this = control.getFile() and
+      type = result.getControlTypeName() and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getBindingTarget() = control.getAttribute(property)
+    )
+  }
+
+  override UI5Control getControl() {
+    exists(XmlElement element |
+      result.asXmlControl() = element and
+      /* Use getAChild+ because some controls nest other controls inside them as aggregations */
+      element = root.getAChild+() and
+      (
+        /* 1. A builtin control provided by UI5 */
+        isBuiltInControl(element.getNamespace().getUri())
+        or
+        /* 2. A custom control with implementation code found in the webapp */
+        exists(CustomControl control |
+          control.getName() = element.getNamespace().getUri() + "." + element.getName() and
+          inSameWebApp(control.getFile(), element.getFile())
+        )
+      )
+    )
+  }
+
+  /**
+   * This is either known in the location from which `loadFragment` is called (in a controller's init function)
+   * OR in the optional controller param of `Fragment.load`.
+   * This MAY return no value, when the fragment is not associated to any controller.
+   * When this returns a value it is guaranteed that this xml fragment is instantiated.
+   */
+  override string getControllerName() {
+    exists(CustomController controller, MethodCallNode loadFragmentCall |
+      loadFragmentCall.getMethodName() = "loadFragment" and
+      controller.getAThisNode().flowsTo(loadFragmentCall.getReceiver()) and
+      controller.getName() = result
+    )
+    or
+    exists(CustomController controller, FragmentLoad fragmentLoad |
+      controller.getAThisNode().flowsTo(fragmentLoad.getControllerArgument()) and
+      /*
+       * extracting just the base name of the fragment (not the fully qualified)
+       * otherwise difficult to know which part of absolute path is only for the qualified name
+       */
+
+      fragmentLoad
+          .getNameArgument()
+          .getStringValue()
+          .matches("%" + this.getBaseName().replaceAll(".fragment.xml", "")) and
+      controller.getName() = result
+    )
+  }
+}
+
 private newtype TUI5Control =
-  TXmlControl(XmlElement control) or
+  TXmlControl(XmlElement control) {
+    control
+        .(Locatable)
+        .getFile()
+        .getBaseName()
+        .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
+  } or
   TJsonControl(JsonObject control) {
     exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
   } or
@@ -769,11 +882,23 @@ class UI5Control extends TUI5Control {
 
   /**
    * Gets a reference to this control. Currently supports only such references made through `byId`.
+   * Handles both:
+   * - `this.byId("controlId")` or `this.getView().byId("controlId")` - ID in argument 0
+   * - `Fragment.byId(viewId, "controlId")` - ID in argument 1
    */
   ControlReference getAReference() {
     result.getMethodName() = "byId" and
-    result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
-      this.getProperty("id").getValue()
+    (
+      // Standard byId: ID in first argument
+      result.getNumArgument() = 1 and
+      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
+        this.getProperty("id").getValue()
+      or
+      // Fragment.byId: ID in second argument
+      result.getNumArgument() = 2 and
+      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
+        this.getProperty("id").getValue()
+    )
   }
 
   /** Gets a property of this control having the name. */

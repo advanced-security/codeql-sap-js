@@ -1,0 +1,9 @@
+<mvc:View xmlns:mvc="sap.ui.core.mvc" xmlns:core="sap.ui.core" xmlns="sap.m"
+    controllerName="ui5-xss-urlparams-jsonmodel.controller.Display">
+    <App id="app">
+        <Page id="page" title="URLSearchParams JSONModel Test">
+            <!-- Test 2 sink: Model binding in View -->
+            <core:HTML content="{/remotePayload}" />
+        </Page>
+    </App>
+</mvc:View>

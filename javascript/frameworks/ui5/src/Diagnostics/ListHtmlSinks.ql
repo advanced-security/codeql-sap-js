@@ -8,14 +8,14 @@
  * @tags diagnostics
  */
 
- import javascript
- import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import javascript
+import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 
- from DataFlow::Node sink, string kind
- where
-   sink = ModelOutput::getASinkNode(kind).asSink() and
-   kind = "ui5-html-injection"
-   or
-   sink instanceof UI5ExternalModel and
-   kind = "ui5-model-sink"
+from DataFlow::Node sink, string kind
+where
+  sink = ModelOutput::getASinkNode(kind).asSink() and
+  kind = "ui5-html-injection"
+  or
+  sink instanceof UI5ExternalModel and
+  kind = "ui5-model-sink"
 select sink, "SAP UI5 Html injection sink with kind: " + kind

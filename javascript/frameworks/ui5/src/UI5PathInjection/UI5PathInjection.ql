@@ -21,7 +21,7 @@ module UI5PathInjectionFlow = TaintTracking::Global<UI5PathInjection>;
 module UI5PathInjectionPathGraph =
   UI5PathGraph<UI5PathInjectionFlow::PathNode, UI5PathInjectionFlow::PathGraph>;
 
-import UI5PathInjectionPathGraph 
+import UI5PathInjectionPathGraph
 
 from
   UI5PathInjectionPathGraph::UI5PathNode source, UI5PathInjectionPathGraph::UI5PathNode sink,
