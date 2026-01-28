@@ -32,7 +32,7 @@ module UI5Xss implements DataFlow::ConfigSig {
     node.(DataFlow::CallNode).getCalleeName() =
       ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML", "encodeHTML"]
     or
-    /* Flow through `setContent/getContent` of a sanitized UI5Control */
+    /* Block flow through setContent/getContent of a sanitized UI5Control */
     exists(UI5Control control, DataFlow::MethodCallNode content |
       control.asJsControl() = content.getReceiver().getALocalSource() and
       control.isHTMLSanitized() and
