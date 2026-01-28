@@ -31,6 +31,14 @@ module UI5Xss implements DataFlow::ConfigSig {
     node.(DataFlow::CallNode).getReceiver().asExpr().(PropAccess).getQualifiedName() = "jQuery.sap" and
     node.(DataFlow::CallNode).getCalleeName() =
       ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML", "encodeHTML"]
+    or
+    /* Flow through `setContent/getContent` of a sanitized UI5Control */
+    exists(UI5Control control, DataFlow::MethodCallNode content |
+      control.asJsControl() = content.getReceiver().getALocalSource() and
+      control.isHTMLSanitized() and
+      content.getMethodName() = ["setContent", "getContent"] and
+      node = [content, content.getArgument(0)]
+    )
   }
 
   predicate isSink(DataFlow::Node node) {
@@ -55,6 +63,19 @@ module UI5Xss implements DataFlow::ConfigSig {
        */
 
       end = h.getParameter(0)
+    )
+    or
+    /* Flow from `setContent` to `getContent` of a control */
+    exists(
+      UI5Control control, DataFlow::MethodCallNode getContent, DataFlow::MethodCallNode setContent
+    |
+      control.asJsControl() = setContent.getReceiver().getALocalSource() and
+      control.asJsControl() = getContent.getReceiver().getALocalSource() and
+      setContent.getMethodName() = "setContent" and
+      getContent.getMethodName() = "getContent" and
+      start = setContent.getArgument(0) and
+      end = getContent and
+      not control.isHTMLSanitized()
     )
   }
 }
@@ -91,10 +112,6 @@ private class UI5ExtHtmlISink extends DataFlow::Node {
     /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
     not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
   }
-}
-
-private class HTMLControlInstantiation extends ElementInstantiation {
-  HTMLControlInstantiation() { typeModel("UI5HTMLControl", this.getImportPath(), _) }
 }
 
 private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
