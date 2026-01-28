@@ -1,0 +1,8 @@
+nodes
+| webapp/controller/App.controller.js:21:17:21:53 | oFragme ... es(1)") |
+| webapp/fragments/DataDisplay.fragment.xml:7:9:7:42 | content={message} |
+edges
+| webapp/controller/App.controller.js:21:17:21:53 | oFragme ... es(1)") | webapp/fragments/DataDisplay.fragment.xml:7:9:7:42 | content={message} |
+| webapp/fragments/DataDisplay.fragment.xml:7:9:7:42 | content={message} | webapp/controller/App.controller.js:21:17:21:53 | oFragme ... es(1)") |
+#select
+| webapp/fragments/DataDisplay.fragment.xml:7:9:7:42 | content={message} | webapp/controller/App.controller.js:21:17:21:53 | oFragme ... es(1)") | webapp/fragments/DataDisplay.fragment.xml:7:9:7:42 | content={message} | XSS vulnerability due to $@. | webapp/controller/App.controller.js:21:17:21:53 | oFragme ... es(1)") | user-provided value |

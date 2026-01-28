@@ -1,0 +1,5 @@
+{
+  "name": "xss-cross-app-isolation",
+  "version": "1.0.0",
+  "description": "Test case for ensuring XSS detection does not cross webapp boundaries with default OData models"
+}
