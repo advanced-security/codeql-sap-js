@@ -171,6 +171,7 @@ class FragmentModule extends DataFlow::SourceNode {
 /**
  * A user-defined module through `sap.ui.define` or `jQuery.sap.declare`.
  */
+overlay[local?]
 abstract class UserModule extends CallExpr {
   abstract string getADependency();
 
@@ -183,6 +184,7 @@ abstract class UserModule extends CallExpr {
  * A user-defined module through `sap.ui.define`.
  * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui%23methods/sap.ui.define
  */
+overlay[local?]
 class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserModule {
   SapDefineModule() {
     /*
