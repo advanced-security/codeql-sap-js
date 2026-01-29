@@ -1,0 +1,2 @@
+| webapp/manifest.json:11:25:17:7 | {\\n      ...       } | OData data source 'catalogService' at OData |
+| webapp/manifest.json:18:22:24:7 | {\\n      ...       } | OData data source 'userService' at OData |
