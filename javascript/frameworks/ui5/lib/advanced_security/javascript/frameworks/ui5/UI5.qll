@@ -1034,7 +1034,7 @@ module ManifestJson {
         /* This data source can be found in the "dataSources" property of the same manifest */
         exists(DataSourceManifest dataSource |
           dataSource.getName() = dataSourceName and
-          dataSource.getManifestJson() = this.getJsonFile()
+          dataSource.getParentManifestJson() = this.getJsonFile()
         )
       )
     }
@@ -1046,7 +1046,7 @@ module ManifestJson {
     /** Gets the data source for this external model from the same manifest file. */
     DataSourceManifest getDataSource() {
       result.getName() = dataSourceName and
-      result.getManifestJson() = this.getJsonFile()
+      result.getParentManifestJson() = this.getJsonFile()
     }
   }
 
