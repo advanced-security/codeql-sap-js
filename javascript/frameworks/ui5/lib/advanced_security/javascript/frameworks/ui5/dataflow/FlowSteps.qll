@@ -398,6 +398,13 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
   }
 }
 
+/**
+ * A data flow step from published event data to subscribed event handlers via the UI5 EventBus.
+ *
+ * This step connects data passed to `EventBus.publish()` calls to the corresponding
+ * data received by matching `EventBus.subscribe()` handlers, enabling taint tracking
+ * across event-driven communication patterns in UI5 applications.
+ */
 class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
     exists(

@@ -27,6 +27,13 @@ private class RemoteControlHandlerParameter extends RemoteControlAPISource, Call
   }
 }
 
+/**
+ * A remote flow source representing user-provided data fetched from UI5 input controls.
+ *
+ * This class models data obtained from control references (such as `HTML` or `CodeEditor`)
+ * or from handler parameters, via property reads or getter methods like `getValue()` or
+ * `getCurrentValue()`. These represent user input that could potentially be tainted.
+ */
 private class UserDataFromRemoteControlAPISource extends RemoteFlowSource {
   UserDataFromRemoteControlAPISource() {
     exists(RemoteControlAPISource remoteControlAPISource |
