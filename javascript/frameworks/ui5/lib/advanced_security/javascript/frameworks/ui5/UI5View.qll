@@ -184,6 +184,13 @@ abstract class UI5BindingPath extends BindingPath {
       inSameWebApp(this.getLocation().getFile(), result.getFile())
     )
     or
+    exists(JsonModel model, CustomController controller |
+      not model.contentIsStaticallyVisible() and
+      result = model and
+      this.getView() = controller.getAViewReference().getDefinition() and
+      controller.getModel() = result
+    )
+    or
     /* 2. External (Server-side) model */
     result = this.getModel().(UI5ExternalModel) and
     /* Restrict search to inside the same webapp. */

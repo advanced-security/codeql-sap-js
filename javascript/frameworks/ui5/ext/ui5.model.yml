@@ -16,7 +16,7 @@ extensions:
       - ["Component", "sap/ui/core/UIComponent", ""]
       - ["Renderer", "Control", "Member[extend].Argument[1].Member[renderer]"]
       - ["Renderer", "sap/ui/core/RenderManager", "Member[extend].Argument[1].Member[renderer]"]
-      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]  # ?
+      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]
       - ["RenderManager", "RenderManager", "Instance"]
       - ["RenderManager", "sap/ui/core/RenderManager", ""]
       - ["RenderManager", "Renderer", "Parameter[0]"]
