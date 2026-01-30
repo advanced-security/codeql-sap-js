@@ -4,6 +4,7 @@ import DataFlow
 /**
  * The root XSJS namespace, accessed as a dollar sign (`$`) symbol.
  */
+overlay[local?]
 class XSJSDollarNamespace extends GlobalVarRefNode {
   XSJSDollarNamespace() {
     this = globalVarRef("$") and
