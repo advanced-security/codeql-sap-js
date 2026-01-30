@@ -6,6 +6,9 @@ extensions:
       - ["SapUICoreInstance", "global", "Member[sap].Member[ui].Member[getCore].ReturnValue"]
       - ["Control", "Control", "Instance"]
       - ["Control", "sap/ui/core/Control", ""]
+      - ["Control", "UI5HTMLControl", ""]
+      - ["Control", "UI5InputControl", ""]
+      - ["Control", "CustomControl", ""]
       - ["Control", "global", "Member[sap].Member[ui].Member[core].Member[Control]"]
       - ["Controller", "Controller", "Instance"]
       - ["Controller", "sap/ui/core/mvc/Controller", ""]
@@ -13,7 +16,7 @@ extensions:
       - ["Component", "sap/ui/core/UIComponent", ""]
       - ["Renderer", "Control", "Member[extend].Argument[1].Member[renderer]"]
       - ["Renderer", "sap/ui/core/RenderManager", "Member[extend].Argument[1].Member[renderer]"]
-      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]  # ?
+      - ["Renderer", "sap/ui/core/Renderer", "Member[extend].Argument[1]"]
       - ["RenderManager", "RenderManager", "Instance"]
       - ["RenderManager", "sap/ui/core/RenderManager", ""]
       - ["RenderManager", "Renderer", "Parameter[0]"]
@@ -112,6 +115,7 @@ extensions:
     data:
       - ["UI5InputControl", "Member[value]", "remote"]
       - ["UI5InputControl", "Member[getValue].ReturnValue", "remote"]
+      - ["UI5HTMLControl", "Member[getContent].ReturnValue", "remote"]
       - ["UI5CodeEditor", "Member[value]", "remote"]
       - ["UI5CodeEditor", "Member[getCurrentValue].ReturnValue", "remote"]
       - ["global", "Member[jQuery].Member[sap].Member[syncHead,syncGet,syncGetText,syncPost,syncPostText].ReturnValue", "remote"]
