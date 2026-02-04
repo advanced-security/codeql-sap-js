@@ -1,5 +1,5 @@
 import advanced_security.javascript.frameworks.ui5.UI5
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
 import advanced_security.javascript.frameworks.ui5.Fragment

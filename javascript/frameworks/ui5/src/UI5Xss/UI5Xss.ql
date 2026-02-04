@@ -13,7 +13,7 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5XssQuery
 
 module UI5XssFlow = TaintTracking::Global<UI5Xss>;
