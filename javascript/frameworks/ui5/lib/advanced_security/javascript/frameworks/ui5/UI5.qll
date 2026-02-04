@@ -171,6 +171,7 @@ class FragmentModule extends DataFlow::SourceNode {
 /**
  * A user-defined module through `sap.ui.define` or `jQuery.sap.declare`.
  */
+overlay[local?]
 abstract class UserModule extends CallExpr {
   abstract string getADependency();
 
@@ -183,6 +184,7 @@ abstract class UserModule extends CallExpr {
  * A user-defined module through `sap.ui.define`.
  * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui%23methods/sap.ui.define
  */
+overlay[local?]
 class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserModule {
   SapDefineModule() {
     /*
@@ -194,10 +196,16 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       sap.getName() = "sap" and
       sapUi.getBase() = sap and
       sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine
-      // and this.getMethodName() = "define"
+      this.getReceiver() = sapUiDefine and
+      this.getMethodName() = ["define", "require"] // TODO: Treat sap.ui.declare in its own class
     )
   }
+
+  SapExtendCall getExtendCall() { result.getDefine() = this }
+
+  string getName() { result = this.getExtendCall().getName() }
+
+  Module asModule() { result = this.getTopLevel() }
 
   string getDependency(int i) {
     result = this.(AmdModuleDefinition).getDependencyExpr(i).getStringValue()
@@ -214,17 +222,48 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   WebApp getWebApp() { this.getFile() = result.getAResource() }
 
   /**
-   * Gets the module defined with sap.ui.define that imports and extends this module.
+   * Gets the module defined with sap.ui.define that imports and extends (subclasses) this module.
    */
-  SapDefineModule getExtendingModule() {
-    exists(SapExtendCall baseExtendCall, SapExtendCall subclassExtendCall |
-      baseExtendCall.getDefine() = this and
-      result = subclassExtendCall.getDefine() and
-      result
-          .getRequiredObject(baseExtendCall.getName().replaceAll(".", "/"))
-          .asSourceNode()
-          .flowsTo(subclassExtendCall.getReceiver())
+  SapDefineModule getExtendingModule() { result.getSuperModule(_) = this }
+
+  /**
+   * Gets the module that this module imports via path `importPath`.
+   */
+  SapDefineModule getImportedModule(string importPath) {
+    /* 1. Absolute import paths: We resolve this ourselves. */
+    exists(string importedModuleDefinitionPath, string importedModuleDefinitionPathSlashNormalized |
+      /*
+       *  Let `importPath` = "my/app/path1/path2/controller/Some.controller",
+       *      `importedModuleDefinitionPath` = "my.app.path1.path2.controller.Some",
+       *      `importedModuleDefinitionPathSlashNormalized` = "my/app/path1/path2/controller/Some".
+       *  Then, `importedModuleDefinitionPathSlashNormalized` matches `importPath`.
+       */
+
+      importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
+      importedModuleDefinitionPath = result.getExtendCall().getName() and
+      importedModuleDefinitionPathSlashNormalized =
+        importedModuleDefinitionPath.replaceAll(".", "/") and
+      importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
     )
+    or
+    /*
+     * 2. Relative import paths: We delegate the heaving lifting of resolving to
+     * `Import.resolveImportedPath/0`.
+     */
+
+    exists(Import import_ |
+      importPath = import_.getImportedPathExpr().getStringValue() and
+      import_ = this.asModule().getAnImport() and
+      import_.resolveImportedPath() = result.getTopLevel()
+    )
+  }
+
+  /**
+   * Holds if the `importingModule` extends the `importedModule`, imported via path `importPath`.
+   */
+  SapDefineModule getSuperModule(string importPath) {
+    result = this.getImportedModule(importPath) and
+    this.getRequiredObject(importPath).asSourceNode().flowsTo(this.getExtendCall().getReceiver())
   }
 }
 
@@ -276,7 +315,9 @@ class CustomControl extends SapExtendCall {
   CustomControl() {
     this = ModelOutput::getATypeNode("CustomControl").getACall()
     or
-    exists(SapDefineModule sapModule | this.getDefine() = sapModule.getExtendingModule())
+    exists(CustomControl superControl |
+      superControl.getDefine() = this.getDefine().getSuperModule(_)
+    )
   }
 
   CustomController getController() { this = result.getAControlReference().getDefinition() }
@@ -485,25 +526,19 @@ class CustomController extends SapExtendCall {
   string name;
 
   CustomController() {
-    customController = ModelOutput::getATypeNode("CustomController") and
-    this = customController.getACall() and
+    (
+      customController = ModelOutput::getATypeNode("CustomController") and
+      this = customController.getACall()
+      or
+      exists(CustomController superController |
+        superController.getDefine() = this.getDefine().getSuperModule(_)
+      )
+    ) and
     name = this.getFile().getBaseName().regexpCapture("(.+).[cC]ontroller.js", 1)
   }
 
   Component getOwnerComponent() {
-    exists(ManifestJson manifestJson, JsonObject rootObj |
-      manifestJson = result.getManifestJson() and
-      rootObj
-          .getPropValue("targets")
-          .(JsonObject)
-          // The individual targets
-          .getPropValue(_)
-          .(JsonObject)
-          // The target's "viewName" property
-          .getPropValue("viewName")
-          .(JsonString)
-          .getValue() = name
-    )
+    this = result.getParentManifestJson().getARoutingTarget().getView().getController()
   }
 
   MethodCallNode getOwnerComponentRef() {
@@ -512,6 +547,11 @@ class CustomController extends SapExtendCall {
     |
       customController.getASuccessor+() = getOwnerComponent and
       result = getOwnerComponent.asSource()
+    )
+    or
+    exists(CustomController baseController |
+      baseController.getDefine() = this.getDefine().getSuperModule(_) and
+      result = baseController.getOwnerComponentRef()
     )
   }
 
@@ -781,6 +821,11 @@ abstract class UI5InternalModel extends UI5Model, NewNode {
   abstract string getPathString();
 
   abstract string getPathString(Property property);
+
+  /**
+   * Holds if the content of the model is statically determinable.
+   */
+  abstract predicate contentIsStaticallyVisible();
 }
 
 import ManifestJson
@@ -800,7 +845,7 @@ class Component extends SapExtendCall {
 
   string getId() { result = this.getName().regexpCapture("(.+).Component", 1) }
 
-  ManifestJson getManifestJson() {
+  ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
     result.getId() = this.getId()
   }
@@ -822,7 +867,7 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getExternalModelDef(string modelName) {
-    result.getFile() = this.getManifestJson() and result.getName() = modelName
+    result.getFile() = this.getParentManifestJson() and result.getName() = modelName
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
@@ -849,9 +894,49 @@ module ManifestJson {
 
     string getName() { result = dataSourceName }
 
-    ManifestJson getManifestJson() { result = manifestJson }
+    ManifestJson getParentManifestJson() { result = manifestJson }
 
     string getType() { result = this.getPropValue("type").(JsonString).getValue() }
+  }
+
+  class RoutingTargetManifest extends JsonObject {
+    /** Note: This is NOT its `viewName` property! */
+    string targetName;
+    ManifestJson manifestJson;
+
+    RoutingTargetManifest() {
+      exists(JsonObject rootObj |
+        this.getJsonFile() = manifestJson and
+        rootObj.getJsonFile() = manifestJson and
+        this =
+          rootObj
+              .getPropValue("sap.ui5")
+              .(JsonObject)
+              .getPropValue("routing")
+              .(JsonObject)
+              .getPropValue("targets")
+              .(JsonObject)
+              .getPropValue(targetName)
+      )
+    }
+
+    /**
+     * Gets the value of the `viewName` property of this target.
+     */
+    string getViewName() { result = this.getPropStringValue("viewName") }
+
+    /**
+     * Gets the view this target is associated with.
+     */
+    UI5View getView() {
+      result.getController().getModuleName() =
+        getSubstringAfterLastOccurrenceOfCharacter(this.getViewName(), "/")
+    }
+
+    /**
+     * Gets the `manifest.json` file that this routing target is a part of.
+     */
+    ManifestJson getParentManifestJson() { result = manifestJson }
   }
 
   class ODataDataSourceManifest extends DataSourceManifest {
@@ -951,7 +1036,7 @@ module ManifestJson {
         /* This data source can be found in the "dataSources" property of the same manifest */
         exists(DataSourceManifest dataSource |
           dataSource.getName() = dataSourceName and
-          dataSource.getManifestJson() = this.getJsonFile()
+          dataSource.getParentManifestJson() = this.getJsonFile()
         )
       )
     }
@@ -963,7 +1048,7 @@ module ManifestJson {
     /** Gets the data source for this external model from the same manifest file. */
     DataSourceManifest getDataSource() {
       result.getName() = dataSourceName and
-      result.getManifestJson() = this.getJsonFile()
+      result.getParentManifestJson() = this.getJsonFile()
     }
   }
 
@@ -989,642 +1074,688 @@ module ManifestJson {
       this.getBaseName() = "manifest.json"
     }
 
-    DataSourceManifest getDataSource() { this = result.getManifestJson() }
+    DataSourceManifest getADataSource() { result = this.getDataSource(_) }
+
+    DataSourceManifest getDataSource(string name) {
+      this = result.getParentManifestJson() and
+      result.getName() = name
+    }
+
+    RoutingTargetManifest getARoutingTarget() { result = this.getRoutingTarget(_) }
+
+    RoutingTargetManifest getRoutingTarget(string viewName) {
+      result.getViewName() = viewName and
+      result.getParentManifestJson() = this
+    }
   }
-}
 
-/** The manifest.json file serving as the app descriptor. */
-private string constructPathStringInner(Expr object) {
-  if not object instanceof ObjectExpr
-  then result = ""
-  else
-    exists(Property property | property = object.(ObjectExpr).getAProperty().(ValueProperty) |
-      result = "/" + property.getName() + constructPathStringInner(property.getInit())
-    )
-}
-
-/**
- * Create all recursive path strings of an object literal, e.g.
- * if `object = { p1: { p2: 1 }, p3: 2 }`, then create:
- * - `p1/p2`, and
- * - `p3/`.
- */
-private string constructPathString(DataFlow::ObjectLiteralNode object) {
-  result = constructPathStringInner(object.asExpr())
-}
-
-/** Holds if the `property` is in any way nested inside the `object`. */
-private predicate propertyNestedInObject(ObjectExpr object, Property property) {
-  exists(Property property2 | property2 = object.getAProperty() |
-    property = property2 or
-    propertyNestedInObject(property2.getInit().(ObjectExpr), property)
-  )
-}
-
-private string constructPathStringInner(Expr object, Property property) {
-  if not object instanceof ObjectExpr
-  then result = ""
-  else
-    exists(Property property2 | property2 = object.(ObjectExpr).getAProperty().(ValueProperty) |
-      if property = property2
-      then result = "/" + property2.getName()
-      else (
-        /* We're sure this property is inside this object */
-        propertyNestedInObject(property2.getInit().(ObjectExpr), property) and
-        result = "/" + property2.getName() + constructPathStringInner(property2.getInit(), property)
+  /** The manifest.json file serving as the app descriptor. */
+  private string constructPathStringInner(Expr object) {
+    if not object instanceof ObjectExpr
+    then result = ""
+    else
+      exists(Property property | property = object.(ObjectExpr).getAProperty().(ValueProperty) |
+        result = "/" + property.getName() + constructPathStringInner(property.getInit())
       )
+  }
+
+  /**
+   * Create all recursive path strings of an object literal, e.g.
+   * if `object = { p1: { p2: 1 }, p3: 2 }`, then create:
+   * - `p1/p2`, and
+   * - `p3/`.
+   */
+  private string constructPathString(DataFlow::ObjectLiteralNode object) {
+    result = constructPathStringInner(object.asExpr())
+  }
+
+  /** Holds if the `property` is in any way nested inside the `object`. */
+  private predicate propertyNestedInObject(ObjectExpr object, Property property) {
+    exists(Property property2 | property2 = object.getAProperty() |
+      property = property2 or
+      propertyNestedInObject(property2.getInit().(ObjectExpr), property)
     )
-}
+  }
 
-/**
- * Create all possible path strings of an object literal up to a certain property, e.g.
- * if `object = { p1: { p2: 1 }, p3: 2 }` and `property = {p3: 2}` then create `"p3/"`.
- */
-string constructPathString(DataFlow::ObjectLiteralNode object, Property property) {
-  result = constructPathStringInner(object.asExpr(), property)
-}
-
-/**
- * Create all recursive path strings of a JSON object, e.g.
- * if `object = { "p1": { "p2": 1 }, "p3": 2 }`, then create:
- * - `/p1/p2`, and
- * - `/p3`.
- */
-string constructPathStringJson(JsonValue object) {
-  if not object instanceof JsonObject
-  then result = ""
-  else
-    exists(string property |
-      result = "/" + property + constructPathStringJson(object.getPropValue(property))
-    )
-}
-
-/**
- * Create all possible path strings of a JSON object up to a certain property name, e.g.
- * if `object = { "p1": { "p2": 1 }, "p3": 2 }` and `propName = "p3"` then create `"/p3"`.
- * PRECONDITION: All of `object`'s keys are unique.
- */
-bindingset[propName]
-string constructPathStringJson(JsonValue object, string propName) {
-  exists(string pathString | pathString = constructPathStringJson(object) |
-    pathString.regexpMatch(".*" + propName + ".*") and
-    result = pathString
-  )
-}
-
-/**
- *  When given a constructor call `new JSONModel("controller/model.json")`,
- *  get the content of the file referred to by URI (`"controller/model.json"`)
- *  inside the string argument.
- */
-bindingset[path]
-JsonObject resolveDirectPath(string path) {
-  exists(WebApp webApp | result.getJsonFile() = webApp.getResource(path))
-}
-
-/**
- *  When given a constructor call `new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")`,
- *  get the content of the file referred to by resolving the argument.
- *  Currently only supports `sap.ui.require.toUrl`.
- */
-bindingset[path]
-private JsonObject resolveIndirectPath(string path) {
-  result = any(JsonObject tODO | tODO.getFile().getAbsolutePath() = path)
-}
-
-class JsonModel extends UI5InternalModel {
-  JsonModel() {
-    this instanceof NewNode and
-    (
-      exists(RequiredObject jsonModel |
-        jsonModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-        jsonModel.getDependency() = "sap/ui/model/json/JSONModel"
+  private string constructPathStringInner(Expr object, Property property) {
+    if not object instanceof ObjectExpr
+    then result = ""
+    else
+      exists(Property property2 | property2 = object.(ObjectExpr).getAProperty().(ValueProperty) |
+        if property = property2
+        then result = "/" + property2.getName()
+        else (
+          /* We're sure this property is inside this object */
+          propertyNestedInObject(property2.getInit().(ObjectExpr), property) and
+          result =
+            "/" + property2.getName() + constructPathStringInner(property2.getInit(), property)
+        )
       )
-      or
-      /* Fallback */
-      this.getCalleeName() = "JSONModel"
+  }
+
+  /**
+   * Create all possible path strings of an object literal up to a certain property, e.g.
+   * if `object = { p1: { p2: 1 }, p3: 2 }` and `property = {p3: 2}` then create `"p3/"`.
+   */
+  string constructPathString(DataFlow::ObjectLiteralNode object, Property property) {
+    result = constructPathStringInner(object.asExpr(), property)
+  }
+
+  /**
+   * Create all recursive path strings of a JSON object, e.g.
+   * if `object = { "p1": { "p2": 1 }, "p3": 2 }`, then create:
+   * - `/p1/p2`, and
+   * - `/p3`.
+   */
+  string constructPathStringJson(JsonValue object) {
+    if not object instanceof JsonObject
+    then result = ""
+    else
+      exists(string property |
+        result = "/" + property + constructPathStringJson(object.getPropValue(property))
+      )
+  }
+
+  /**
+   * Create all possible path strings of a JSON object up to a certain property name, e.g.
+   * if `object = { "p1": { "p2": 1 }, "p3": 2 }` and `propName = "p3"` then create `"/p3"`.
+   * PRECONDITION: All of `object`'s keys are unique.
+   */
+  bindingset[propName]
+  string constructPathStringJson(JsonValue object, string propName) {
+    exists(string pathString | pathString = constructPathStringJson(object) |
+      pathString.regexpMatch(".*" + propName + ".*") and
+      result = pathString
     )
   }
 
   /**
-   *  Gets all possible path strings that can be constructed from this JSON model.
+   *  When given a constructor call `new JSONModel("controller/model.json")`,
+   *  get the content of the file referred to by URI (`"controller/model.json"`)
+   *  inside the string argument.
    */
-  override string getPathString() {
-    /* 1. new JSONModel("controller/model.json") */
-    if this.getAnArgument().asExpr() instanceof StringLiteral
-    then
-      result =
-        constructPathStringJson(resolveDirectPath(this.getAnArgument()
-                .asExpr()
-                .(StringLiteral)
-                .getValue()))
-    else
-      if this.getAnArgument().(MethodCallNode).getAnArgument().asExpr() instanceof StringLiteral
+  bindingset[path]
+  JsonObject resolveDirectPath(string path) {
+    exists(WebApp webApp | result.getJsonFile() = webApp.getResource(path))
+  }
+
+  /**
+   *  When given a constructor call `new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")`,
+   *  get the content of the file referred to by resolving the argument.
+   *  Currently only supports `sap.ui.require.toUrl`.
+   */
+  bindingset[path]
+  private JsonObject resolveIndirectPath(string path) {
+    result = any(JsonObject tODO | tODO.getFile().getAbsolutePath() = path)
+  }
+
+  class JsonModel extends UI5InternalModel {
+    JsonModel() {
+      this instanceof NewNode and
+      (
+        exists(RequiredObject jsonModel |
+          jsonModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+          jsonModel.getDependency() = "sap/ui/model/json/JSONModel"
+        )
+        or
+        /* Fallback */
+        this.getCalleeName() = "JSONModel"
+      )
+    }
+
+    /**
+     *  Gets all possible path strings that can be constructed from this JSON model.
+     */
+    override string getPathString() {
+      /* 1. new JSONModel("controller/model.json") */
+      if this.getAnArgument().asExpr() instanceof StringLiteral
       then
-        /* 2. new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")) */
         result =
-          constructPathStringJson(resolveIndirectPath(this.getAnArgument()
-                  .(MethodCallNode)
-                  .getAnArgument()
+          constructPathStringJson(resolveDirectPath(this.getAnArgument()
                   .asExpr()
                   .(StringLiteral)
                   .getValue()))
       else
+        if this.getAnArgument().(MethodCallNode).getAnArgument().asExpr() instanceof StringLiteral
+        then
+          /* 2. new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")) */
+          result =
+            constructPathStringJson(resolveIndirectPath(this.getAnArgument()
+                    .(MethodCallNode)
+                    .getAnArgument()
+                    .asExpr()
+                    .(StringLiteral)
+                    .getValue()))
+        else
+          /*
+           * 3. new JSONModel(oData) where
+           *    var oData = { input: null };
+           */
+
+          exists(ObjectLiteralNode objectNode |
+            objectNode.flowsTo(this.getAnArgument()) and constructPathString(objectNode) = result
+          )
+    }
+
+    override string getPathString(Property property) {
+      /*
+       * 3. new JSONModel(oData) where
+       *    var oData = { input: null };
+       */
+
+      exists(ObjectLiteralNode objectNode |
+        objectNode.flowsTo(this.getAnArgument()) and
+        constructPathString(objectNode, property) = result
+      )
+    }
+
+    bindingset[propName]
+    string getPathStringPropName(string propName) {
+      exists(JsonObject jsonObject |
+        jsonObject =
+          resolveDirectPath(this.getArgument(0)
+                .getALocalSource()
+                .asExpr()
+                .(StringLiteral)
+                .getValue())
+      |
+        constructPathStringJson(jsonObject, propName) = result
+      )
+    }
+
+    override predicate contentIsStaticallyVisible() {
+      /* 1. There is at least one path string that can be constructed out of the path string. */
+      exists(this.getPathString())
+      or
+      /* 2. There is a JSON file that can be loaded from. */
+      exists(JsonObject jsonObject |
+        jsonObject = resolveDirectPath(this.getArgument(0).getStringValue())
+      )
+    }
+
+    /**
+     * A model possibly supporting two-way binding explicitly set as a one-way binding model.
+     */
+    predicate isOneWayBinding() {
+      exists(MethodCallNode call, BindingMode bindingMode |
+        this.flowsTo(call.getReceiver()) and
+        call.getMethodName() = "setDefaultBindingMode" and
+        bindingMode.getOneWay().flowsTo(call.getArgument(0))
+      )
+    }
+
+    predicate isTwoWayBinding() {
+      // Either explicitly set as two-way, or
+      exists(MethodCallNode call, BindingMode bindingMode |
+        this.flowsTo(call.getReceiver()) and
+        call.getMethodName() = "setDefaultBindingMode" and
+        bindingMode.getTwoWay().flowsTo(call.getArgument(0))
+      )
+      or
+      // left untouched as default mode which is two-way.
+      not exists(MethodCallNode call |
+        this.flowsTo(call.getReceiver()) and
+        call.getMethodName() = "setDefaultBindingMode"
+      )
+    }
+
+    /**
+     * Get a property of this `JsonModel`, e.g. given a JSON model `oModel` defined either of the following:
+     * ```javascript
+     * oModel = new JSONModel({x: null});
+     * ```
+     * ```javascript
+     * oContent = {x: null};
+     * oModel = new JSONModel(oContent);
+     * ```
+     * Get `x: null` as its result.
+     */
+    DataFlow::PropWrite getAProperty() {
+      this.getArgument(0).getALocalSource().asExpr() = result.getPropertyNameExpr().getParent+()
+    }
+  }
+
+  class XmlModel extends UI5InternalModel {
+    XmlModel() {
+      this instanceof NewNode and
+      exists(RequiredObject xmlModel |
+        xmlModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+        xmlModel.getDependency() = "sap/ui/model/xml/XMLModel"
+      )
+    }
+
+    override string getPathString(Property property) {
+      /* TODO */
+      result = property.toString()
+    }
+
+    override string getPathString() { result = "TODO" }
+
+    override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
+  }
+
+  class ResourceModel extends UI5Model, ModelReference {
+    string modelName;
+
+    ResourceModel() {
+      /* A model reference obtained from this.getOwnerComponent().getModel("i18n") */
+      exists(CustomController controller, ResourceModelManifest manifest |
+        (
+          this = controller.getAThisNode().getAMemberCall("getModel") or
+          this = controller.getOwnerComponentRef().getAMemberCall("getModel")
+        ) and
+        modelName = this.getModelName() and
+        manifest.getName() = modelName
+      )
+    }
+
+    override MethodCallNode getARead() { result = ModelReference.super.getARead() }
+
+    MethodCallNode getResourceBundle() { result = this.getAMemberCall("getResourceBundle") }
+  }
+
+  class BindingMode extends RequiredObject {
+    BindingMode() { this.getDependency() = "sap/ui/model/BindingMode" }
+
+    PropRead getOneWay() { result = this.asSourceNode().getAPropertyRead("OneWay") }
+
+    PropRead getTwoWay() { result = this.asSourceNode().getAPropertyRead("TwoWay") }
+
+    PropRead getDefault_() { result = this.asSourceNode().getAPropertyRead("Default") }
+
+    PropRead getOneTime() { result = this.asSourceNode().getAPropertyRead("OneTime") }
+  }
+
+  class RequiredObject extends Expr {
+    RequiredObject() {
+      exists(SapDefineModule sapDefineModule |
+        this = sapDefineModule.getArgument(1).(Function).getParameter(_)
+      ) or
+      exists(JQueryDefineModule jQueryDefineModule |
+        /* WARNING: toString() Hack! */
+        this.toString() = jQueryDefineModule.getArgument(0).(StringLiteral).getValue()
+      )
+    }
+
+    pragma[inline]
+    SourceNode asSourceNode() { result = this.flow() }
+
+    UserModule getDefiningModule() { result.getArgument(1).(Function).getParameter(_) = this }
+
+    string getDependency() {
+      exists(SapDefineModule module_ | this = module_.getRequiredObject(result))
+    }
+  }
+
+  /**
+   * `SomeModule.extend(...)` where `SomeModule` stands for a module imported with `sap.ui.define`.
+   */
+  class SapExtendCall extends InvokeNode, MethodCallNode {
+    SapExtendCall() {
+      exists(RequiredObject requiredModule |
+        this = requiredModule.asSourceNode().getAMemberCall("extend")
+      )
+    }
+
+    FunctionNode getMethod(string methodName) {
+      result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName)
+    }
+
+    FunctionNode getAMethod() { result = this.getMethod(_) }
+
+    string getName() { result = this.getArgument(0).getALocalSource().getStringValue() }
+
+    string getModuleName() {
+      result = getSubstringAfterLastOccurrenceOfCharacter(this.getName(), ".")
+    }
+
+    ObjectLiteralNode getContent() { result = this.getArgument(1) }
+
+    Metadata getMetadata() {
+      result = this.getContent().getAPropertySource("metadata")
+      or
+      exists(SapExtendCall baseExtendCall |
+        baseExtendCall.getDefine().getExtendingModule() = this.getDefine() and
+        result = baseExtendCall.getMetadata()
+      )
+    }
+
+    /** Gets the `sap.ui.define` call that wraps this extension. */
+    SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1) }
+
+    ThisNode getAThisNode() { result.getBinder() = this.getAMethod() }
+  }
+
+  class ElementInstantiation extends NewNode {
+    string importPath;
+
+    ElementInstantiation() {
+      exists(RequiredObject requiredObject |
+        this = requiredObject.asSourceNode().getAnInstantiation() and
+        importPath = requiredObject.getDependency()
+      )
+    }
+
+    string getId() {
+      result = this.getArgument(0).(SourceNode).getAPropertyWrite("id").getRhs().getStringValue()
+    }
+
+    string getImportPath() { result = importPath }
+  }
+
+  /**
+   * The property metadata found in an SapExtendCall.
+   */
+  class Metadata extends ObjectLiteralNode {
+    SapExtendCall extension;
+
+    SapExtendCall getExtension() { result = extension }
+
+    Metadata() { this = extension.getContent().getAPropertySource("metadata") }
+
+    PropertyMetadata getProperty(string name) {
+      result.getParentMetadata() = this and result.getName() = name
+    }
+  }
+
+  class AggregationMetadata extends ObjectLiteralNode {
+    string name;
+    Metadata parentMetadata;
+
+    AggregationMetadata() {
+      this = parentMetadata.getAPropertySource("aggregations").getAPropertySource(name)
+    }
+
+    Metadata getParentMetadata() { result = parentMetadata }
+
+    string getName() { result = name }
+
+    /**
+     * Gets the type of this aggregation.
+     */
+    string getType() {
+      result = this.getAPropertySource("type").getALocalSource().asExpr().(StringLiteral).getValue()
+    }
+  }
+
+  class PropertyMetadata extends ObjectLiteralNode {
+    string name;
+    Metadata parentMetadata;
+
+    PropertyMetadata() {
+      this = parentMetadata.getAPropertySource("properties").getAPropertySource(name)
+    }
+
+    Metadata getParentMetadata() { result = parentMetadata }
+
+    string getName() { result = name }
+
+    /**
+     * Gets the type of this aggregation.
+     */
+    string getType() {
+      if this.isUnrestrictedStringType()
+      then result = "string"
+      else
+        result =
+          this.getAPropertySource("type").getALocalSource().asExpr().(StringLiteral).getValue()
+    }
+
+    /**
+     * Holds if this property's type is an unrestricted string not belonging to any enum.
+     * This makes the property a possible avenue of a client-side XSS.
+     */
+    predicate isUnrestrictedStringType() {
+      /* text : "string" */
+      this.getStringValue() = "string"
+      or
+      /* text: { type: "string" } */
+      this.getAPropertySource("type").getStringValue() = "string"
+      or
+      /* text: { someOther: "someOtherVal", ... } */
+      not exists(this.getAPropertySource("type"))
+    }
+
+    MethodCallNode getAWrite() {
+      (
         /*
-         * 3. new JSONModel(oData) where
-         *    var oData = { input: null };
+         * 1. The receiver is a reference to a custom control whose property
+         * has the same name of the property the setter is writing to.
          */
 
-        exists(ObjectLiteralNode objectNode |
-          objectNode.flowsTo(this.getAnArgument()) and constructPathString(objectNode) = result
+        exists(ControlReference controlReference |
+          result.getReceiver().getALocalSource() = controlReference and
+          exists(controlReference.getDefinition().getMetadata().getProperty(name))
         )
-  }
+        or
+        /*
+         * 2. The receiver is a parameter of the `renderer` method of the custom
+         * control whose property has the same name of the property the setter is
+         * writing to.
+         */
 
-  override string getPathString(Property property) {
-    /*
-     * 3. new JSONModel(oData) where
-     *    var oData = { input: null };
-     */
-
-    exists(ObjectLiteralNode objectNode |
-      objectNode.flowsTo(this.getAnArgument()) and
-      constructPathString(objectNode, property) = result
-    )
-  }
-
-  bindingset[propName]
-  string getPathStringPropName(string propName) {
-    exists(JsonObject jsonObject |
-      jsonObject =
-        resolveDirectPath(this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue())
-    |
-      constructPathStringJson(jsonObject, propName) = result
-    )
-  }
-
-  /**
-   * A model possibly supporting two-way binding explicitly set as a one-way binding model.
-   */
-  predicate isOneWayBinding() {
-    exists(MethodCallNode call, BindingMode bindingMode |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode" and
-      bindingMode.getOneWay().flowsTo(call.getArgument(0))
-    )
-  }
-
-  predicate isTwoWayBinding() {
-    // Either explicitly set as two-way, or
-    exists(MethodCallNode call, BindingMode bindingMode |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode" and
-      bindingMode.getTwoWay().flowsTo(call.getArgument(0))
-    )
-    or
-    // left untouched as default mode which is two-way.
-    not exists(MethodCallNode call |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode"
-    )
-  }
-
-  /**
-   * Get a property of this `JsonModel`, e.g. given a JSON model `oModel` defined either of the following:
-   * ```javascript
-   * oModel = new JSONModel({x: null});
-   * ```
-   * ```javascript
-   * oContent = {x: null};
-   * oModel = new JSONModel(oContent);
-   * ```
-   * Get `x: null` as its result.
-   */
-  DataFlow::PropWrite getAProperty() {
-    this.getArgument(0).getALocalSource().asExpr() = result.getPropertyNameExpr().getParent+()
-  }
-}
-
-class XmlModel extends UI5InternalModel {
-  XmlModel() {
-    this instanceof NewNode and
-    exists(RequiredObject xmlModel |
-      xmlModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-      xmlModel.getDependency() = "sap/ui/model/xml/XMLModel"
-    )
-  }
-
-  override string getPathString(Property property) {
-    /* TODO */
-    result = property.toString()
-  }
-
-  override string getPathString() { result = "TODO" }
-}
-
-class ResourceModel extends UI5Model, ModelReference {
-  string modelName;
-
-  ResourceModel() {
-    /* A model reference obtained from this.getOwnerComponent().getModel("i18n") */
-    exists(CustomController controller, ResourceModelManifest manifest |
-      (
-        this = controller.getAThisNode().getAMemberCall("getModel") or
-        this = controller.getOwnerComponentRef().getAMemberCall("getModel")
+        exists(CustomControl control |
+          result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
+          exists(control.getMetadata().getProperty(name))
+        )
       ) and
-      modelName = this.getModelName() and
-      manifest.getName() = modelName
-    )
+      (
+        result.getNumArgument() = 1 and
+        result.getMethodName() = "set" + capitalize(name) and
+        name != "property"
+        or
+        result.getNumArgument() = 2 and
+        result.getMethodName() = "setProperty" and
+        result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
+      ) and
+      inSameWebApp(this.getFile(), result.getFile())
+    }
+
+    MethodCallNode getARead() {
+      (
+        /*
+         * 1. The receiver is a reference to a custom control whose property
+         * has the same name of the property the getter is reading from.
+         */
+
+        exists(ControlReference controlReference |
+          result.getReceiver().getALocalSource() = controlReference and
+          exists(controlReference.getDefinition().getMetadata().getProperty(name))
+        )
+        or
+        /*
+         * 2. The receiver is a parameter of the `renderer` method of the custom
+         * control whose property has the same name of the property the getter is
+         * reading from.
+         */
+
+        exists(CustomControl control |
+          result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
+          exists(control.getMetadata().getProperty(name))
+        )
+      ) and
+      (
+        result.getNumArgument() = 0 and
+        result.getMethodName() = "get" + capitalize(name) and
+        name != "property"
+        or
+        result.getNumArgument() = 1 and
+        result.getMethodName() = "getProperty" and
+        result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
+      ) and
+      inSameWebApp(this.getFile(), result.getFile())
+    }
   }
 
-  override MethodCallNode getARead() { result = ModelReference.super.getARead() }
+  module EventBus {
+    abstract class EventBusPublishCall extends CallNode {
+      abstract EventBusSubscribeCall getAMatchingSubscribeCall();
 
-  MethodCallNode getResourceBundle() { result = this.getAMemberCall("getResourceBundle") }
-}
+      abstract DataFlow::Node getPublishedData();
 
-class BindingMode extends RequiredObject {
-  BindingMode() { this.getDependency() = "sap/ui/model/BindingMode" }
+      string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
 
-  PropRead getOneWay() { result = this.asSourceNode().getAPropertyRead("OneWay") }
+      string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
+    }
 
-  PropRead getTwoWay() { result = this.asSourceNode().getAPropertyRead("TwoWay") }
+    abstract class EventBusSubscribeCall extends CallNode {
+      abstract EventBusPublishCall getMatchingPublishCall();
 
-  PropRead getDefault_() { result = this.asSourceNode().getAPropertyRead("Default") }
+      abstract DataFlow::Node getSubscriptionData();
 
-  PropRead getOneTime() { result = this.asSourceNode().getAPropertyRead("OneTime") }
-}
+      string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
 
-class RequiredObject extends Expr {
-  RequiredObject() {
-    exists(SapDefineModule sapDefineModule |
-      this = sapDefineModule.getArgument(1).(Function).getParameter(_)
-    ) or
-    exists(JQueryDefineModule jQueryDefineModule |
-      /* WARNING: toString() Hack! */
-      this.toString() = jQueryDefineModule.getArgument(0).(StringLiteral).getValue()
-    )
-  }
+      string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
+    }
 
-  pragma[inline]
-  SourceNode asSourceNode() { result = this.flow() }
+    class GlobalEventBusPublishCall extends EventBusPublishCall {
+      API::Node publishMethod;
 
-  UserModule getDefiningModule() { result.getArgument(1).(Function).getParameter(_) = this }
+      GlobalEventBusPublishCall() {
+        publishMethod = ModelOutput::getATypeNode("UI5EventBusPublish") and
+        this = publishMethod.getACall()
+      }
 
-  string getDependency() {
-    exists(SapDefineModule module_ | this = module_.getRequiredObject(result))
-  }
-}
+      override GlobalEventBusSubscribeCall getAMatchingSubscribeCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-/**
- * `SomeModule.extend(...)` where `SomeModule` stands for a module imported with `sap.ui.define`.
- */
-class SapExtendCall extends InvokeNode, MethodCallNode {
-  SapExtendCall() {
-    exists(RequiredObject requiredModule |
-      this = requiredModule.asSourceNode().getAMemberCall("extend")
-    )
-  }
+      override DataFlow::Node getPublishedData() {
+        exists(API::Node publishedData |
+          publishedData = ModelOutput::getATypeNode("UI5EventBusPublishedEventData")
+        |
+          publishMethod.getASuccessor*() = publishedData and
+          result = publishedData.getInducingNode()
+        )
+      }
+    }
 
-  FunctionNode getMethod(string methodName) {
-    result = this.getContent().(ObjectLiteralNode).getAPropertySource(methodName)
-  }
+    class SapUICoreEventBusPublishCall extends EventBusPublishCall {
+      API::Node publishMethod;
 
-  FunctionNode getAMethod() { result = this.getMethod(_) }
+      SapUICoreEventBusPublishCall() {
+        publishMethod = ModelOutput::getATypeNode("SapUICoreEventBusPublish") and
+        this = publishMethod.getACall()
+      }
 
-  string getName() { result = this.getArgument(0).getALocalSource().getStringValue() }
+      override SapUICoreEventBusSubscribeCall getAMatchingSubscribeCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-  ObjectLiteralNode getContent() { result = this.getArgument(1) }
+      override DataFlow::Node getPublishedData() {
+        exists(API::Node publishedData |
+          publishedData = ModelOutput::getATypeNode("SapUICoreEventBusPublishedEventData")
+        |
+          publishMethod.getASuccessor*() = publishedData and
+          result = publishedData.getInducingNode()
+        )
+      }
+    }
 
-  Metadata getMetadata() {
-    result = this.getContent().getAPropertySource("metadata")
-    or
-    exists(SapExtendCall baseExtendCall |
-      baseExtendCall.getDefine().getExtendingModule() = this.getDefine() and
-      result = baseExtendCall.getMetadata()
-    )
-  }
+    class ComponentEventBusPublishCall extends EventBusPublishCall {
+      API::Node customController;
 
-  /** Gets the `sap.ui.define` call that wraps this extension. */
-  SapDefineModule getDefine() { this.getEnclosingFunction() = result.getArgument(1) }
+      ComponentEventBusPublishCall() {
+        exists(API::Node customControllerGetOwnerComponentEventBusPublish |
+          customControllerGetOwnerComponentEventBusPublish =
+            ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusPublish")
+        |
+          customController = ModelOutput::getATypeNode("CustomController") and
+          customControllerGetOwnerComponentEventBusPublish = customController.getASuccessor+() and
+          this = customControllerGetOwnerComponentEventBusPublish.getACall()
+        )
+      }
 
-  ThisNode getAThisNode() { result.getBinder() = this.getAMethod() }
-}
+      override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-class ElementInstantiation extends NewNode {
-  string importPath;
+      override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
+    }
 
-  ElementInstantiation() {
-    exists(RequiredObject requiredObject |
-      this = requiredObject.asSourceNode().getAnInstantiation() and
-      importPath = requiredObject.getDependency()
-    )
-  }
+    class GlobalEventBusSubscribeCall extends EventBusSubscribeCall {
+      API::Node subscribeMethod;
 
-  string getId() {
-    result = this.getArgument(0).(SourceNode).getAPropertyWrite("id").getRhs().getStringValue()
-  }
+      GlobalEventBusSubscribeCall() {
+        subscribeMethod = ModelOutput::getATypeNode("UI5EventBusSubscribe") and
+        this = subscribeMethod.getACall()
+      }
 
-  string getImportPath() { result = importPath }
-}
+      override GlobalEventBusPublishCall getMatchingPublishCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-/**
- * The property metadata found in an SapExtendCall.
- */
-class Metadata extends ObjectLiteralNode {
-  SapExtendCall extension;
+      override DataFlow::Node getSubscriptionData() {
+        exists(API::Node subscribeMethodCallbackDataParameter |
+          subscribeMethodCallbackDataParameter =
+            ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter")
+        |
+          subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
+          result = subscribeMethodCallbackDataParameter.getInducingNode()
+        )
+      }
+    }
 
-  SapExtendCall getExtension() { result = extension }
+    class SapUICoreEventBusSubscribeCall extends EventBusSubscribeCall {
+      API::Node subscribeMethod;
 
-  Metadata() { this = extension.getContent().getAPropertySource("metadata") }
+      SapUICoreEventBusSubscribeCall() {
+        subscribeMethod = ModelOutput::getATypeNode("SapUICoreEventBusSubscribe") and
+        this = subscribeMethod.getACall()
+      }
 
-  PropertyMetadata getProperty(string name) {
-    result.getParentMetadata() = this and result.getName() = name
-  }
-}
+      override SapUICoreEventBusPublishCall getMatchingPublishCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-class AggregationMetadata extends ObjectLiteralNode {
-  string name;
-  Metadata parentMetadata;
+      override DataFlow::Node getSubscriptionData() {
+        exists(API::Node subscribeMethodCallbackDataParameter |
+          subscribeMethodCallbackDataParameter =
+            ModelOutput::getATypeNode("SapUICoreEventSubscriptionHandlerDataParameter")
+        |
+          subscribeMethod.getASuccessor+() = subscribeMethodCallbackDataParameter and
+          result = subscribeMethodCallbackDataParameter.getInducingNode()
+        )
+      }
+    }
 
-  AggregationMetadata() {
-    this = parentMetadata.getAPropertySource("aggregations").getAPropertySource(name)
-  }
+    class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
+      API::Node customController;
 
-  Metadata getParentMetadata() { result = parentMetadata }
+      ComponentEventBusSubscribeCall() {
+        exists(API::Node customControllerGetOwnerComponentEventBusSubscribe |
+          customControllerGetOwnerComponentEventBusSubscribe =
+            ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe")
+        |
+          customController = ModelOutput::getATypeNode("CustomController") and
+          customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
+          this = customControllerGetOwnerComponentEventBusSubscribe.getACall()
+        )
+      }
 
-  string getName() { result = name }
+      override ComponentEventBusPublishCall getMatchingPublishCall() {
+        result.getChannelName() = this.getChannelName() and
+        result.getMessageType() = this.getMessageType()
+      }
 
-  /**
-   * Gets the type of this aggregation.
-   */
-  string getType() {
-    result = this.getAPropertySource("type").getALocalSource().asExpr().(StringLiteral).getValue()
-  }
-}
-
-class PropertyMetadata extends ObjectLiteralNode {
-  string name;
-  Metadata parentMetadata;
-
-  PropertyMetadata() {
-    this = parentMetadata.getAPropertySource("properties").getAPropertySource(name)
-  }
-
-  Metadata getParentMetadata() { result = parentMetadata }
-
-  string getName() { result = name }
-
-  /**
-   * Gets the type of this aggregation.
-   */
-  string getType() {
-    if this.isUnrestrictedStringType()
-    then result = "string"
-    else
-      result = this.getAPropertySource("type").getALocalSource().asExpr().(StringLiteral).getValue()
-  }
-
-  /**
-   * Holds if this property's type is an unrestricted string not belonging to any enum.
-   * This makes the property a possible avenue of a client-side XSS.
-   */
-  predicate isUnrestrictedStringType() {
-    /* text : "string" */
-    this.getStringValue() = "string"
-    or
-    /* text: { type: "string" } */
-    this.getAPropertySource("type").getStringValue() = "string"
-    or
-    /* text: { someOther: "someOtherVal", ... } */
-    not exists(this.getAPropertySource("type"))
-  }
-
-  MethodCallNode getAWrite() {
-    (
-      /*
-       * 1. The receiver is a reference to a custom control whose property
-       * has the same name of the property the setter is writing to.
-       */
-
-      exists(ControlReference controlReference |
-        result.getReceiver().getALocalSource() = controlReference and
-        exists(controlReference.getDefinition().getMetadata().getProperty(name))
-      )
-      or
-      /*
-       * 2. The receiver is a parameter of the `renderer` method of the custom
-       * control whose property has the same name of the property the setter is
-       * writing to.
-       */
-
-      exists(CustomControl control |
-        result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
-        exists(control.getMetadata().getProperty(name))
-      )
-    ) and
-    (
-      result.getNumArgument() = 1 and
-      result.getMethodName() = "set" + capitalize(name) and
-      name != "property"
-      or
-      result.getNumArgument() = 2 and
-      result.getMethodName() = "setProperty" and
-      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
-    ) and
-    inSameWebApp(this.getFile(), result.getFile())
-  }
-
-  MethodCallNode getARead() {
-    (
-      /*
-       * 1. The receiver is a reference to a custom control whose property
-       * has the same name of the property the getter is reading from.
-       */
-
-      exists(ControlReference controlReference |
-        result.getReceiver().getALocalSource() = controlReference and
-        exists(controlReference.getDefinition().getMetadata().getProperty(name))
-      )
-      or
-      /*
-       * 2. The receiver is a parameter of the `renderer` method of the custom
-       * control whose property has the same name of the property the getter is
-       * reading from.
-       */
-
-      exists(CustomControl control |
-        result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
-        exists(control.getMetadata().getProperty(name))
-      )
-    ) and
-    (
-      result.getNumArgument() = 0 and
-      result.getMethodName() = "get" + capitalize(name) and
-      name != "property"
-      or
-      result.getNumArgument() = 1 and
-      result.getMethodName() = "getProperty" and
-      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
-    ) and
-    inSameWebApp(this.getFile(), result.getFile())
+      override DataFlow::Node getSubscriptionData() {
+        result = this.getABoundCallbackParameter(2, 2)
+      }
+    }
   }
 }
 
-module EventBus {
-  abstract class EventBusPublishCall extends CallNode {
-    abstract EventBusSubscribeCall getAMatchingSubscribeCall();
+bindingset[input, character]
+private int countCharacterInString(string input, string character) {
+  result = count(int index | character = input.charAt(index) | index)
+}
 
-    abstract DataFlow::Node getPublishedData();
-
-    string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
-
-    string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
-  }
-
-  abstract class EventBusSubscribeCall extends CallNode {
-    abstract EventBusPublishCall getMatchingPublishCall();
-
-    abstract DataFlow::Node getSubscriptionData();
-
-    string getChannelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
-
-    string getMessageType() { result = this.getArgument(1).getALocalSource().getStringValue() }
-  }
-
-  class GlobalEventBusPublishCall extends EventBusPublishCall {
-    API::Node publishMethod;
-
-    GlobalEventBusPublishCall() {
-      publishMethod = ModelOutput::getATypeNode("UI5EventBusPublish") and
-      this = publishMethod.getACall()
-    }
-
-    override GlobalEventBusSubscribeCall getAMatchingSubscribeCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getPublishedData() {
-      exists(API::Node publishedData |
-        publishedData = ModelOutput::getATypeNode("UI5EventBusPublishedEventData")
-      |
-        publishMethod.getASuccessor*() = publishedData and
-        result = publishedData.getInducingNode()
-      )
-    }
-  }
-
-  class SapUICoreEventBusPublishCall extends EventBusPublishCall {
-    API::Node publishMethod;
-
-    SapUICoreEventBusPublishCall() {
-      publishMethod = ModelOutput::getATypeNode("SapUICoreEventBusPublish") and
-      this = publishMethod.getACall()
-    }
-
-    override SapUICoreEventBusSubscribeCall getAMatchingSubscribeCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getPublishedData() {
-      exists(API::Node publishedData |
-        publishedData = ModelOutput::getATypeNode("SapUICoreEventBusPublishedEventData")
-      |
-        publishMethod.getASuccessor*() = publishedData and
-        result = publishedData.getInducingNode()
-      )
-    }
-  }
-
-  class ComponentEventBusPublishCall extends EventBusPublishCall {
-    API::Node customController;
-
-    ComponentEventBusPublishCall() {
-      exists(API::Node customControllerGetOwnerComponentEventBusPublish |
-        customControllerGetOwnerComponentEventBusPublish =
-          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusPublish")
-      |
-        customController = ModelOutput::getATypeNode("CustomController") and
-        customControllerGetOwnerComponentEventBusPublish = customController.getASuccessor+() and
-        this = customControllerGetOwnerComponentEventBusPublish.getACall()
-      )
-    }
-
-    override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
-  }
-
-  class GlobalEventBusSubscribeCall extends EventBusSubscribeCall {
-    API::Node subscribeMethod;
-
-    GlobalEventBusSubscribeCall() {
-      subscribeMethod = ModelOutput::getATypeNode("UI5EventBusSubscribe") and
-      this = subscribeMethod.getACall()
-    }
-
-    override GlobalEventBusPublishCall getMatchingPublishCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getSubscriptionData() {
-      exists(API::Node subscribeMethodCallbackDataParameter |
-        subscribeMethodCallbackDataParameter =
-          ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter")
-      |
-        subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
-        result = subscribeMethodCallbackDataParameter.getInducingNode()
-      )
-    }
-  }
-
-  class SapUICoreEventBusSubscribeCall extends EventBusSubscribeCall {
-    API::Node subscribeMethod;
-
-    SapUICoreEventBusSubscribeCall() {
-      subscribeMethod = ModelOutput::getATypeNode("SapUICoreEventBusSubscribe") and
-      this = subscribeMethod.getACall()
-    }
-
-    override SapUICoreEventBusPublishCall getMatchingPublishCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getSubscriptionData() {
-      exists(API::Node subscribeMethodCallbackDataParameter |
-        subscribeMethodCallbackDataParameter =
-          ModelOutput::getATypeNode("SapUICoreEventSubscriptionHandlerDataParameter")
-      |
-        subscribeMethod.getASuccessor+() = subscribeMethodCallbackDataParameter and
-        result = subscribeMethodCallbackDataParameter.getInducingNode()
-      )
-    }
-  }
-
-  class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
-    API::Node customController;
-
-    ComponentEventBusSubscribeCall() {
-      exists(API::Node customControllerGetOwnerComponentEventBusSubscribe |
-        customControllerGetOwnerComponentEventBusSubscribe =
-          ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe")
-      |
-        customController = ModelOutput::getATypeNode("CustomController") and
-        customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
-        this = customControllerGetOwnerComponentEventBusSubscribe.getACall()
-      )
-    }
-
-    override ComponentEventBusPublishCall getMatchingPublishCall() {
-      result.getChannelName() = this.getChannelName() and
-      result.getMessageType() = this.getMessageType()
-    }
-
-    override DataFlow::Node getSubscriptionData() { result = this.getABoundCallbackParameter(2, 2) }
-  }
+bindingset[input, character]
+private string getSubstringAfterLastOccurrenceOfCharacter(string input, string character) {
+  result = input.splitAt(character, countCharacterInString(input, character))
 }

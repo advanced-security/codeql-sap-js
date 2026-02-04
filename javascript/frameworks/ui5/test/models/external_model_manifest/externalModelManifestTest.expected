@@ -1,0 +1,3 @@
+| webapp/manifest.json:40:11:45:7 | {\\n      ...       } | External model '' with data source 'catalogService' |
+| webapp/manifest.json:46:16:48:7 | {\\n      ...       } | External model 'users' with data source 'userService' |
+| webapp/manifest.json:49:17:51:7 | {\\n      ...       } | External model 'config' with data source 'configData' |
