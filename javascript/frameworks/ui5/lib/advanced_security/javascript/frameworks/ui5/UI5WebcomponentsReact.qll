@@ -49,10 +49,10 @@ predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
  * A custom version of the `React::UseRefDomValueSource` in the out of the box libraries
  * this version exposes its JSX element and also is not private
  */
-class UseRefDomValueSource extends DOM::DomValueSource::Range {
+class CustomUseRefDomValueSource extends DOM::DomValueSource::Range {
   JsxElement jsx;
 
-  UseRefDomValueSource() {
+  CustomUseRefDomValueSource() {
     exists(RefAttribute attrib |
       attrib.getValue().flow().getALocalSource().getAPropertyRead("current") = this and
       jsx.getAnAttribute() = attrib
