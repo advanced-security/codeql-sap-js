@@ -31,7 +31,7 @@ class RefAttribute extends JsxAttribute {
 /**
  * Holds if the ref variable is assigned to a UI5 component via JSX
  */
-predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
+predicate isRefAssignedToUI5Component(CustomUseRefDomValueSource source) {
   exists(
     Variable refVar, JsxElement jsx, RefAttribute attr, VarRef componentVar, WebComponentImport decl
   |
