@@ -73,86 +73,81 @@ jobs:
 
       - name: Setup CodeQL CLI
         id: setup-codeql
-        shell: pwsh
+        shell: bash
         run: |
           # Read CodeQL CLI version from qlt.conf.json
-          $qltConfig = Get-Content "qlt.conf.json" | ConvertFrom-Json
-          $cliVersion = $qltConfig.CodeQLCLI
+          CLI_VERSION=$(grep -oP '"CodeQLCLI"\s*:\s*"\K[^"]+' qlt.conf.json)
 
           # Ensure version has 'v' prefix for GitHub releases
-          if (-not $cliVersion.StartsWith("v")) {
-            $version = "v$cliVersion"
-          } else {
-            $version = $cliVersion
-          }
+          if [[ ! "$CLI_VERSION" =~ ^v ]]; then
+            VERSION="v$CLI_VERSION"
+          else
+            VERSION="$CLI_VERSION"
+          fi
 
-          Write-Host "Installing CodeQL CLI version: $version (from qlt.conf.json)"
+          echo "Installing CodeQL CLI version: $VERSION (from qlt.conf.json)"
 
           # Determine download URL for Windows
-          $downloadUrl = "https://github.com/github/codeql-cli-binaries/releases/download/$version/codeql-win64.zip"
+          DOWNLOAD_URL="https://github.com/github/codeql-cli-binaries/releases/download/$VERSION/codeql-win64.zip"
 
           # Create installation directory
-          $installDir = "$env:RUNNER_TOOL_CACHE\codeql"
-          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+          INSTALL_DIR="$RUNNER_TOOL_CACHE/codeql"
+          mkdir -p "$INSTALL_DIR"
 
           # Download and extract CodeQL CLI
-          $zipPath = "$env:RUNNER_TEMP\codeql.zip"
-          Write-Host "Downloading from: $downloadUrl"
-          Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
+          ZIP_PATH="$RUNNER_TEMP/codeql.zip"
+          echo "Downloading from: $DOWNLOAD_URL"
+          curl -L -o "$ZIP_PATH" "$DOWNLOAD_URL"
 
-          Write-Host "Extracting CodeQL CLI to: $installDir"
-          Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
+          echo "Extracting CodeQL CLI to: $INSTALL_DIR"
+          unzip -q "$ZIP_PATH" -d "$INSTALL_DIR"
 
           # Set up environment
-          $codeqlPath = "$installDir\codeql"
-          $codeqlExe = "$codeqlPath\codeql.exe"
+          CODEQL_PATH="$INSTALL_DIR/codeql"
+          CODEQL_EXE="$CODEQL_PATH/codeql.exe"
 
-          if (-not (Test-Path $codeqlExe)) {
-            Write-Error "CodeQL executable not found at: $codeqlExe"
+          if [ ! -f "$CODEQL_EXE" ]; then
+            echo "Error: CodeQL executable not found at: $CODEQL_EXE"
             exit 1
-          }
+          fi
 
-          Write-Host "CodeQL executable: $codeqlExe"
+          echo "CodeQL executable: $CODEQL_EXE"
 
           # Add to PATH for subsequent steps
-          echo "$codeqlPath" >> $env:GITHUB_PATH
-          echo "CODEQL_HOME=$codeqlPath" >> $env:GITHUB_ENV
-          echo "codeql-path=$codeqlPath" >> $env:GITHUB_OUTPUT
+          echo "$CODEQL_PATH" >> $GITHUB_PATH
+          echo "CODEQL_HOME=$CODEQL_PATH" >> $GITHUB_ENV
+          echo "codeql-path=$CODEQL_PATH" >> $GITHUB_OUTPUT
 
           # Verify installation
-          & $codeqlExe --version
+          "$CODEQL_EXE" --version
 
       - name: Verify CodeQL Installation
-        shell: pwsh
+        shell: bash
         run: |
-          Write-Host "CodeQL version:"
+          echo "CodeQL version:"
           codeql --version
 
-          Write-Host ""
-          Write-Host "CodeQL resolve languages:"
+          echo ""
+          echo "CodeQL resolve languages:"
           codeql resolve languages
 
       - name: Install QL Packs
-        shell: pwsh
+        shell: bash
         run: |
-          Write-Host "Installing QL packs from qlpack.yml files..."
+          echo "Installing QL packs from qlpack.yml files..."
 
           # Find all qlpack.yml files and install dependencies
-          $qlpacks = Get-ChildItem -Path "javascript" -Filter "qlpack.yml" -Recurse
+          find javascript -name "qlpack.yml" | while read qlpack; do
+            dir=$(dirname "$qlpack")
+            echo "Installing packs for: $dir"
+            pushd "$dir" > /dev/null
+            if ! codeql pack install; then
+              echo "Warning: Failed to install packs in $dir"
+            fi
+            popd > /dev/null
+          done
 
-          foreach ($qlpack in $qlpacks) {
-            $dir = $qlpack.DirectoryName
-            Write-Host "Installing packs for: $dir"
-            Push-Location $dir
-            try {
-              codeql pack install
-            } catch {
-              Write-Warning "Failed to install packs in $dir : $_"
-            }
-            Pop-Location
-          }
-
-          Write-Host "QL pack installation complete"
+          echo "QL pack installation complete"
 
       - name: Setup Node.js for CDS compilation
         uses: actions/setup-node@v6
@@ -162,129 +157,112 @@ jobs:
           cache-dependency-path: 'extractors/cds/tools/package-lock.json'
 
       - name: Verify Node.js and npm tools
-        shell: pwsh
+        shell: bash
         run: |
-          Write-Host "Node.js version: $(node --version)"
-          Write-Host "npm version: $(npm --version)"
-          Write-Host "npx version: $(npx --version)"
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "npx version: $(npx --version)"
 
           # Verify npx can access @sap/cds-dk
-          Write-Host "Testing npx access to @sap/cds-dk..."
-          try {
-            npx --yes --package @sap/cds-dk@latest cds --version
-          } catch {
-            Write-Host "CDS will be installed per-project as needed"
-          }
+          echo "Testing npx access to @sap/cds-dk..."
+          if ! npx --yes --package @sap/cds-dk@latest cds --version 2>/dev/null; then
+            echo "CDS will be installed per-project as needed"
+          fi
 
       - name: Compile CAP CDS files
-        shell: cmd
+        shell: bash
         run: |
-          REM Use the dedicated CDS compilation script that follows the same logic
-          REM as the CDS extractor's resolveCdsVersions function
-          call extractors\cds\tools\workflow\cds-compilation-for-actions.cmd
+          # Use the dedicated CDS compilation script that follows the same logic
+          # as the CDS extractor's resolveCdsVersions function
+          ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
       - name: Run CodeQL unit tests
         id: run-tests
-        shell: pwsh
+        shell: bash
         env:
           LGTM_INDEX_XML_MODE: all
           LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
         run: |
-          Write-Host "Running CodeQL unit tests for: ${{ matrix.test_suite }}"
+          echo "Running CodeQL unit tests for: ${{ matrix.test_suite }}"
 
           # Create results directory
-          $resultsDir = Join-Path $env:RUNNER_TEMP "test-results"
-          New-Item -ItemType Directory -Force -Path $resultsDir | Out-Null
+          RESULTS_DIR="$RUNNER_TEMP/test-results"
+          mkdir -p "$RESULTS_DIR"
 
           # Get the test path for this matrix job
-          $testPath = "${{ matrix.test_path }}"
+          TEST_PATH="${{ matrix.test_path }}"
 
           # Check if test path exists
-          if (-not (Test-Path $testPath)) {
-            Write-Host "⚠️ Test path does not exist: $testPath"
-            Write-Host "Skipping tests for this suite"
+          if [ ! -d "$TEST_PATH" ]; then
+            echo "⚠️ Test path does not exist: $TEST_PATH"
+            echo "Skipping tests for this suite"
             exit 0
-          }
+          fi
 
           # Use CodeQL's strict test discovery to find valid tests
-          Write-Host "Resolving tests with strict test discovery in: $testPath"
+          echo "Resolving tests with strict test discovery in: $TEST_PATH"
 
-          $resolveOutputFile = Join-Path $resultsDir "resolve-output.txt"
-          $resolveErrorFile = Join-Path $resultsDir "resolve-errors.txt"
+          RESOLVE_OUTPUT_FILE="$RESULTS_DIR/resolve-output.txt"
+          RESOLVE_ERROR_FILE="$RESULTS_DIR/resolve-errors.txt"
 
           # Run codeql resolve tests with strict discovery
-          $resolveProcess = Start-Process -FilePath "codeql" `
-            -ArgumentList @("resolve", "tests", "--strict-test-discovery", "--format=text", "--", $testPath) `
-            -Wait `
-            -PassThru `
-            -NoNewWindow `
-            -RedirectStandardOutput $resolveOutputFile `
-            -RedirectStandardError $resolveErrorFile
-
-          # Check if resolve succeeded
-          if ($resolveProcess.ExitCode -ne 0) {
-            Write-Host "❌ Failed to resolve tests"
-            if (Test-Path $resolveErrorFile) {
-              Get-Content $resolveErrorFile | Write-Host
-            }
-            exit $resolveProcess.ExitCode
-          }
+          if ! codeql resolve tests --strict-test-discovery --format=text -- "$TEST_PATH" > "$RESOLVE_OUTPUT_FILE" 2> "$RESOLVE_ERROR_FILE"; then
+            echo "❌ Failed to resolve tests"
+            if [ -f "$RESOLVE_ERROR_FILE" ]; then
+              cat "$RESOLVE_ERROR_FILE"
+            fi
+            exit 1
+          fi
 
           # Read discovered test directories
-          $testDirs = @()
-          if (Test-Path $resolveOutputFile) {
-            $testDirs = Get-Content $resolveOutputFile | Where-Object { $_.Trim() -ne "" }
-          }
+          TEST_DIRS=()
+          if [ -f "$RESOLVE_OUTPUT_FILE" ]; then
+            while IFS= read -r line; do
+              if [ -n "$line" ]; then
+                TEST_DIRS+=("$line")
+              fi
+            done < "$RESOLVE_OUTPUT_FILE"
+          fi
 
-          if ($testDirs.Count -eq 0) {
-            Write-Host "⚠️ No valid test directories found in: $testPath"
-            Write-Host "Skipping tests for this suite"
+          if [ ${#TEST_DIRS[@]} -eq 0 ]; then
+            echo "⚠️ No valid test directories found in: $TEST_PATH"
+            echo "Skipping tests for this suite"
             exit 0
-          }
+          fi
 
-          Write-Host "Found $($testDirs.Count) valid test directory(ies):"
-          $testDirs | ForEach-Object { Write-Host "  - $_" }
-          Write-Host ""
+          echo "Found ${#TEST_DIRS[@]} valid test directory(ies):"
+          printf "  - %s\n" "${TEST_DIRS[@]}"
+          echo ""
 
           # Run tests using codeql test run
-          Write-Host "Running: codeql test run --format=text -- $($testDirs -join ' ')"
+          echo "Running: codeql test run --format=text -- ${TEST_DIRS[*]}"
 
-          $outputFile = Join-Path $resultsDir "test-output.txt"
-          $errorFile = Join-Path $resultsDir "test-errors.txt"
-
-          # Build argument list for codeql test run
-          $codeqlArgs = @("test", "run", "--format=text", "--")
-          $codeqlArgs += $testDirs
+          OUTPUT_FILE="$RESULTS_DIR/test-output.txt"
+          ERROR_FILE="$RESULTS_DIR/test-errors.txt"
 
           # Run tests and capture output
-          $testProcess = Start-Process -FilePath "codeql" `
-            -ArgumentList $codeqlArgs `
-            -Wait `
-            -PassThru `
-            -NoNewWindow `
-            -RedirectStandardOutput $outputFile `
-            -RedirectStandardError $errorFile
+          set +e
+          codeql test run --format=text -- "${TEST_DIRS[@]}" > "$OUTPUT_FILE" 2> "$ERROR_FILE"
+          TEST_EXIT_CODE=$?
+          set -e
 
           # Display output
-          if (Test-Path $outputFile) {
-            Get-Content $outputFile | Write-Host
-          }
+          if [ -f "$OUTPUT_FILE" ]; then
+            cat "$OUTPUT_FILE"
+          fi
 
-          if (Test-Path $errorFile) {
-            $errors = Get-Content $errorFile
-            if ($errors) {
-              Write-Host "Standard Error Output:"
-              $errors | Write-Host
-            }
-          }
+          if [ -f "$ERROR_FILE" ] && [ -s "$ERROR_FILE" ]; then
+            echo "Standard Error Output:"
+            cat "$ERROR_FILE"
+          fi
 
           # Check exit code
-          if ($testProcess.ExitCode -ne 0) {
-            Write-Host "❌ Tests failed with exit code: $($testProcess.ExitCode)"
-            exit $testProcess.ExitCode
-          }
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "❌ Tests failed with exit code: $TEST_EXIT_CODE"
+            exit $TEST_EXIT_CODE
+          fi
 
-          Write-Host "✅ Tests completed successfully"
+          echo "✅ Tests completed successfully"
 
       - name: Upload test results
         if: ${{ always() }}
