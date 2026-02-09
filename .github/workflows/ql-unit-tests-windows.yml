@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           # Read CodeQL CLI version from qlt.conf.json
-          CLI_VERSION=$(grep -oP '"CodeQLCLI"\s*:\s*"\K[^"]+' qlt.conf.json)
+          CLI_VERSION=$(sed -n 's/.*"CodeQLCLI"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' qlt.conf.json)
 
           # Ensure version has 'v' prefix for GitHub releases
           if [[ ! "$CLI_VERSION" =~ ^v ]]; then
@@ -97,10 +97,16 @@ jobs:
           # Download and extract CodeQL CLI
           ZIP_PATH="$RUNNER_TEMP/codeql.zip"
           echo "Downloading from: $DOWNLOAD_URL"
-          curl -L -o "$ZIP_PATH" "$DOWNLOAD_URL"
+          if ! curl -fL -o "$ZIP_PATH" "$DOWNLOAD_URL"; then
+            echo "Error: Failed to download CodeQL CLI"
+            exit 1
+          fi
 
           echo "Extracting CodeQL CLI to: $INSTALL_DIR"
-          unzip -q "$ZIP_PATH" -d "$INSTALL_DIR"
+          if ! unzip -q "$ZIP_PATH" -d "$INSTALL_DIR"; then
+            echo "Error: Failed to extract CodeQL CLI"
+            exit 1
+          fi
 
           # Set up environment
           CODEQL_PATH="$INSTALL_DIR/codeql"
@@ -137,15 +143,18 @@ jobs:
           echo "Installing QL packs from qlpack.yml files..."
 
           # Find all qlpack.yml files and install dependencies
-          find javascript -name "qlpack.yml" | while read qlpack; do
+          while IFS= read -r qlpack; do
             dir=$(dirname "$qlpack")
             echo "Installing packs for: $dir"
-            pushd "$dir" > /dev/null
+            if ! pushd "$dir" > /dev/null; then
+              echo "Error: Failed to change directory to $dir"
+              continue
+            fi
             if ! codeql pack install; then
               echo "Warning: Failed to install packs in $dir"
             fi
             popd > /dev/null
-          done
+          done < <(find javascript -name "qlpack.yml")
 
           echo "QL pack installation complete"
 
