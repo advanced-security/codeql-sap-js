@@ -1,111 +1,123 @@
-name: "Update the CodeQL CLI dependencies"
+name: Update CodeQL CLI Dependencies
 
 on:
-    workflow_dispatch:
-    # nightly runs to update the CodeQL CLI dependencies
-    schedule:
-      - cron: '30 0 * * *'
+  workflow_dispatch:
+  # Nightly check for new CodeQL CLI releases
+  schedule:
+    - cron: '30 0 * * *'
 
 permissions:
-    contents: write
-    pull-requests: write
+  contents: write
+  pull-requests: write
 
 jobs:
-    update-codeql:
-        name: Update CodeQL CLI dependencies
-        runs-on: ubuntu-latest
+  update-codeql:
+    name: Update CodeQL CLI Dependencies
+    runs-on: ubuntu-latest
 
-        steps:
-        - name: Checkout repository
-          uses: actions/checkout@v6
+    steps:
+      - name: Update - Checkout repository
+        uses: actions/checkout@v6
 
-        - name: Check latest CodeQL CLI version and update qlt.conf.json
-          id: check-version
-          env:
-            GH_TOKEN: ${{ github.token }}
-          run: |
-            echo "Checking latest CodeQL CLI version"
-            current_version=$(jq .CodeQLCLI qlt.conf.json -r)
-            latest_version=$(gh release list --repo github/codeql-cli-binaries --json 'tagName,isLatest' --jq '.[] | select(.isLatest == true) | .tagName')
-            echo "Current CodeQL CLI version: $current_version"
-            echo "Latest CodeQL CLI version: $latest_version"
+      - name: Update - Check latest CodeQL CLI version
+        id: check-version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Checking latest CodeQL CLI version..."
+          current_version=$(jq .CodeQLCLI qlt.conf.json -r)
+          latest_version=$(gh release list --repo github/codeql-cli-binaries --json 'tagName,isLatest' --jq '.[] | select(.isLatest == true) | .tagName')
+          echo "Current CodeQL CLI version: $current_version"
+          echo "Latest CodeQL CLI version: $latest_version"
 
-            # Remove 'v' prefix if present for comparison with current version
-            latest_clean=$(echo "$latest_version" | sed 's/^v//')
+          # Remove 'v' prefix if present for comparison with current version
+          latest_clean=$(echo "$latest_version" | sed 's/^v//')
 
-            if [ "$latest_clean" != "$current_version" ]; then
-              echo "Updating CodeQL CLI from $current_version to $latest_clean"
-              echo "update_needed=true" >> $GITHUB_OUTPUT
-              echo "latest_version=$latest_clean" >> $GITHUB_OUTPUT
-              echo "latest_version_tag=$latest_version" >> $GITHUB_OUTPUT
+          if [ "$latest_clean" != "$current_version" ]; then
+            echo "Updating CodeQL CLI from $current_version to $latest_clean"
+            echo "update_needed=true" >> $GITHUB_OUTPUT
+            echo "current_version=$current_version" >> $GITHUB_OUTPUT
+            echo "latest_version=$latest_clean" >> $GITHUB_OUTPUT
+            echo "latest_version_tag=$latest_version" >> $GITHUB_OUTPUT
 
-              # Update qlt.conf.json with all properties
-              echo "Updating qlt.conf.json with all properties for version $latest_clean"
-              jq --arg cli_version "$latest_clean" \
-                 --arg std_lib "codeql-cli/$latest_version" \
-                 --arg bundle "codeql-bundle-$latest_version" \
-                 '.CodeQLCLI = $cli_version | .CodeQLStandardLibrary = $std_lib | .CodeQLCLIBundle = $bundle' \
-                 qlt.conf.json > qlt.conf.json.tmp && mv qlt.conf.json.tmp qlt.conf.json
+            # Update qlt.conf.json with all properties
+            echo "Updating qlt.conf.json with all properties for version $latest_clean"
+            jq --arg cli_version "$latest_clean" \
+               --arg std_lib "codeql-cli/$latest_version" \
+               --arg bundle "codeql-bundle-$latest_version" \
+               '.CodeQLCLI = $cli_version | .CodeQLStandardLibrary = $std_lib | .CodeQLCLIBundle = $bundle' \
+               qlt.conf.json > qlt.conf.json.tmp && mv qlt.conf.json.tmp qlt.conf.json
 
-              echo "Updated qlt.conf.json contents:"
-              cat qlt.conf.json
-            else
-              echo "CodeQL CLI is already up-to-date at version $current_version."
-              echo "update_needed=false" >> $GITHUB_OUTPUT
-            fi
+            echo "Updated qlt.conf.json contents:"
+            cat qlt.conf.json
+          else
+            echo "CodeQL CLI is already up-to-date at version $current_version."
+            echo "update_needed=false" >> $GITHUB_OUTPUT
+          fi
 
-        - name: Install QLT
-          if: steps.check-version.outputs.update_needed == 'true'
-          id: install-qlt
-          uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
-          with:
-            qlt-version: 'latest'
-            add-to-path: true
+      - name: Update - Install QLT
+        if: steps.check-version.outputs.update_needed == 'true'
+        id: install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        with:
+          qlt-version: 'latest'
+          add-to-path: true
 
-        - name: Install CodeQL
-          if: steps.check-version.outputs.update_needed == 'true'
-          id: install-codeql
-          shell: bash
-          run: |
-            echo "Installing CodeQL"
-            qlt codeql run install
-            echo "-----------------------------"
-            echo "CodeQL Home: $QLT_CODEQL_HOME"
-            echo "CodeQL Binary: $QLT_CODEQL_PATH"
+      - name: Update - Install CodeQL
+        if: steps.check-version.outputs.update_needed == 'true'
+        shell: bash
+        run: |
+          echo "Installing CodeQL"
+          qlt codeql run install
+          echo "-----------------------------"
+          echo "CodeQL Home: $QLT_CODEQL_HOME"
+          echo "CodeQL Binary: $QLT_CODEQL_PATH"
 
-        - name: Upgrade CodeQL pack lock files
-          if: steps.check-version.outputs.update_needed == 'true'
-          shell: bash
-          run: |
-            echo "Upgrading CodeQL pack lock files"
-            echo "Finding all directories with qlpack.yml files..."
+      - name: Update - Upgrade CodeQL pack lock files
+        if: steps.check-version.outputs.update_needed == 'true'
+        shell: bash
+        run: |
+          echo "Upgrading CodeQL pack lock files..."
+          find . -name "qlpack.yml" -type f | sort | while read -r qlpack_file; do
+            pack_dir=$(dirname "$qlpack_file")
+            echo "Upgrading pack in directory: $pack_dir"
+            cd "$pack_dir"
+            $QLT_CODEQL_PATH pack upgrade
+            cd - > /dev/null
+          done
+          echo "Finished upgrading all CodeQL pack lock files"
 
-            # Find all directories containing qlpack.yml files
-            find . -name "qlpack.yml" -type f | while read -r qlpack_file; do
-              pack_dir=$(dirname "$qlpack_file")
-              echo "Upgrading pack in directory: $pack_dir"
+      - name: Update - Create Pull Request
+        if: steps.check-version.outputs.update_needed == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          title: "Upgrade CodeQL CLI dependency to ${{ steps.check-version.outputs.latest_version_tag }}"
+          body: |
+            This PR upgrades the CodeQL CLI version to ${{ steps.check-version.outputs.latest_version_tag }}.
 
-              # Change to the directory and run codeql pack upgrade
-              cd "$pack_dir"
-              $QLT_CODEQL_PATH pack upgrade
-              cd - > /dev/null
-            done
+            **Changes made:**
+            - Updated `CodeQLCLI` to `${{ steps.check-version.outputs.latest_version }}`
+            - Updated `CodeQLStandardLibrary` to `codeql-cli/${{ steps.check-version.outputs.latest_version_tag }}`
+            - Updated `CodeQLCLIBundle` to `codeql-bundle-${{ steps.check-version.outputs.latest_version_tag }}`
+            - Upgraded all CodeQL pack lock files using `codeql pack upgrade`
+          commit-message: "Upgrade CodeQL CLI dependency to ${{ steps.check-version.outputs.latest_version_tag }}"
+          delete-branch: true
+          branch: "codeql/upgrade-to-${{ steps.check-version.outputs.latest_version_tag }}"
 
-            echo "Finished upgrading all CodeQL pack lock files"
-
-        - name: Create Pull Request
-          if: steps.check-version.outputs.update_needed == 'true'
-          uses: peter-evans/create-pull-request@v8
-          with:
-            title: "Upgrade CodeQL CLI dependency to ${{ steps.check-version.outputs.latest_version_tag }}"
-            body: |
-                This PR upgrades the CodeQL CLI version to ${{ steps.check-version.outputs.latest_version_tag }}.
-
-                **Changes made:**
-                - Updated `CodeQLCLI` to `${{ steps.check-version.outputs.latest_version }}`
-                - Updated `CodeQLStandardLibrary` to `codeql-cli/${{ steps.check-version.outputs.latest_version_tag }}`
-                - Updated `CodeQLCLIBundle` to `codeql-bundle-${{ steps.check-version.outputs.latest_version_tag }}`
-                - Upgraded all CodeQL pack lock files using `codeql pack upgrade`
-            commit-message: "Upgrade CodeQL CLI dependency to ${{ steps.check-version.outputs.latest_version_tag }}"
-            delete-branch: true
-            branch: "codeql/upgrade-to-${{ steps.check-version.outputs.latest_version_tag }}"
+      - name: Update - Summary
+        run: |
+          echo "## CodeQL CLI Update Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.check-version.outputs.update_needed }}" == "true" ]; then
+            echo "✅ Update available: ${{ steps.check-version.outputs.current_version }} → ${{ steps.check-version.outputs.latest_version }}" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Property | Old Value | New Value |" >> $GITHUB_STEP_SUMMARY
+            echo "| -------- | --------- | --------- |" >> $GITHUB_STEP_SUMMARY
+            echo "| CodeQLCLI | ${{ steps.check-version.outputs.current_version }} | ${{ steps.check-version.outputs.latest_version }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| CodeQLStandardLibrary | — | codeql-cli/${{ steps.check-version.outputs.latest_version_tag }} |" >> $GITHUB_STEP_SUMMARY
+            echo "| CodeQLCLIBundle | — | codeql-bundle-${{ steps.check-version.outputs.latest_version_tag }} |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A pull request has been created with these changes." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "ℹ️ CodeQL CLI is already up-to-date. No changes needed." >> $GITHUB_STEP_SUMMARY
+          fi

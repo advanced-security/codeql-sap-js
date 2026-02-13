@@ -1,0 +1,171 @@
+name: Release - CodeQL SAP JavaScript
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      create_github_release:
+        default: true
+        description: 'Create GitHub Release with CodeQL pack bundles. Disable to only publish packs without creating a release.'
+        required: false
+        type: boolean
+      publish_codeql_packs:
+        default: true
+        description: 'Publish CodeQL packs to GHCR. Disable for pre-release or re-run scenarios where packs already exist. Packs are always bundled as release artifacts regardless of this setting.'
+        required: false
+        type: boolean
+      version:
+        description: 'Release version (e.g., vX.Y.Z). Must start with "v".'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Step 1: Determine the release version
+  #
+  # Resolves the version from either the tag push event or the workflow_dispatch
+  # input, and validates the format. This output is consumed by all downstream
+  # jobs.
+  # ─────────────────────────────────────────────────────────────────────────────
+  resolve-version:
+    name: Resolve Release Version
+    runs-on: ubuntu-latest
+
+    outputs:
+      create_github_release: ${{ steps.resolve.outputs.create_github_release }}
+      publish_codeql_packs: ${{ steps.resolve.outputs.publish_codeql_packs }}
+      release_name: ${{ steps.resolve.outputs.release_name }}
+      version: ${{ steps.resolve.outputs.version }}
+
+    steps:
+      - name: Version - Resolve and validate
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${{ github.ref_name }}"
+          fi
+
+          # Validate version starts with 'v'
+          if [[ ! "${VERSION}" =~ ^v ]]; then
+            echo "::error::Version '${VERSION}' must start with 'v'"
+            exit 1
+          fi
+
+          # Resolve publish flags (default true for tag pushes)
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            CREATE_RELEASE="${{ github.event.inputs.create_github_release }}"
+            PUBLISH_PACKS="${{ github.event.inputs.publish_codeql_packs }}"
+          else
+            CREATE_RELEASE="true"
+            PUBLISH_PACKS="true"
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "release_name=${VERSION#v}" >> $GITHUB_OUTPUT
+          echo "create_github_release=${CREATE_RELEASE}" >> $GITHUB_OUTPUT
+          echo "publish_codeql_packs=${PUBLISH_PACKS}" >> $GITHUB_OUTPUT
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Step 2: Ensure the release tag exists
+  #
+  # For workflow_dispatch, ensures a properly validated tag exists. For tag push
+  # events, this is a no-op (tag already exists). The release-tag workflow
+  # handles version updates, pack lock upgrades, test validation, and tag
+  # creation.
+  # ─────────────────────────────────────────────────────────────────────────────
+  ensure-tag:
+    name: Ensure Release Tag
+    needs: resolve-version
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release-tag.yml
+    with:
+      version: ${{ needs.resolve-version.outputs.version }}
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Step 3: Bundle and optionally publish CodeQL packs
+  #
+  # Checks out the clean tag, installs CodeQL, and bundles packs for release.
+  # Publishing to GHCR is controlled by the publish_codeql_packs flag; bundling
+  # always runs so that pack artifacts are available for the GitHub Release.
+  # ─────────────────────────────────────────────────────────────────────────────
+  publish-codeql:
+    name: Publish CodeQL Packs
+    needs: [resolve-version, ensure-tag]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/release-codeql.yml
+    with:
+      publish_codeql_packs: ${{ needs.resolve-version.outputs.publish_codeql_packs == 'true' }}
+      version: ${{ needs.resolve-version.outputs.version }}
+
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Step 4: Create GitHub Release
+  #
+  # Downloads the CodeQL pack bundles and creates the GitHub Release with
+  # release notes and attached artifacts.
+  # ─────────────────────────────────────────────────────────────────────────────
+  create-release:
+    name: Create GitHub Release
+    if: >-
+      always() && !failure() && !cancelled()
+      && needs.resolve-version.outputs.create_github_release == 'true'
+    needs: [resolve-version, ensure-tag, publish-codeql]
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Release - Download CodeQL pack artifacts
+        uses: actions/download-artifact@v7
+        with:
+          name: codeql-pack-bundles-${{ needs.resolve-version.outputs.version }}
+          path: dist-packs
+
+      - name: Release - Create GitHub Release
+        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        with:
+          files: |
+            dist-packs/*.tar.gz
+          generate_release_notes: true
+          tag_name: ${{ needs.resolve-version.outputs.version }}
+
+      - name: Release - Summary
+        run: |
+          VERSION="${{ needs.resolve-version.outputs.version }}"
+          RELEASE_NAME="${{ needs.resolve-version.outputs.release_name }}"
+          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| ---- | ------ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tag | ✅ ${VERSION} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version validation | ✅ All files match ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.resolve-version.outputs.publish_codeql_packs }}" == "true" ]; then
+            echo "| CodeQL pack publish | ✅ Published to GHCR |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| CodeQL pack publish | ⏭️ Skipped (packs bundled only) |" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "| GitHub Release | ✅ Created |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Published CodeQL Packs" >> $GITHUB_STEP_SUMMARY
+          echo "| Pack | Version |" >> $GITHUB_STEP_SUMMARY
+          echo "| ---- | ------- |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-heuristic-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
