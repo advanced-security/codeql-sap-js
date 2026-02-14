@@ -295,6 +295,16 @@ jobs:
             ${{ runner.temp }}/test-results/
           if-no-files-found: warn
 
+      - name: Upload CAP test artifacts
+        if: ${{ always() && (matrix.test_suite == 'cap-models' || matrix.test_suite == 'cap-queries') }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: windows-cap-debug-${{ matrix.test_suite }}
+          path: |
+            javascript/frameworks/cap/test/**/*.cds.json
+            javascript/frameworks/cap/test/**/*.actual
+          if-no-files-found: warn
+
   validate-results:
     name: Validate Windows Test Results
     needs: [run-windows-tests]
