@@ -266,9 +266,9 @@ update_internal_deps() {
   local old_version="$2"
   local new_version="$3"
 
-  # Escape dots in the old version (e.g., '2.3.0' -> '2\.3\.0') for use in sed regex
+  # Escape regex metacharacters in the old version (e.g., '.' -> '\.')
   local escaped_old_version
-  escaped_old_version=$(printf '%s' "${old_version}" | sed 's/\./\\./g')
+  escaped_old_version=$(printf '%s' "${old_version}" | sed 's/[.\*\[\^\$]/\\&/g')
 
   for pack_name in "${INTERNAL_PACKS[@]}"; do
     # Update quoted caret-prefixed versions: "^X.Y.Z"
