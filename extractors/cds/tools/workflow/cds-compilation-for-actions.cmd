@@ -96,8 +96,8 @@ for /f "usebackq delims=" %%D in ("%TEMP_DIRS%") do (
         REM Check for .cds files in app\, db\, or srv\ subdirectories
         if !CDS_FILES_FOUND! equ 0 (
             for %%S in (app db srv) do (
-                if exist "%%S" (
-                    for /r "%%S" %%F in (*.cds) do (
+                if exist "%%S\" (
+                    for %%F in ("%%S\*.cds") do (
                         set "CDS_FILES_FOUND=1"
                     )
                 )
