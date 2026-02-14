@@ -106,6 +106,10 @@ collect_versions() {
     if [[ -f "${full_path}" ]]; then
       local pack_version
       pack_version=$(grep -m1 "^version:" "${full_path}" | awk '{print $2}')
+      if [[ -z "${pack_version}" ]]; then
+        echo "ERROR: ${qlpack_file} is missing a 'version:' field" >&2
+        return 1
+      fi
       versions+=("${qlpack_file}|${pack_version}")
     else
       echo "WARNING: ${qlpack_file} not found" >&2
@@ -191,12 +195,16 @@ update_internal_deps() {
   local old_version="$2"
   local new_version="$3"
 
+  # Escape regex metacharacters in the old version (e.g., '.' -> '\.')
+  local escaped_old_version
+  escaped_old_version=$(printf '%s' "${old_version}" | sed 's/[.\*\[\^\$]/\\&/g')
+
   for pack_name in "${INTERNAL_PACKS[@]}"; do
     # Update quoted caret-prefixed versions: "^X.Y.Z"
-    sed -i.bak "s|${pack_name}: \"\\^${old_version}\"|${pack_name}: \"^${new_version}\"|g" "${file}"
+    sed -i.bak "s|${pack_name}: \"\\^${escaped_old_version}\"|${pack_name}: \"^${new_version}\"|g" "${file}"
     rm -f "${file}.bak"
     # Update unquoted exact versions: X.Y.Z
-    sed -i.bak "s|${pack_name}: ${old_version}$|${pack_name}: ${new_version}|g" "${file}"
+    sed -i.bak "s|${pack_name}: ${escaped_old_version}$|${pack_name}: ${new_version}|g" "${file}"
     rm -f "${file}.bak"
   done
 }

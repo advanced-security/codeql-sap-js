@@ -167,9 +167,10 @@ jobs:
 
           # Stage version-bearing files and lockfile changes
           git add -A
-          # Ensure CodeQL-generated artifacts are not staged for commit
+          # Ensure generated artifacts (CodeQL, CAP compilation) are not staged for commit
           git restore --staged .codeql || true
           git restore --staged '*.qlx' || true
+          git restore --staged 'javascript/frameworks/cap/test/**/model.cds.json' || true
 
           # Check if there are changes to commit
           if git diff --cached --quiet; then

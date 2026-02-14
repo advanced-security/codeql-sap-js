@@ -73,3 +73,7 @@ dbs
 *.cds.json
 .cds-extractor-cache
 
+# CodeQL-generated artifacts
+.codeql/
+*.qlx
+
