@@ -43,6 +43,19 @@ jobs:
       release_name: ${{ steps.version.outputs.release_name }}
       version: ${{ steps.version.outputs.version }}
 
+    env:
+      PUBLISHABLE_PACKS_LIST: |
+        javascript/frameworks/cap/src
+        javascript/frameworks/cap/ext
+        javascript/frameworks/cap/lib
+        javascript/frameworks/ui5/src
+        javascript/frameworks/ui5/ext
+        javascript/frameworks/ui5/lib
+        javascript/frameworks/xsjs/src
+        javascript/frameworks/xsjs/ext
+        javascript/frameworks/xsjs/lib
+        javascript/heuristic-models/ext
+
     steps:
       - name: CodeQL - Validate and parse version
         id: version
@@ -95,19 +108,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Publishable packs: queries, models (ext), and libraries (lib)
-          PUBLISHABLE_PACKS=(
-            "javascript/frameworks/cap/src"
-            "javascript/frameworks/cap/ext"
-            "javascript/frameworks/cap/lib"
-            "javascript/frameworks/ui5/src"
-            "javascript/frameworks/ui5/ext"
-            "javascript/frameworks/ui5/lib"
-            "javascript/frameworks/xsjs/src"
-            "javascript/frameworks/xsjs/ext"
-            "javascript/frameworks/xsjs/lib"
-            "javascript/heuristic-models/ext"
-          )
+          # Read the shared pack list from the job-level environment variable.
+          mapfile -t PUBLISHABLE_PACKS <<< "${PUBLISHABLE_PACKS_LIST}"
 
           echo "Publishing CodeQL packs..."
           for pack_dir in "${PUBLISHABLE_PACKS[@]}"; do
@@ -126,18 +128,6 @@ jobs:
         run: echo "⏭️ CodeQL pack publishing disabled via workflow input"
 
       - name: CodeQL - Bundle CodeQL packs
-        env:
-          PUBLISHABLE_PACKS_LIST: |
-            javascript/frameworks/cap/src
-            javascript/frameworks/cap/ext
-            javascript/frameworks/cap/lib
-            javascript/frameworks/ui5/src
-            javascript/frameworks/ui5/ext
-            javascript/frameworks/ui5/lib
-            javascript/frameworks/xsjs/src
-            javascript/frameworks/xsjs/ext
-            javascript/frameworks/xsjs/lib
-            javascript/heuristic-models/ext
         run: |
           mkdir -p dist-packs
 
