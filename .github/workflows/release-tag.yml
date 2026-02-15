@@ -104,7 +104,7 @@ jobs:
         shell: bash
         run: |
           echo "Upgrading CodeQL pack lock files"
-          find . -name "qlpack.yml" -type f | while read -r qlpack_file; do
+          find . -name "qlpack.yml" -type f | sort | while read -r qlpack_file; do
             pack_dir=$(dirname "$qlpack_file")
             echo "Upgrading pack in directory: $pack_dir"
             cd "$pack_dir"
