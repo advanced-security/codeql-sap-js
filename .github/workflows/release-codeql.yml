@@ -128,18 +128,6 @@ jobs:
         run: echo "⏭️ CodeQL pack publishing disabled via workflow input"
 
       - name: CodeQL - Bundle CodeQL packs
-        env:
-          PUBLISHABLE_PACKS_LIST: |
-            javascript/frameworks/cap/src
-            javascript/frameworks/cap/ext
-            javascript/frameworks/cap/lib
-            javascript/frameworks/ui5/src
-            javascript/frameworks/ui5/ext
-            javascript/frameworks/ui5/lib
-            javascript/frameworks/xsjs/src
-            javascript/frameworks/xsjs/ext
-            javascript/frameworks/xsjs/lib
-            javascript/heuristic-models/ext
         run: |
           mkdir -p dist-packs
 
