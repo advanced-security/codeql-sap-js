@@ -35,6 +35,11 @@ EOF
 while [[ $# -gt 0 ]]; do
   case $1 in
     --framework)
+      if [[ $# -lt 2 || "${2-}" == -* ]]; then
+        echo "Error: --framework requires a value" >&2
+        usage >&2
+        exit 1
+      fi
       FRAMEWORK="$2"
       shift 2
       ;;

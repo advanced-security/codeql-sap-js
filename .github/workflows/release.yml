@@ -17,7 +17,7 @@ on:
         required: false
         type: boolean
       version:
-        description: 'Release version (e.g., vX.Y.Z). Must start with "v".'
+        description: 'Release version (e.g., vX.Y.Z or vX.Y.Z-suffix). Must start with "v". Supports pre-release suffixes like -alpha, -beta, -rc1.'
         required: true
         type: string
 

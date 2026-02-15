@@ -9,15 +9,15 @@ on:
         required: false
         type: boolean
       version:
-        description: 'Release version tag (e.g., vX.Y.Z). Must start with "v".'
+        description: 'Release version tag (e.g., vX.Y.Z or vX.Y.Z-suffix). Must start with "v".'
         required: true
         type: string
     outputs:
       release_name:
-        description: 'The release name without "v" prefix (e.g., X.Y.Z)'
+        description: 'The release name without "v" prefix (e.g., X.Y.Z or X.Y.Z-alpha)'
         value: ${{ jobs.publish-codeql-packs.outputs.release_name }}
       version:
-        description: 'The full version string with "v" prefix (e.g., vX.Y.Z)'
+        description: 'The full version string with "v" prefix (e.g., vX.Y.Z or vX.Y.Z-alpha)'
         value: ${{ jobs.publish-codeql-packs.outputs.version }}
 
 # Note: This workflow is called exclusively via workflow_call from release.yml.
@@ -79,7 +79,9 @@ jobs:
       - name: CodeQL - Install pack dependencies
         shell: bash
         run: |
-          qlt query run install-packs
+          export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
+          chmod +x ./scripts/install-packs.sh
+          ./scripts/install-packs.sh
 
       - name: CodeQL - Validate version consistency
         run: |

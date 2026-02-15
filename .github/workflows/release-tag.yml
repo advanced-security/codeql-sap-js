@@ -4,18 +4,18 @@ on:
   workflow_call:
     inputs:
       version:
-        description: 'Release version (e.g., vX.Y.Z). Must start with "v".'
+        description: 'Release version (e.g., vX.Y.Z or vX.Y.Z-suffix). Must start with "v".'
         required: true
         type: string
     outputs:
       release_name:
-        description: 'The release name without "v" prefix (e.g., X.Y.Z)'
+        description: 'The release name without "v" prefix (e.g., X.Y.Z or X.Y.Z-alpha)'
         value: ${{ jobs.create-tag.outputs.release_name }}
       tag_sha:
         description: 'The commit SHA that the tag points to'
         value: ${{ jobs.create-tag.outputs.tag_sha }}
       version:
-        description: 'The full version string with "v" prefix (e.g., vX.Y.Z)'
+        description: 'The full version string with "v" prefix (e.g., vX.Y.Z or vX.Y.Z-alpha)'
         value: ${{ jobs.create-tag.outputs.version }}
 
 # Note: This workflow is called exclusively via workflow_call from release.yml.
@@ -73,6 +73,14 @@ jobs:
             echo "ℹ️ Tag ${TAG} does not exist yet"
           fi
 
+      - name: Tag - Update release version
+        if: steps.check-tag.outputs.tag_exists != 'true'
+        run: |
+          TAG_VERSION="${{ steps.version.outputs.release_name }}"
+          echo "Updating all version-bearing files to '${TAG_VERSION}'..."
+          chmod +x ./scripts/update-release-version.sh
+          ./scripts/update-release-version.sh "${TAG_VERSION}"
+
       - name: Tag - Install QLT
         if: steps.check-tag.outputs.tag_exists != 'true'
         id: install-qlt
@@ -90,14 +98,6 @@ jobs:
           echo "-----------------------------"
           echo "CodeQL Home: $QLT_CODEQL_HOME"
           echo "CodeQL Binary: $QLT_CODEQL_PATH"
-
-      - name: Tag - Update release version
-        if: steps.check-tag.outputs.tag_exists != 'true'
-        run: |
-          TAG_VERSION="${{ steps.version.outputs.release_name }}"
-          echo "Updating all version-bearing files to '${TAG_VERSION}'..."
-          chmod +x ./scripts/update-release-version.sh
-          ./scripts/update-release-version.sh "${TAG_VERSION}"
 
       - name: Tag - Upgrade CodeQL pack lock files
         if: steps.check-tag.outputs.tag_exists != 'true'
@@ -117,7 +117,9 @@ jobs:
         if: steps.check-tag.outputs.tag_exists != 'true'
         shell: bash
         run: |
-          qlt query run install-packs
+          export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
+          chmod +x ./scripts/install-packs.sh
+          ./scripts/install-packs.sh
 
       - name: Tag - Setup Node.js for CDS compilation
         if: steps.check-tag.outputs.tag_exists != 'true'

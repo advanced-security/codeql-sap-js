@@ -22,8 +22,11 @@ set -euo pipefail
 ##   javascript/heuristic-models/ext/qlpack.yml
 ##   javascript/heuristic-models/tests/qlpack.yml
 ##
-## Additionally updates internal dependency references within qlpack.yml files
-## that reference other packs in this repository (e.g., ^X.Y.Z constraints).
+## Additionally updates:
+##   - Internal dependency references within qlpack.yml files
+##     that reference other packs in this repository (e.g., ^X.Y.Z constraints).
+##   - qlt.conf.json (CodeQLCLI, CodeQLStandardLibrary, CodeQLCLIBundle)
+##     using the base version (X.Y.Z) derived by stripping any pre-release suffix.
 ##
 ## Usage:
 ##   ./scripts/update-release-version.sh <new-version>
@@ -31,6 +34,7 @@ set -euo pipefail
 ##
 ## Examples:
 ##   ./scripts/update-release-version.sh 2.4.0
+##   ./scripts/update-release-version.sh 2.4.0-rc1
 ##   ./scripts/update-release-version.sh --check
 ##   ./scripts/update-release-version.sh --check 2.4.0
 
@@ -78,8 +82,9 @@ Usage: $0 <new-version>
 Deterministically updates the release version across all version-bearing files.
 
 ARGUMENTS:
-    <new-version>          The new version to set (e.g., 2.4.0).
+    <new-version>          The new version to set (e.g., 2.4.0 or 2.4.0-alpha).
                            The 'v' prefix is optional and will be normalized.
+                           Supports pre-release suffixes: -alpha, -beta, -rc1, etc.
 
 OPTIONS:
     --check [<version>]    Check version consistency across all files.
@@ -90,6 +95,7 @@ OPTIONS:
 
 EXAMPLES:
     $0 2.4.0               Update all files to version 2.4.0
+    $0 2.4.0-alpha         Update all files to pre-release version 2.4.0-alpha
     $0 v2.4.0              Same as above (v prefix is stripped automatically)
     $0 --check             Verify all version-bearing files are consistent
     $0 --check 2.4.0       Verify all files contain version 2.4.0
@@ -112,7 +118,8 @@ collect_versions() {
       fi
       versions+=("${qlpack_file}|${pack_version}")
     else
-      echo "WARNING: ${qlpack_file} not found" >&2
+      echo "ERROR: ${qlpack_file} not found" >&2
+      return 1
     fi
   done
 
@@ -128,6 +135,12 @@ check_versions() {
 
   echo "=== Version Consistency Check ==="
   echo ""
+
+  local version_output
+  if ! version_output=$(collect_versions); then
+    echo "❌ Failed to collect versions" >&2
+    return 1
+  fi
 
   while IFS='|' read -r file version; do
     file_count=$((file_count + 1))
@@ -151,10 +164,26 @@ check_versions() {
         all_consistent=false
       fi
     fi
-  done < <(collect_versions)
+  done <<< "${version_output}"
+
+  ## Also check qlt.conf.json consistency
+  local qlt_config="${REPO_ROOT}/qlt.conf.json"
+  if [[ -f "${qlt_config}" ]]; then
+    local cli_version
+    cli_version=$(grep -o '"CodeQLCLI":[[:space:]]*"[^"]*"' "${qlt_config}" | grep -o '"[^"]*"$' | tr -d '"')
+    ## Derive expected base version: strip pre-release suffix from first_version or expected_version
+    local check_base="${expected_version:-${first_version}}"
+    check_base="${check_base%%-*}"
+    if [[ "${cli_version}" == "${check_base}" ]]; then
+      echo "  ✅ qlt.conf.json: CodeQLCLI ${cli_version}"
+    else
+      echo "  ❌ qlt.conf.json: CodeQLCLI ${cli_version} (expected ${check_base})"
+      all_consistent=false
+    fi
+  fi
 
   echo ""
-  echo "Checked ${file_count} version-bearing files."
+  echo "Checked ${file_count} version-bearing files + qlt.conf.json."
 
   if [[ "${all_consistent}" == true ]]; then
     if [[ -n "${expected_version}" ]]; then
@@ -169,12 +198,12 @@ check_versions() {
   fi
 }
 
-## Validate version format (X.Y.Z)
+## Validate version format (X.Y.Z or X.Y.Z-suffix)
 validate_version() {
   local version="$1"
-  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)?$ ]]; then
     echo "ERROR: Invalid version format '${version}'" >&2
-    echo "Expected format: X.Y.Z (e.g., 2.4.0)" >&2
+    echo "Expected format: X.Y.Z or X.Y.Z-suffix (e.g., 2.4.0, 2.4.0-alpha, 2.4.0-rc1)" >&2
     return 1
   fi
 }
@@ -187,8 +216,50 @@ update_pack_version() {
   rm -f "${file}.bak"
 }
 
+## Update qlt.conf.json with the base version (suffix stripped)
+## e.g., 2.4.0-alpha -> CodeQLCLI: "2.4.0", CodeQLStandardLibrary: "codeql-cli/v2.4.0", etc.
+update_qlt_config() {
+  local new_version="$1"
+  local dry_run="${2:-false}"
+  local qlt_config="${REPO_ROOT}/qlt.conf.json"
+
+  # Derive the base version by stripping any pre-release suffix
+  local base_version="${new_version%%-*}"
+
+  if [[ ! -f "${qlt_config}" ]]; then
+    echo "WARNING: qlt.conf.json not found, skipping" >&2
+    return 0
+  fi
+
+  if [[ "${dry_run}" == true ]]; then
+    echo "  [DRY RUN] qlt.conf.json: CodeQLCLI -> ${base_version}"
+    return 0
+  fi
+
+  # Use jq for reliable JSON manipulation (learned from update-codeql.yml)
+  if command -v jq &>/dev/null; then
+    jq --arg cli_version "${base_version}" \
+       --arg std_lib "codeql-cli/v${base_version}" \
+       --arg bundle "codeql-bundle-v${base_version}" \
+       '.CodeQLCLI = $cli_version | .CodeQLStandardLibrary = $std_lib | .CodeQLCLIBundle = $bundle' \
+       "${qlt_config}" > "${qlt_config}.tmp" && mv "${qlt_config}.tmp" "${qlt_config}"
+  else
+    # Fallback to sed if jq is not available
+    local tmp_file
+    tmp_file=$(mktemp)
+    sed \
+      -e "s/\"CodeQLCLI\":[[:space:]]*\"[^\"]*\"/\"CodeQLCLI\": \"${base_version}\"/" \
+      -e "s/\"CodeQLStandardLibrary\":[[:space:]]*\"[^\"]*\"/\"CodeQLStandardLibrary\": \"codeql-cli\/v${base_version}\"/" \
+      -e "s/\"CodeQLCLIBundle\":[[:space:]]*\"[^\"]*\"/\"CodeQLCLIBundle\": \"codeql-bundle-v${base_version}\"/" \
+      "${qlt_config}" > "${tmp_file}"
+    mv "${tmp_file}" "${qlt_config}"
+  fi
+  echo "  ✅ qlt.conf.json: CodeQLCLI -> ${base_version}"
+}
+
 ## Update internal dependency references in a qlpack.yml file
 ## e.g., advanced-security/javascript-sap-cap-models: "^2.3.0" -> "^2.4.0"
+## e.g., advanced-security/javascript-sap-cap-models: "^2.3.0" -> "^2.4.0-alpha"
 ## and   advanced-security/javascript-heuristic-models: 2.3.0 -> 2.4.0
 update_internal_deps() {
   local file="$1"
@@ -256,11 +327,14 @@ update_versions() {
     fi
   done
 
+  ## Update qlt.conf.json
+  update_qlt_config "${new_version}" "${dry_run}"
+
   echo ""
   if [[ "${dry_run}" == true ]]; then
-    echo "Would update ${updated_count} files. (Dry run — no files modified)"
+    echo "Would update ${updated_count} qlpack files + qlt.conf.json. (Dry run — no files modified)"
   else
-    echo "Updated ${updated_count} files to version ${new_version}."
+    echo "Updated ${updated_count} qlpack files + qlt.conf.json to version ${new_version}."
     echo ""
     echo "Next steps:"
     echo "  1. Run 'codeql pack upgrade' on all packs to update lock files"

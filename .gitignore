@@ -77,3 +77,6 @@ dbs
 .codeql/
 *.qlx
 
+# workspace customization file
+codeql-sap-js.code-workspace
+
