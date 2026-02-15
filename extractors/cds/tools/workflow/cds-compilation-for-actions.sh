@@ -216,6 +216,12 @@ do
   # Log compilation result
   if [ -f "model.cds.json" ]; then
     echo "  ✓ Successfully generated model.cds.json in $(pwd)"
+
+    # Normalize $location.file paths to POSIX forward slashes.
+    # The CDS compiler on Windows produces backslash paths which
+    # CodeQL libraries do not expect. On Unix this is a no-op.
+    node "$SCRIPT_DIR/../normalize-cds-json-paths.mjs" "model.cds.json"
+
     # Add to list of generated files (convert to relative path)
     RELATIVE_PATH=$(get_relative_path "$(pwd)/model.cds.json" "$PROJECT_ROOT")
     GENERATED_FILES+=("$RELATIVE_PATH")

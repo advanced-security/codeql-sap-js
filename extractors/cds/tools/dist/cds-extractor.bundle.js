@@ -358,11 +358,8 @@ var parseClass = (glob2, position) => {
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/unescape.js
-var unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) => {
-  if (magicalBraces) {
-    return windowsPathsNoEscape ? s.replace(/\[([^\/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, "$1$2").replace(/\\([^\/])/g, "$1");
-  }
-  return windowsPathsNoEscape ? s.replace(/\[([^\/\\{}])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\{}])\]/g, "$1$2").replace(/\\([^\/{}])/g, "$1");
+var unescape = (s, { windowsPathsNoEscape = false } = {}) => {
+  return windowsPathsNoEscape ? s.replace(/\[([^\/\\])\]/g, "$1") : s.replace(/((?!\\).|^)\[([^\/\\])\]/g, "$1$2").replace(/\\([^\/])/g, "$1");
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/ast.js
@@ -716,7 +713,7 @@ var AST = class _AST {
     if (this.#root === this)
       this.#fillNegs();
     if (!this.type) {
-      const noEmpty = this.isStart() && this.isEnd() && !this.#parts.some((s) => typeof s !== "string");
+      const noEmpty = this.isStart() && this.isEnd();
       const src = this.#parts.map((p) => {
         const [re, _, hasMagic2, uflag] = typeof p === "string" ? _AST.#parseGlob(p, this.#hasMagic, noEmpty) : p.toRegExpSource(allowDot);
         this.#hasMagic = this.#hasMagic || hasMagic2;
@@ -826,7 +823,10 @@ var AST = class _AST {
         }
       }
       if (c === "*") {
-        re += noEmpty && glob2 === "*" ? starNoEmpty : star;
+        if (noEmpty && glob2 === "*")
+          re += starNoEmpty;
+        else
+          re += star;
         hasMagic2 = true;
         continue;
       }
@@ -842,10 +842,7 @@ var AST = class _AST {
 };
 
 // node_modules/glob/node_modules/minimatch/dist/esm/escape.js
-var escape = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
-  if (magicalBraces) {
-    return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
-  }
+var escape = (s, { windowsPathsNoEscape = false } = {}) => {
   return windowsPathsNoEscape ? s.replace(/[?*()[\]]/g, "[$&]") : s.replace(/[?*()[\]\\]/g, "\\$&");
 };
 
@@ -914,7 +911,7 @@ var path = {
 };
 var sep = defaultPlatform === "win32" ? path.win32.sep : path.posix.sep;
 minimatch.sep = sep;
-var GLOBSTAR = /* @__PURE__ */ Symbol("globstar **");
+var GLOBSTAR = Symbol("globstar **");
 minimatch.GLOBSTAR = GLOBSTAR;
 var qmark2 = "[^/]";
 var star2 = qmark2 + "*?";
@@ -1486,27 +1483,16 @@ var Minimatch = class {
             pp[i] = twoStar;
           }
         } else if (next === void 0) {
-          pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + ")?";
+          pp[i - 1] = prev + "(?:\\/|" + twoStar + ")?";
         } else if (next !== GLOBSTAR) {
           pp[i - 1] = prev + "(?:\\/|\\/" + twoStar + "\\/)" + next;
           pp[i + 1] = GLOBSTAR;
         }
       });
-      const filtered = pp.filter((p) => p !== GLOBSTAR);
-      if (this.partial && filtered.length >= 1) {
-        const prefixes = [];
-        for (let i = 1; i <= filtered.length; i++) {
-          prefixes.push(filtered.slice(0, i).join("/"));
-        }
-        return "(?:" + prefixes.join("|") + ")";
-      }
-      return filtered.join("/");
+      return pp.filter((p) => p !== GLOBSTAR).join("/");
     }).join("|");
     const [open, close] = set.length > 1 ? ["(?:", ")"] : ["", ""];
     re = "^" + open + re + close + "$";
-    if (this.partial) {
-      re = "^(?:\\/|" + open + re.slice(1, -1) + close + ")$";
-    }
     if (this.negate)
       re = "^(?!" + re + ").+$";
     try {
@@ -1625,6 +1611,7 @@ if (typeof AC === "undefined") {
   };
 }
 var shouldWarn = (code) => !warned.has(code);
+var TYPE = Symbol("type");
 var isPosInt = (n) => n && n === Math.floor(n) && n > 0 && isFinite(n);
 var getUintArray = (max) => !isPosInt(max) ? null : max <= Math.pow(2, 8) ? Uint8Array : max <= Math.pow(2, 16) ? Uint16Array : max <= Math.pow(2, 32) ? Uint32Array : max <= Number.MAX_SAFE_INTEGER ? ZeroArray : null;
 var ZeroArray = class extends Array {
@@ -2986,37 +2973,37 @@ var isStream = (s) => !!s && typeof s === "object" && (s instanceof Minipass || 
 var isReadable = (s) => !!s && typeof s === "object" && s instanceof import_node_events.EventEmitter && typeof s.pipe === "function" && // node core Writable streams have a pipe() method, but it throws
 s.pipe !== import_node_stream.default.Writable.prototype.pipe;
 var isWritable = (s) => !!s && typeof s === "object" && s instanceof import_node_events.EventEmitter && typeof s.write === "function" && typeof s.end === "function";
-var EOF = /* @__PURE__ */ Symbol("EOF");
-var MAYBE_EMIT_END = /* @__PURE__ */ Symbol("maybeEmitEnd");
-var EMITTED_END = /* @__PURE__ */ Symbol("emittedEnd");
-var EMITTING_END = /* @__PURE__ */ Symbol("emittingEnd");
-var EMITTED_ERROR = /* @__PURE__ */ Symbol("emittedError");
-var CLOSED = /* @__PURE__ */ Symbol("closed");
-var READ = /* @__PURE__ */ Symbol("read");
-var FLUSH = /* @__PURE__ */ Symbol("flush");
-var FLUSHCHUNK = /* @__PURE__ */ Symbol("flushChunk");
-var ENCODING = /* @__PURE__ */ Symbol("encoding");
-var DECODER = /* @__PURE__ */ Symbol("decoder");
-var FLOWING = /* @__PURE__ */ Symbol("flowing");
-var PAUSED = /* @__PURE__ */ Symbol("paused");
-var RESUME = /* @__PURE__ */ Symbol("resume");
-var BUFFER = /* @__PURE__ */ Symbol("buffer");
-var PIPES = /* @__PURE__ */ Symbol("pipes");
-var BUFFERLENGTH = /* @__PURE__ */ Symbol("bufferLength");
-var BUFFERPUSH = /* @__PURE__ */ Symbol("bufferPush");
-var BUFFERSHIFT = /* @__PURE__ */ Symbol("bufferShift");
-var OBJECTMODE = /* @__PURE__ */ Symbol("objectMode");
-var DESTROYED = /* @__PURE__ */ Symbol("destroyed");
-var ERROR = /* @__PURE__ */ Symbol("error");
-var EMITDATA = /* @__PURE__ */ Symbol("emitData");
-var EMITEND = /* @__PURE__ */ Symbol("emitEnd");
-var EMITEND2 = /* @__PURE__ */ Symbol("emitEnd2");
-var ASYNC = /* @__PURE__ */ Symbol("async");
-var ABORT = /* @__PURE__ */ Symbol("abort");
-var ABORTED = /* @__PURE__ */ Symbol("aborted");
-var SIGNAL = /* @__PURE__ */ Symbol("signal");
-var DATALISTENERS = /* @__PURE__ */ Symbol("dataListeners");
-var DISCARDED = /* @__PURE__ */ Symbol("discarded");
+var EOF = Symbol("EOF");
+var MAYBE_EMIT_END = Symbol("maybeEmitEnd");
+var EMITTED_END = Symbol("emittedEnd");
+var EMITTING_END = Symbol("emittingEnd");
+var EMITTED_ERROR = Symbol("emittedError");
+var CLOSED = Symbol("closed");
+var READ = Symbol("read");
+var FLUSH = Symbol("flush");
+var FLUSHCHUNK = Symbol("flushChunk");
+var ENCODING = Symbol("encoding");
+var DECODER = Symbol("decoder");
+var FLOWING = Symbol("flowing");
+var PAUSED = Symbol("paused");
+var RESUME = Symbol("resume");
+var BUFFER = Symbol("buffer");
+var PIPES = Symbol("pipes");
+var BUFFERLENGTH = Symbol("bufferLength");
+var BUFFERPUSH = Symbol("bufferPush");
+var BUFFERSHIFT = Symbol("bufferShift");
+var OBJECTMODE = Symbol("objectMode");
+var DESTROYED = Symbol("destroyed");
+var ERROR = Symbol("error");
+var EMITDATA = Symbol("emitData");
+var EMITEND = Symbol("emitEnd");
+var EMITEND2 = Symbol("emitEnd2");
+var ASYNC = Symbol("async");
+var ABORT = Symbol("abort");
+var ABORTED = Symbol("aborted");
+var SIGNAL = Symbol("signal");
+var DATALISTENERS = Symbol("dataListeners");
+var DISCARDED = Symbol("discarded");
 var defer = (fn) => Promise.resolve().then(fn);
 var nodefer = (fn) => fn();
 var isEndish = (ev) => ev === "end" || ev === "finish" || ev === "prefinish";
@@ -3929,7 +3916,7 @@ var ChildrenCache = class extends LRUCache {
     });
   }
 };
-var setAsCwd = /* @__PURE__ */ Symbol("PathScurry setAsCwd");
+var setAsCwd = Symbol("PathScurry setAsCwd");
 var PathBase = class {
   /**
    * the basename of this path
@@ -6862,6 +6849,47 @@ function removeMarkerFile(markerFilePath) {
     }
   }
 }
+function normalizeCdsJsonLocations(data) {
+  if (typeof data !== "object" || data === null) return data;
+  const topLoc = data["$location"];
+  if (topLoc?.file && typeof topLoc.file === "string") {
+    topLoc.file = topLoc.file.split("\\").join("/");
+  }
+  const definitions = data["definitions"];
+  if (definitions) {
+    for (const defn of Object.values(definitions)) {
+      normalizeLocationsRecursive(defn);
+    }
+  }
+  return data;
+}
+function normalizeLocationsRecursive(obj) {
+  if (typeof obj !== "object" || obj === null) return;
+  const record = obj;
+  const loc = record["$location"];
+  if (loc?.file && typeof loc.file === "string") {
+    loc.file = loc.file.split("\\").join("/");
+  }
+  for (const key of ["elements", "params", "actions", "functions", "items", "returns"]) {
+    const nested = record[key];
+    if (typeof nested === "object" && nested !== null && !Array.isArray(nested)) {
+      for (const child of Object.values(nested)) {
+        normalizeLocationsRecursive(child);
+      }
+    }
+  }
+}
+function normalizeLocationPathsInFile(filePath) {
+  if (!fileExists(filePath)) return;
+  const raw = (0, import_fs2.readFileSync)(filePath, "utf8");
+  const data = JSON.parse(raw);
+  normalizeCdsJsonLocations(data);
+  const normalized = JSON.stringify(data, null, 2) + "\n";
+  if (normalized !== raw) {
+    (0, import_fs2.writeFileSync)(filePath, normalized, "utf8");
+    cdsExtractorLog("info", `Normalized $location paths in: ${filePath}`);
+  }
+}
 
 // src/cds/compiler/command.ts
 var DEFAULT_COMMAND_TIMEOUT_MS = 1e4;
@@ -7314,6 +7342,7 @@ ${result.stderr?.toString() || "Unknown error"}
   } else {
     cdsExtractorLog("info", `CDS compiler generated JSON to file: ${projectJsonOutPath}`);
   }
+  normalizeLocationPathsInFile(projectJsonOutPath);
   return {
     success: true,
     outputPath: projectJsonOutPath,

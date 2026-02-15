@@ -21,9 +21,11 @@ abstract class CdlObject extends JsonObject {
         // `$location` values in the generated JSON data are, therefore, relative to the
         // base directory of the project.
         //
-        // Note: On Windows, `getAbsolutePath()` returns backslash-separated paths, but
-        // `$location.file` values in `.cds.json` always use forward slashes (POSIX).
-        // We normalize backslashes to forward slashes to ensure cross-platform compatibility.
+        // Note: On Windows, `getAbsolutePath()` returns backslash-separated paths.
+        // We normalize backslashes to forward slashes to ensure cross-platform
+        // compatibility. The `$location.file` values are guaranteed to use forward
+        // slashes because the CDS compilation scripts and CDS extractor normalize
+        // them at generation time.
         path =
           locValue
                 .getJsonFile()
@@ -176,8 +178,9 @@ class CdlService extends CdlElement {
       jsonFileLocation = this.getPropValue("$location").getPropValue("file")
     |
       // Normalize backslashes to forward slashes for cross-platform compatibility.
-      // On Windows, `getAbsolutePath()` returns backslash-separated paths, but
-      // `$location.file` values in `.cds.json` always use forward slashes (POSIX).
+      // On Windows, `getAbsolutePath()` returns backslash-separated paths.
+      // The `$location.file` values are guaranteed to use forward slashes because
+      // the CDS compilation scripts and CDS extractor normalize them at generation time.
       result.getFile().getAbsolutePath().replaceAll("\\", "/").regexpReplaceAll("\\.[^.]+$", ".cds") =
         jsonFileLocation
               .getJsonFile()

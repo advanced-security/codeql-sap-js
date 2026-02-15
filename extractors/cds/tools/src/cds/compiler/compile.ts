@@ -4,7 +4,12 @@ import { basename, delimiter, dirname, join, relative, resolve, sep } from 'path
 import { CdsCompilationResult } from './types';
 import { getCdsVersion } from './version';
 import { modelCdsJsonFile } from '../../constants';
-import { fileExists, dirExists, recursivelyRenameJsonFiles } from '../../filesystem';
+import {
+  fileExists,
+  dirExists,
+  recursivelyRenameJsonFiles,
+  normalizeLocationPathsInFile,
+} from '../../filesystem';
 import { cdsExtractorLog } from '../../logging';
 import { BasicCdsProject } from '../parser/types';
 
@@ -215,6 +220,11 @@ function compileProject(
   } else {
     cdsExtractorLog('info', `CDS compiler generated JSON to file: ${projectJsonOutPath}`);
   }
+
+  // Normalize $location.file paths to POSIX forward slashes.
+  // The CDS compiler on Windows produces backslash paths (e.g. "srv\\service1.cds")
+  // but CodeQL libraries expect forward slashes (e.g. "srv/service1.cds").
+  normalizeLocationPathsInFile(projectJsonOutPath);
 
   return {
     success: true,

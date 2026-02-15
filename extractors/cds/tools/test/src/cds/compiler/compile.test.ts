@@ -29,6 +29,7 @@ jest.mock('../../../../src/filesystem', () => ({
   fileExists: jest.fn(),
   dirExists: jest.fn(),
   recursivelyRenameJsonFiles: jest.fn(),
+  normalizeLocationPathsInFile: jest.fn(),
 }));
 
 jest.mock('../../../../src/cds/compiler/version', () => ({

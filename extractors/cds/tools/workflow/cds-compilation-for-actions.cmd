@@ -155,6 +155,12 @@ for /f "usebackq delims=" %%D in ("%TEMP_DIRS%") do (
             REM Log compilation result
             if exist "model.cds.json" (
                 echo   Success: Successfully generated model.cds.json in !CD!
+
+                REM Normalize $location.file paths to POSIX forward slashes.
+                REM The CDS compiler on Windows produces backslash paths which
+                REM CodeQL libraries do not expect.
+                node "%~dp0..\normalize-cds-json-paths.mjs" "model.cds.json"
+
                 set /a GENERATED_COUNT+=1
                 REM Mark this directory as processed
                 echo !TEST_DIR! >> "%PROCESSED_DIRS%"
