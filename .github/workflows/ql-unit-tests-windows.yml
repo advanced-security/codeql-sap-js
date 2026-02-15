@@ -179,9 +179,8 @@ jobs:
       - name: Compile CAP CDS files
         shell: cmd
         run: |
-          REM Use the dedicated CDS compilation script that follows the same logic
-          REM as the CDS extractor's resolveCdsVersions function
-          call extractors\cds\tools\workflow\cds-compilation-for-actions.cmd
+          REM Compile CDS files for the specific test suite path
+          call extractors\cds\tools\workflow\cds-compilation-for-actions.cmd ${{ matrix.test_path }}
 
       - name: Run CodeQL unit tests
         id: run-tests
