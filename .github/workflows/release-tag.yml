@@ -73,8 +73,43 @@ jobs:
             echo "ℹ️ Tag ${TAG} does not exist yet"
           fi
 
+      - name: Tag - Validate existing tag versions
+        id: validate-existing
+        if: steps.check-tag.outputs.tag_exists == 'true'
+        run: |
+          TAG="${{ steps.version.outputs.version }}"
+          RELEASE_NAME="${{ steps.version.outputs.release_name }}"
+          echo "Validating versions on existing tag ${TAG}..."
+          git checkout "refs/tags/${TAG}" --quiet
+          chmod +x ./scripts/update-release-version.sh
+          if ./scripts/update-release-version.sh --check "${RELEASE_NAME}"; then
+            echo "✅ Existing tag ${TAG} has correct versions"
+            echo "versions_valid=true" >> $GITHUB_OUTPUT
+          else
+            echo ""
+            echo "⚠️ Existing tag ${TAG} has incorrect versions — will delete and recreate"
+            git checkout - --quiet
+            git tag -d "${TAG}" 2>/dev/null || true
+            git push origin --delete "${TAG}" 2>/dev/null || true
+            echo "versions_valid=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Tag - Determine if tag creation is needed
+        id: needs-creation
+        run: |
+          if [ "${{ steps.check-tag.outputs.tag_exists }}" != "true" ]; then
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "ℹ️ Tag does not exist — creation needed"
+          elif [ "${{ steps.validate-existing.outputs.versions_valid }}" != "true" ]; then
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "ℹ️ Existing tag had wrong versions — recreation needed"
+          else
+            echo "needed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ Existing tag is valid — no creation needed"
+          fi
+
       - name: Tag - Update release version
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         run: |
           TAG_VERSION="${{ steps.version.outputs.release_name }}"
           echo "Updating all version-bearing files to '${TAG_VERSION}'..."
@@ -82,7 +117,7 @@ jobs:
           ./scripts/update-release-version.sh "${TAG_VERSION}"
 
       - name: Tag - Install QLT
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         id: install-qlt
         uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
         with:
@@ -90,7 +125,7 @@ jobs:
           add-to-path: true
 
       - name: Tag - Install CodeQL
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         shell: bash
         run: |
           echo "Installing CodeQL"
@@ -100,7 +135,7 @@ jobs:
           echo "CodeQL Binary: $QLT_CODEQL_PATH"
 
       - name: Tag - Upgrade CodeQL pack lock files
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         shell: bash
         run: |
           echo "Upgrading CodeQL pack lock files"
@@ -114,7 +149,7 @@ jobs:
           echo "Finished upgrading all CodeQL pack lock files"
 
       - name: Tag - Install QL packs
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         shell: bash
         run: |
           export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
@@ -122,7 +157,7 @@ jobs:
           ./scripts/install-packs.sh
 
       - name: Tag - Setup Node.js for CDS compilation
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -130,13 +165,13 @@ jobs:
           cache-dependency-path: 'extractors/cds/tools/package-lock.json'
 
       - name: Tag - Compile CAP CDS files
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         run: |
           chmod +x ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
           ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
       - name: Tag - Run CodeQL unit tests
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         env:
           LGTM_INDEX_XML_MODE: all
           LGTM_INDEX_FILETYPES: ".json:JSON\n.cds:JSON"
@@ -150,7 +185,7 @@ jobs:
             -- javascript/
 
       - name: Tag - Validate version consistency
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         run: |
           RELEASE_NAME="${{ steps.version.outputs.release_name }}"
           echo "Validating all version-bearing files match ${RELEASE_NAME}..."
@@ -158,7 +193,7 @@ jobs:
 
       - name: Tag - Commit version changes and create tag
         id: create-tag
-        if: steps.check-tag.outputs.tag_exists != 'true'
+        if: steps.needs-creation.outputs.needed == 'true'
         run: |
           TAG="${{ steps.version.outputs.version }}"
           RELEASE_NAME="${{ steps.version.outputs.release_name }}"
@@ -167,12 +202,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          # Detach HEAD so we never push to a protected branch.
+          # The version-update commit will only be reachable via the tag.
+          git checkout --detach HEAD
+
           # Stage version-bearing files and lockfile changes
           git add -A
-          # Ensure generated artifacts (CodeQL, CAP compilation) are not staged for commit
-          git restore --staged .codeql || true
-          git restore --staged '*.qlx' || true
-          git restore --staged 'javascript/frameworks/cap/test/**/model.cds.json' || true
+          # Ensure generated artifacts (CodeQL, CAP compilation) are not staged
+          git restore --staged .codeql 2>/dev/null || true
+          git restore --staged '*.qlx' 2>/dev/null || true
+          git restore --staged 'javascript/frameworks/cap/test/**/model.cds.json' 2>/dev/null || true
 
           # Check if there are changes to commit
           if git diff --cached --quiet; then
@@ -181,26 +220,25 @@ jobs:
           else
             git commit -m "Release ${TAG}: update versions to ${RELEASE_NAME}"
             CURRENT_SHA=$(git rev-parse HEAD)
-            git push origin HEAD
-            echo "✅ Committed version changes at ${CURRENT_SHA:0:8}"
+            echo "✅ Created version commit at ${CURRENT_SHA:0:8}"
           fi
 
-          # Create and push the tag
+          # Push only the tag — never the branch
           git tag -a "${TAG}" -m "Release ${TAG}" "${CURRENT_SHA}"
-          git push origin "${TAG}"
+          git push origin "refs/tags/${TAG}"
           echo "✅ Created and pushed tag ${TAG} at commit ${CURRENT_SHA:0:8}"
           echo "tag_sha=${CURRENT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Tag - Output existing tag SHA
         id: existing-tag
-        if: steps.check-tag.outputs.tag_exists == 'true'
+        if: steps.needs-creation.outputs.needed == 'false'
         run: |
           echo "tag_sha=${{ steps.check-tag.outputs.tag_sha }}" >> $GITHUB_OUTPUT
 
       - name: Tag - Set final tag SHA output
         id: final-sha
         run: |
-          if [ "${{ steps.check-tag.outputs.tag_exists }}" == "true" ]; then
+          if [ "${{ steps.needs-creation.outputs.needed }}" == "false" ]; then
             SHA="${{ steps.check-tag.outputs.tag_sha }}"
           else
             SHA="${{ steps.create-tag.outputs.tag_sha }}"
@@ -212,11 +250,15 @@ jobs:
           TAG="${{ steps.version.outputs.version }}"
           echo "## Release Tag Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ steps.check-tag.outputs.tag_exists }}" == "true" ]; then
-            echo "ℹ️ Tag \`${TAG}\` already existed at \`${{ steps.check-tag.outputs.tag_sha }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.needs-creation.outputs.needed }}" == "false" ]; then
+            echo "ℹ️ Tag \`${TAG}\` already existed at \`${{ steps.check-tag.outputs.tag_sha }}\` with correct versions" >> $GITHUB_STEP_SUMMARY
           else
             echo "✅ Created tag \`${TAG}\` at \`${{ steps.create-tag.outputs.tag_sha }}\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            if [ "${{ steps.check-tag.outputs.tag_exists }}" == "true" ]; then
+              echo "⚠️ Previous tag had incorrect versions and was replaced" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "| Step | Status |" >> $GITHUB_STEP_SUMMARY
             echo "| ---- | ------ |" >> $GITHUB_STEP_SUMMARY
             echo "| Version update | ✅ All files updated to ${{ steps.version.outputs.release_name }} |" >> $GITHUB_STEP_SUMMARY
