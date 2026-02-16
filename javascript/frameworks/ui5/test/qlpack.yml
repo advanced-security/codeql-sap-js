@@ -1,5 +1,5 @@
 name: advanced-security/javascript-sap-ui5-queries-tests
-version: 2.3.0
+version: 2.24.1
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.4.0"
@@ -7,6 +7,6 @@ dependencies:
   # no overlap occurs with the SAP UI5 queries. We therefore allow any version
   # greater than or equal to 1.2.0, as major breaking changes are not a concern.
   codeql/javascript-queries: ">1.2.0"
-  advanced-security/javascript-sap-ui5-queries: "^2.3.0"
-  advanced-security/javascript-sap-ui5-models: "^2.3.0"
-  advanced-security/javascript-sap-ui5-all: "^2.3.0"
+  advanced-security/javascript-sap-ui5-queries: "^2.24.1"
+  advanced-security/javascript-sap-ui5-models: "^2.24.1"
+  advanced-security/javascript-sap-ui5-all: "^2.24.1"

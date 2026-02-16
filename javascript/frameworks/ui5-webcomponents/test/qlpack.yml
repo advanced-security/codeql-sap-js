@@ -1,6 +1,6 @@
 name: advanced-security/javascript-sap-ui5-webcomponents-for-react-test
-version: 2.3.0
+version: 2.24.1
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.4.0"
-  advanced-security/javascript-sap-ui5-all: "^2.3.0"
+  advanced-security/javascript-sap-ui5-all: "^2.24.1"
