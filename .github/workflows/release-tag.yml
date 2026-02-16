@@ -147,13 +147,6 @@ jobs:
           done
           echo "Finished upgrading all CodeQL pack lock files"
 
-      - name: Tag - Install QL packs
-        if: steps.needs-creation.outputs.needed == 'true'
-        shell: bash
-        run: |
-          chmod +x ./scripts/install-packs.sh
-          ./scripts/install-packs.sh
-
       - name: Tag - Setup Node.js for CDS compilation
         if: steps.needs-creation.outputs.needed == 'true'
         uses: actions/setup-node@v6
