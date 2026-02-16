@@ -20,9 +20,19 @@ abstract class CdlObject extends JsonObject {
         // performed and `.cds.json` files are stored in that base project directory. The
         // `$location` values in the generated JSON data are, therefore, relative to the
         // base directory of the project.
+        //
+        // Note: On Windows, `getAbsolutePath()` returns backslash-separated paths.
+        // We normalize backslashes to forward slashes to ensure cross-platform
+        // compatibility. The `$location.file` values are guaranteed to use forward
+        // slashes because the CDS compilation scripts and CDS extractor normalize
+        // them at generation time.
         path =
-          locValue.getJsonFile().getParentContainer().getAbsolutePath().regexpReplaceAll("/$", "") +
-            "/" + locValue.getPropValue("file").getStringValue() and
+          locValue
+                .getJsonFile()
+                .getParentContainer()
+                .getAbsolutePath()
+                .replaceAll("\\", "/")
+                .regexpReplaceAll("/$", "") + "/" + locValue.getPropValue("file").getStringValue() and
         if
           not exists(locValue.getPropValue("line")) and
           not exists(locValue.getPropValue("col"))
@@ -167,11 +177,16 @@ class CdlService extends CdlElement {
     exists(JsonValue jsonFileLocation |
       jsonFileLocation = this.getPropValue("$location").getPropValue("file")
     |
-      result.getFile().getAbsolutePath().regexpReplaceAll("\\.[^.]+$", ".cds") =
+      // Normalize backslashes to forward slashes for cross-platform compatibility.
+      // On Windows, `getAbsolutePath()` returns backslash-separated paths.
+      // The `$location.file` values are guaranteed to use forward slashes because
+      // the CDS compilation scripts and CDS extractor normalize them at generation time.
+      result.getFile().getAbsolutePath().replaceAll("\\", "/").regexpReplaceAll("\\.[^.]+$", ".cds") =
         jsonFileLocation
               .getJsonFile()
               .getParentContainer()
               .getAbsolutePath()
+              .replaceAll("\\", "/")
               .regexpReplaceAll("/$", "") + "/" + jsonFileLocation.getStringValue()
     )
   }
