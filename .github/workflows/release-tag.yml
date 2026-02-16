@@ -116,23 +116,22 @@ jobs:
           chmod +x ./scripts/update-release-version.sh
           ./scripts/update-release-version.sh "${TAG_VERSION}"
 
-      - name: Tag - Install QLT
+      - name: Tag - Install CodeQL via GitHub CLI
         if: steps.needs-creation.outputs.needed == 'true'
-        id: install-qlt
-        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
-        with:
-          qlt-version: 'latest'
-          add-to-path: true
-
-      - name: Tag - Install CodeQL
-        if: steps.needs-creation.outputs.needed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          echo "Installing CodeQL"
-          qlt codeql run install
-          echo "-----------------------------"
-          echo "CodeQL Home: $QLT_CODEQL_HOME"
-          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+          CODEQL_VERSION=$(jq -r .CodeQLCLI qlt.conf.json)
+          echo "Installing CodeQL CLI ${CODEQL_VERSION} via gh-codeql..."
+          gh extension install github/gh-codeql
+          gh codeql set-version "${CODEQL_VERSION}"
+          STUB_DIR="$HOME/.local/bin"
+          mkdir -p "${STUB_DIR}"
+          gh codeql install-stub "${STUB_DIR}/"
+          echo "${STUB_DIR}" >> "$GITHUB_PATH"
+          export PATH="${STUB_DIR}:${PATH}"
+          echo "CodeQL version: $(codeql version --format=terse)"
 
       - name: Tag - Upgrade CodeQL pack lock files
         if: steps.needs-creation.outputs.needed == 'true'
@@ -143,7 +142,7 @@ jobs:
             pack_dir=$(dirname "$qlpack_file")
             echo "Upgrading pack in directory: $pack_dir"
             cd "$pack_dir"
-            $QLT_CODEQL_PATH pack upgrade
+            codeql pack upgrade
             cd - > /dev/null
           done
           echo "Finished upgrading all CodeQL pack lock files"
@@ -152,7 +151,6 @@ jobs:
         if: steps.needs-creation.outputs.needed == 'true'
         shell: bash
         run: |
-          export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
           chmod +x ./scripts/install-packs.sh
           ./scripts/install-packs.sh
 
@@ -178,7 +176,7 @@ jobs:
         shell: bash
         run: |
           echo "Running CodeQL unit tests to validate release..."
-          $QLT_CODEQL_PATH test run \
+          codeql test run \
             --threads=0 \
             --strict-test-discovery \
             --additional-packs="${GITHUB_WORKSPACE}" \
