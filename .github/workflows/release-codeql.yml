@@ -1,0 +1,186 @@
+name: Release CodeQL - Publish and Bundle CodeQL Packs
+
+on:
+  workflow_call:
+    inputs:
+      publish_codeql_packs:
+        default: true
+        description: 'Publish CodeQL packs to GHCR. Disable for pre-release or re-run scenarios where packs already exist.'
+        required: false
+        type: boolean
+      version:
+        description: 'Release version tag (e.g., vX.Y.Z or vX.Y.Z-suffix). Must start with "v".'
+        required: true
+        type: string
+    outputs:
+      release_name:
+        description: 'The release name without "v" prefix (e.g., X.Y.Z or X.Y.Z-alpha)'
+        value: ${{ jobs.publish-codeql-packs.outputs.release_name }}
+      version:
+        description: 'The full version string with "v" prefix (e.g., vX.Y.Z or vX.Y.Z-alpha)'
+        value: ${{ jobs.publish-codeql-packs.outputs.version }}
+
+# Note: This workflow is called exclusively via workflow_call from release.yml.
+# It does NOT have a workflow_dispatch trigger to keep release.yml as the single
+# entry point for all release operations. To re-publish CodeQL packs standalone,
+# use workflow_dispatch on release.yml with create_github_release=false.
+
+permissions:
+  contents: read
+
+jobs:
+  publish-codeql-packs:
+    name: Publish and Bundle CodeQL Packs
+    runs-on: ubuntu-latest
+
+    environment: release-codeql
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      release_name: ${{ steps.version.outputs.release_name }}
+      version: ${{ steps.version.outputs.version }}
+
+    env:
+      PUBLISHABLE_PACKS_LIST: |
+        javascript/frameworks/cap/src
+        javascript/frameworks/cap/ext
+        javascript/frameworks/cap/lib
+        javascript/frameworks/ui5/src
+        javascript/frameworks/ui5/ext
+        javascript/frameworks/ui5/lib
+        javascript/frameworks/xsjs/src
+        javascript/frameworks/xsjs/ext
+        javascript/frameworks/xsjs/lib
+        javascript/heuristic-models/ext
+
+    steps:
+      - name: CodeQL - Validate and parse version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          if [[ ! "${VERSION}" =~ ^v ]]; then
+            echo "::error::Version '${VERSION}' must start with 'v'"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "release_name=${VERSION#v}" >> $GITHUB_OUTPUT
+
+      - name: CodeQL - Checkout tag
+        uses: actions/checkout@v6
+        with:
+          ref: refs/tags/${{ steps.version.outputs.version }}
+
+      - name: CodeQL - Install QLT
+        id: install-qlt
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        with:
+          qlt-version: 'latest'
+          add-to-path: true
+
+      - name: CodeQL - Install CodeQL
+        shell: bash
+        run: |
+          echo "Installing CodeQL"
+          qlt codeql run install
+          echo "-----------------------------"
+          echo "CodeQL Home: $QLT_CODEQL_HOME"
+          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+
+      - name: CodeQL - Install pack dependencies
+        shell: bash
+        run: |
+          export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
+          chmod +x ./scripts/install-packs.sh
+          ./scripts/install-packs.sh
+
+      - name: CodeQL - Validate version consistency
+        run: |
+          RELEASE_NAME="${{ steps.version.outputs.release_name }}"
+          echo "Validating all version-bearing files match ${RELEASE_NAME}..."
+          chmod +x ./scripts/update-release-version.sh
+          ./scripts/update-release-version.sh --check "${RELEASE_NAME}"
+
+      - name: CodeQL - Publish CodeQL packs
+        if: inputs.publish_codeql_packs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Read the shared pack list from the job-level environment variable.
+          mapfile -t PUBLISHABLE_PACKS <<< "${PUBLISHABLE_PACKS_LIST}"
+
+          echo "Publishing CodeQL packs..."
+          for pack_dir in "${PUBLISHABLE_PACKS[@]}"; do
+            if [ -d "${pack_dir}" ]; then
+              pack_name=$(grep -m1 "^name:" "${pack_dir}/qlpack.yml" | awk '{print $2}')
+              echo "📦 Publishing ${pack_name} from ${pack_dir}..."
+              $QLT_CODEQL_PATH pack publish --threads=-1 -- "${pack_dir}"
+              echo "✅ Published ${pack_name}"
+            else
+              echo "⚠️ Skipping: ${pack_dir} not found"
+            fi
+          done
+
+      - name: CodeQL - Skip pack publishing
+        if: '!inputs.publish_codeql_packs'
+        run: echo "⏭️ CodeQL pack publishing disabled via workflow input"
+
+      - name: CodeQL - Bundle CodeQL packs
+        run: |
+          mkdir -p dist-packs
+
+          # Bundle all publishable packs
+          # Read the pack list from the environment into a Bash array.
+          # Each line in PUBLISHABLE_PACKS_LIST becomes one element.
+          mapfile -t PUBLISHABLE_PACKS <<< "${PUBLISHABLE_PACKS_LIST}"
+
+          echo "Bundling CodeQL packs..."
+          for pack_dir in "${PUBLISHABLE_PACKS[@]}"; do
+            if [ -d "${pack_dir}" ]; then
+              pack_name=$(grep -m1 "^name:" "${pack_dir}/qlpack.yml" | awk '{print $2}')
+              # Convert pack name to filename: advanced-security/foo -> foo
+              bundle_name="${pack_name#advanced-security/}"
+              output="dist-packs/${bundle_name}.tar.gz"
+              echo "📦 Bundling ${pack_name} -> ${output}..."
+              $QLT_CODEQL_PATH pack bundle --threads=-1 --output="${output}" -- "${pack_dir}"
+              echo "✅ Bundled ${bundle_name}"
+            fi
+          done
+          echo ""
+          echo "Bundled packs:"
+          ls -lh dist-packs/
+
+      - name: CodeQL - Upload pack artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: codeql-pack-bundles-${{ steps.version.outputs.version }}
+          path: dist-packs/*.tar.gz
+
+      - name: CodeQL - Summary
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          RELEASE_NAME="${{ steps.version.outputs.release_name }}"
+          echo "## CodeQL Packs Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ inputs.publish_codeql_packs }}" == "true" ]; then
+            echo "✅ Published CodeQL packs to GHCR" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⏭️ CodeQL pack publishing was disabled" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "✅ Bundled CodeQL packs as artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### CodeQL Packs" >> $GITHUB_STEP_SUMMARY
+          echo "| Pack | Version |" >> $GITHUB_STEP_SUMMARY
+          echo "| ---- | ------- |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-cap-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-ui5-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-queries\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-sap-xsjs-all\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
+          echo "| \`advanced-security/javascript-heuristic-models\` | ${RELEASE_NAME} |" >> $GITHUB_STEP_SUMMARY
