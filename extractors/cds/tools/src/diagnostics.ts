@@ -122,7 +122,7 @@ function addDiagnostic(
 }
 
 /**
- * Add a diagnostic error to the CodeQL database for a CDS indexer failure
+ * Add a diagnostic warning to the CodeQL database for a CDS indexer failure
  * @param projectDir The project directory where the cds-indexer failed
  * @param errorMessage The error message from the cds-indexer execution
  * @param codeqlExePath Path to the CodeQL executable
