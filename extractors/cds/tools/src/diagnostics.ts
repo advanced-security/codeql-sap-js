@@ -122,6 +122,32 @@ function addDiagnostic(
 }
 
 /**
+ * Add a diagnostic warning to the CodeQL database for a CDS indexer failure
+ * @param projectDir The project directory where the cds-indexer failed
+ * @param errorMessage The error message from the cds-indexer execution
+ * @param codeqlExePath Path to the CodeQL executable
+ * @param sourceRoot Optional source root directory to make file paths relative to
+ * @returns True if the diagnostic was added, false otherwise
+ */
+export function addCdsIndexerDiagnostic(
+  projectDir: string,
+  errorMessage: string,
+  codeqlExePath: string,
+  sourceRoot?: string,
+): boolean {
+  return addDiagnostic(
+    projectDir,
+    errorMessage,
+    codeqlExePath,
+    'cds/indexer-failure',
+    'Failure running @sap/cds-indexer for a SAP CAP CDS project',
+    DiagnosticSeverity.Warning,
+    'project directory',
+    sourceRoot,
+  );
+}
+
+/**
  * Add a diagnostic error to the CodeQL database for a failed CDS compilation
  * @param cdsFilePath Path to the CDS file that failed to compile
  * @param errorMessage The error message from the compilation

@@ -3,6 +3,7 @@ import { join } from 'path';
 import { sync as globSync } from 'glob';
 
 import { orchestrateCompilation } from './src/cds/compiler';
+import { orchestrateCdsIndexer } from './src/cds/indexer';
 import { buildCdsProjectDependencyGraph, type CdsDependencyGraph } from './src/cds/parser';
 import { handleEarlyExit, runJavaScriptExtractionWithMarker } from './src/codeql';
 import {
@@ -203,6 +204,23 @@ if (projectCacheDirMap.size === 0) {
   cdsExtractorLog(
     'warn',
     'No projects and no cache mappings - this should have been detected earlier.',
+  );
+}
+
+// Run cds-indexer for projects that use it (before compilation)
+logPerformanceTrackingStart('CDS Indexer');
+const cdsIndexerSummary = orchestrateCdsIndexer(
+  dependencyGraph,
+  sourceRoot,
+  projectCacheDirMap,
+  codeqlExePath,
+);
+logPerformanceTrackingStop('CDS Indexer');
+
+if (cdsIndexerSummary.projectsRequiringIndexer > 0) {
+  logPerformanceMilestone(
+    'CDS indexer completed',
+    `${cdsIndexerSummary.successfulRuns} succeeded, ${cdsIndexerSummary.failedRuns} failed`,
   );
 }
 

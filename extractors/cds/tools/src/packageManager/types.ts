@@ -6,6 +6,8 @@
 export interface CdsDependencyCombination {
   cdsVersion: string;
   cdsDkVersion: string;
+  /** Version specifier for @sap/cds-indexer when the project depends on it. */
+  cdsIndexerVersion?: string;
   hash: string;
   resolvedCdsVersion?: string;
   resolvedCdsDkVersion?: string;
