@@ -1,14 +1,14 @@
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5View
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 module UI5Xss implements DataFlow::ConfigSig {
-  predicate isSource(DataFlow::Node start) {
-    DomBasedXss::DomBasedXssConfig::isSource(start, _)
+  predicate isSource(DataFlow::Node node) {
+    DomBasedXss::DomBasedXssConfig::isSource(node, _)
     or
-    start instanceof RemoteFlowSource
+    node instanceof RemoteFlowSource
   }
 
   predicate isBarrier(DataFlow::Node node) {

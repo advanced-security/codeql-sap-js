@@ -4,6 +4,7 @@ import advanced_security.javascript.frameworks.ui5.JsonParser
 import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5View
+import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions

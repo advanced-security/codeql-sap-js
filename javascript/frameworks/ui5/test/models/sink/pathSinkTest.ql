@@ -7,7 +7,7 @@
 
 import javascript
 import semmle.javascript.security.dataflow.TaintedPathQuery
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow as UI5DataFlow
 
 class UI5ExtPathISink extends DataFlow::Node {
   UI5ExtPathISink() { this = ModelOutput::getASinkNode("ui5-path-injection").asSink() }
