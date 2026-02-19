@@ -134,27 +134,7 @@ abstract class UI5BindingPath extends BindingPath {
       )
       or
       /* 5.  There is no call to `setModel` in the same webapp and a default model exists that is related to the binding path this refers to */
-      exists(DefaultODataServiceModel defaultModel |
-        result = defaultModel and
-        not exists(MethodCallNode viewSetModelCall |
-          viewSetModelCall.getMethodName() = "setModel" and
-          inSameWebApp(this.getLocation().getFile(), viewSetModelCall.getFile())
-        ) and
-        /*
-         * this binding path can occur in a fragment that is the receiver object for the bindElement model approximation
-         * i.e. checks that the default model is relevant
-         */
-
-        exists(FragmentLoad load |
-          load.getCallbackObjectReference().flowsTo(defaultModel.asBinding().asDataFlowNode()) and
-          load.getNameArgument()
-              .getStringValue()
-              .matches("%" +
-                  this.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
-          // The fragment load call must be in the same webapp as the fragment file
-          inSameWebApp(this.getLocation().getFile(), load.getFile())
-        )
-      )
+      result = getDefaultODataModel(this)
     )
     // and
     // /* This binding path and the resulting model should live inside the same webapp */
@@ -184,18 +164,64 @@ abstract class UI5BindingPath extends BindingPath {
       inSameWebApp(this.getLocation().getFile(), result.getFile())
     )
     or
-    exists(JsonModel model, CustomController controller |
-      not model.contentIsStaticallyVisible() and
-      result = model and
-      this.getView() = controller.getAViewReference().getDefinition() and
-      controller.getModel() = result
-    )
+    /* 1-3. Internal (Client-side) model, content not statically visible */
+    result = getNonStaticJsonModelNode(this)
     or
     /* 2. External (Server-side) model */
-    result = this.getModel().(UI5ExternalModel) and
-    /* Restrict search to inside the same webapp. */
-    inSameWebApp(this.getLocation().getFile(), result.getFile())
+    result = getExternalModelNode(this)
   }
+}
+
+/**
+ * Gets the `DefaultODataServiceModel` for a binding path in a fragment,
+ * when no explicit `setModel` call exists in the webapp.
+ *
+ * `nomagic` to keep the `FragmentLoad` cross-flow analysis separate from the
+ * main `getModel()` evaluation.
+ */
+pragma[nomagic]
+private DefaultODataServiceModel getDefaultODataModel(UI5BindingPath bindingPath) {
+  // Only applies to fragment XML files
+  bindingPath.getLocation().getFile().getBaseName().matches("%.fragment.xml") and
+  not exists(MethodCallNode viewSetModelCall |
+    viewSetModelCall.getMethodName() = "setModel" and
+    inSameWebApp(bindingPath.getLocation().getFile(), viewSetModelCall.getFile())
+  ) and
+  exists(FragmentLoad load |
+    load.getCallbackObjectReference().flowsTo(result.asBinding().asDataFlowNode()) and
+    load.getNameArgument()
+        .getStringValue()
+        .matches("%" +
+            bindingPath.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
+    inSameWebApp(bindingPath.getLocation().getFile(), load.getFile())
+  )
+}
+
+/**
+ * Gets the `DataFlow::Node` for a non-statically-visible `JsonModel`.
+ *
+ * `nomagic` to avoid re-evaluation of `getModel()` when combined with other
+ * `getNode()` disjuncts.
+ */
+pragma[nomagic]
+private JsonModel getNonStaticJsonModelNode(UI5BindingPath bindingPath) {
+  not result.contentIsStaticallyVisible() and
+  exists(CustomController controller |
+    bindingPath.getView() = controller.getAViewReference().getDefinition() and
+    controller.getModel() = result
+  )
+}
+
+/**
+ * Gets the external (server-side) model node associated with a binding path.
+ *
+ * `nomagic` to prevent `getModel()` from being inlined and duplicated across
+ * the `getNode()` disjuncts.
+ */
+pragma[nomagic]
+private UI5ExternalModel getExternalModelNode(UI5BindingPath bindingPath) {
+  result = bindingPath.getModel() and
+  inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
 }
 
 class XmlControlProperty extends XmlAttribute {
