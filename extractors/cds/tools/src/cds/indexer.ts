@@ -8,7 +8,7 @@ import { cdsExtractorLog } from '../logging';
 import type { CdsDependencyGraph, CdsProject } from './parser/types';
 
 /** Maximum time (ms) allowed for a single cds-indexer invocation. */
-const CDS_INDEXER_TIMEOUT_MS = 120_000;
+const CDS_INDEXER_TIMEOUT_MS = 600_000;
 
 /** The npm package name for cds-indexer. */
 const CDS_INDEXER_PACKAGE = '@sap/cds-indexer';

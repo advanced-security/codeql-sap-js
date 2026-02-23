@@ -5084,7 +5084,7 @@ var import_path9 = require("path");
 // src/cds/indexer.ts
 var import_child_process8 = require("child_process");
 var import_path10 = require("path");
-var CDS_INDEXER_TIMEOUT_MS = 12e4;
+var CDS_INDEXER_TIMEOUT_MS = 6e5;
 var CDS_INDEXER_PACKAGE = "@sap/cds-indexer";
 function projectUsesCdsIndexer(project) {
   if (!project.packageJson) {
