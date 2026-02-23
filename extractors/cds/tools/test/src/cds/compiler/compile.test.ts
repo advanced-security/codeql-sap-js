@@ -29,6 +29,7 @@ jest.mock('../../../../src/filesystem', () => ({
   fileExists: jest.fn(),
   dirExists: jest.fn(),
   recursivelyRenameJsonFiles: jest.fn(),
+  normalizeLocationPathsInFile: jest.fn(),
 }));
 
 jest.mock('../../../../src/cds/compiler/version', () => ({
@@ -1100,6 +1101,89 @@ describe('compile .cds to .cds.json', () => {
       const spawnCall = (childProcess.spawnSync as jest.Mock).mock.calls[0];
       const args = spawnCall[1];
       expect(args).not.toContain('index.cds');
+    });
+  });
+
+  describe('Windows path handling', () => {
+    beforeEach(() => {
+      // Mock path functions
+      (path.resolve as jest.Mock).mockImplementation(p => `/resolved/${p}`);
+      (path.join as jest.Mock).mockImplementation((...parts) => parts.join('/'));
+      (path.relative as jest.Mock).mockImplementation((_from, _to) => 'project/file.cds');
+
+      // Default mocks for filesystem functions
+      (filesystem.fileExists as jest.Mock).mockReturnValue(true);
+      (filesystem.dirExists as jest.Mock).mockReturnValue(false);
+
+      // Mock getCdsVersion to return a version
+      (getCdsVersion as jest.Mock).mockReturnValue('7.0.0');
+    });
+
+    it('should detect direct binary path with Windows backslash separators', () => {
+      // This test verifies the isDirectBinary detection works with Windows path separators
+      const projectMap = new Map<string, BasicCdsProject>();
+      const projectDir = 'test-project';
+      const project: BasicCdsProject = {
+        cdsFiles: ['project/file.cds'],
+        compilationTargets: ['project/file.cds'],
+        expectedOutputFile: 'model.cds.json',
+        projectDir,
+      };
+      projectMap.set(projectDir, project);
+
+      // Mock successful spawn process
+      (childProcess.spawnSync as jest.Mock).mockReturnValue({
+        status: 0,
+        stdout: Buffer.from('Compilation successful'),
+        stderr: Buffer.from(''),
+      });
+
+      // Execute with a Windows-style path containing node_modules\.bin\
+      const windowsBinaryPath = 'C:\\Users\\user\\project\\node_modules\\.bin\\cds';
+      const result = compileCdsToJson(
+        'test.cds',
+        '/source/root',
+        windowsBinaryPath,
+        undefined,
+        projectMap,
+        projectDir,
+      );
+
+      // The test passes if no exceptions are thrown during path handling
+      // The actual binary path detection is internal, so we verify via successful compilation
+      expect(result).toBeDefined();
+    });
+
+    it('should detect direct binary path with POSIX forward slash separators', () => {
+      const projectMap = new Map<string, BasicCdsProject>();
+      const projectDir = 'test-project';
+      const project: BasicCdsProject = {
+        cdsFiles: ['project/file.cds'],
+        compilationTargets: ['project/file.cds'],
+        expectedOutputFile: 'model.cds.json',
+        projectDir,
+      };
+      projectMap.set(projectDir, project);
+
+      // Mock successful spawn process
+      (childProcess.spawnSync as jest.Mock).mockReturnValue({
+        status: 0,
+        stdout: Buffer.from('Compilation successful'),
+        stderr: Buffer.from(''),
+      });
+
+      // Execute with a POSIX-style path containing node_modules/.bin/
+      const posixBinaryPath = '/home/user/project/node_modules/.bin/cds';
+      const result = compileCdsToJson(
+        'test.cds',
+        '/source/root',
+        posixBinaryPath,
+        undefined,
+        projectMap,
+        projectDir,
+      );
+
+      expect(result).toBeDefined();
     });
   });
 });

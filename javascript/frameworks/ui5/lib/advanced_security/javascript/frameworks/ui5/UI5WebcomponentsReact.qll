@@ -31,7 +31,7 @@ class RefAttribute extends JsxAttribute {
 /**
  * Holds if the ref variable is assigned to a UI5 component via JSX
  */
-predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
+predicate isRefAssignedToUI5Component(CustomUseRefDomValueSource source) {
   exists(
     Variable refVar, JsxElement jsx, RefAttribute attr, VarRef componentVar, WebComponentImport decl
   |
@@ -49,10 +49,10 @@ predicate isRefAssignedToUI5Component(UseRefDomValueSource source) {
  * A custom version of the `React::UseRefDomValueSource` in the out of the box libraries
  * this version exposes its JSX element and also is not private
  */
-class UseRefDomValueSource extends DOM::DomValueSource::Range {
+class CustomUseRefDomValueSource extends DOM::DomValueSource::Range {
   JsxElement jsx;
 
-  UseRefDomValueSource() {
+  CustomUseRefDomValueSource() {
     exists(RefAttribute attrib |
       attrib.getValue().flow().getALocalSource().getAPropertyRead("current") = this and
       jsx.getAnAttribute() = attrib

@@ -73,3 +73,10 @@ dbs
 *.cds.json
 .cds-extractor-cache
 
+# CodeQL-generated artifacts
+.codeql/
+*.qlx
+
+# workspace customization file
+codeql-sap-js.code-workspace
+

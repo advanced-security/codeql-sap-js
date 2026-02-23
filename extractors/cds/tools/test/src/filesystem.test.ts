@@ -1,7 +1,13 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { fileExists, dirExists, recursivelyRenameJsonFiles } from '../../src/filesystem';
+import {
+  fileExists,
+  dirExists,
+  recursivelyRenameJsonFiles,
+  normalizeCdsJsonLocations,
+  normalizeLocationPathsInFile,
+} from '../../src/filesystem';
 
 // Mock fs module
 jest.mock('fs', () => ({
@@ -10,6 +16,7 @@ jest.mock('fs', () => ({
   readFileSync: jest.fn(),
   readdirSync: jest.fn(),
   renameSync: jest.fn(),
+  writeFileSync: jest.fn(),
 }));
 
 // Mock path module
@@ -198,6 +205,202 @@ describe('filesystem', () => {
       );
 
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('normalizeCdsJsonLocations', () => {
+    it('should normalize backslashes in top-level $location.file', () => {
+      const data = {
+        $location: { file: 'db\\schema.cds' },
+        definitions: {},
+      };
+      normalizeCdsJsonLocations(data);
+      expect((data.$location as Record<string, unknown>).file).toBe('db/schema.cds');
+    });
+
+    it('should normalize backslashes in definition $location.file values', () => {
+      const data = {
+        definitions: {
+          Service1: {
+            kind: 'service',
+            $location: { file: 'srv\\service1.cds', line: 4, col: 9 },
+          },
+          'Service1.Entity1': {
+            kind: 'entity',
+            $location: { file: 'srv\\service1.cds', line: 10 },
+          },
+        },
+      };
+      normalizeCdsJsonLocations(data);
+      expect((data.definitions.Service1.$location as Record<string, unknown>).file).toBe(
+        'srv/service1.cds',
+      );
+      expect((data.definitions['Service1.Entity1'].$location as Record<string, unknown>).file).toBe(
+        'srv/service1.cds',
+      );
+    });
+
+    it('should normalize backslashes in nested element $location.file values', () => {
+      const data = {
+        definitions: {
+          Entity1: {
+            kind: 'entity',
+            $location: { file: 'db\\schema.cds' },
+            elements: {
+              name: {
+                type: 'cds.String',
+                $location: { file: 'db\\schema.cds', line: 5 },
+              },
+            },
+          },
+        },
+      };
+      normalizeCdsJsonLocations(data);
+      expect(
+        (
+          (data.definitions.Entity1.elements as Record<string, Record<string, unknown>>).name
+            .$location as Record<string, unknown>
+        ).file,
+      ).toBe('db/schema.cds');
+    });
+
+    it('should be a no-op for forward-slash paths (Unix output)', () => {
+      const data = {
+        $location: { file: 'db/schema.cds' },
+        definitions: {
+          Service1: {
+            kind: 'service',
+            $location: { file: 'srv/service1.cds', line: 4 },
+          },
+        },
+      };
+      const original = JSON.stringify(data);
+      normalizeCdsJsonLocations(data);
+      expect(JSON.stringify(data)).toBe(original);
+    });
+
+    it('should handle deeply nested Windows paths', () => {
+      const data = {
+        $location: { file: 'srv\\sub\\deep\\file.cds' },
+        definitions: {},
+      };
+      normalizeCdsJsonLocations(data);
+      expect((data.$location as Record<string, unknown>).file).toBe('srv/sub/deep/file.cds');
+    });
+
+    it('should handle missing $location gracefully', () => {
+      const data = { definitions: { Foo: { kind: 'service' } } };
+      expect(() => normalizeCdsJsonLocations(data)).not.toThrow();
+    });
+
+    it('should handle empty object gracefully', () => {
+      expect(() => normalizeCdsJsonLocations({})).not.toThrow();
+    });
+
+    it('should handle null/non-object input gracefully', () => {
+      expect(() =>
+        normalizeCdsJsonLocations(null as unknown as Record<string, unknown>),
+      ).not.toThrow();
+    });
+
+    it('should normalize a realistic Windows CDS compiler output', () => {
+      const data = {
+        namespace: 'sample',
+        $location: { file: 'db\\schema.cds' },
+        definitions: {
+          'sample.Entity1': {
+            kind: 'entity',
+            $location: { file: 'db\\schema.cds', line: 3, col: 8 },
+            elements: {
+              name: {
+                type: 'cds.String',
+                $location: { file: 'db\\schema.cds', line: 4, col: 5 },
+              },
+            },
+          },
+          Service1: {
+            kind: 'service',
+            '@protocol': 'none',
+            $location: { file: 'srv\\service1.cds', line: 4, col: 9 },
+          },
+          Service2: {
+            kind: 'service',
+            $location: { file: 'srv\\service2.cds', line: 1, col: 9 },
+          },
+        },
+        meta: { creator: 'CDS Compiler v6.6.0', flavor: 'inferred' },
+      };
+
+      normalizeCdsJsonLocations(data);
+
+      expect((data.$location as Record<string, unknown>).file).toBe('db/schema.cds');
+      expect((data.definitions.Service1.$location as Record<string, unknown>).file).toBe(
+        'srv/service1.cds',
+      );
+      expect((data.definitions.Service2.$location as Record<string, unknown>).file).toBe(
+        'srv/service2.cds',
+      );
+      expect((data.definitions['sample.Entity1'].$location as Record<string, unknown>).file).toBe(
+        'db/schema.cds',
+      );
+      // Non-path properties should be untouched
+      expect(data.definitions.Service1['@protocol']).toBe('none');
+      expect(data.meta.creator).toBe('CDS Compiler v6.6.0');
+    });
+  });
+
+  describe('normalizeLocationPathsInFile', () => {
+    it('should read, normalize, and write back a file with backslash paths', () => {
+      const inputJson = JSON.stringify({
+        $location: { file: 'db\\schema.cds' },
+        definitions: {
+          Service1: {
+            kind: 'service',
+            $location: { file: 'srv\\service1.cds', line: 1 },
+          },
+        },
+      });
+
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+      (fs.readFileSync as jest.Mock).mockReturnValue(inputJson);
+
+      normalizeLocationPathsInFile('/path/to/model.cds.json');
+
+      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
+      const writtenContent = (fs.writeFileSync as jest.Mock).mock.calls[0][1] as string;
+      const parsed = JSON.parse(writtenContent);
+      expect(parsed.$location.file).toBe('db/schema.cds');
+      expect(parsed.definitions.Service1.$location.file).toBe('srv/service1.cds');
+    });
+
+    it('should not write if content is already normalized', () => {
+      const normalizedJson =
+        JSON.stringify(
+          {
+            $location: { file: 'db/schema.cds' },
+            definitions: {},
+          },
+          null,
+          2,
+        ) + '\n';
+
+      (fs.existsSync as jest.Mock).mockReturnValue(true);
+      (fs.statSync as jest.Mock).mockReturnValue({ isFile: () => true });
+      (fs.readFileSync as jest.Mock).mockReturnValue(normalizedJson);
+
+      normalizeLocationPathsInFile('/path/to/model.cds.json');
+
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should skip non-existent files', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      normalizeLocationPathsInFile('/nonexistent/file.cds.json');
+
+      expect(fs.readFileSync).not.toHaveBeenCalled();
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
   });
 });

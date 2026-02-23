@@ -42,6 +42,8 @@ class RequiredService extends JsonObject {
 
   File getImplementationFile() {
     exists(RootDirectory root |
+      // `getFilePathRelativeToRoot` returns normalized forward-slash paths regardless of OS,
+      // matching the forward-slash convention used in package.json `impl` values.
       root.getFilePathRelativeToRoot(result) = "./" + this.getPropStringValue("impl")
     )
   }

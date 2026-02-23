@@ -11,7 +11,7 @@ import advanced_security.javascript.frameworks.ui5.UI5WebcomponentsReact
  */
 class ExcludedSource extends DomBasedXss::Sanitizer {
   ExcludedSource() {
-    exists(UseRefDomValueSource source |
+    exists(CustomUseRefDomValueSource source |
       // exclude components with this name from @ui5/webcomponents-react only
       isRefAssignedToUI5Component(source) and
       source.getElement().getName() in [

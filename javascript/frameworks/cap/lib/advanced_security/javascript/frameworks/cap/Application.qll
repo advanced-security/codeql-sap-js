@@ -12,9 +12,16 @@ class RootDirectory extends Folder {
 
   /**
    * Gets the path of a file relative to this root directory.
+   *
+   * Note: On Windows, `getAbsolutePath()` returns backslash-separated paths.
+   * We normalize backslashes to forward slashes before comparison to ensure
+   * cross-platform compatibility.
    */
   string getFilePathRelativeToRoot(File file) {
-    result = file.getAbsolutePath().regexpReplaceAll(this.getAbsolutePath(), ".") and
+    result =
+      file.getAbsolutePath()
+          .replaceAll("\\", "/")
+          .regexpReplaceAll(this.getAbsolutePath().replaceAll("\\", "/"), ".") and
     result.charAt(0) = "."
   }
 

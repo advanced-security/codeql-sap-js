@@ -6,3 +6,4 @@ dependencies:
   codeql/javascript-all: "^2.4.0"
   advanced-security/javascript-sap-xsjs-queries: "^2.3.0"
   advanced-security/javascript-sap-xsjs-all: "^2.3.0"
+  advanced-security/javascript-sap-xsjs-models: "^2.3.0"

@@ -77,6 +77,23 @@ async function build() {
     // Convert bytes to MB
     const sizeInMB = stats.size / (1024 * 1024);
     console.log(`📦 Created CDS extractor JS bundle: total bundle size: ${sizeInMB.toFixed(2)} MB`);
+
+    // Build the workflow library bundle (used by compile-test-cds.mjs)
+    console.log('🚀 Building compile-test-cds library bundle...');
+
+    const libResult = await esbuildFunc({
+      ...buildOptions,
+      banner: {},
+      entryPoints: ['compile-test-cds-lib.ts'],
+      outfile: 'dist/compile-test-cds-lib.cjs',
+    });
+
+    if (libResult.errors.length > 0) {
+      console.error('❌ Library build errors:', libResult.errors);
+      process.exit(1);
+    }
+
+    console.log('✅ Library bundle created at dist/compile-test-cds-lib.cjs');
   } catch (error) {
     console.error('❌ Build failed:', error);
     process.exit(1);
