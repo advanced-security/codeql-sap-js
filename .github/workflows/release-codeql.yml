@@ -73,26 +73,25 @@ jobs:
         with:
           ref: refs/tags/${{ steps.version.outputs.version }}
 
-      - name: CodeQL - Install QLT
-        id: install-qlt
-        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
-        with:
-          qlt-version: 'latest'
-          add-to-path: true
-
-      - name: CodeQL - Install CodeQL
+      - name: CodeQL - Install CodeQL via GitHub CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          echo "Installing CodeQL"
-          qlt codeql run install
-          echo "-----------------------------"
-          echo "CodeQL Home: $QLT_CODEQL_HOME"
-          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+          CODEQL_VERSION=$(jq -r .CodeQLCLI qlt.conf.json)
+          echo "Installing CodeQL CLI ${CODEQL_VERSION} via gh-codeql..."
+          gh extension install github/gh-codeql
+          gh codeql set-version "${CODEQL_VERSION}"
+          STUB_DIR="$HOME/.local/bin"
+          mkdir -p "${STUB_DIR}"
+          gh codeql install-stub "${STUB_DIR}/"
+          echo "${STUB_DIR}" >> "$GITHUB_PATH"
+          export PATH="${STUB_DIR}:${PATH}"
+          echo "CodeQL version: $(codeql version --format=terse)"
 
       - name: CodeQL - Install pack dependencies
         shell: bash
         run: |
-          export PATH="$(dirname "$QLT_CODEQL_PATH"):$PATH"
           chmod +x ./scripts/install-packs.sh
           ./scripts/install-packs.sh
 
@@ -116,7 +115,7 @@ jobs:
             if [ -d "${pack_dir}" ]; then
               pack_name=$(grep -m1 "^name:" "${pack_dir}/qlpack.yml" | awk '{print $2}')
               echo "📦 Publishing ${pack_name} from ${pack_dir}..."
-              $QLT_CODEQL_PATH pack publish --threads=-1 -- "${pack_dir}"
+              echo "${GITHUB_TOKEN}" | codeql pack publish --github-auth-stdin --threads=-1 -- "${pack_dir}"
               echo "✅ Published ${pack_name}"
             else
               echo "⚠️ Skipping: ${pack_dir} not found"
@@ -144,7 +143,7 @@ jobs:
               bundle_name="${pack_name#advanced-security/}"
               output="dist-packs/${bundle_name}.tar.gz"
               echo "📦 Bundling ${pack_name} -> ${output}..."
-              $QLT_CODEQL_PATH pack bundle --threads=-1 --output="${output}" -- "${pack_dir}"
+              codeql pack bundle --threads=-1 --output="${output}" -- "${pack_dir}"
               echo "✅ Bundled ${bundle_name}"
             fi
           done
