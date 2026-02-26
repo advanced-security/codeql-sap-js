@@ -1,3 +1,20 @@
+// Suppress Node.js v25+ localStorage warning triggered by jest-environment-node
+// teardown accessing globalThis.localStorage before --localstorage-file is set.
+// Setting the env var here ensures it propagates to all Jest worker processes.
+const nodeVersion = parseInt(process.versions.node, 10);
+if (nodeVersion >= 25 && !process.env.NODE_OPTIONS?.includes('--localstorage-file')) {
+  const localStoragePath = require('path').join(
+    require('os').tmpdir(),
+    '.jest-cds-extractor-localstorage',
+  );
+  process.env.NODE_OPTIONS = [
+    process.env.NODE_OPTIONS,
+    `--localstorage-file=${localStoragePath}`,
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   preset: 'ts-jest',
