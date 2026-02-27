@@ -1,0 +1,14 @@
+# .yamllint.yaml
+extends: default
+rules:
+  # Disable rules you don't care about (e.g., flow styles if you prefer compact YAML)
+  braces: disable
+  brackets: disable
+  comments: disable
+  document-start: disable
+  key-duplicates: enable
+  indentation:
+    spaces: 2
+  line-length: disable
+  new-lines: disable
+  truthy: disable
