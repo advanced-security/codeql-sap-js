@@ -108,7 +108,6 @@ jobs:
         run: |
           LATEST="${{ needs.detect-update.outputs.latest_version }}"
           echo "Updating all version-bearing files to ${LATEST}..."
-          chmod +x ./scripts/update-release-version.sh
           ./scripts/update-release-version.sh "${LATEST}"
 
       - name: Update - Install CodeQL via GitHub CLI
@@ -128,17 +127,7 @@ jobs:
           echo "CodeQL version: $(codeql version --format=terse)"
 
       - name: Update - Upgrade CodeQL pack lock files
-        shell: bash
-        run: |
-          echo "Upgrading CodeQL pack lock files..."
-          find . -name "qlpack.yml" -type f | sort | while read -r qlpack_file; do
-            pack_dir=$(dirname "$qlpack_file")
-            echo "Upgrading pack in directory: $pack_dir"
-            cd "$pack_dir"
-            codeql pack upgrade
-            cd - > /dev/null
-          done
-          echo "Finished upgrading all CodeQL pack lock files"
+        run: ./scripts/upgrade-packs.sh
 
       - name: Update - Setup Node.js for CDS compilation
         uses: actions/setup-node@v6
@@ -148,9 +137,7 @@ jobs:
           cache-dependency-path: 'extractors/cds/tools/package-lock.json'
 
       - name: Update - Compile CAP CDS files
-        run: |
-          chmod +x ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
-          ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
+        run: ./extractors/cds/tools/workflow/cds-compilation-for-actions.sh
 
       - name: Update - Run CodeQL unit tests
         env:
