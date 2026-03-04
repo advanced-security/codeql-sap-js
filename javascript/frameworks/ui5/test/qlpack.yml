@@ -1,5 +1,5 @@
 name: advanced-security/javascript-sap-ui5-queries-tests
-version: 2.24.2
+version: 2.24.2-rc1
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.6.22"
