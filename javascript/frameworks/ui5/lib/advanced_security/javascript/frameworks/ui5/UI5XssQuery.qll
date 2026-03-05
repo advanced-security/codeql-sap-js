@@ -1,5 +1,5 @@
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow as UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5View
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss

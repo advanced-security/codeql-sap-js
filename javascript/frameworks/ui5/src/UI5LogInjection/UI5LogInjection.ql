@@ -13,7 +13,6 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5LogInjectionQuery
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 
 module UI5LogInjectionFlow = TaintTracking::Global<UI5LogInjection>;
 
