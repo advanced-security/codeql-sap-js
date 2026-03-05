@@ -7,7 +7,7 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5FormulaInjectionQuery
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 
 from DataFlow::Node sink
 where UI5FormulaInjection::isSink(sink)

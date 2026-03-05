@@ -1,5 +1,5 @@
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import semmle.javascript.security.dataflow.LogInjectionQuery
 
 module UI5UnsafeLogAccess implements DataFlow::ConfigSig {

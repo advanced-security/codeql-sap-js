@@ -13,7 +13,6 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5LogsToHttpQuery
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
 
 module UI5LogsToHttpFlow = TaintTracking::GlobalWithState<UI5LogEntryToHttp>;
 

@@ -1,5 +1,5 @@
 import javascript
-import DataFlow
+import UI5DataFlow
 
 module TypeTrackers {
   private SourceNode hasDependency(TypeTracker t, string dependencyPath) {
