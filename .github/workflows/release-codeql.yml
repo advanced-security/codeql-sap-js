@@ -107,15 +107,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          RELEASE_NAME="${{ steps.version.outputs.release_name }}"
+
           # Read the shared pack list from the job-level environment variable.
           mapfile -t PUBLISHABLE_PACKS <<< "${PUBLISHABLE_PACKS_LIST}"
+
+          # Prerelease versions (containing a hyphen) require --allow-prerelease
+          PRERELEASE_FLAG=""
+          if [[ "${RELEASE_NAME}" == *-* ]]; then
+            PRERELEASE_FLAG="--allow-prerelease"
+            echo "Detected prerelease version — using ${PRERELEASE_FLAG}"
+          fi
 
           echo "Publishing CodeQL packs..."
           for pack_dir in "${PUBLISHABLE_PACKS[@]}"; do
             if [ -d "${pack_dir}" ]; then
               pack_name=$(grep -m1 "^name:" "${pack_dir}/qlpack.yml" | awk '{print $2}')
               echo "📦 Publishing ${pack_name} from ${pack_dir}..."
-              echo "${GITHUB_TOKEN}" | codeql pack publish --github-auth-stdin --threads=-1 -- "${pack_dir}"
+              codeql pack publish --threads=-1 ${PRERELEASE_FLAG} -- "${pack_dir}"
               echo "✅ Published ${pack_name}"
             else
               echo "⚠️ Skipping: ${pack_dir} not found"
