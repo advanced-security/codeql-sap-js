@@ -12,7 +12,7 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5FormulaInjectionQuery
 
 module UI5FormulaInjectionFlow = TaintTracking::Global<UI5FormulaInjection>;
