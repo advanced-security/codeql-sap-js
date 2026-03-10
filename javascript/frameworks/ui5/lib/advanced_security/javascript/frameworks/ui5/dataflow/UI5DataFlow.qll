@@ -61,20 +61,6 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5Control getControlDeclaration() { result = controlDeclaration }
 }
 
-class LocalModelStringPropertySource extends DomBasedXss::Source {
-  LocalModelStringPropertySource() {
-    exists(UI5BindingPath bindingPath |
-      this =
-        bindingPath
-            .getControlDeclaration()
-            .getDefinition()
-            .getMetadata()
-            .getProperty(bindingPath.getPropertyName())
-    ) and
-    not exists(DataFlow::SharedFlowStep s | s.step(_, this))
-  }
-}
-
 module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {
   private newtype TNode =
     TUI5BindingPathNode(UI5BindingPath path) or
