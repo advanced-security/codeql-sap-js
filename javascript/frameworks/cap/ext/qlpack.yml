@@ -1,6 +1,6 @@
 ---
 library: true
 name: advanced-security/javascript-sap-cap-models
-version: 2.24.2
+version: 2.24.3
 extensionTargets:
   codeql/javascript-all: "^2.6.22"
