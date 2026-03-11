@@ -115,6 +115,7 @@ extensions:
     data:
       - ["UI5InputControl", "Member[value]", "remote"]
       - ["UI5InputControl", "Member[getValue].ReturnValue", "remote"]
+      - ["UI5HTMLControl", "Member[getContent].ReturnValue", "remote"]
       - ["UI5CodeEditor", "Member[value]", "remote"]
       - ["UI5CodeEditor", "Member[getCurrentValue].ReturnValue", "remote"]
       - ["global", "Member[jQuery].Member[sap].Member[syncHead,syncGet,syncGetText,syncPost,syncPostText].ReturnValue", "remote"]

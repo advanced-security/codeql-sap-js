@@ -225,24 +225,6 @@ private UI5ExternalModel getExternalModelNode(UI5BindingPath bindingPath) {
   inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
 }
 
-class XmlControlProperty extends XmlAttribute {
-  XmlControlProperty() { exists(UI5Control control | this.getElement() = control.asXmlControl()) }
-}
-
-bindingset[qualifiedTypeUri]
-predicate isBuiltInControl(string qualifiedTypeUri) {
-  exists(string namespace |
-    namespace =
-      [
-        "sap\\.m.*", // https://sapui5.hana.ondemand.com/#/api/sap.m: The main UI5 control library, with responsive controls that can be used in touch devices as well as desktop browsers.
-        "sap\\.f.*", // https://sapui5.hana.ondemand.com/#/api/sap.f: SAPUI5 library with controls specialized for SAP Fiori apps.
-        "sap\\.ui.*" // https://sapui5.hana.ondemand.com/#/api/sap.ui: The sap.ui namespace is the central OpenAjax compliant entry point for UI related JavaScript functionality provided by SAP.
-      ]
-  |
-    qualifiedTypeUri.regexpMatch(namespace)
-  )
-}
-
 /**
  * A UI5 View that might include XSS sources and sinks in standard controls.
  */
