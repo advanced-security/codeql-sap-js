@@ -203,14 +203,3 @@ private class DisplayEventHandlerParameterAccess extends RemoteFlowSource instan
     )
   }
 }
-
-/**
- * Method calls that fetch a piece of data either from a library control capable of accepting user input, or from a URI parameter.
- */
-private class UI5ExtRemoteSource extends RemoteFlowSource {
-  UI5ExtRemoteSource() { this = ModelOutput::getASourceNode("remote").asSource() }
-
-  override string getSourceType() {
-    result = "Remote flow" // Don't discriminate between UI5-specific remote flows and vanilla ones
-  }
-}

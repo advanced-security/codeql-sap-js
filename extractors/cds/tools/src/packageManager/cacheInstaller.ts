@@ -97,10 +97,13 @@ export function cacheInstallDependencies(
     const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
     const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
     const fallbackNote = isFallback ? ' (using fallback versions)' : '';
+    const indexerNote = combination.cdsIndexerVersion
+      ? `, @sap/cds-indexer@${combination.cdsIndexerVersion}`
+      : '';
 
     cdsExtractorLog(
       'info',
-      `Dependency combination ${hash.substring(0, 8)}: @sap/cds@${actualCdsVersion}, @sap/cds-dk@${actualCdsDkVersion}${fallbackNote}`,
+      `Dependency combination ${hash.substring(0, 8)}: @sap/cds@${actualCdsVersion}, @sap/cds-dk@${actualCdsDkVersion}${indexerNote}${fallbackNote}`,
     );
   }
 
@@ -162,14 +165,31 @@ export function cacheInstallDependencies(
       const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
       const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
 
+      const cacheDeps: Record<string, string> = {
+        '@sap/cds': actualCdsVersion,
+        '@sap/cds-dk': actualCdsDkVersion,
+      };
+
+      // Include @sap/cds-indexer in the cache when a project depends on it.
+      // This is a best-effort optimization: on systems with access to the
+      // private npm registry that hosts @sap/cds-indexer, it will be cached
+      // alongside @sap/cds and @sap/cds-dk. On systems without access, the
+      // npm install will still succeed for the other packages (it won't fail
+      // the overall installation — npm install is run with --no-optional
+      // semantics handled below).
+      if (combination.cdsIndexerVersion) {
+        cacheDeps['@sap/cds-indexer'] = combination.cdsIndexerVersion;
+        cdsExtractorLog(
+          'info',
+          `Including @sap/cds-indexer@${combination.cdsIndexerVersion} in cache for combination ${hash.substring(0, 8)}`,
+        );
+      }
+
       const packageJson = {
         name: `cds-extractor-cache-${hash}`,
         version: '1.0.0',
         private: true,
-        dependencies: {
-          '@sap/cds': actualCdsVersion,
-          '@sap/cds-dk': actualCdsDkVersion,
-        },
+        dependencies: cacheDeps,
       };
 
       try {
@@ -220,6 +240,10 @@ export function cacheInstallDependencies(
       }
       const p_cdsVersion = project.packageJson.dependencies?.['@sap/cds'] ?? 'latest';
       const p_cdsDkVersion = project.packageJson.devDependencies?.['@sap/cds-dk'] ?? p_cdsVersion;
+      const p_cdsIndexerVersion =
+        project.packageJson.dependencies?.['@sap/cds-indexer'] ??
+        project.packageJson.devDependencies?.['@sap/cds-indexer'] ??
+        undefined;
 
       // Resolve the project's versions to match against the combination's resolved versions
       const projectResolvedVersions = resolveCdsVersions(p_cdsVersion, p_cdsDkVersion);
@@ -234,7 +258,8 @@ export function cacheInstallDependencies(
 
       if (
         projectActualCdsVersion === combinationActualCdsVersion &&
-        projectActualCdsDkVersion === combinationActualCdsDkVersion
+        projectActualCdsDkVersion === combinationActualCdsDkVersion &&
+        p_cdsIndexerVersion === combination.cdsIndexerVersion
       ) {
         projectCacheDirMap.set(projectDir, cacheDir);
       }
@@ -294,6 +319,12 @@ function extractUniqueDependencyCombinations(
     const cdsVersion = project.packageJson.dependencies?.['@sap/cds'] ?? 'latest';
     const cdsDkVersion = project.packageJson.devDependencies?.['@sap/cds-dk'] ?? cdsVersion;
 
+    // Detect optional @sap/cds-indexer dependency
+    const cdsIndexerVersion =
+      project.packageJson.dependencies?.['@sap/cds-indexer'] ??
+      project.packageJson.devDependencies?.['@sap/cds-indexer'] ??
+      undefined;
+
     // Resolve versions first to ensure we cache based on actual resolved versions
     cdsExtractorLog(
       'info',
@@ -326,14 +357,16 @@ function extractUniqueDependencyCombinations(
     // Calculate hash based on resolved versions to ensure proper cache reuse
     const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
     const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
-    const hash = createHash('sha256')
-      .update(`${actualCdsVersion}|${actualCdsDkVersion}`)
-      .digest('hex');
+    const hashInput = cdsIndexerVersion
+      ? `${actualCdsVersion}|${actualCdsDkVersion}|${cdsIndexerVersion}`
+      : `${actualCdsVersion}|${actualCdsDkVersion}`;
+    const hash = createHash('sha256').update(hashInput).digest('hex');
 
     if (!combinations.has(hash)) {
       combinations.set(hash, {
         cdsVersion,
         cdsDkVersion,
+        cdsIndexerVersion,
         hash,
         resolvedCdsVersion: resolvedCdsVersion ?? undefined,
         resolvedCdsDkVersion: resolvedCdsDkVersion ?? undefined,

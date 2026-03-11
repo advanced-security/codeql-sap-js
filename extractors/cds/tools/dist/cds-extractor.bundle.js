@@ -24,7 +24,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // cds-extractor.ts
-var import_path14 = require("path");
+var import_path15 = require("path");
 
 // node_modules/glob/dist/esm/index.min.js
 var import_node_url = require("node:url");
@@ -45,16 +45,16 @@ var ce = (n7, t) => {
   return e ? e[0] : null;
 };
 var ss = (n7, t, e) => {
-  let s, i, r, o, h, a = e.indexOf(n7), l = e.indexOf(t, a + 1), f = a;
+  let s, i, r, o, h, a = e.indexOf(n7), l = e.indexOf(t, a + 1), u = a;
   if (a >= 0 && l > 0) {
     if (n7 === t) return [a, l];
-    for (s = [], r = e.length; f >= 0 && !h; ) {
-      if (f === a) s.push(f), a = e.indexOf(n7, f + 1);
+    for (s = [], r = e.length; u >= 0 && !h; ) {
+      if (u === a) s.push(u), a = e.indexOf(n7, u + 1);
       else if (s.length === 1) {
         let c = s.pop();
         c !== void 0 && (h = [c, l]);
-      } else i = s.pop(), i !== void 0 && i < r && (r = i, o = l), l = e.indexOf(t, f + 1);
-      f = a < l && a >= 0 ? a : l;
+      } else i = s.pop(), i !== void 0 && i < r && (r = i, o = l), l = e.indexOf(t, u + 1);
+      u = a < l && a >= 0 ? a : l;
     }
     s.length && o !== void 0 && (h = [r, o]);
   }
@@ -120,18 +120,18 @@ function ht(n7, t, e) {
     s.push(a);
   }
   else {
-    let h = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(i.body), a = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(i.body), l = h || a, f = i.body.indexOf(",") >= 0;
-    if (!l && !f) return i.post.match(/,(?!,).*\}/) ? (n7 = i.pre + "{" + i.body + qt + i.post, ht(n7, t, true)) : [n7];
+    let h = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(i.body), a = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(i.body), l = h || a, u = i.body.indexOf(",") >= 0;
+    if (!l && !u) return i.post.match(/,(?!,).*\}/) ? (n7 = i.pre + "{" + i.body + qt + i.post, ht(n7, t, true)) : [n7];
     let c;
     if (l) c = i.body.split(/\.\./);
-    else if (c = me(i.body), c.length === 1 && c[0] !== void 0 && (c = ht(c[0], t, false).map(gs), c.length === 1)) return o.map((u) => i.pre + c[0] + u);
+    else if (c = me(i.body), c.length === 1 && c[0] !== void 0 && (c = ht(c[0], t, false).map(gs), c.length === 1)) return o.map((f) => i.pre + c[0] + f);
     let d;
     if (l && c[0] !== void 0 && c[1] !== void 0) {
-      let u = Ht(c[0]), m = Ht(c[1]), p = Math.max(c[0].length, c[1].length), w = c.length === 3 && c[2] !== void 0 ? Math.abs(Ht(c[2])) : 1, g = ys;
-      m < u && (w *= -1, g = bs);
+      let f = Ht(c[0]), m = Ht(c[1]), p = Math.max(c[0].length, c[1].length), w = c.length === 3 && c[2] !== void 0 ? Math.abs(Ht(c[2])) : 1, g = ys;
+      m < f && (w *= -1, g = bs);
       let E = c.some(ws);
       d = [];
-      for (let y = u; g(y, m); y += w) {
+      for (let y = f; g(y, m); y += w) {
         let b;
         if (a) b = String.fromCharCode(y), b === "\\" && (b = "");
         else if (b = String(y), E) {
@@ -145,10 +145,10 @@ function ht(n7, t, e) {
       }
     } else {
       d = [];
-      for (let u = 0; u < c.length; u++) d.push.apply(d, ht(c[u], t, false));
+      for (let f = 0; f < c.length; f++) d.push.apply(d, ht(c[f], t, false));
     }
-    for (let u = 0; u < d.length; u++) for (let m = 0; m < o.length && s.length < t; m++) {
-      let p = r + d[u] + o[m];
+    for (let f = 0; f < d.length; f++) for (let m = 0; m < o.length && s.length < t; m++) {
+      let p = r + d[f] + o[m];
       (!e || l || p) && s.push(p);
     }
   }
@@ -165,7 +165,7 @@ var we = (n7) => n7.join("");
 var ye = (n7, t) => {
   let e = t;
   if (n7.charAt(e) !== "[") throw new Error("not in a brace expression");
-  let s = [], i = [], r = e + 1, o = false, h = false, a = false, l = false, f = e, c = "";
+  let s = [], i = [], r = e + 1, o = false, h = false, a = false, l = false, u = e, c = "";
   t: for (; r < n7.length; ) {
     let p = n7.charAt(r);
     if ((p === "!" || p === "^") && r === e + 1) {
@@ -173,7 +173,7 @@ var ye = (n7, t) => {
       continue;
     }
     if (p === "]" && o && !a) {
-      f = r + 1;
+      u = r + 1;
       break;
     }
     if (o = true, p === "\\" && !a) {
@@ -201,14 +201,14 @@ var ye = (n7, t) => {
     }
     s.push(lt(p)), r++;
   }
-  if (f < r) return ["", false, 0, false];
+  if (u < r) return ["", false, 0, false];
   if (!s.length && !i.length) return ["$.", false, n7.length - e, true];
   if (i.length === 0 && s.length === 1 && /^\\?.$/.test(s[0]) && !l) {
     let p = s[0].length === 2 ? s[0].slice(-1) : s[0];
-    return [Es(p), false, f - e, false];
+    return [Es(p), false, u - e, false];
   }
-  let d = "[" + (l ? "^" : "") + we(s) + "]", u = "[" + (l ? "" : "^") + we(i) + "]";
-  return [s.length && i.length ? "(" + d + "|" + u + ")" : s.length ? d : u, h, f - e, true];
+  let d = "[" + (l ? "^" : "") + we(s) + "]", f = "[" + (l ? "" : "^") + we(i) + "]";
+  return [s.length && i.length ? "(" + d + "|" + f + ")" : s.length ? d : f, h, u - e, true];
 };
 var W = (n7, { windowsPathsNoEscape: t = false, magicalBraces: e = true } = {}) => e ? t ? n7.replace(/\[([^\/\\])\]/g, "$1") : n7.replace(/((?!\\).|^)\[([^\/\\])\]/g, "$1$2").replace(/\\([^\/])/g, "$1") : t ? n7.replace(/\[([^\/\\{}])\]/g, "$1") : n7.replace(/((?!\\).|^)\[([^\/\\{}])\]/g, "$1$2").replace(/\\([^\/{}])/g, "$1");
 var xs = /* @__PURE__ */ new Set(["!", "?", "+", "*", "@"]);
@@ -303,56 +303,56 @@ var Q = class n {
   static #i(t, e, s, i) {
     let r = false, o = false, h = -1, a = false;
     if (e.type === null) {
-      let u = s, m = "";
-      for (; u < t.length; ) {
-        let p = t.charAt(u++);
+      let f = s, m = "";
+      for (; f < t.length; ) {
+        let p = t.charAt(f++);
         if (r || p === "\\") {
           r = !r, m += p;
           continue;
         }
         if (o) {
-          u === h + 1 ? (p === "^" || p === "!") && (a = true) : p === "]" && !(u === h + 2 && a) && (o = false), m += p;
+          f === h + 1 ? (p === "^" || p === "!") && (a = true) : p === "]" && !(f === h + 2 && a) && (o = false), m += p;
           continue;
         } else if (p === "[") {
-          o = true, h = u, a = false, m += p;
+          o = true, h = f, a = false, m += p;
           continue;
         }
-        if (!i.noext && be(p) && t.charAt(u) === "(") {
+        if (!i.noext && be(p) && t.charAt(f) === "(") {
           e.push(m), m = "";
           let w = new n(p, e);
-          u = n.#i(t, w, u, i), e.push(w);
+          f = n.#i(t, w, f, i), e.push(w);
           continue;
         }
         m += p;
       }
-      return e.push(m), u;
+      return e.push(m), f;
     }
-    let l = s + 1, f = new n(null, e), c = [], d = "";
+    let l = s + 1, u = new n(null, e), c = [], d = "";
     for (; l < t.length; ) {
-      let u = t.charAt(l++);
-      if (r || u === "\\") {
-        r = !r, d += u;
+      let f = t.charAt(l++);
+      if (r || f === "\\") {
+        r = !r, d += f;
         continue;
       }
       if (o) {
-        l === h + 1 ? (u === "^" || u === "!") && (a = true) : u === "]" && !(l === h + 2 && a) && (o = false), d += u;
+        l === h + 1 ? (f === "^" || f === "!") && (a = true) : f === "]" && !(l === h + 2 && a) && (o = false), d += f;
         continue;
-      } else if (u === "[") {
-        o = true, h = l, a = false, d += u;
-        continue;
-      }
-      if (be(u) && t.charAt(l) === "(") {
-        f.push(d), d = "";
-        let m = new n(u, f);
-        f.push(m), l = n.#i(t, m, l, i);
+      } else if (f === "[") {
+        o = true, h = l, a = false, d += f;
         continue;
       }
-      if (u === "|") {
-        f.push(d), d = "", c.push(f), f = new n(null, e);
+      if (be(f) && t.charAt(l) === "(") {
+        u.push(d), d = "";
+        let m = new n(f, u);
+        u.push(m), l = n.#i(t, m, l, i);
         continue;
       }
-      if (u === ")") return d === "" && e.#r.length === 0 && (e.#f = true), f.push(d), d = "", e.push(...c, f), l;
-      d += u;
+      if (f === "|") {
+        u.push(d), d = "", c.push(u), u = new n(null, e);
+        continue;
+      }
+      if (f === ")") return d === "" && e.#r.length === 0 && (e.#f = true), u.push(d), d = "", e.push(...c, u), l;
+      d += f;
     }
     return e.type = null, e.#s = void 0, e.#r = [t.substring(s - 1)], l;
   }
@@ -373,16 +373,16 @@ var Q = class n {
   toRegExpSource(t) {
     let e = t ?? !!this.#h.dot;
     if (this.#t === this && this.#a(), !this.type) {
-      let a = this.isStart() && this.isEnd() && !this.#r.some((u) => typeof u != "string"), l = this.#r.map((u) => {
-        let [m, p, w, g] = typeof u == "string" ? n.#E(u, this.#s, a) : u.toRegExpSource(t);
+      let a = this.isStart() && this.isEnd() && !this.#r.some((f) => typeof f != "string"), l = this.#r.map((f) => {
+        let [m, p, w, g] = typeof f == "string" ? n.#E(f, this.#s, a) : f.toRegExpSource(t);
         return this.#s = this.#s || w, this.#n = this.#n || g, m;
-      }).join(""), f = "";
+      }).join(""), u = "";
       if (this.isStart() && typeof this.#r[0] == "string" && !(this.#r.length === 1 && Ts.has(this.#r[0]))) {
         let m = Cs, p = e && m.has(l.charAt(0)) || l.startsWith("\\.") && m.has(l.charAt(2)) || l.startsWith("\\.\\.") && m.has(l.charAt(4)), w = !e && !t && m.has(l.charAt(0));
-        f = p ? vs : w ? Ct : "";
+        u = p ? vs : w ? Ct : "";
       }
       let c = "";
-      return this.isEnd() && this.#t.#c && this.#o?.type === "!" && (c = "(?:$|\\/)"), [f + l + c, W(l), this.#s = !!this.#s, this.#n];
+      return this.isEnd() && this.#t.#c && this.#o?.type === "!" && (c = "(?:$|\\/)"), [u + l + c, W(l), this.#s = !!this.#s, this.#n];
     }
     let s = this.type === "*" || this.type === "+", i = this.type === "!" ? "(?:(?!(?:" : "(?:", r = this.#d(e);
     if (this.isStart() && this.isEnd() && !r && this.type !== "!") {
@@ -407,33 +407,34 @@ var Q = class n {
     }).filter((e) => !(this.isStart() && this.isEnd()) || !!e).join("|");
   }
   static #E(t, e, s = false) {
-    let i = false, r = "", o = false;
-    for (let h = 0; h < t.length; h++) {
-      let a = t.charAt(h);
+    let i = false, r = "", o = false, h = false;
+    for (let a = 0; a < t.length; a++) {
+      let l = t.charAt(a);
       if (i) {
-        i = false, r += (As.has(a) ? "\\" : "") + a;
+        i = false, r += (As.has(l) ? "\\" : "") + l;
         continue;
       }
-      if (a === "\\") {
-        h === t.length - 1 ? r += "\\\\" : i = true;
+      if (l === "*") {
+        if (h) continue;
+        h = true, r += s && /^[*]+$/.test(t) ? Ee : Se, e = true;
+        continue;
+      } else h = false;
+      if (l === "\\") {
+        a === t.length - 1 ? r += "\\\\" : i = true;
         continue;
       }
-      if (a === "[") {
-        let [l, f, c, d] = ye(t, h);
-        if (c) {
-          r += l, o = o || f, h += c - 1, e = e || d;
+      if (l === "[") {
+        let [u, c, d, f] = ye(t, a);
+        if (d) {
+          r += u, o = o || c, a += d - 1, e = e || f;
           continue;
         }
       }
-      if (a === "*") {
-        r += s && t === "*" ? Ee : Se, e = true;
-        continue;
-      }
-      if (a === "?") {
+      if (l === "?") {
         r += Kt, e = true;
         continue;
       }
-      r += ks(a);
+      r += ks(l);
     }
     return [r, W(t), !!e, o];
   }
@@ -568,8 +569,8 @@ var D = class {
     let i = this.globParts.map((r, o, h) => {
       if (this.isWindows && this.windowsNoMagicRoot) {
         let a = r[0] === "" && r[1] === "" && (r[2] === "?" || !ve.test(r[2])) && !ve.test(r[3]), l = /^[a-z]:/i.test(r[0]);
-        if (a) return [...r.slice(0, 4), ...r.slice(4).map((f) => this.parse(f))];
-        if (l) return [r[0], ...r.slice(1).map((f) => this.parse(f))];
+        if (a) return [...r.slice(0, 4), ...r.slice(4).map((u) => this.parse(u))];
+        if (l) return [r[0], ...r.slice(1).map((u) => this.parse(u))];
       }
       return r.map((a) => this.parse(a));
     });
@@ -633,8 +634,8 @@ var D = class {
           let h = s[i + 1], a = s[i + 2], l = s[i + 3];
           if (h !== ".." || !a || a === "." || a === ".." || !l || l === "." || l === "..") continue;
           e = true, s.splice(i, 1);
-          let f = s.slice(0);
-          f[i] = "**", t.push(f), i--;
+          let u = s.slice(0);
+          u[i] = "**", t.push(u), i--;
         }
         if (!this.preserveMultipleSlashes) {
           for (let o = 1; o < s.length - 1; o++) {
@@ -699,30 +700,30 @@ var D = class {
     r >= 2 && (t = this.levelTwoFileOptimize(t)), this.debug("matchOne", this, { file: t, pattern: e }), this.debug("matchOne", t.length, e.length);
     for (var o = 0, h = 0, a = t.length, l = e.length; o < a && h < l; o++, h++) {
       this.debug("matchOne loop");
-      var f = e[h], c = t[o];
-      if (this.debug(e, f, c), f === false) return false;
-      if (f === A) {
-        this.debug("GLOBSTAR", [e, f, c]);
-        var d = o, u = h + 1;
-        if (u === l) {
+      var u = e[h], c = t[o];
+      if (this.debug(e, u, c), u === false) return false;
+      if (u === A) {
+        this.debug("GLOBSTAR", [e, u, c]);
+        var d = o, f = h + 1;
+        if (f === l) {
           for (this.debug("** at the end"); o < a; o++) if (t[o] === "." || t[o] === ".." || !i.dot && t[o].charAt(0) === ".") return false;
           return true;
         }
         for (; d < a; ) {
           var m = t[d];
           if (this.debug(`
-globstar while`, t, d, e, u, m), this.matchOne(t.slice(d), e.slice(u), s)) return this.debug("globstar found match!", d, a, m), true;
+globstar while`, t, d, e, f, m), this.matchOne(t.slice(d), e.slice(f), s)) return this.debug("globstar found match!", d, a, m), true;
           if (m === "." || m === ".." || !i.dot && m.charAt(0) === ".") {
-            this.debug("dot detected!", t, d, e, u);
+            this.debug("dot detected!", t, d, e, f);
             break;
           }
           this.debug("globstar swallow a segment, and continue"), d++;
         }
         return !!(s && (this.debug(`
->>> no match, partial?`, t, d, e, u), d === a));
+>>> no match, partial?`, t, d, e, f), d === a));
       }
       let p;
-      if (typeof f == "string" ? (p = c === f, this.debug("string match", f, c, p)) : (p = f.test(c), this.debug("pattern match", f, c, p)), !p) return false;
+      if (typeof u == "string" ? (p = c === u, this.debug("string match", u, c, p)) : (p = u.test(c), this.debug("pattern match", u, c, p)), !p) return false;
     }
     if (o === a && h === l) return true;
     if (o === a) return s;
@@ -752,16 +753,16 @@ globstar while`, t, d, e, u, m), this.matchOne(t.slice(d), e.slice(u), s)) retur
         return typeof c == "string" ? ei(c) : c === A ? A : c._src;
       });
       l.forEach((c, d) => {
-        let u = l[d + 1], m = l[d - 1];
-        c !== A || m === A || (m === void 0 ? u !== void 0 && u !== A ? l[d + 1] = "(?:\\/|" + s + "\\/)?" + u : l[d] = s : u === void 0 ? l[d - 1] = m + "(?:\\/|\\/" + s + ")?" : u !== A && (l[d - 1] = m + "(?:\\/|\\/" + s + "\\/)" + u, l[d + 1] = A));
+        let f = l[d + 1], m = l[d - 1];
+        c !== A || m === A || (m === void 0 ? f !== void 0 && f !== A ? l[d + 1] = "(?:\\/|" + s + "\\/)?" + f : l[d] = s : f === void 0 ? l[d - 1] = m + "(?:\\/|\\/" + s + ")?" : f !== A && (l[d - 1] = m + "(?:\\/|\\/" + s + "\\/)" + f, l[d + 1] = A));
       });
-      let f = l.filter((c) => c !== A);
-      if (this.partial && f.length >= 1) {
+      let u = l.filter((c) => c !== A);
+      if (this.partial && u.length >= 1) {
         let c = [];
-        for (let d = 1; d <= f.length; d++) c.push(f.slice(0, d).join("/"));
+        for (let d = 1; d <= u.length; d++) c.push(u.slice(0, d).join("/"));
         return "(?:" + c.join("|") + ")";
       }
-      return f.join("/");
+      return u.join("/");
     }).join("|"), [o, h] = t.length > 1 ? ["(?:", ")"] : ["", ""];
     r = "^" + o + r + h + "$", this.partial && (r = "^(?:\\/|" + o + r.slice(1, -1) + h + ")$"), this.negate && (r = "^(?!" + r + ").+$");
     try {
@@ -945,7 +946,7 @@ var ft = class Me {
     return this.#o;
   }
   constructor(t) {
-    let { max: e = 0, ttl: s, ttlResolution: i = 1, ttlAutopurge: r, updateAgeOnGet: o, updateAgeOnHas: h, allowStale: a, dispose: l, onInsert: f, disposeAfter: c, noDisposeOnSet: d, noUpdateTTL: u, maxSize: m = 0, maxEntrySize: p = 0, sizeCalculation: w, fetchMethod: g, memoMethod: S, noDeleteOnFetchRejection: E, noDeleteOnStaleGet: y, allowStaleOnFetchRejection: b, allowStaleOnFetchAbort: z, ignoreFetchAbort: $, perf: J } = t;
+    let { max: e = 0, ttl: s, ttlResolution: i = 1, ttlAutopurge: r, updateAgeOnGet: o, updateAgeOnHas: h, allowStale: a, dispose: l, onInsert: u, disposeAfter: c, noDisposeOnSet: d, noUpdateTTL: f, maxSize: m = 0, maxEntrySize: p = 0, sizeCalculation: w, fetchMethod: g, memoMethod: S, noDeleteOnFetchRejection: E, noDeleteOnStaleGet: y, allowStaleOnFetchRejection: b, allowStaleOnFetchAbort: z, ignoreFetchAbort: $, perf: J } = t;
     if (J !== void 0 && typeof J?.now != "function") throw new TypeError("perf option must have a now() method if specified");
     if (this.#c = J ?? si, e !== 0 && !q(e)) throw new TypeError("max option must be a nonnegative integer");
     let Z = e ? De(e) : Array;
@@ -956,7 +957,7 @@ var ft = class Me {
     }
     if (S !== void 0 && typeof S != "function") throw new TypeError("memoMethod must be a function if defined");
     if (this.#w = S, g !== void 0 && typeof g != "function") throw new TypeError("fetchMethod must be a function if specified");
-    if (this.#S = g, this.#A = !!g, this.#f = /* @__PURE__ */ new Map(), this.#a = new Array(e).fill(void 0), this.#i = new Array(e).fill(void 0), this.#d = new Z(e), this.#E = new Z(e), this.#b = 0, this.#p = 0, this.#R = ri.create(e), this.#h = 0, this.#u = 0, typeof l == "function" && (this.#n = l), typeof f == "function" && (this.#r = f), typeof c == "function" ? (this.#o = c, this.#m = []) : (this.#o = void 0, this.#m = void 0), this.#x = !!this.#n, this.#_ = !!this.#r, this.#e = !!this.#o, this.noDisposeOnSet = !!d, this.noUpdateTTL = !!u, this.noDeleteOnFetchRejection = !!E, this.allowStaleOnFetchRejection = !!b, this.allowStaleOnFetchAbort = !!z, this.ignoreFetchAbort = !!$, this.maxEntrySize !== 0) {
+    if (this.#S = g, this.#A = !!g, this.#f = /* @__PURE__ */ new Map(), this.#a = new Array(e).fill(void 0), this.#i = new Array(e).fill(void 0), this.#d = new Z(e), this.#E = new Z(e), this.#b = 0, this.#p = 0, this.#R = ri.create(e), this.#h = 0, this.#u = 0, typeof l == "function" && (this.#n = l), typeof u == "function" && (this.#r = u), typeof c == "function" ? (this.#o = c, this.#m = []) : (this.#o = void 0, this.#m = void 0), this.#x = !!this.#n, this.#_ = !!this.#r, this.#e = !!this.#o, this.noDisposeOnSet = !!d, this.noUpdateTTL = !!f, this.noDeleteOnFetchRejection = !!E, this.allowStaleOnFetchRejection = !!b, this.allowStaleOnFetchAbort = !!z, this.ignoreFetchAbort = !!$, this.maxEntrySize !== 0) {
       if (this.#s !== 0 && !q(this.#s)) throw new TypeError("maxSize must be a positive integer if specified");
       if (!q(this.maxEntrySize)) throw new TypeError("maxEntrySize must be a positive integer if specified");
       this.#G();
@@ -992,8 +993,8 @@ var ft = class Me {
         let a = t[h], l = e[h];
         if (!a || !l) return;
         o.ttl = a, o.start = l, o.now = i || r();
-        let f = o.now - l;
-        o.remainingTTL = a - f;
+        let u = o.now - l;
+        o.remainingTTL = a - u;
       }
     };
     let i = 0, r = () => {
@@ -1010,8 +1011,8 @@ var ft = class Me {
       if (h === void 0) return 0;
       let a = t[h], l = e[h];
       if (!a || !l) return 1 / 0;
-      let f = (i || r()) - l;
-      return a - f;
+      let u = (i || r()) - l;
+      return a - u;
     }, this.#v = (o) => {
       let h = e[o], a = t[o];
       return !!a && !!h && (i || r()) - h > a;
@@ -1153,30 +1154,30 @@ var ft = class Me {
   }
   set(t, e, s = {}) {
     if (e === void 0) return this.delete(t), this;
-    let { ttl: i = this.ttl, start: r, noDisposeOnSet: o = this.noDisposeOnSet, sizeCalculation: h = this.sizeCalculation, status: a } = s, { noUpdateTTL: l = this.noUpdateTTL } = s, f = this.#I(t, e, s.size || 0, h);
-    if (this.maxEntrySize && f > this.maxEntrySize) return a && (a.set = "miss", a.maxEntrySizeExceeded = true), this.#O(t, "set"), this;
+    let { ttl: i = this.ttl, start: r, noDisposeOnSet: o = this.noDisposeOnSet, sizeCalculation: h = this.sizeCalculation, status: a } = s, { noUpdateTTL: l = this.noUpdateTTL } = s, u = this.#I(t, e, s.size || 0, h);
+    if (this.maxEntrySize && u > this.maxEntrySize) return a && (a.set = "miss", a.maxEntrySizeExceeded = true), this.#O(t, "set"), this;
     let c = this.#h === 0 ? void 0 : this.#f.get(t);
-    if (c === void 0) c = this.#h === 0 ? this.#p : this.#R.length !== 0 ? this.#R.pop() : this.#h === this.#t ? this.#B(false) : this.#h, this.#a[c] = t, this.#i[c] = e, this.#f.set(t, c), this.#d[this.#p] = c, this.#E[c] = this.#p, this.#p = c, this.#h++, this.#L(c, f, a), a && (a.set = "add"), l = false, this.#_ && this.#r?.(e, t, "add");
+    if (c === void 0) c = this.#h === 0 ? this.#p : this.#R.length !== 0 ? this.#R.pop() : this.#h === this.#t ? this.#B(false) : this.#h, this.#a[c] = t, this.#i[c] = e, this.#f.set(t, c), this.#d[this.#p] = c, this.#E[c] = this.#p, this.#p = c, this.#h++, this.#L(c, u, a), a && (a.set = "add"), l = false, this.#_ && this.#r?.(e, t, "add");
     else {
       this.#W(c);
       let d = this.#i[c];
       if (e !== d) {
         if (this.#A && this.#l(d)) {
           d.__abortController.abort(new Error("replaced"));
-          let { __staleWhileFetching: u } = d;
-          u !== void 0 && !o && (this.#x && this.#n?.(u, t, "set"), this.#e && this.#m?.push([u, t, "set"]));
+          let { __staleWhileFetching: f } = d;
+          f !== void 0 && !o && (this.#x && this.#n?.(f, t, "set"), this.#e && this.#m?.push([f, t, "set"]));
         } else o || (this.#x && this.#n?.(d, t, "set"), this.#e && this.#m?.push([d, t, "set"]));
-        if (this.#P(c), this.#L(c, f, a), this.#i[c] = e, a) {
+        if (this.#P(c), this.#L(c, u, a), this.#i[c] = e, a) {
           a.set = "replace";
-          let u = d && this.#l(d) ? d.__staleWhileFetching : d;
-          u !== void 0 && (a.oldValue = u);
+          let f = d && this.#l(d) ? d.__staleWhileFetching : d;
+          f !== void 0 && (a.oldValue = f);
         }
       } else a && (a.set = "update");
       this.#_ && this.onInsert?.(e, t, e === d ? "update" : "replace");
     }
     if (i !== 0 && !this.#g && this.#M(), this.#g && (l || this.#j(c, i, r), a && this.#N(a, c)), !o && this.#e && this.#m) {
-      let d = this.#m, u;
-      for (; u = d?.shift(); ) this.#o?.(...u);
+      let d = this.#m, f;
+      for (; f = d?.shift(); ) this.#o?.(...f);
     }
     return this;
   }
@@ -1223,11 +1224,11 @@ var ft = class Me {
     let a = { signal: o.signal, options: s, context: i }, l = (p, w = false) => {
       let { aborted: g } = o.signal, S = s.ignoreFetchAbort && p !== void 0, E = s.ignoreFetchAbort || !!(s.allowStaleOnFetchAbort && p !== void 0);
       if (s.status && (g && !w ? (s.status.fetchAborted = true, s.status.fetchError = o.signal.reason, S && (s.status.fetchAbortIgnored = true)) : s.status.fetchResolved = true), g && !S && !w) return c(o.signal.reason, E);
-      let y = u, b = this.#i[e];
-      return (b === u || S && w && b === void 0) && (p === void 0 ? y.__staleWhileFetching !== void 0 ? this.#i[e] = y.__staleWhileFetching : this.#O(t, "fetch") : (s.status && (s.status.fetchUpdated = true), this.set(t, p, a.options))), p;
-    }, f = (p) => (s.status && (s.status.fetchRejected = true, s.status.fetchError = p), c(p, false)), c = (p, w) => {
-      let { aborted: g } = o.signal, S = g && s.allowStaleOnFetchAbort, E = S || s.allowStaleOnFetchRejection, y = E || s.noDeleteOnFetchRejection, b = u;
-      if (this.#i[e] === u && (!y || !w && b.__staleWhileFetching === void 0 ? this.#O(t, "fetch") : S || (this.#i[e] = b.__staleWhileFetching)), E) return s.status && b.__staleWhileFetching !== void 0 && (s.status.returnedStale = true), b.__staleWhileFetching;
+      let y = f, b = this.#i[e];
+      return (b === f || S && w && b === void 0) && (p === void 0 ? y.__staleWhileFetching !== void 0 ? this.#i[e] = y.__staleWhileFetching : this.#O(t, "fetch") : (s.status && (s.status.fetchUpdated = true), this.set(t, p, a.options))), p;
+    }, u = (p) => (s.status && (s.status.fetchRejected = true, s.status.fetchError = p), c(p, false)), c = (p, w) => {
+      let { aborted: g } = o.signal, S = g && s.allowStaleOnFetchAbort, E = S || s.allowStaleOnFetchRejection, y = E || s.noDeleteOnFetchRejection, b = f;
+      if (this.#i[e] === f && (!y || !w && b.__staleWhileFetching === void 0 ? this.#O(t, "fetch") : S || (this.#i[e] = b.__staleWhileFetching)), E) return s.status && b.__staleWhileFetching !== void 0 && (s.status.returnedStale = true), b.__staleWhileFetching;
       if (b.__returned === b) throw p;
     }, d = (p, w) => {
       let g = this.#S?.(t, r, a);
@@ -1236,7 +1237,7 @@ var ft = class Me {
       });
     };
     s.status && (s.status.fetchDispatched = true);
-    let u = new Promise(d).then(l, f), m = Object.assign(u, { __abortController: o, __staleWhileFetching: r, __returned: void 0 });
+    let f = new Promise(d).then(l, u), m = Object.assign(f, { __abortController: o, __staleWhileFetching: r, __returned: void 0 });
     return e === void 0 ? (this.set(t, m, { ...a.options, status: void 0 }), e = this.#f.get(t)) : this.#i[e] = m, m;
   }
   #l(t) {
@@ -1245,9 +1246,9 @@ var ft = class Me {
     return !!e && e instanceof Promise && e.hasOwnProperty("__staleWhileFetching") && e.__abortController instanceof At;
   }
   async fetch(t, e = {}) {
-    let { allowStale: s = this.allowStale, updateAgeOnGet: i = this.updateAgeOnGet, noDeleteOnStaleGet: r = this.noDeleteOnStaleGet, ttl: o = this.ttl, noDisposeOnSet: h = this.noDisposeOnSet, size: a = 0, sizeCalculation: l = this.sizeCalculation, noUpdateTTL: f = this.noUpdateTTL, noDeleteOnFetchRejection: c = this.noDeleteOnFetchRejection, allowStaleOnFetchRejection: d = this.allowStaleOnFetchRejection, ignoreFetchAbort: u = this.ignoreFetchAbort, allowStaleOnFetchAbort: m = this.allowStaleOnFetchAbort, context: p, forceRefresh: w = false, status: g, signal: S } = e;
+    let { allowStale: s = this.allowStale, updateAgeOnGet: i = this.updateAgeOnGet, noDeleteOnStaleGet: r = this.noDeleteOnStaleGet, ttl: o = this.ttl, noDisposeOnSet: h = this.noDisposeOnSet, size: a = 0, sizeCalculation: l = this.sizeCalculation, noUpdateTTL: u = this.noUpdateTTL, noDeleteOnFetchRejection: c = this.noDeleteOnFetchRejection, allowStaleOnFetchRejection: d = this.allowStaleOnFetchRejection, ignoreFetchAbort: f = this.ignoreFetchAbort, allowStaleOnFetchAbort: m = this.allowStaleOnFetchAbort, context: p, forceRefresh: w = false, status: g, signal: S } = e;
     if (!this.#A) return g && (g.fetch = "get"), this.get(t, { allowStale: s, updateAgeOnGet: i, noDeleteOnStaleGet: r, status: g });
-    let E = { allowStale: s, updateAgeOnGet: i, noDeleteOnStaleGet: r, ttl: o, noDisposeOnSet: h, size: a, sizeCalculation: l, noUpdateTTL: f, noDeleteOnFetchRejection: c, allowStaleOnFetchRejection: d, allowStaleOnFetchAbort: m, ignoreFetchAbort: u, status: g, signal: S }, y = this.#f.get(t);
+    let E = { allowStale: s, updateAgeOnGet: i, noDeleteOnStaleGet: r, ttl: o, noDisposeOnSet: h, size: a, sizeCalculation: l, noUpdateTTL: u, noDeleteOnFetchRejection: c, allowStaleOnFetchRejection: d, allowStaleOnFetchAbort: m, ignoreFetchAbort: f, status: g, signal: S }, y = this.#f.get(t);
     if (y === void 0) {
       g && (g.fetch = "miss");
       let b = this.#U(t, y, E, p);
@@ -1403,7 +1404,7 @@ var te = class extends Mt {
     this.src.removeListener("error", this.proxyErrors), super.unpipe();
   }
   constructor(t, e, s) {
-    super(t, e, s), this.proxyErrors = (i) => e.emit("error", i), t.on("error", this.proxyErrors);
+    super(t, e, s), this.proxyErrors = (i) => this.dest.emit("error", i), t.on("error", this.proxyErrors);
   }
 };
 var di = (n7) => !!n7.objectMode;
@@ -1644,17 +1645,18 @@ var V = class extends import_node_events.EventEmitter {
       if (i !== null) return Promise.resolve({ done: false, value: i });
       if (this[G]) return e();
       let r, o, h = (c) => {
-        this.off("data", a), this.off("end", l), this.off(x, f), e(), o(c);
+        this.off("data", a), this.off("end", l), this.off(x, u), e(), o(c);
       }, a = (c) => {
-        this.off("error", h), this.off("end", l), this.off(x, f), this.pause(), r({ value: c, done: !!this[G] });
+        this.off("error", h), this.off("end", l), this.off(x, u), this.pause(), r({ value: c, done: !!this[G] });
       }, l = () => {
-        this.off("error", h), this.off("data", a), this.off(x, f), e(), r({ done: true, value: void 0 });
-      }, f = () => h(new Error("stream destroyed"));
+        this.off("error", h), this.off("data", a), this.off(x, u), e(), r({ done: true, value: void 0 });
+      }, u = () => h(new Error("stream destroyed"));
       return new Promise((c, d) => {
-        o = d, r = c, this.once(x, f), this.once("error", h), this.once("end", l), this.once("data", a);
+        o = d, r = c, this.once(x, u), this.once("error", h), this.once("end", l), this.once("data", a);
       });
     }, throw: e, return: e, [Symbol.asyncIterator]() {
       return this;
+    }, [Symbol.asyncDispose]: async () => {
     } };
   }
   [Symbol.iterator]() {
@@ -1666,6 +1668,7 @@ var V = class extends import_node_events.EventEmitter {
     };
     return this.once("end", e), this.once(Xt, e), this.once(x, e), { next: s, throw: e, return: e, [Symbol.iterator]() {
       return this;
+    }, [Symbol.dispose]: () => {
     } };
   }
   destroy(t) {
@@ -2036,8 +2039,8 @@ var R = class {
     }
   }
   #$(t) {
-    let { atime: e, atimeMs: s, birthtime: i, birthtimeMs: r, blksize: o, blocks: h, ctime: a, ctimeMs: l, dev: f, gid: c, ino: d, mode: u, mtime: m, mtimeMs: p, nlink: w, rdev: g, size: S, uid: E } = t;
-    this.#b = e, this.#a = s, this.#m = i, this.#E = r, this.#c = o, this.#f = h, this.#R = a, this.#d = l, this.#s = f, this.#S = c, this.#h = d, this.#n = u, this.#p = m, this.#i = p, this.#r = w, this.#w = g, this.#u = S, this.#o = E;
+    let { atime: e, atimeMs: s, birthtime: i, birthtimeMs: r, blksize: o, blocks: h, ctime: a, ctimeMs: l, dev: u, gid: c, ino: d, mode: f, mtime: m, mtimeMs: p, nlink: w, rdev: g, size: S, uid: E } = t;
+    this.#b = e, this.#a = s, this.#m = i, this.#E = r, this.#c = o, this.#f = h, this.#R = a, this.#d = l, this.#s = u, this.#S = c, this.#h = d, this.#n = f, this.#p = m, this.#i = p, this.#r = w, this.#w = g, this.#u = S, this.#o = E;
     let y = ie(t);
     this.#e = this.#e & gt | y | je, y !== L && y !== U && y !== X && (this.#e |= yt);
   }
@@ -2193,10 +2196,10 @@ var It = class {
     let a = h.substring(this.rootPath.length).split(s);
     if (a.length === 1 && !a[0] && a.pop(), i === void 0) throw new TypeError("must provide nocase setting to PathScurryBase ctor");
     this.nocase = i, this.root = this.newRoot(this.#r), this.roots[this.rootPath] = this.root;
-    let l = this.root, f = a.length - 1, c = e.sep, d = this.rootPath, u = false;
+    let l = this.root, u = a.length - 1, c = e.sep, d = this.rootPath, f = false;
     for (let m of a) {
-      let p = f--;
-      l = l.child(m, { relative: new Array(p).fill("..").join(c), relativePosix: new Array(p).fill("..").join("/"), fullpath: d += (u ? "" : c) + m }), u = true;
+      let p = u--;
+      l = l.child(m, { relative: new Array(p).fill("..").join(c), relativePosix: new Array(p).fill("..").join("/"), fullpath: d += (f ? "" : c) + m }), f = true;
     }
     this.cwd = l;
   }
@@ -2284,8 +2287,8 @@ var It = class {
     let { withFileTypes: s = true, follow: i = false, filter: r, walkFilter: o } = e, h = [];
     (!r || r(t)) && h.push(s ? t : t.fullpath());
     let a = /* @__PURE__ */ new Set(), l = (c, d) => {
-      a.add(c), c.readdirCB((u, m) => {
-        if (u) return d(u);
+      a.add(c), c.readdirCB((f, m) => {
+        if (f) return d(f);
         let p = m.length;
         if (!p) return d();
         let w = () => {
@@ -2293,10 +2296,10 @@ var It = class {
         };
         for (let g of m) (!r || r(g)) && h.push(s ? g : g.fullpath()), i && g.isSymbolicLink() ? g.realpath().then((S) => S?.isUnknown() ? S.lstat() : S).then((S) => S?.shouldWalk(a, o) ? l(S, w) : w()) : g.shouldWalk(a, o) ? l(g, w) : w();
       }, true);
-    }, f = t;
+    }, u = t;
     return new Promise((c, d) => {
-      l(f, (u) => {
-        if (u) return d(u);
+      l(u, (f) => {
+        if (f) return d(f);
         c(h);
       });
     });
@@ -2307,8 +2310,8 @@ var It = class {
     (!r || r(t)) && h.push(s ? t : t.fullpath());
     let a = /* @__PURE__ */ new Set([t]);
     for (let l of a) {
-      let f = l.readdirSync();
-      for (let c of f) {
+      let u = l.readdirSync();
+      for (let c of u) {
         (!r || r(c)) && h.push(s ? c : c.fullpath());
         let d = c;
         if (c.isSymbolicLink()) {
@@ -2336,11 +2339,11 @@ var It = class {
     let h = /* @__PURE__ */ new Set([t]);
     for (let a of h) {
       let l = a.readdirSync();
-      for (let f of l) {
-        (!r || r(f)) && (yield s ? f : f.fullpath());
-        let c = f;
-        if (f.isSymbolicLink()) {
-          if (!(i && (c = f.realpathSync()))) continue;
+      for (let u of l) {
+        (!r || r(u)) && (yield s ? u : u.fullpath());
+        let c = u;
+        if (u.isSymbolicLink()) {
+          if (!(i && (c = u.realpathSync()))) continue;
           c.isUnknown() && c.lstatSync();
         }
         c.shouldWalk(h, o) && h.add(c);
@@ -2351,15 +2354,15 @@ var It = class {
     typeof t == "string" ? t = this.cwd.resolve(t) : t instanceof R || (e = t, t = this.cwd);
     let { withFileTypes: s = true, follow: i = false, filter: r, walkFilter: o } = e, h = new V({ objectMode: true });
     (!r || r(t)) && h.write(s ? t : t.fullpath());
-    let a = /* @__PURE__ */ new Set(), l = [t], f = 0, c = () => {
+    let a = /* @__PURE__ */ new Set(), l = [t], u = 0, c = () => {
       let d = false;
       for (; !d; ) {
-        let u = l.shift();
-        if (!u) {
-          f === 0 && h.end();
+        let f = l.shift();
+        if (!f) {
+          u === 0 && h.end();
           return;
         }
-        f++, a.add(u);
+        u++, a.add(f);
         let m = (w, g, S = false) => {
           if (w) return h.emit("error", w);
           if (i && !S) {
@@ -2371,14 +2374,14 @@ var It = class {
             }
           }
           for (let E of g) E && (!r || r(E)) && (h.write(s ? E : E.fullpath()) || (d = true));
-          f--;
+          u--;
           for (let E of g) {
             let y = E.realpathCached() || E;
             y.shouldWalk(a, o) && l.push(y);
           }
           d && !h.flowing ? h.once("drain", c) : p || c();
         }, p = true;
-        u.readdirCB(m, true), p = false;
+        f.readdirCB(m, true), p = false;
       }
     };
     return c(), h;
@@ -2387,18 +2390,18 @@ var It = class {
     typeof t == "string" ? t = this.cwd.resolve(t) : t instanceof R || (e = t, t = this.cwd);
     let { withFileTypes: s = true, follow: i = false, filter: r, walkFilter: o } = e, h = new V({ objectMode: true }), a = /* @__PURE__ */ new Set();
     (!r || r(t)) && h.write(s ? t : t.fullpath());
-    let l = [t], f = 0, c = () => {
+    let l = [t], u = 0, c = () => {
       let d = false;
       for (; !d; ) {
-        let u = l.shift();
-        if (!u) {
-          f === 0 && h.end();
+        let f = l.shift();
+        if (!f) {
+          u === 0 && h.end();
           return;
         }
-        f++, a.add(u);
-        let m = u.readdirSync();
+        u++, a.add(f);
+        let m = f.readdirSync();
         for (let p of m) (!r || r(p)) && (h.write(s ? p : p.fullpath()) || (d = true));
-        f--;
+        u--;
         for (let p of m) {
           let w = p;
           if (p.isSymbolicLink()) {
@@ -2456,10 +2459,11 @@ var St = class extends rt {
     super(t, { ...e, nocase: s });
   }
 };
-var vr = process.platform === "win32" ? Pt : jt;
+var Cr = process.platform === "win32" ? Pt : jt;
 var Xe = process.platform === "win32" ? it : process.platform === "darwin" ? St : rt;
 var Di = (n7) => n7.length >= 1;
 var Mi = (n7) => n7.length >= 1;
+var Ni = /* @__PURE__ */ Symbol.for("nodejs.util.inspect.custom");
 var nt = class n4 {
   #t;
   #s;
@@ -2479,17 +2483,20 @@ var nt = class n4 {
     if (this.length = t.length, s < 0 || s >= this.length) throw new TypeError("index out of range");
     if (this.#t = t, this.#s = e, this.#n = s, this.#r = i, this.#n === 0) {
       if (this.isUNC()) {
-        let [r, o, h, a, ...l] = this.#t, [f, c, d, u, ...m] = this.#s;
+        let [r, o, h, a, ...l] = this.#t, [u, c, d, f, ...m] = this.#s;
         l[0] === "" && (l.shift(), m.shift());
-        let p = [r, o, h, a, ""].join("/"), w = [f, c, d, u, ""].join("/");
+        let p = [r, o, h, a, ""].join("/"), w = [u, c, d, f, ""].join("/");
         this.#t = [p, ...l], this.#s = [w, ...m], this.length = this.#t.length;
       } else if (this.isDrive() || this.isAbsolute()) {
         let [r, ...o] = this.#t, [h, ...a] = this.#s;
         o[0] === "" && (o.shift(), a.shift());
-        let l = r + "/", f = h + "/";
-        this.#t = [l, ...o], this.#s = [f, ...a], this.length = this.#t.length;
+        let l = r + "/", u = h + "/";
+        this.#t = [l, ...o], this.#s = [u, ...a], this.length = this.#t.length;
       }
     }
+  }
+  [Ni]() {
+    return "Pattern <" + this.#s.slice(this.#n).join("/") + ">";
   }
   pattern() {
     return this.#t[this.#n];
@@ -2535,7 +2542,7 @@ var nt = class n4 {
     return this.#n === 0 || !this.isGlobstar() || !this.#u ? false : (this.#u = false, true);
   }
 };
-var Ni = typeof process == "object" && process && typeof process.platform == "string" ? process.platform : "linux";
+var _i = typeof process == "object" && process && typeof process.platform == "string" ? process.platform : "linux";
 var ot = class {
   relative;
   relativeChildren;
@@ -2543,7 +2550,7 @@ var ot = class {
   absoluteChildren;
   platform;
   mmopts;
-  constructor(t, { nobrace: e, nocase: s, noext: i, noglobstar: r, platform: o = Ni }) {
+  constructor(t, { nobrace: e, nocase: s, noext: i, noglobstar: r, platform: o = _i }) {
     this.relative = [], this.absolute = [], this.relativeChildren = [], this.absoluteChildren = [], this.platform = o, this.mmopts = { dot: true, nobrace: e, nocase: s, noext: i, noglobstar: r, optimizationLevel: 2, platform: o, nocomment: true, nonegate: true };
     for (let h of t) this.add(h);
   }
@@ -2642,9 +2649,9 @@ var Et = class n6 {
         }
       }
       if (i.isENOENT()) continue;
-      let a, l, f = false;
-      for (; typeof (a = r.pattern()) == "string" && (l = r.rest()); ) i = i.resolve(a), r = l, f = true;
-      if (a = r.pattern(), l = r.rest(), f) {
+      let a, l, u = false;
+      for (; typeof (a = r.pattern()) == "string" && (l = r.rest()); ) i = i.resolve(a), r = l, u = true;
+      if (a = r.pattern(), l = r.rest(), u) {
         if (this.hasWalkedCache.hasWalked(i, r)) continue;
         this.hasWalkedCache.storeWalked(i, r);
       }
@@ -2657,8 +2664,8 @@ var Et = class n6 {
         let c = l?.pattern(), d = l?.rest();
         if (!l || (c === "" || c === ".") && !d) this.matches.add(i, h, c === "" || c === ".");
         else if (c === "..") {
-          let u = i.parent || i;
-          d ? this.hasWalkedCache.hasWalked(u, d) || this.subwalks.add(u, d) : this.matches.add(u, h, true);
+          let f = i.parent || i;
+          d ? this.hasWalkedCache.hasWalked(f, d) || this.subwalks.add(f, d) : this.matches.add(f, h, true);
         }
       } else a instanceof RegExp && this.subwalks.add(i, r);
     }
@@ -2695,7 +2702,7 @@ var Et = class n6 {
     t.isNamed(e) && (s ? this.subwalks.add(t, s) : this.matches.add(t, i, false));
   }
 };
-var _i = (n7, t) => typeof n7 == "string" ? new ot([n7], t) : Array.isArray(n7) ? new ot(n7, t) : n7;
+var Li = (n7, t) => typeof n7 == "string" ? new ot([n7], t) : Array.isArray(n7) ? new ot(n7, t) : n7;
 var zt = class {
   path;
   patterns;
@@ -2710,7 +2717,7 @@ var zt = class {
   maxDepth;
   includeChildMatches;
   constructor(t, e, s) {
-    if (this.patterns = t, this.path = e, this.opts = s, this.#n = !s.posix && s.platform === "win32" ? "\\" : "/", this.includeChildMatches = s.includeChildMatches !== false, (s.ignore || !this.includeChildMatches) && (this.#s = _i(s.ignore ?? [], s), !this.includeChildMatches && typeof this.#s.add != "function")) {
+    if (this.patterns = t, this.path = e, this.opts = s, this.#n = !s.posix && s.platform === "win32" ? "\\" : "/", this.includeChildMatches = s.includeChildMatches !== false, (s.ignore || !this.includeChildMatches) && (this.#s = Li(s.ignore ?? [], s), !this.includeChildMatches && typeof this.#s.add != "function")) {
       let i = "cannot ignore child matches, ignore lacks add() method.";
       throw new Error(i);
     }
@@ -2811,7 +2818,7 @@ var zt = class {
       if (this.maxDepth !== 1 / 0 && h.depth() >= this.maxDepth) continue;
       r++;
       let a = h.readdirCached();
-      h.calledReaddir() ? this.walkCB3(h, a, s, o) : h.readdirCB((l, f) => this.walkCB3(h, f, s, o), true);
+      h.calledReaddir() ? this.walkCB3(h, a, s, o) : h.readdirCB((l, u) => this.walkCB3(h, u, s, o), true);
     }
     o();
   }
@@ -2897,7 +2904,7 @@ var vt = class extends zt {
     return this.path.isUnknown() && this.path.lstatSync(), this.walkCBSync(this.path, this.patterns, () => this.results.end()), this.results;
   }
 };
-var Wi = typeof process == "object" && process && typeof process.platform == "string" ? process.platform : "linux";
+var Pi = typeof process == "object" && process && typeof process.platform == "string" ? process.platform : "linux";
 var I = class {
   absolute;
   cwd;
@@ -2933,18 +2940,18 @@ var I = class {
       if (e.noglobstar) throw new TypeError("base matching requires globstar");
       t = t.map((a) => a.includes("/") ? a : `./**/${a}`);
     }
-    if (this.pattern = t, this.platform = e.platform || Wi, this.opts = { ...e, platform: this.platform }, e.scurry) {
+    if (this.pattern = t, this.platform = e.platform || Pi, this.opts = { ...e, platform: this.platform }, e.scurry) {
       if (this.scurry = e.scurry, e.nocase !== void 0 && e.nocase !== e.scurry.nocase) throw new Error("nocase option contradicts provided scurry option");
     } else {
       let a = e.platform === "win32" ? it : e.platform === "darwin" ? St : e.platform ? rt : Xe;
       this.scurry = new a(this.cwd, { nocase: e.nocase, fs: e.fs });
     }
     this.nocase = this.scurry.nocase;
-    let s = this.platform === "darwin" || this.platform === "win32", i = { ...e, dot: this.dot, matchBase: this.matchBase, nobrace: this.nobrace, nocase: this.nocase, nocaseMagicOnly: s, nocomment: true, noext: this.noext, nonegate: true, optimizationLevel: 2, platform: this.platform, windowsPathsNoEscape: this.windowsPathsNoEscape, debug: !!this.opts.debug }, r = this.pattern.map((a) => new D(a, i)), [o, h] = r.reduce((a, l) => (a[0].push(...l.set), a[1].push(...l.globParts), a), [[], []]);
+    let s = this.platform === "darwin" || this.platform === "win32", i = { braceExpandMax: 1e4, ...e, dot: this.dot, matchBase: this.matchBase, nobrace: this.nobrace, nocase: this.nocase, nocaseMagicOnly: s, nocomment: true, noext: this.noext, nonegate: true, optimizationLevel: 2, platform: this.platform, windowsPathsNoEscape: this.windowsPathsNoEscape, debug: !!this.opts.debug }, r = this.pattern.map((a) => new D(a, i)), [o, h] = r.reduce((a, l) => (a[0].push(...l.set), a[1].push(...l.globParts), a), [[], []]);
     this.patterns = o.map((a, l) => {
-      let f = h[l];
-      if (!f) throw new Error("invalid pattern object");
-      return new nt(a, f, 0, this.platform);
+      let u = h[l];
+      if (!u) throw new Error("invalid pattern object");
+      return new nt(a, u, 0, this.platform);
     });
   }
   async walk() {
@@ -2995,12 +3002,12 @@ function Ut(n7, t = {}) {
 function es(n7, t = {}) {
   return new I(n7, t).iterate();
 }
-var Pi = Bt;
-var ji = Object.assign(Qe, { sync: Bt });
-var Ii = Ut;
-var zi = Object.assign(es, { sync: Ut });
-var Bi = Object.assign(ts, { stream: Bt, iterate: Ut });
-var Ze = Object.assign(Je, { glob: Je, globSync: ts, sync: Bi, globStream: Qe, stream: ji, globStreamSync: Bt, streamSync: Pi, globIterate: es, iterate: zi, globIterateSync: Ut, iterateSync: Ii, Glob: I, hasMagic: le, escape: tt, unescape: W });
+var ji = Bt;
+var Ii = Object.assign(Qe, { sync: Bt });
+var zi = Ut;
+var Bi = Object.assign(es, { sync: Ut });
+var Ui = Object.assign(ts, { stream: Bt, iterate: Ut });
+var Ze = Object.assign(Je, { glob: Je, globSync: ts, sync: Ui, globStream: Qe, stream: Ii, globStreamSync: Bt, streamSync: ji, globIterate: es, iterate: Bi, globIterateSync: Ut, iterateSync: zi, Glob: I, hasMagic: le, escape: tt, unescape: W });
 Ze.glob = Ze;
 
 // src/cds/compiler/command.ts
@@ -3948,6 +3955,18 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
     return false;
   }
 }
+function addCdsIndexerDiagnostic(projectDir, errorMessage, codeqlExePath2, sourceRoot2) {
+  return addDiagnostic(
+    projectDir,
+    errorMessage,
+    codeqlExePath2,
+    "cds/indexer-failure",
+    "Failure running @sap/cds-indexer for a SAP CAP CDS project",
+    "warning" /* Warning */,
+    "project directory",
+    sourceRoot2
+  );
+}
 function addCompilationDiagnostic(cdsFilePath, errorMessage, codeqlExePath2, sourceRoot2) {
   return addDiagnostic(
     cdsFilePath,
@@ -4261,9 +4280,10 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
     const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
     const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
     const fallbackNote = isFallback ? " (using fallback versions)" : "";
+    const indexerNote = combination.cdsIndexerVersion ? `, @sap/cds-indexer@${combination.cdsIndexerVersion}` : "";
     cdsExtractorLog(
       "info",
-      `Dependency combination ${hash.substring(0, 8)}: @sap/cds@${actualCdsVersion}, @sap/cds-dk@${actualCdsDkVersion}${fallbackNote}`
+      `Dependency combination ${hash.substring(0, 8)}: @sap/cds@${actualCdsVersion}, @sap/cds-dk@${actualCdsDkVersion}${indexerNote}${fallbackNote}`
     );
   }
   const cacheRootDir = (0, import_path7.join)(sourceRoot2, cacheSubDirName);
@@ -4310,14 +4330,22 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
       }
       const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
       const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
+      const cacheDeps = {
+        "@sap/cds": actualCdsVersion,
+        "@sap/cds-dk": actualCdsDkVersion
+      };
+      if (combination.cdsIndexerVersion) {
+        cacheDeps["@sap/cds-indexer"] = combination.cdsIndexerVersion;
+        cdsExtractorLog(
+          "info",
+          `Including @sap/cds-indexer@${combination.cdsIndexerVersion} in cache for combination ${hash.substring(0, 8)}`
+        );
+      }
       const packageJson = {
         name: `cds-extractor-cache-${hash}`,
         version: "1.0.0",
         private: true,
-        dependencies: {
-          "@sap/cds": actualCdsVersion,
-          "@sap/cds-dk": actualCdsDkVersion
-        }
+        dependencies: cacheDeps
       };
       try {
         (0, import_fs5.writeFileSync)((0, import_path7.join)(cacheDir, "package.json"), JSON.stringify(packageJson, null, 2));
@@ -4355,12 +4383,13 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
       }
       const p_cdsVersion = project.packageJson.dependencies?.["@sap/cds"] ?? "latest";
       const p_cdsDkVersion = project.packageJson.devDependencies?.["@sap/cds-dk"] ?? p_cdsVersion;
+      const p_cdsIndexerVersion = project.packageJson.dependencies?.["@sap/cds-indexer"] ?? project.packageJson.devDependencies?.["@sap/cds-indexer"] ?? void 0;
       const projectResolvedVersions = resolveCdsVersions2(p_cdsVersion, p_cdsDkVersion);
       const projectActualCdsVersion = projectResolvedVersions.resolvedCdsVersion ?? p_cdsVersion;
       const projectActualCdsDkVersion = projectResolvedVersions.resolvedCdsDkVersion ?? p_cdsDkVersion;
       const combinationActualCdsVersion = combination.resolvedCdsVersion ?? combination.cdsVersion;
       const combinationActualCdsDkVersion = combination.resolvedCdsDkVersion ?? combination.cdsDkVersion;
-      if (projectActualCdsVersion === combinationActualCdsVersion && projectActualCdsDkVersion === combinationActualCdsDkVersion) {
+      if (projectActualCdsVersion === combinationActualCdsVersion && projectActualCdsDkVersion === combinationActualCdsDkVersion && p_cdsIndexerVersion === combination.cdsIndexerVersion) {
         projectCacheDirMap2.set(projectDir, cacheDir);
       }
     }
@@ -4403,6 +4432,7 @@ function extractUniqueDependencyCombinations(projects) {
     }
     const cdsVersion = project.packageJson.dependencies?.["@sap/cds"] ?? "latest";
     const cdsDkVersion = project.packageJson.devDependencies?.["@sap/cds-dk"] ?? cdsVersion;
+    const cdsIndexerVersion = project.packageJson.dependencies?.["@sap/cds-indexer"] ?? project.packageJson.devDependencies?.["@sap/cds-indexer"] ?? void 0;
     cdsExtractorLog(
       "info",
       `Resolving available dependency versions for project '${project.projectDir}' with dependencies: [@sap/cds@${cdsVersion}, @sap/cds-dk@${cdsDkVersion}]`
@@ -4430,11 +4460,13 @@ function extractUniqueDependencyCombinations(projects) {
     }
     const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
     const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
-    const hash = (0, import_crypto.createHash)("sha256").update(`${actualCdsVersion}|${actualCdsDkVersion}`).digest("hex");
+    const hashInput = cdsIndexerVersion ? `${actualCdsVersion}|${actualCdsDkVersion}|${cdsIndexerVersion}` : `${actualCdsVersion}|${actualCdsDkVersion}`;
+    const hash = (0, import_crypto.createHash)("sha256").update(hashInput).digest("hex");
     if (!combinations.has(hash)) {
       combinations.set(hash, {
         cdsVersion,
         cdsDkVersion,
+        cdsIndexerVersion,
         hash,
         resolvedCdsVersion: resolvedCdsVersion ?? void 0,
         resolvedCdsDkVersion: resolvedCdsDkVersion ?? void 0,
@@ -5056,12 +5088,127 @@ function planCompilationTasks(dependencyGraph2, projectCacheDirMap2) {
 // src/cds/compiler/project.ts
 var import_path9 = require("path");
 
+// src/cds/indexer.ts
+var import_child_process8 = require("child_process");
+var import_path10 = require("path");
+var CDS_INDEXER_TIMEOUT_MS = 6e5;
+var CDS_INDEXER_PACKAGE = "@sap/cds-indexer";
+function projectUsesCdsIndexer(project) {
+  if (!project.packageJson) {
+    return false;
+  }
+  const inDeps = project.packageJson.dependencies?.[CDS_INDEXER_PACKAGE] !== void 0;
+  const inDevDeps = project.packageJson.devDependencies?.[CDS_INDEXER_PACKAGE] !== void 0;
+  return inDeps || inDevDeps;
+}
+function runCdsIndexer(project, sourceRoot2, cacheDir) {
+  const projectAbsPath = (0, import_path10.join)(sourceRoot2, project.projectDir);
+  const startTime = Date.now();
+  const result = {
+    success: false,
+    projectDir: project.projectDir,
+    durationMs: 0,
+    timedOut: false
+  };
+  try {
+    const nodePaths = [];
+    if (cacheDir) {
+      nodePaths.push((0, import_path10.join)(cacheDir, "node_modules"));
+    }
+    nodePaths.push((0, import_path10.join)(projectAbsPath, "node_modules"));
+    const env = {
+      ...process.env,
+      NODE_PATH: nodePaths.join(import_path10.delimiter)
+    };
+    cdsExtractorLog(
+      "info",
+      `Running ${CDS_INDEXER_PACKAGE} for project '${project.projectDir}'...`
+    );
+    const spawnResult = (0, import_child_process8.spawnSync)("npx", ["--yes", CDS_INDEXER_PACKAGE], {
+      cwd: projectAbsPath,
+      env,
+      stdio: "pipe",
+      timeout: CDS_INDEXER_TIMEOUT_MS
+    });
+    result.durationMs = Date.now() - startTime;
+    if (spawnResult.signal === "SIGTERM" || spawnResult.signal === "SIGKILL") {
+      result.timedOut = true;
+      result.error = `${CDS_INDEXER_PACKAGE} timed out after ${CDS_INDEXER_TIMEOUT_MS}ms for project '${project.projectDir}'`;
+      cdsExtractorLog("warn", result.error);
+      return result;
+    }
+    if (spawnResult.error) {
+      result.error = `${CDS_INDEXER_PACKAGE} failed to start for project '${project.projectDir}': ${String(spawnResult.error)}`;
+      cdsExtractorLog("warn", result.error);
+      return result;
+    }
+    if (spawnResult.status !== 0) {
+      const stderr = spawnResult.stderr?.toString().trim() ?? "";
+      const stdout = spawnResult.stdout?.toString().trim() ?? "";
+      const output = stderr || stdout || "unknown error";
+      result.error = `${CDS_INDEXER_PACKAGE} failed for project '${project.projectDir}' (exit code ${spawnResult.status}): ${output}`;
+      cdsExtractorLog("warn", result.error);
+      return result;
+    }
+    result.success = true;
+    cdsExtractorLog(
+      "info",
+      `Successfully ran ${CDS_INDEXER_PACKAGE} for project '${project.projectDir}' (${result.durationMs}ms)`
+    );
+  } catch (error) {
+    result.durationMs = Date.now() - startTime;
+    result.error = `${CDS_INDEXER_PACKAGE} threw an unexpected error for project '${project.projectDir}': ${String(error)}`;
+    cdsExtractorLog("error", result.error);
+  }
+  return result;
+}
+function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap2, codeqlExePath2) {
+  const summary = {
+    totalProjects: dependencyGraph2.projects.size,
+    projectsRequiringIndexer: 0,
+    successfulRuns: 0,
+    failedRuns: 0,
+    results: []
+  };
+  for (const [projectDir, project] of dependencyGraph2.projects.entries()) {
+    if (!projectUsesCdsIndexer(project)) {
+      continue;
+    }
+    summary.projectsRequiringIndexer++;
+    const cacheDir = projectCacheDirMap2.get(projectDir);
+    const result = runCdsIndexer(project, sourceRoot2, cacheDir);
+    summary.results.push(result);
+    if (result.success) {
+      summary.successfulRuns++;
+    } else {
+      summary.failedRuns++;
+      if (codeqlExePath2) {
+        addCdsIndexerDiagnostic(
+          projectDir,
+          result.error ?? `${CDS_INDEXER_PACKAGE} failed for project '${projectDir}'`,
+          codeqlExePath2,
+          sourceRoot2
+        );
+      }
+    }
+  }
+  if (summary.projectsRequiringIndexer > 0) {
+    cdsExtractorLog(
+      "info",
+      `CDS indexer summary: ${summary.projectsRequiringIndexer} project(s) required indexer, ${summary.successfulRuns} succeeded, ${summary.failedRuns} failed`
+    );
+  } else {
+    cdsExtractorLog("info", "No projects require @sap/cds-indexer.");
+  }
+  return summary;
+}
+
 // src/cds/parser/graph.ts
-var import_path11 = require("path");
+var import_path12 = require("path");
 
 // src/cds/parser/functions.ts
 var import_fs6 = require("fs");
-var import_path10 = require("path");
+var import_path11 = require("path");
 function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   if (!sourceRootDir || !projectDir) {
     throw new Error(
@@ -5076,11 +5223,11 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
     );
   }
   try {
-    const cdsFiles = Bi((0, import_path10.join)(projectDir, "**/*.cds"), {
+    const cdsFiles = Ui((0, import_path11.join)(projectDir, "**/*.cds"), {
       nodir: true,
       ignore: ["**/node_modules/**", "**/*.testproj/**"]
     });
-    return cdsFiles.map((file) => (0, import_path10.relative)(sourceRootDir, file));
+    return cdsFiles.map((file) => (0, import_path11.relative)(sourceRootDir, file));
   } catch (error) {
     cdsExtractorLog("error", `Error finding CDS files in ${projectDir}: ${String(error)}`);
     return [];
@@ -5091,20 +5238,20 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
     throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
   }
   const foundProjects = /* @__PURE__ */ new Set();
-  const packageJsonFiles = Bi((0, import_path10.join)(sourceRootDir, "**/package.json"), {
+  const packageJsonFiles = Ui((0, import_path11.join)(sourceRootDir, "**/package.json"), {
     nodir: true,
     ignore: ["**/node_modules/**", "**/*.testproj/**"]
   });
-  const cdsFiles = Bi((0, import_path10.join)(sourceRootDir, "**/*.cds"), {
+  const cdsFiles = Ui((0, import_path11.join)(sourceRootDir, "**/*.cds"), {
     nodir: true,
     ignore: ["**/node_modules/**", "**/*.testproj/**"]
   });
   const candidateDirectories = /* @__PURE__ */ new Set();
   for (const packageJsonFile of packageJsonFiles) {
-    candidateDirectories.add((0, import_path10.dirname)(packageJsonFile));
+    candidateDirectories.add((0, import_path11.dirname)(packageJsonFile));
   }
   for (const cdsFile of cdsFiles) {
-    const cdsDir = (0, import_path10.dirname)(cdsFile);
+    const cdsDir = (0, import_path11.dirname)(cdsFile);
     const projectRoot = findProjectRootFromCdsFile(cdsDir, sourceRootDir);
     if (projectRoot) {
       candidateDirectories.add(projectRoot);
@@ -5114,14 +5261,14 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   }
   for (const dir of candidateDirectories) {
     if (isLikelyCdsProject(dir)) {
-      const relativePath = (0, import_path10.relative)(sourceRootDir, dir);
+      const relativePath = (0, import_path11.relative)(sourceRootDir, dir);
       const projectDir = relativePath || ".";
       let shouldAdd = true;
       const existingProjects = Array.from(foundProjects);
       for (const existingProject of existingProjects) {
-        const existingAbsPath = (0, import_path10.join)(sourceRootDir, existingProject);
-        if (dir.startsWith(existingAbsPath + import_path10.sep)) {
-          const parentPackageJsonPath = (0, import_path10.join)(existingAbsPath, "package.json");
+        const existingAbsPath = (0, import_path11.join)(sourceRootDir, existingProject);
+        if (dir.startsWith(existingAbsPath + import_path11.sep)) {
+          const parentPackageJsonPath = (0, import_path11.join)(existingAbsPath, "package.json");
           const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
           const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
           if (isParentMonorepo && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
@@ -5131,8 +5278,8 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
           }
           break;
         }
-        if (existingAbsPath.startsWith(dir + import_path10.sep)) {
-          const currentPackageJsonPath = (0, import_path10.join)(dir, "package.json");
+        if (existingAbsPath.startsWith(dir + import_path11.sep)) {
+          const currentPackageJsonPath = (0, import_path11.join)(dir, "package.json");
           const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
           const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
           if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
@@ -5173,32 +5320,32 @@ function findProjectRootFromCdsFile(cdsFileDir, sourceRootDir) {
   let currentDir = cdsFileDir;
   while (currentDir.startsWith(sourceRootDir)) {
     if (isLikelyCdsProject(currentDir)) {
-      const currentDirName = (0, import_path10.basename)(currentDir);
+      const currentDirName = (0, import_path11.basename)(currentDir);
       const isStandardSubdir = ["srv", "db", "app"].includes(currentDirName);
       if (isStandardSubdir) {
-        const parentDir3 = (0, import_path10.dirname)(currentDir);
+        const parentDir3 = (0, import_path11.dirname)(currentDir);
         if (parentDir3 !== currentDir && parentDir3.startsWith(sourceRootDir) && !parentDir3.includes("node_modules") && !parentDir3.includes(".testproj") && isLikelyCdsProject(parentDir3)) {
           return parentDir3;
         }
       }
-      const parentDir2 = (0, import_path10.dirname)(currentDir);
+      const parentDir2 = (0, import_path11.dirname)(currentDir);
       if (parentDir2 !== currentDir && parentDir2.startsWith(sourceRootDir) && !parentDir2.includes("node_modules") && !parentDir2.includes(".testproj")) {
-        const hasDbDir2 = (0, import_fs6.existsSync)((0, import_path10.join)(parentDir2, "db")) && (0, import_fs6.statSync)((0, import_path10.join)(parentDir2, "db")).isDirectory();
-        const hasSrvDir2 = (0, import_fs6.existsSync)((0, import_path10.join)(parentDir2, "srv")) && (0, import_fs6.statSync)((0, import_path10.join)(parentDir2, "srv")).isDirectory();
-        const hasAppDir2 = (0, import_fs6.existsSync)((0, import_path10.join)(parentDir2, "app")) && (0, import_fs6.statSync)((0, import_path10.join)(parentDir2, "app")).isDirectory();
+        const hasDbDir2 = (0, import_fs6.existsSync)((0, import_path11.join)(parentDir2, "db")) && (0, import_fs6.statSync)((0, import_path11.join)(parentDir2, "db")).isDirectory();
+        const hasSrvDir2 = (0, import_fs6.existsSync)((0, import_path11.join)(parentDir2, "srv")) && (0, import_fs6.statSync)((0, import_path11.join)(parentDir2, "srv")).isDirectory();
+        const hasAppDir2 = (0, import_fs6.existsSync)((0, import_path11.join)(parentDir2, "app")) && (0, import_fs6.statSync)((0, import_path11.join)(parentDir2, "app")).isDirectory();
         if (hasDbDir2 && hasSrvDir2 || hasSrvDir2 && hasAppDir2) {
           return parentDir2;
         }
       }
       return currentDir;
     }
-    const hasDbDir = (0, import_fs6.existsSync)((0, import_path10.join)(currentDir, "db")) && (0, import_fs6.statSync)((0, import_path10.join)(currentDir, "db")).isDirectory();
-    const hasSrvDir = (0, import_fs6.existsSync)((0, import_path10.join)(currentDir, "srv")) && (0, import_fs6.statSync)((0, import_path10.join)(currentDir, "srv")).isDirectory();
-    const hasAppDir = (0, import_fs6.existsSync)((0, import_path10.join)(currentDir, "app")) && (0, import_fs6.statSync)((0, import_path10.join)(currentDir, "app")).isDirectory();
+    const hasDbDir = (0, import_fs6.existsSync)((0, import_path11.join)(currentDir, "db")) && (0, import_fs6.statSync)((0, import_path11.join)(currentDir, "db")).isDirectory();
+    const hasSrvDir = (0, import_fs6.existsSync)((0, import_path11.join)(currentDir, "srv")) && (0, import_fs6.statSync)((0, import_path11.join)(currentDir, "srv")).isDirectory();
+    const hasAppDir = (0, import_fs6.existsSync)((0, import_path11.join)(currentDir, "app")) && (0, import_fs6.statSync)((0, import_path11.join)(currentDir, "app")).isDirectory();
     if (hasDbDir && hasSrvDir || hasSrvDir && hasAppDir) {
       return currentDir;
     }
-    const parentDir = (0, import_path10.dirname)(currentDir);
+    const parentDir = (0, import_path11.dirname)(currentDir);
     if (parentDir === currentDir) {
       break;
     }
@@ -5219,7 +5366,7 @@ function isLikelyCdsProject(dir) {
       if (!hasCdsFiles) {
         return false;
       }
-      const packageJsonPath = (0, import_path10.join)(dir, "package.json");
+      const packageJsonPath = (0, import_path11.join)(dir, "package.json");
       const packageJson = readPackageJsonFile(packageJsonPath);
       if (packageJson?.workspaces && Array.isArray(packageJson.workspaces) && packageJson.workspaces.length > 0) {
         if (!hasCdsFiles) {
@@ -5235,10 +5382,10 @@ function isLikelyCdsProject(dir) {
   }
 }
 function hasStandardCdsContent(dir) {
-  const standardLocations = [(0, import_path10.join)(dir, "db"), (0, import_path10.join)(dir, "srv"), (0, import_path10.join)(dir, "app")];
+  const standardLocations = [(0, import_path11.join)(dir, "db"), (0, import_path11.join)(dir, "srv"), (0, import_path11.join)(dir, "app")];
   for (const location of standardLocations) {
     if ((0, import_fs6.existsSync)(location) && (0, import_fs6.statSync)(location).isDirectory()) {
-      const cdsFiles = Bi((0, import_path10.join)(location, "**/*.cds"), { nodir: true });
+      const cdsFiles = Ui((0, import_path11.join)(location, "**/*.cds"), { nodir: true });
       if (cdsFiles.length > 0) {
         return true;
       }
@@ -5247,7 +5394,7 @@ function hasStandardCdsContent(dir) {
   return false;
 }
 function hasDirectCdsContent(dir) {
-  const directCdsFiles = Bi((0, import_path10.join)(dir, "*.cds"));
+  const directCdsFiles = Ui((0, import_path11.join)(dir, "*.cds"));
   return directCdsFiles.length > 0;
 }
 function readPackageJsonFile(filePath) {
@@ -5267,36 +5414,36 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   if (!project.cdsFiles || project.cdsFiles.length === 0) {
     return {
       compilationTargets: [],
-      expectedOutputFile: (0, import_path10.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path11.join)(project.projectDir, modelCdsJsonFile)
     };
   }
-  const absoluteProjectDir = (0, import_path10.join)(sourceRootDir, project.projectDir);
+  const absoluteProjectDir = (0, import_path11.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs6.existsSync)((0, import_path10.join)(absoluteProjectDir, dir)));
+  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs6.existsSync)((0, import_path11.join)(absoluteProjectDir, dir)));
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,
-      expectedOutputFile: (0, import_path10.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path11.join)(project.projectDir, modelCdsJsonFile)
     };
   }
-  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path10.dirname)((0, import_path10.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path10.basename)(file));
+  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path11.dirname)((0, import_path11.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path11.basename)(file));
   if (rootCdsFiles.length > 0) {
     return {
       compilationTargets: rootCdsFiles,
-      expectedOutputFile: (0, import_path10.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path11.join)(project.projectDir, modelCdsJsonFile)
     };
   }
   const compilationTargets = project.cdsFiles.map(
-    (file) => (0, import_path10.relative)(absoluteProjectDir, (0, import_path10.join)(sourceRootDir, file))
+    (file) => (0, import_path11.relative)(absoluteProjectDir, (0, import_path11.join)(sourceRootDir, file))
   );
   return {
     compilationTargets,
-    expectedOutputFile: (0, import_path10.join)(project.projectDir, modelCdsJsonFile)
+    expectedOutputFile: (0, import_path11.join)(project.projectDir, modelCdsJsonFile)
   };
 }
 function hasPackageJsonWithCapDeps(dir) {
   try {
-    const packageJsonPath = (0, import_path10.join)(dir, "package.json");
+    const packageJsonPath = (0, import_path11.join)(dir, "package.json");
     const packageJson = readPackageJsonFile(packageJsonPath);
     if (packageJson) {
       const dependencies = {
@@ -5322,16 +5469,16 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   cdsExtractorLog("info", `Found ${projectDirs.length} CDS project(s) under source directory.`);
   const projectMap = /* @__PURE__ */ new Map();
   for (const projectDir of projectDirs) {
-    const absoluteProjectDir = (0, import_path11.join)(sourceRootDir, projectDir);
+    const absoluteProjectDir = (0, import_path12.join)(sourceRootDir, projectDir);
     const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
-    const packageJsonPath = (0, import_path11.join)(absoluteProjectDir, "package.json");
+    const packageJsonPath = (0, import_path12.join)(absoluteProjectDir, "package.json");
     const packageJson = readPackageJsonFile(packageJsonPath);
     projectMap.set(projectDir, {
       projectDir,
       cdsFiles,
       compilationTargets: [],
       // Will be populated in the third pass
-      expectedOutputFile: (0, import_path11.join)(projectDir, modelCdsJsonFile),
+      expectedOutputFile: (0, import_path12.join)(projectDir, modelCdsJsonFile),
       packageJson,
       dependencies: [],
       imports: /* @__PURE__ */ new Map()
@@ -5340,18 +5487,18 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   cdsExtractorLog("info", "Analyzing dependencies between CDS projects...");
   for (const [projectDir, project] of projectMap.entries()) {
     for (const relativeFilePath of project.cdsFiles) {
-      const absoluteFilePath = (0, import_path11.join)(sourceRootDir, relativeFilePath);
+      const absoluteFilePath = (0, import_path12.join)(sourceRootDir, relativeFilePath);
       try {
         const imports = extractCdsImports(absoluteFilePath);
         const enrichedImports = [];
         for (const importInfo of imports) {
           const enrichedImport = { ...importInfo };
           if (importInfo.isRelative) {
-            const importedFilePath = (0, import_path11.resolve)((0, import_path11.dirname)(absoluteFilePath), importInfo.path);
+            const importedFilePath = (0, import_path12.resolve)((0, import_path12.dirname)(absoluteFilePath), importInfo.path);
             const normalizedImportedPath = importedFilePath.endsWith(".cds") ? importedFilePath : `${importedFilePath}.cds`;
             try {
-              const relativeToDirPath = (0, import_path11.dirname)(relativeFilePath);
-              const resolvedPath = (0, import_path11.resolve)((0, import_path11.join)(sourceRootDir, relativeToDirPath), importInfo.path);
+              const relativeToDirPath = (0, import_path12.dirname)(relativeFilePath);
+              const resolvedPath = (0, import_path12.resolve)((0, import_path12.join)(sourceRootDir, relativeToDirPath), importInfo.path);
               const normalizedResolvedPath = resolvedPath.endsWith(".cds") ? resolvedPath : `${resolvedPath}.cds`;
               if (normalizedResolvedPath.startsWith(sourceRootDir)) {
                 enrichedImport.resolvedPath = normalizedResolvedPath.substring(sourceRootDir.length).replace(/^[/\\]/, "");
@@ -5364,10 +5511,10 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
             }
             for (const [otherProjectDir, otherProject] of projectMap.entries()) {
               if (otherProjectDir === projectDir) continue;
-              const otherProjectAbsoluteDir = (0, import_path11.join)(sourceRootDir, otherProjectDir);
+              const otherProjectAbsoluteDir = (0, import_path12.join)(sourceRootDir, otherProjectDir);
               const isInOtherProject = otherProject.cdsFiles.some((otherFile) => {
-                const otherAbsolutePath = (0, import_path11.join)(sourceRootDir, otherFile);
-                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path11.sep);
+                const otherAbsolutePath = (0, import_path12.join)(sourceRootDir, otherFile);
+                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path12.sep);
               });
               if (isInOtherProject) {
                 project.dependencies ??= [];
@@ -5410,8 +5557,8 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
         "warn",
         `Error determining files to compile for project ${project.projectDir}: ${String(error)}`
       );
-      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path11.basename)(file));
-      project.expectedOutputFile = (0, import_path11.join)(project.projectDir, modelCdsJsonFile);
+      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path12.basename)(file));
+      project.expectedOutputFile = (0, import_path12.join)(project.projectDir, modelCdsJsonFile);
     }
   }
   return projectMap;
@@ -5540,13 +5687,13 @@ function buildCdsProjectDependencyGraph(sourceRootDir) {
 }
 
 // src/codeql.ts
-var import_child_process9 = require("child_process");
+var import_child_process10 = require("child_process");
 
 // src/environment.ts
-var import_child_process8 = require("child_process");
+var import_child_process9 = require("child_process");
 var import_fs7 = require("fs");
 var import_os = require("os");
-var import_path12 = require("path");
+var import_path13 = require("path");
 function getPlatformInfo() {
   const osPlatform = (0, import_os.platform)();
   const osPlatformArch = (0, import_os.arch)();
@@ -5564,7 +5711,7 @@ function getCodeQLExePath() {
   const codeqlExeName = platformInfo2.isWindows ? "codeql.exe" : "codeql";
   const codeqlDist = process.env.CODEQL_DIST;
   if (codeqlDist) {
-    const codeqlPathFromDist = (0, import_path12.resolve)((0, import_path12.join)(codeqlDist, codeqlExeName));
+    const codeqlPathFromDist = (0, import_path13.resolve)((0, import_path13.join)(codeqlDist, codeqlExeName));
     if ((0, import_fs7.existsSync)(codeqlPathFromDist)) {
       cdsExtractorLog("info", `Using CodeQL executable from CODEQL_DIST: ${codeqlPathFromDist}`);
       return codeqlPathFromDist;
@@ -5580,7 +5727,7 @@ function getCodeQLExePath() {
     'CODEQL_DIST environment variable not set or invalid. Attempting to find CodeQL executable via system PATH using "codeql version --format=json".'
   );
   try {
-    const versionOutput = (0, import_child_process8.execFileSync)(codeqlExeName, ["version", "--format=json"], {
+    const versionOutput = (0, import_child_process9.execFileSync)(codeqlExeName, ["version", "--format=json"], {
       encoding: "utf8",
       timeout: 5e3,
       // 5 seconds timeout
@@ -5590,7 +5737,7 @@ function getCodeQLExePath() {
     try {
       const versionInfo = JSON.parse(versionOutput);
       if (versionInfo && typeof versionInfo.unpackedLocation === "string" && versionInfo.unpackedLocation) {
-        const resolvedPathFromVersion = (0, import_path12.resolve)((0, import_path12.join)(versionInfo.unpackedLocation, codeqlExeName));
+        const resolvedPathFromVersion = (0, import_path13.resolve)((0, import_path13.join)(versionInfo.unpackedLocation, codeqlExeName));
         if ((0, import_fs7.existsSync)(resolvedPathFromVersion)) {
           cdsExtractorLog(
             "info",
@@ -5645,7 +5792,7 @@ function getJavaScriptExtractorRoot(codeqlExePath2) {
     return "";
   }
   try {
-    jsExtractorRoot = (0, import_child_process8.execFileSync)(
+    jsExtractorRoot = (0, import_child_process9.execFileSync)(
       codeqlExePath2,
       ["resolve", "extractor", "--language=javascript"],
       { stdio: "pipe" }
@@ -5680,7 +5827,7 @@ function getAutobuildScriptPath(jsExtractorRoot) {
   if (!jsExtractorRoot) return "";
   const platformInfo2 = getPlatformInfo();
   const autobuildScriptName = platformInfo2.isWindows ? "autobuild.cmd" : "autobuild.sh";
-  return (0, import_path12.resolve)((0, import_path12.join)(jsExtractorRoot, "tools", autobuildScriptName));
+  return (0, import_path13.resolve)((0, import_path13.join)(jsExtractorRoot, "tools", autobuildScriptName));
 }
 function configureLgtmIndexFilters() {
   let excludeFilters = "";
@@ -5690,17 +5837,17 @@ function configureLgtmIndexFilters() {
       `Found $LGTM_INDEX_FILTERS already set to:
 ${process.env.LGTM_INDEX_FILTERS}`
     );
-    const allowedExcludePatterns = [(0, import_path12.join)("exclude:**", "*"), (0, import_path12.join)("exclude:**", "*.*")];
+    const allowedExcludePatterns = [(0, import_path13.join)("exclude:**", "*"), (0, import_path13.join)("exclude:**", "*.*")];
     excludeFilters = "\n" + process.env.LGTM_INDEX_FILTERS.split("\n").filter(
       (line) => line.startsWith("exclude") && !allowedExcludePatterns.some((pattern) => line.includes(pattern))
     ).join("\n");
   }
   const lgtmIndexFiltersPatterns = [
-    (0, import_path12.join)("exclude:**", "*.*"),
-    (0, import_path12.join)("include:**", "*.cds.json"),
-    (0, import_path12.join)("include:**", "*.cds"),
-    (0, import_path12.join)("include:**", cdsExtractorMarkerFileName),
-    (0, import_path12.join)("exclude:**", "node_modules", "**", "*.*")
+    (0, import_path13.join)("exclude:**", "*.*"),
+    (0, import_path13.join)("include:**", "*.cds.json"),
+    (0, import_path13.join)("include:**", "*.cds"),
+    (0, import_path13.join)("include:**", cdsExtractorMarkerFileName),
+    (0, import_path13.join)("exclude:**", "node_modules", "**", "*.*")
   ].join("\n");
   process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
   process.env.LGTM_INDEX_TYPESCRIPT = "NONE";
@@ -5754,7 +5901,7 @@ function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath
     `Extracting the .cds.json files by running the 'javascript' extractor autobuild script:
         ${autobuildScriptPath2}`
   );
-  const result = (0, import_child_process9.spawnSync)(autobuildScriptPath2, {
+  const result = (0, import_child_process10.spawnSync)(autobuildScriptPath2, {
     cwd: sourceRoot2,
     env: process.env,
     shell: true,
@@ -5825,13 +5972,13 @@ function handleEarlyExit(sourceRoot2, autobuildScriptPath2, codeqlExePath2, skip
 }
 
 // src/utils.ts
-var import_path13 = require("path");
+var import_path14 = require("path");
 var USAGE_MESSAGE = `	Usage: node <script> <source-root>`;
 function resolveSourceRoot(sourceRoot2) {
   if (!sourceRoot2 || typeof sourceRoot2 !== "string") {
     throw new Error("Source root must be a non-empty string");
   }
-  const normalizedPath = (0, import_path13.resolve)(sourceRoot2);
+  const normalizedPath = (0, import_path14.resolve)(sourceRoot2);
   if (!normalizedPath || normalizedPath === "/") {
     throw new Error("Source root must point to a valid directory");
   }
@@ -5928,7 +6075,7 @@ try {
     try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
-          ...Bi((0, import_path14.join)(sourceRoot, "**/*.cds"), {
+          ...Ui((0, import_path15.join)(sourceRoot, "**/*.cds"), {
             ignore: ["**/node_modules/**", "**/.git/**"]
           })
         ])
@@ -6006,6 +6153,20 @@ if (projectCacheDirMap.size === 0) {
   cdsExtractorLog(
     "warn",
     "No projects and no cache mappings - this should have been detected earlier."
+  );
+}
+logPerformanceTrackingStart("CDS Indexer");
+var cdsIndexerSummary = orchestrateCdsIndexer(
+  dependencyGraph,
+  sourceRoot,
+  projectCacheDirMap,
+  codeqlExePath
+);
+logPerformanceTrackingStop("CDS Indexer");
+if (cdsIndexerSummary.projectsRequiringIndexer > 0) {
+  logPerformanceMilestone(
+    "CDS indexer completed",
+    `${cdsIndexerSummary.successfulRuns} succeeded, ${cdsIndexerSummary.failedRuns} failed`
   );
 }
 var cdsFilePathsToProcess = [];

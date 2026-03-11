@@ -12,7 +12,10 @@ This repository contains [CodeQL](https://codeql.github.com/) models and queries
 
 - [advanced-security/javascript-sap-cap-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-cap-queries)
 - [advanced-security/javascript-sap-ui5-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-ui5-queries)
-- [advanced-security/javascript-sap-async-xsjs-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-async-xsjs-queries)
+- [advanced-security/javascript-sap-xsjs-queries](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-xsjs-queries)
+- [advanced-security/javascript-sap-cap-models](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-cap-models)
+- [advanced-security/javascript-sap-ui5-models](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-ui5-models)
+- [advanced-security/javascript-sap-xsjs-models](https://github.com/advanced-security/codeql-sap-js/pkgs/container/javascript-sap-xsjs-models)
 
 ## Usage
 
@@ -65,6 +68,9 @@ packs:
     - advanced-security/javascript-sap-xsjs-queries:codeql-suites/javascript-security-extended.qls
     - advanced-security/javascript-sap-cap-queries:codeql-suites/javascript-security-extended.qls
     - advanced-security/javascript-sap-ui5-queries:codeql-suites/javascript-security-extended.qls
+    - advanced-security/javascript-sap-xsjs-models
+    - advanced-security/javascript-sap-cap-models
+    - advanced-security/javascript-sap-ui5-models
 
 paths-ignore:
   - "**/node_modules"
@@ -105,6 +111,9 @@ codeql database analyze <DB_NAME> --format=sarif-latest --output=<OUTPUT_FILE> \
   --download advanced-security/javascript-sap-cap-queries \
              advanced-security/javascript-sap-ui5-queries \
              advanced-security/javascript-sap-xsjs-queries
+  --model-packs=advanced-security/javascript-sap-cap-models
+  --model-packs= advanced-security/javascript-sap-ui5-models
+  --model-packs=advanced-security/javascript-sap-xsjs-models
 ```
 
 ### Example `codeql database create` with CDS Extractor Invocation

@@ -2,6 +2,7 @@ import * as childProcess from 'child_process';
 import { isAbsolute, join, sep } from 'path';
 
 import {
+  addCdsIndexerDiagnostic,
   addCompilationDiagnostic,
   addDependencyGraphDiagnostic,
   addDependencyInstallationDiagnostic,
@@ -534,6 +535,69 @@ describe('diagnostics', () => {
         // The main assertion: isAbsolute handles platform differences correctly
         // whereas startsWith('/') would fail on Windows
       });
+    });
+  });
+
+  describe('addCdsIndexerDiagnostic', () => {
+    const sourceRoot = '/project/source/root';
+    const codeqlExePath = '/path/to/codeql';
+
+    it('should add a warning diagnostic for a cds-indexer failure', () => {
+      const originalEnv = setupMockEnvironment();
+      mockSuccessfulExecution();
+
+      const result = addCdsIndexerDiagnostic(
+        join(sourceRoot, 'my-cap-app'),
+        'cds-indexer failed with exit code 1',
+        codeqlExePath,
+        sourceRoot,
+      );
+
+      expect(result).toBe(true);
+      expect(childProcess.execFileSync).toHaveBeenCalledWith(
+        codeqlExePath,
+        expect.arrayContaining([
+          '--source-id=cds/indexer-failure',
+          '--severity=warning',
+          expect.stringContaining('--markdown-message=cds-indexer failed'),
+          '--file-path=my-cap-app',
+        ]),
+      );
+      restoreMockEnvironment(originalEnv);
+    });
+
+    it('should handle project directory outside source root', () => {
+      const originalEnv = setupMockEnvironment();
+      mockSuccessfulExecution();
+
+      const result = addCdsIndexerDiagnostic(
+        '/outside/source/root/project',
+        'cds-indexer not found',
+        codeqlExePath,
+        sourceRoot,
+      );
+
+      expect(result).toBe(true);
+      // Should remap to source root '.'
+      expectRelativePathInCall('.');
+      restoreMockEnvironment(originalEnv);
+    });
+
+    it('should return false when execFileSync throws', () => {
+      const originalEnv = setupMockEnvironment();
+      (childProcess.execFileSync as jest.Mock).mockImplementation(() => {
+        throw new Error('CodeQL CLI error');
+      });
+
+      const result = addCdsIndexerDiagnostic(
+        'my-cap-app',
+        'cds-indexer failed',
+        codeqlExePath,
+        sourceRoot,
+      );
+
+      expect(result).toBe(false);
+      restoreMockEnvironment(originalEnv);
     });
   });
 });

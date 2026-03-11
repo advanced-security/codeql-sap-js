@@ -1,5 +1,5 @@
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 
 /**
  * Call to [`sap.ui.util.Storage.put`](https://sapui5.hana.ondemand.com/sdk/#/api/module:sap/ui/util/Storage%23methods/put)
