@@ -10,6 +10,7 @@ import {
 import { CdsDependencyGraph, CdsImport, CdsProject, BasicCdsProject } from './types';
 import { modelCdsJsonFile } from '../../constants';
 import { cdsExtractorLog } from '../../logging';
+import { getPathsIgnorePatterns, shouldIgnorePath } from '../../paths-ignore';
 
 /**
  * Builds a basic dependency graph of CDS projects and performs the initial parsing stage of the CDS extractor.
@@ -30,12 +31,30 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir: string): Map<string,
 
   cdsExtractorLog('info', `Found ${projectDirs.length} CDS project(s) under source directory.`);
 
+  // Load paths-ignore patterns once for the entire source root
+  const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
+
   const projectMap = new Map<string, BasicCdsProject>();
 
   // First pass: create CdsProject objects for each project directory
   for (const projectDir of projectDirs) {
+    // Skip projects whose directory matches a paths-ignore pattern
+    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns)) {
+      cdsExtractorLog('info', `Skipping project '${projectDir}' — matches paths-ignore pattern`);
+      continue;
+    }
+
     const absoluteProjectDir = join(sourceRootDir, projectDir);
     const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
+
+    // Skip projects with no CDS files remaining after paths-ignore filtering
+    if (cdsFiles.length === 0) {
+      cdsExtractorLog(
+        'info',
+        `Skipping project '${projectDir}' — no CDS files remain after paths-ignore filtering`,
+      );
+      continue;
+    }
 
     // Try to load package.json if it exists
     const packageJsonPath = join(absoluteProjectDir, 'package.json');

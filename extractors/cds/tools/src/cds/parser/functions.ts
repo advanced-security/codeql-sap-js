@@ -6,6 +6,7 @@ import { sync } from 'glob';
 import { CdsFilesToCompile, CdsImport, PackageJson } from './types';
 import { modelCdsJsonFile } from '../../constants';
 import { cdsExtractorLog } from '../../logging';
+import { filterIgnoredPaths, getPathsIgnorePatterns } from '../../paths-ignore';
 
 /**
  * Determines the list of CDS files to be parsed for the specified project directory.
@@ -49,7 +50,23 @@ export function determineCdsFilesForProjectDir(
     });
 
     // Convert absolute paths to paths relative to sourceRootDir
-    return cdsFiles.map(file => relative(sourceRootDir, file));
+    const relativePaths = cdsFiles.map(file => relative(sourceRootDir, file));
+
+    // Apply paths-ignore filtering from CodeQL config
+    const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
+    if (pathsIgnorePatterns.length > 0) {
+      const filtered = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
+      const ignoredCount = relativePaths.length - filtered.length;
+      if (ignoredCount > 0) {
+        cdsExtractorLog(
+          'info',
+          `Filtered ${ignoredCount} CDS file(s) matching paths-ignore patterns in project ${relative(sourceRootDir, projectDir) || '.'}`,
+        );
+      }
+      return filtered;
+    }
+
+    return relativePaths;
   } catch (error: unknown) {
     cdsExtractorLog('error', `Error finding CDS files in ${projectDir}: ${String(error)}`);
     return [];

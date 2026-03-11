@@ -6,6 +6,7 @@ import { join, resolve } from 'path';
 import { cdsExtractorMarkerFileName } from './constants';
 import { dirExists } from './filesystem';
 import { cdsExtractorLog } from './logging';
+import { getPathsIgnorePatterns } from './paths-ignore';
 
 /**
  * Interface for platform information
@@ -256,6 +257,30 @@ ${process.env.LGTM_INDEX_FILTERS}`,
   process.env.LGTM_INDEX_TYPESCRIPT = 'NONE';
   // Configure to copy over the .cds files as well, by pretending they are JSON.
   process.env.LGTM_INDEX_FILETYPES = '.cds:JSON';
+}
+
+/**
+ * Applies paths-ignore patterns from the CodeQL configuration to the
+ * LGTM_INDEX_FILTERS environment variable. This ensures the JavaScript
+ * extractor also respects the user's paths-ignore configuration for
+ * compiled .cds.json output files.
+ *
+ * @param sourceRoot - The source root directory used to locate the config file
+ */
+export function applyPathsIgnoreToLgtmFilters(sourceRoot: string): void {
+  const patterns = getPathsIgnorePatterns(sourceRoot);
+  if (patterns.length === 0) {
+    return;
+  }
+
+  const excludeLines = patterns.map(p => `exclude:${p}`).join('\n');
+  const current = process.env.LGTM_INDEX_FILTERS ?? '';
+  process.env.LGTM_INDEX_FILTERS = current + '\n' + excludeLines;
+
+  cdsExtractorLog(
+    'info',
+    `Applied ${patterns.length} paths-ignore pattern(s) to LGTM_INDEX_FILTERS`,
+  );
 }
 
 /**
