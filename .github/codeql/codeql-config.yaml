@@ -3,8 +3,11 @@ name: "My CodeQL config"
 queries:
   - uses: security-extended
   - uses: ./javascript/frameworks/ui5/src/codeql-suites/javascript-security-extended.qls
+  - uses: advanced-security/javascript-sap-ui5-models
   - uses: ./javascript/frameworks/cap/src/codeql-suites/javascript-security-extended.qls
+  - uses: advanced-security/javascript-sap-cap-models
   - uses: ./javascript/frameworks/xsjs/src/codeql-suites/javascript-security-extended.qls
+  - uses: advanced-security/javascript-sap-xsjs-models
 
 paths-ignore:
   - "**/frameworks/*/test/models"
