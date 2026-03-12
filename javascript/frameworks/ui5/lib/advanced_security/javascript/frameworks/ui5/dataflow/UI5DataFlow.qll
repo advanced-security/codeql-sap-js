@@ -263,24 +263,27 @@ module TrackPlaceAtCallConfig implements DataFlow::ConfigSig {
    * - [ ] Heuristic by prefix: not an attractive option since heuristics can fail
    */
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
-    exists(DataFlow::PropWrite propWrite |
-      start = propWrite.getRhs() and
-      end = propWrite.getBase()
-    )
-    or
-    exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
-      start = maybeAddingChildAPICall.getAnArgument() and
-      end = maybeAddingChildAPICall.getReceiver()
-    )
-    or
-    exists(DataFlow::MethodCallNode call |
-      start = call.getReceiver() and
-      end = call
-    )
-    or
-    exists(DataFlow::NewNode new |
-      start = new.getAnArgument() and
-      end = new
+    inSameWebApp(start.getFile(), end.getFile()) and
+    (
+      exists(DataFlow::PropWrite propWrite |
+        start = propWrite.getRhs() and
+        end = propWrite.getBase()
+      )
+      or
+      exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
+        start = maybeAddingChildAPICall.getAnArgument() and
+        end = maybeAddingChildAPICall.getReceiver()
+      )
+      or
+      exists(DataFlow::MethodCallNode call |
+        start = call.getReceiver() and
+        end = call
+      )
+      or
+      exists(DataFlow::NewNode new |
+        start = new.getAnArgument() and
+        end = new
+      )
     )
   }
 }
