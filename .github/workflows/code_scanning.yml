@@ -59,6 +59,8 @@ jobs:
         env:
           LGTM_INDEX_XML_MODE: all
           LGTM_INDEX_FILETYPES: ".json:JSON"
+          # Add our CodeQL workspace to the path to search for packs to then resolve the MaD locally
+          CODEQL_ACTION_EXTRA_OPTIONS: '{"database":{"run-queries":["--search-path","${{ github.workspace }}"]}}'
 
       - name: Setup Python
         uses: actions/setup-python@v5
