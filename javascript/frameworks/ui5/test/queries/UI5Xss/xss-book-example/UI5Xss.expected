@@ -13,3 +13,4 @@ edges
 | webapp/controls/Book.js:133:8:133:26 | oControl.getTitle() | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" |
 #select
 | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" | webapp/controller/App.Controller.js:23:25:23:47 | oSearch ... Value() | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" | XSS vulnerability due to $@. | webapp/controller/App.Controller.js:23:25:23:47 | oSearch ... Value() | user-provided value |
+| webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" | webapp/controls/Book.js:17:13:17:30 | { type: "string" } | webapp/controls/Book.js:132:7:134:15 | "<div>T ... </div>" | XSS vulnerability due to $@. | webapp/controls/Book.js:17:13:17:30 | { type: "string" } | user-provided value |

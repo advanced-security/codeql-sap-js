@@ -66,14 +66,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
  */
 class LocalModelStringPropertySource extends DomBasedXss::Source {
   LocalModelStringPropertySource() {
-    exists(UI5BindingPath bindingPath |
-      this =
-        bindingPath
-            .getControlDeclaration()
-            .getDefinition()
-            .getMetadata()
-            .getProperty(bindingPath.getPropertyName())
-    )
+    this = any(PropertyMetadata propMeta | propMeta.isUnrestrictedStringType())
   }
 }
 
