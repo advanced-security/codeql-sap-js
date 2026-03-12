@@ -6,5 +6,11 @@ queries:
   - uses: ./javascript/frameworks/cap/src/codeql-suites/javascript-security-extended.qls
   - uses: ./javascript/frameworks/xsjs/src/codeql-suites/javascript-security-extended.qls
 
+packs:
+  javascript:
+    - advanced-security/javascript-sap-ui5-models
+    - advanced-security/javascript-sap-cap-models
+    - advanced-security/javascript-sap-xsjs-models
+
 paths-ignore:
   - "**/frameworks/*/test/models"
