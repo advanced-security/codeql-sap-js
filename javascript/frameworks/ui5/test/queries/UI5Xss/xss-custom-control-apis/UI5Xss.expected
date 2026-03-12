@@ -1,18 +1,37 @@
 nodes
-| webapp/control/xss.js:7:23:7:40 | { type: "string" } |
-| webapp/control/xss.js:14:32:14:49 | oControl.getText() |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:5:5:7:28 | value={/input} |
-| webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } |
+| xss-custom-control-api3/webapp/control/xss.js:8:24:8:41 | { type: "string" } |
+| xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() |
+| xss-custom-control-api3/webapp/control/xss.js:16:32:16:50 | oControl.getText2() |
+| xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| xss-custom-control-api3/webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } |
+| xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() |
+| xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| xss-custom-control.api2/webapp/view/app.view.xml:8:5:8:38 | text={/input} |
 edges
-| webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:14:32:14:49 | oControl.getText() |
-| webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/control/xss.js:7:23:7:40 | { type: "string" } |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:8:5:8:38 | text={/input} |
-| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:8:5:8:38 | text={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() |
+| xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control-api3/webapp/control/xss.js:8:24:8:41 | { type: "string" } | xss-custom-control-api3/webapp/control/xss.js:16:32:16:50 | oControl.getText2() |
+| xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } |
+| xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control-api3/webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control-api3/webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
+| xss-custom-control-api3/webapp/view/app.view.xml:8:5:8:38 | text={/input} | xss-custom-control-api3/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() |
+| xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } |
+| xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} |
+| xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null | xss-custom-control.api2/webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control.api2/webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
+| xss-custom-control.api2/webapp/view/app.view.xml:8:5:8:38 | text={/input} | xss-custom-control.api2/webapp/controller/app.controller.js:9:17:9:27 | input: null |
 #select
-| webapp/control/xss.js:14:32:14:49 | oControl.getText() | webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:14:32:14:49 | oControl.getText() | XSS vulnerability due to $@. | webapp/control/xss.js:7:23:7:40 | { type: "string" } | user-provided value |
-| webapp/control/xss.js:14:32:14:49 | oControl.getText() | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/control/xss.js:14:32:14:49 | oControl.getText() | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
+| xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() | xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() | XSS vulnerability due to $@. | xss-custom-control-api3/webapp/control/xss.js:7:23:7:40 | { type: "string" } | user-provided value |
+| xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() | xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control-api3/webapp/control/xss.js:15:32:15:49 | oControl.getText() | XSS vulnerability due to $@. | xss-custom-control-api3/webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
+| xss-custom-control-api3/webapp/control/xss.js:16:32:16:50 | oControl.getText2() | xss-custom-control-api3/webapp/control/xss.js:8:24:8:41 | { type: "string" } | xss-custom-control-api3/webapp/control/xss.js:16:32:16:50 | oControl.getText2() | XSS vulnerability due to $@. | xss-custom-control-api3/webapp/control/xss.js:8:24:8:41 | { type: "string" } | user-provided value |
+| xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() | xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } | xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() | XSS vulnerability due to $@. | xss-custom-control.api2/webapp/control/xss.js:7:23:7:40 | { type: "string" } | user-provided value |
+| xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() | xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} | xss-custom-control.api2/webapp/control/xss.js:14:32:14:49 | oControl.getText() | XSS vulnerability due to $@. | xss-custom-control.api2/webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
