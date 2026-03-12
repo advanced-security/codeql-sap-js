@@ -14,4 +14,5 @@ edges
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
 | webapp/view/app.view.xml:8:5:8:38 | text={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 #select
+| webapp/control/xssRenderer.js:8:28:8:45 | oControl.getText() | webapp/control/xssBase.js:5:15:5:32 | { type: "string" } | webapp/control/xssRenderer.js:8:28:8:45 | oControl.getText() | XSS vulnerability due to $@. | webapp/control/xssBase.js:5:15:5:32 | { type: "string" } | user-provided value |
 | webapp/control/xssRenderer.js:8:28:8:45 | oControl.getText() | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/control/xssRenderer.js:8:28:8:45 | oControl.getText() | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
