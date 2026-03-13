@@ -21,8 +21,9 @@ jest.mock('child_process', () => ({
 }));
 
 jest.mock('../../src/environment', () => ({
-  getPlatformInfo: jest.fn(),
+  applyPathsIgnoreToLgtmFilters: jest.fn(),
   configureLgtmIndexFilters: jest.fn(),
+  getPlatformInfo: jest.fn(),
 }));
 
 jest.mock('../../src/diagnostics', () => ({
