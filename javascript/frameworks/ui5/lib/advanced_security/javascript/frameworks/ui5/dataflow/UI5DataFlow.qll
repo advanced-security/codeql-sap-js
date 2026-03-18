@@ -61,6 +61,15 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5Control getControlDeclaration() { result = controlDeclaration }
 }
 
+/**
+ * A local source for cases where the Control implementation is separate from the complete UI5 app.
+ */
+class LocalModelStringPropertySource extends DomBasedXss::Source {
+  LocalModelStringPropertySource() {
+    this = any(PropertyMetadata propMeta | propMeta.isUnrestrictedStringType())
+  }
+}
+
 module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {
   private newtype TNode =
     TUI5BindingPathNode(UI5BindingPath path) or
@@ -254,24 +263,27 @@ module TrackPlaceAtCallConfig implements DataFlow::ConfigSig {
    * - [ ] Heuristic by prefix: not an attractive option since heuristics can fail
    */
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
-    exists(DataFlow::PropWrite propWrite |
-      start = propWrite.getRhs() and
-      end = propWrite.getBase()
-    )
-    or
-    exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
-      start = maybeAddingChildAPICall.getAnArgument() and
-      end = maybeAddingChildAPICall.getReceiver()
-    )
-    or
-    exists(DataFlow::MethodCallNode call |
-      start = call.getReceiver() and
-      end = call
-    )
-    or
-    exists(DataFlow::NewNode new |
-      start = new.getAnArgument() and
-      end = new
+    inSameWebApp(start.getFile(), end.getFile()) and
+    (
+      exists(DataFlow::PropWrite propWrite |
+        start = propWrite.getRhs() and
+        end = propWrite.getBase()
+      )
+      or
+      exists(DataFlow::MethodCallNode maybeAddingChildAPICall |
+        start = maybeAddingChildAPICall.getAnArgument() and
+        end = maybeAddingChildAPICall.getReceiver()
+      )
+      or
+      exists(DataFlow::MethodCallNode call |
+        start = call.getReceiver() and
+        end = call
+      )
+      or
+      exists(DataFlow::NewNode new |
+        start = new.getAnArgument() and
+        end = new
+      )
     )
   }
 }

@@ -49,33 +49,36 @@ module UI5Xss implements DataFlow::ConfigSig {
   }
 
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
-    /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
-    DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
-    or
-    /* TODO: Legacy code */
-    /* Handler argument node to handler parameter */
-    exists(UI5Handler h |
-      start = h.getBindingPath().getNode() and
-      /*
-       * Ideally we would like to show an intermediate node where
-       * the handler is bound to a control, but there is no sourceNode there
-       * `end = h.getBindingPath() or start = h.getBindingPath()`
-       */
+    inSameWebApp(start.getFile(), end.getFile()) and
+    (
+      /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
+      DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
+      or
+      /* TODO: Legacy code */
+      /* Handler argument node to handler parameter */
+      exists(UI5Handler h |
+        start = h.getBindingPath().getNode() and
+        /*
+         * Ideally we would like to show an intermediate node where
+         * the handler is bound to a control, but there is no sourceNode there
+         * `end = h.getBindingPath() or start = h.getBindingPath()`
+         */
 
-      end = h.getParameter(0)
-    )
-    or
-    /* Flow from `setContent` to `getContent` of a control */
-    exists(
-      UI5Control control, DataFlow::MethodCallNode getContent, DataFlow::MethodCallNode setContent
-    |
-      control.asJsControl() = setContent.getReceiver().getALocalSource() and
-      control.asJsControl() = getContent.getReceiver().getALocalSource() and
-      setContent.getMethodName() = "setContent" and
-      getContent.getMethodName() = "getContent" and
-      start = setContent.getArgument(0) and
-      end = getContent and
-      not control.isHTMLSanitized()
+        end = h.getParameter(0)
+      )
+      or
+      /* Flow from `setContent` to `getContent` of a control */
+      exists(
+        UI5Control control, DataFlow::MethodCallNode getContent, DataFlow::MethodCallNode setContent
+      |
+        control.asJsControl() = setContent.getReceiver().getALocalSource() and
+        control.asJsControl() = getContent.getReceiver().getALocalSource() and
+        setContent.getMethodName() = "setContent" and
+        getContent.getMethodName() = "getContent" and
+        start = setContent.getArgument(0) and
+        end = getContent and
+        not control.isHTMLSanitized()
+      )
     )
   }
 }
