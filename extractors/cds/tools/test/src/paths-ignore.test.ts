@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 
-import jsYaml from 'js-yaml';
+import { load as yamlLoad } from 'js-yaml';
 
 import {
   clearPathsIgnoreCache,
@@ -70,7 +70,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         name: 'My CodeQL config',
         'paths-ignore': ['src/node_modules', '**/*.test.js'],
         queries: [{ uses: 'security-extended' }],
@@ -92,7 +92,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         name: 'My CodeQL config',
         queries: [{ uses: 'security-extended' }],
       });
@@ -106,7 +106,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         'paths-ignore': ['vendor/**', 'test/data'],
       });
 
@@ -119,7 +119,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         'paths-ignore': ['vendor'],
       });
 
@@ -136,7 +136,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('{{invalid');
-      (jsYaml.load as jest.Mock).mockImplementation(() => {
+      (yamlLoad as jest.Mock).mockImplementation(() => {
         throw new Error('YAML parse error');
       });
 
@@ -161,7 +161,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         'paths-ignore': ['vendor', '', null, 42, 'test'],
       });
 
@@ -174,7 +174,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('');
-      (jsYaml.load as jest.Mock).mockReturnValue(null);
+      (yamlLoad as jest.Mock).mockReturnValue(null);
 
       const result = getPathsIgnorePatterns('/source');
       expect(result).toEqual([]);
@@ -185,7 +185,7 @@ describe('paths-ignore', () => {
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
       );
       (readFileSync as jest.Mock).mockReturnValue('yaml-content');
-      (jsYaml.load as jest.Mock).mockReturnValue({
+      (yamlLoad as jest.Mock).mockReturnValue({
         'paths-ignore': 'not-an-array',
       });
 

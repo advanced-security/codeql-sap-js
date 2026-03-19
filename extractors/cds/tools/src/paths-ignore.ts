@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-import jsYaml from 'js-yaml';
+import { load as yamlLoad } from 'js-yaml';
 import { minimatch } from 'minimatch';
 
 import { cdsExtractorLog } from './logging';
@@ -66,9 +66,10 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
 
   try {
     const content = readFileSync(configPath, 'utf8');
-    const config = jsYaml.load(content) as CodeqlConfig | null;
+    const config = yamlLoad(content) as CodeqlConfig | null;
 
     if (!config || !Array.isArray(config['paths-ignore'])) {
+      patternsCache.set(sourceRoot, []);
       return [];
     }
 
@@ -106,18 +107,20 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
  * @returns true if the path should be ignored
  */
 export function shouldIgnorePath(relativePath: string, patterns: string[]): boolean {
+  const matchOptions = { dot: true, windowsPathsNoEscape: true };
+
   for (const raw of patterns) {
     // Strip trailing slashes so `vendor/` is treated the same as `vendor`
     const pattern = raw.replace(/\/+$/, '');
 
     // Direct minimatch check
-    if (minimatch(relativePath, pattern, { dot: true })) {
+    if (minimatch(relativePath, pattern, matchOptions)) {
       return true;
     }
 
     // Also match as a directory prefix: pattern `vendor` should
     // match `vendor/lib/foo.cds` (i.e. anything nested underneath).
-    if (minimatch(relativePath, `${pattern}/**`, { dot: true })) {
+    if (minimatch(relativePath, `${pattern}/**`, matchOptions)) {
       return true;
     }
   }

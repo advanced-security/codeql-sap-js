@@ -23,13 +23,9 @@
     "test:coverage": "npm run build:tests && jest --coverage"
   },
   "dependencies": {
-    "child_process": "^1.0.2",
-    "fs": "^0.0.2",
     "glob": "^13.0.6",
     "js-yaml": "^4.1.1",
     "minimatch": "^10.2.4",
-    "os": "^0.1.2",
-    "path": "^0.12.7",
     "tmp": "^0.2.5"
   },
   "devDependencies": {

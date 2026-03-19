@@ -79,4 +79,5 @@ dbs
 
 # workspace customization file
 codeql-sap-js.code-workspace
+.vscode/settings.json
 

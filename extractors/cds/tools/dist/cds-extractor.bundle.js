@@ -7793,50 +7793,12 @@ function renamed(from, to) {
     throw new Error("Function yaml." + from + " is removed in js-yaml 4. Use yaml." + to + " instead, which is now safe by default.");
   };
 }
-var Type = type;
-var Schema = schema;
-var FAILSAFE_SCHEMA = failsafe;
-var JSON_SCHEMA = json;
-var CORE_SCHEMA = core;
-var DEFAULT_SCHEMA = _default;
 var load = loader.load;
 var loadAll = loader.loadAll;
 var dump = dumper.dump;
-var YAMLException = exception;
-var types = {
-  binary,
-  float,
-  map,
-  null: _null,
-  pairs,
-  set,
-  timestamp,
-  bool,
-  int,
-  merge,
-  omap,
-  seq,
-  str
-};
 var safeLoad = renamed("safeLoad", "load");
 var safeLoadAll = renamed("safeLoadAll", "loadAll");
 var safeDump = renamed("safeDump", "dump");
-var jsYaml = {
-  Type,
-  Schema,
-  FAILSAFE_SCHEMA,
-  JSON_SCHEMA,
-  CORE_SCHEMA,
-  DEFAULT_SCHEMA,
-  load,
-  loadAll,
-  dump,
-  YAMLException,
-  types,
-  safeLoad,
-  safeLoadAll,
-  safeDump
-};
 
 // node_modules/brace-expansion/node_modules/balanced-match/dist/esm/index.js
 var balanced = (a, b, str2) => {
@@ -8181,8 +8143,8 @@ var unescape = (s, { windowsPathsNoEscape = false, magicalBraces = true } = {}) 
 
 // node_modules/minimatch/dist/esm/ast.js
 var _a;
-var types2 = /* @__PURE__ */ new Set(["!", "?", "+", "*", "@"]);
-var isExtglobType = (c) => types2.has(c);
+var types = /* @__PURE__ */ new Set(["!", "?", "+", "*", "@"]);
+var isExtglobType = (c) => types.has(c);
 var isExtglobAST = (c) => isExtglobType(c.type);
 var adoptionMap = /* @__PURE__ */ new Map([
   ["!", ["@"]],
@@ -9674,8 +9636,9 @@ function getPathsIgnorePatterns(sourceRoot2) {
   }
   try {
     const content = (0, import_fs6.readFileSync)(configPath, "utf8");
-    const config = jsYaml.load(content);
+    const config = load(content);
     if (!config || !Array.isArray(config["paths-ignore"])) {
+      patternsCache.set(sourceRoot2, []);
       return [];
     }
     const patterns = config["paths-ignore"].filter(
@@ -9696,12 +9659,13 @@ function getPathsIgnorePatterns(sourceRoot2) {
   }
 }
 function shouldIgnorePath(relativePath, patterns) {
+  const matchOptions = { dot: true, windowsPathsNoEscape: true };
   for (const raw of patterns) {
     const pattern = raw.replace(/\/+$/, "");
-    if (minimatch(relativePath, pattern, { dot: true })) {
+    if (minimatch(relativePath, pattern, matchOptions)) {
       return true;
     }
-    if (minimatch(relativePath, `${pattern}/**`, { dot: true })) {
+    if (minimatch(relativePath, `${pattern}/**`, matchOptions)) {
       return true;
     }
   }
