@@ -1,7 +1,7 @@
 ---
 library: true
 name: advanced-security/javascript-sap-xsjs-models
-version: 2.24.3
+version: 2.25.0
 extensionTargets:
   codeql/javascript-all: "^2.6.22"
 dataExtensions:
