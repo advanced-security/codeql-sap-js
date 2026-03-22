@@ -1,7 +1,7 @@
 ---
 library: false
 name: advanced-security/javascript-sap-ui5-queries
-version: 2.24.3
+version: 2.25.0
 suites: codeql-suites
 extractor: javascript
 dependencies:
