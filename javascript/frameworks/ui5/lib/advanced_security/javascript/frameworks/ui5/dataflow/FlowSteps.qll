@@ -21,6 +21,7 @@ import advanced_security.javascript.frameworks.ui5.UI5View
  */
 class JsonModelPropertyValueToBindingStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(UI5BindingPath bindingPath, DataFlow::PropWrite propWrite |
       // The binding path resolves to a property write in a JSONModel
       bindingPath.getNode() = propWrite and
@@ -43,6 +44,7 @@ class JsonModelPropertyValueToBindingStep extends DataFlow::SharedFlowStep {
  */
 class InternalModelContentToCustomMetadataPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(UI5BindingPath bindingPath |
       bindingPath.getNode() = start and
       end =
@@ -61,6 +63,7 @@ class InternalModelContentToCustomMetadataPropertyStep extends DataFlow::SharedF
  */
 class CustomMetadataPropertyStepToInternalModelContent extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(UI5BindingPath bindingPath, UI5InternalModel internalModel |
       start =
         bindingPath
@@ -79,6 +82,7 @@ class CustomMetadataPropertyStepToInternalModelContent extends DataFlow::SharedF
 /** External model to a relevant control property */
 class ExternalModelToCustomMetadataPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(UI5BindingPath bindingPath |
       bindingPath.getModel() = start and
       end =
@@ -94,6 +98,7 @@ class ExternalModelToCustomMetadataPropertyStep extends DataFlow::SharedFlowStep
 /** Control metadata property being the intermediate flow node */
 class CustomMetadataPropertyReadStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(PropertyMetadata property |
       /* Writing site -> Control property */
       exists(MethodCallNode propertyWrite | propertyWrite = property.getAWrite() |
@@ -134,57 +139,60 @@ class CustomMetadataPropertyReadStep extends DataFlow::SharedFlowStep {
  */
 class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
-    /* 1. The receiver is a reference to the local model, jump to the relevant content */
-    exists(MethodCallNode setPropertyCall, CustomController controller, ModelReference modelRef |
-      start = setPropertyCall.getArgument(1) and
-      setPropertyCall.getMethodName() = "setProperty" and
-      setPropertyCall.getReceiver().getALocalSource() = modelRef and
-      modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `modelRef` can be inside a callback argument
-      controller.getAModelReference() = modelRef and
-      modelRef.isLocalModelReference() and
-      modelRef = end
-    )
-    or
-    /* 2. The receiver is a reference to the local model, jump to the model reference (receiver) itself */
-    exists(
-      MethodCallNode setPropertyCall, CustomController controller, ModelReference modelRef,
-      UI5BindingPath bindingPath
-    |
-      start = setPropertyCall.getArgument(1) and
-      setPropertyCall.getMethodName() = "setProperty" and
-      setPropertyCall.getReceiver().getALocalSource() = modelRef and
-      modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
-      controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
-      bindingPath.getNode() = modelRef.getResolvedModel().(JsonModel).getAProperty() and
-      bindingPath.getPath() =
-        setPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
-      end = bindingPath.getNode()
-    )
-    or
-    /* 3. The receiver is the local model itself, jump to the relevant content */
-    exists(
-      MethodCallNode setPropertyCall, CustomController controller, UI5InternalModel internalModel
-    |
-      start = setPropertyCall.getArgument(1) and
-      setPropertyCall.getMethodName() = "setProperty" and
-      setPropertyCall.getReceiver().getALocalSource() = internalModel and
-      internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
-      internalModel = end
-    )
-    or
-    /* 4. The receiver is the local model, jump to the model reference (receiver) itself */
-    exists(
-      MethodCallNode setPropertyCall, CustomController controller, UI5InternalModel internalModel,
-      UI5BindingPath bindingPath
-    |
-      start = setPropertyCall.getArgument(1) and
-      setPropertyCall.getMethodName() = "setProperty" and
-      setPropertyCall.getReceiver().getALocalSource() = internalModel and
-      internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
-      bindingPath.getNode() = internalModel.(JsonModel).getAProperty() and
-      bindingPath.getPath() =
-        setPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
-      end = bindingPath.getNode()
+    inSameWebApp(start.getFile(), end.getFile()) and
+    (
+      /* 1. The receiver is a reference to the local model, jump to the relevant content */
+      exists(MethodCallNode setPropertyCall, CustomController controller, ModelReference modelRef |
+        start = setPropertyCall.getArgument(1) and
+        setPropertyCall.getMethodName() = "setProperty" and
+        setPropertyCall.getReceiver().getALocalSource() = modelRef and
+        modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `modelRef` can be inside a callback argument
+        controller.getAModelReference() = modelRef and
+        modelRef.isLocalModelReference() and
+        modelRef = end
+      )
+      or
+      /* 2. The receiver is a reference to the local model, jump to the model reference (receiver) itself */
+      exists(
+        MethodCallNode setPropertyCall, CustomController controller, ModelReference modelRef,
+        UI5BindingPath bindingPath
+      |
+        start = setPropertyCall.getArgument(1) and
+        setPropertyCall.getMethodName() = "setProperty" and
+        setPropertyCall.getReceiver().getALocalSource() = modelRef and
+        modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
+        controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
+        bindingPath.getNode() = modelRef.getResolvedModel().(JsonModel).getAProperty() and
+        bindingPath.getPath() =
+          setPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
+        end = bindingPath.getNode()
+      )
+      or
+      /* 3. The receiver is the local model itself, jump to the relevant content */
+      exists(
+        MethodCallNode setPropertyCall, CustomController controller, UI5InternalModel internalModel
+      |
+        start = setPropertyCall.getArgument(1) and
+        setPropertyCall.getMethodName() = "setProperty" and
+        setPropertyCall.getReceiver().getALocalSource() = internalModel and
+        internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
+        internalModel = end
+      )
+      or
+      /* 4. The receiver is the local model, jump to the model reference (receiver) itself */
+      exists(
+        MethodCallNode setPropertyCall, CustomController controller, UI5InternalModel internalModel,
+        UI5BindingPath bindingPath
+      |
+        start = setPropertyCall.getArgument(1) and
+        setPropertyCall.getMethodName() = "setProperty" and
+        setPropertyCall.getReceiver().getALocalSource() = internalModel and
+        internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
+        bindingPath.getNode() = internalModel.(JsonModel).getAProperty() and
+        bindingPath.getPath() =
+          setPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
+        end = bindingPath.getNode()
+      )
     )
   }
 }
@@ -212,57 +220,60 @@ class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
  */
 class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
-    /* 1. The receiver is a reference to the local model, jump from the relevant content */
-    exists(MethodCallNode getPropertyCall, CustomController controller, ModelReference modelRef |
-      modelRef = start and
-      getPropertyCall.getMethodName() = "getProperty" and
-      getPropertyCall.getReceiver().getALocalSource() = modelRef and
-      modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
-      controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
-      modelRef.isLocalModelReference() and
-      end = getPropertyCall
-    )
-    or
-    /* 2. The receiver is a reference to the local model, jump from the model reference (receiver) itself */
-    exists(
-      MethodCallNode getPropertyCall, CustomController controller, ModelReference modelRef,
-      UI5BindingPath bindingPath
-    |
-      start = bindingPath.getNode() and
-      getPropertyCall.getMethodName() = "getProperty" and
-      getPropertyCall.getReceiver().getALocalSource() = modelRef and
-      modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
-      controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
-      bindingPath.getNode() = modelRef.getResolvedModel().(JsonModel).getAProperty() and
-      bindingPath.getPath() =
-        getPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
-      end = getPropertyCall
-    )
-    or
-    /* 3. The receiver is the local model itself, jump from the relevant content */
-    exists(
-      MethodCallNode getPropertyCall, CustomController controller, UI5InternalModel internalModel
-    |
-      internalModel = start and
-      getPropertyCall.getMethodName() = "getProperty" and
-      getPropertyCall.getReceiver().getALocalSource() = internalModel and
-      internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
-      end = getPropertyCall
-    )
-    or
-    /* 4. The receiver is the local model, jump from the model reference (receiver) itself */
-    exists(
-      MethodCallNode getPropertyCall, CustomController controller, UI5InternalModel internalModel,
-      UI5BindingPath bindingPath
-    |
-      start = bindingPath.getNode() and
-      getPropertyCall.getMethodName() = "getProperty" and
-      getPropertyCall.getReceiver().getALocalSource() = internalModel and
-      internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
-      bindingPath.getNode() = internalModel.(JsonModel).getAProperty() and
-      bindingPath.getPath() =
-        getPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
-      end = getPropertyCall
+    inSameWebApp(start.getFile(), end.getFile()) and
+    (
+      /* 1. The receiver is a reference to the local model, jump from the relevant content */
+      exists(MethodCallNode getPropertyCall, CustomController controller, ModelReference modelRef |
+        modelRef = start and
+        getPropertyCall.getMethodName() = "getProperty" and
+        getPropertyCall.getReceiver().getALocalSource() = modelRef and
+        modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
+        controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
+        modelRef.isLocalModelReference() and
+        end = getPropertyCall
+      )
+      or
+      /* 2. The receiver is a reference to the local model, jump from the model reference (receiver) itself */
+      exists(
+        MethodCallNode getPropertyCall, CustomController controller, ModelReference modelRef,
+        UI5BindingPath bindingPath
+      |
+        start = bindingPath.getNode() and
+        getPropertyCall.getMethodName() = "getProperty" and
+        getPropertyCall.getReceiver().getALocalSource() = modelRef and
+        modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
+        controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
+        bindingPath.getNode() = modelRef.getResolvedModel().(JsonModel).getAProperty() and
+        bindingPath.getPath() =
+          getPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
+        end = getPropertyCall
+      )
+      or
+      /* 3. The receiver is the local model itself, jump from the relevant content */
+      exists(
+        MethodCallNode getPropertyCall, CustomController controller, UI5InternalModel internalModel
+      |
+        internalModel = start and
+        getPropertyCall.getMethodName() = "getProperty" and
+        getPropertyCall.getReceiver().getALocalSource() = internalModel and
+        internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
+        end = getPropertyCall
+      )
+      or
+      /* 4. The receiver is the local model, jump from the model reference (receiver) itself */
+      exists(
+        MethodCallNode getPropertyCall, CustomController controller, UI5InternalModel internalModel,
+        UI5BindingPath bindingPath
+      |
+        start = bindingPath.getNode() and
+        getPropertyCall.getMethodName() = "getProperty" and
+        getPropertyCall.getReceiver().getALocalSource() = internalModel and
+        internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
+        bindingPath.getNode() = internalModel.(JsonModel).getAProperty() and
+        bindingPath.getPath() =
+          getPropertyCall.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() and
+        end = getPropertyCall
+      )
     )
   }
 }
@@ -298,6 +309,7 @@ class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
 
 class LocalModelGetPropertyStepWithSetProperty extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(
       MethodCallNode setPropertyCall, ModelReference modelRefFrom, MethodCallNode getPropertyCall,
       ModelReference modelRefTo
@@ -322,6 +334,7 @@ class LocalModelGetPropertyStepWithSetProperty extends DataFlow::SharedFlowStep 
 
 class LocalModelControlMetadataStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(
       ModelReference modelRef, BindingPath bindingPath, Binding binding, CustomControl control,
       MethodCallNode setPropertyCall
@@ -340,6 +353,7 @@ class LocalModelControlMetadataStep extends DataFlow::SharedFlowStep {
 
 class SetModelToGetModelStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(UI5Model modelDefinition, ModelReference modelReference |
       modelReference.getResolvedModel() = modelDefinition and
       start = modelDefinition and
@@ -350,6 +364,7 @@ class SetModelToGetModelStep extends DataFlow::SharedFlowStep {
 
 class GetModelToGetPropertyStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(ModelReference modelReference, MethodCallNode readingMethodCall |
       readingMethodCall = modelReference.getARead() and
       start = modelReference and
@@ -365,6 +380,7 @@ class GetModelToGetPropertyStep extends DataFlow::SharedFlowStep {
  */
 class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(MethodCallNode getTextCall, ResourceModel resourceModel |
       getTextCall.getReceiver().getALocalSource() = resourceModel.getResourceBundle() and
       getTextCall.getMethodName() = "getText" and
@@ -380,12 +396,14 @@ class ResourceBundleGetTextCallArgToReturnValueStep extends DataFlow::SharedFlow
  */
 predicate logArgumentToListener(DataFlow::Node start, DataFlow::Node end) {
   inSameWebApp(start.getFile(), end.getFile()) and
-  start =
-    ModelOutput::getATypeNode("SapLogger")
-        .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
-        .getACall()
-        .getAnArgument() and
-  end = ModelOutput::getATypeNode("SapLogEntries").asSource()
+  (
+    start =
+      ModelOutput::getATypeNode("SapLogger")
+          .getMember(["debug", "error", "fatal", "info", "trace", "warning"])
+          .getACall()
+          .getAnArgument() and
+    end = ModelOutput::getATypeNode("SapLogEntries").asSource()
+  )
 }
 
 /**
@@ -394,6 +412,7 @@ predicate logArgumentToListener(DataFlow::Node start, DataFlow::Node end) {
  */
 class LogArgumentToListener extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     logArgumentToListener(start, end)
   }
 }
@@ -407,6 +426,7 @@ class LogArgumentToListener extends DataFlow::SharedFlowStep {
  */
 class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(
       EventBus::EventBusPublishCall publishCall, EventBus::EventBusSubscribeCall subscribeCall
     |
@@ -428,6 +448,7 @@ class PublishedEventToEventSubscribedEventData extends DataFlow::SharedFlowStep 
  */
 class ThisNodePropertyWriteToThisNodePropertyRead extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
     exists(
       SapExtendCall sapExtendCall, ThisNode propReadThisNode, ThisNode propWriteThisNode,
       PropRead propRead, PropWrite propWrite, string propName
