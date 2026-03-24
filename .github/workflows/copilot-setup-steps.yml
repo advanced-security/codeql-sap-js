@@ -1,0 +1,54 @@
+name: 'Copilot Setup Steps'
+
+on:
+  # Automatically run the setup steps when an associated workflow is changed.
+  push:
+    paths:
+      - '.codeql-version'
+      - '.github/workflows/copilot-setup-steps.yml'
+      - '.node-version'
+      - '**/codeql-pack.yml'
+      - '**/codeql-pack.lock.yml'
+      - '**/qlpack.yml'
+      - 'extractors/cds/tools/package.json'
+      - 'extractors/cds/tools/package-lock.json'
+  pull_request:
+    paths:
+      - '.codeql-version'
+      - '.github/workflows/copilot-setup-steps.yml'
+      - '.node-version'
+      - '**/codeql-pack.yml'
+      - '**/codeql-pack.lock.yml'
+      - '**/qlpack.yml'
+      - 'extractors/cds/tools/package.json'
+      - 'extractors/cds/tools/package-lock.json'
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Copilot Setup - Checkout code
+        uses: actions/checkout@v6
+
+      - name: Copilot Setup - Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          cache: 'npm'
+          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+          node-version-file: '.node-version'
+
+      - name: Copilot Setup - Install CDS extractor dependencies
+        working-directory: extractors/cds/tools
+        run: npm ci
+
+      - name: Copilot Setup - Setup CodeQL environment
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@main
+        with:
+          install-language-runtimes: false
+
+      - name: Copilot Setup - Install CodeQL packs
+        run: ./scripts/install-packs.sh
