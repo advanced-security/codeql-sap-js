@@ -27,7 +27,7 @@ My `github-maintenance-agent`:
 Validate GitHub Actions workflows:
 ```bash
 # Check YAML syntax
-yamllint .github/workflows/*.yml
+yamllint -c .github/.yamllint .github/workflows/*.yml
 ```
 
 Test issue template rendering:
@@ -41,12 +41,7 @@ gh issue create --web
 ```
 .github/
 ├── agents/                       # Agent definitions
-│   ├── cds-extractor-agent.md
-│   ├── cap-modeling-agent.md
-│   ├── ui5-modeling-agent.md
-│   ├── xsjs-modeling-agent.md
-│   ├── dependency-upgrade-agent.md
-│   └── github-maintenance-agent.md
+│   └── *.md                      # Individual agent definition files
 ├── instructions/                 # Middle-layer instructions
 │   ├── extractors_cds_tools_ts.instructions.md
 │   ├── javascript_cap_ql.instructions.md

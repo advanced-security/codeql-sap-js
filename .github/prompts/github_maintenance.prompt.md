@@ -122,7 +122,7 @@ When updating `.github/workflows/*.yml`:
 actionlint .github/workflows/*.yml
 
 # Or use yamllint
-yamllint .github/workflows/*.yml
+yamllint -c .github/.yamllint .github/workflows/*.yml
 
 # Test in PR before merging
 ```
