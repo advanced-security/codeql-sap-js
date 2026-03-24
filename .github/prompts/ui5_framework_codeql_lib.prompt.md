@@ -1,4 +1,3 @@
-```prompt
 # UI5 Framework CodeQL Library Modeling
 
 Guidelines for developing CodeQL library models (`.qll` files) that define sources, sinks, and taint steps for SAPUI5 security analysis.
@@ -264,4 +263,3 @@ module UI5LogInjection implements DataFlow::ConfigSig {
 - [UI5 Query Development Prompt](ui5_framework_codeql_dev.prompt.md) - Query file structure
 - [UI5 Testing Prompt](ui5_framework_codeql_test.prompt.md) - Test case development
 - [UI5 Framework Development](ui5_framework_development.prompt.md) - General UI5 context
-```

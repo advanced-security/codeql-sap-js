@@ -1,4 +1,3 @@
-```prompt
 # UI5 Framework CodeQL Query Development
 
 Guidelines for developing CodeQL security queries that detect vulnerable code patterns in SAPUI5 applications.
@@ -165,4 +164,3 @@ const fragment = await Fragment.load({
 - [UI5 Library Modeling Prompt](ui5_framework_codeql_lib.prompt.md) - Library implementation details
 - [UI5 Testing Prompt](ui5_framework_codeql_test.prompt.md) - Test case development
 - [CodeQL Test Commands](codeql_test_commands.prompt.md) - Testing workflow
-```

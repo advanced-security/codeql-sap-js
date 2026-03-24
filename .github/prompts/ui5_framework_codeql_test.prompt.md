@@ -1,4 +1,3 @@
-```prompt
 # UI5 Framework CodeQL Unit Testing
 
 Guidelines for creating unit tests for UI5 CodeQL queries and library models.
@@ -287,4 +286,3 @@ Each alert on separate line in `#select`:
 - [UI5 Library Modeling Prompt](ui5_framework_codeql_lib.prompt.md) - Library implementation
 - [CodeQL Test Commands](codeql_test_commands.prompt.md) - Command reference
 - [Test-Driven Development](test_driven_development.prompt.md) - TDD workflow
-```
