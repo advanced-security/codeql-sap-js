@@ -1,0 +1,8 @@
+edges
+| test.js:1:11:1:50 | jQuery. ... ("url") | test.js:2:34:2:36 | url | provenance |  |
+nodes
+| test.js:1:11:1:50 | jQuery. ... ("url") | semmle.label | jQuery. ... ("url") |
+| test.js:2:34:2:36 | url | semmle.label | url |
+subpaths
+#select
+| test.js:2:1:2:20 | new XMLHttpRequest() | test.js:1:11:1:50 | jQuery. ... ("url") | test.js:2:34:2:36 | url | The $@ of this request depends on a $@. | test.js:2:34:2:36 | url | URL | test.js:1:11:1:50 | jQuery. ... ("url") | user-provided value |

@@ -118,8 +118,8 @@ extensions:
       - ["UI5CodeEditor", "Member[value]", "remote"]
       - ["UI5CodeEditor", "Member[getCurrentValue].ReturnValue", "remote"]
       - ["global", "Member[jQuery].Member[sap].Member[syncHead,syncGet,syncGetText,syncPost,syncPostText].ReturnValue", "remote"]
-      - ["UI5URIParameters", "Member[get].ReturnValue", "remote"]
-      - ["UI5URIParameters", "Member[getAll].ReturnValue", "remote"]
+      - ["UI5URIParameters", "Member[get].ReturnValue", "browser-url-query"]
+      - ["UI5URIParameters", "Member[getAll].ReturnValue", "browser-url-query"]
 
   - addsTo:
       pack: codeql/javascript-all
