@@ -9,8 +9,8 @@ on:
     branches: [ main ]
     paths:
       - 'extractors/cds/**'
+  # This job can be manually triggered to validate the CDS extractor bundle
   workflow_dispatch:
-    # This job can be manually triggered to validate the CDS extractor bundle
 
 permissions:
   contents: read
