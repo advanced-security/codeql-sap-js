@@ -54,7 +54,7 @@
 | source.js:92:17:92:25 | obj.value | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.js:94:17:94:30 | obj.getValue() | Remote flow source of type: Remote flow |
 | source.js:94:17:94:30 | obj.getValue() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:96:17:96:51 | jQuery. ... ).get() | Remote flow source of type: Remote flow |
+| source.js:96:17:96:51 | jQuery. ... ).get() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:96:17:96:51 | jQuery. ... ).get() | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.js:98:17:98:37 | jQuery. ... cHead() | Remote flow source of type: Remote flow |
 | source.js:98:17:98:37 | jQuery. ... cHead() | Remote flow source of type: Source node (remote) [from data-extension] |
@@ -66,15 +66,15 @@
 | source.js:104:17:104:37 | jQuery. ... cPost() | Remote flow source of type: Source node (remote) [from data-extension] |
 | source.js:106:17:106:41 | jQuery. ... tText() | Remote flow source of type: Remote flow |
 | source.js:106:17:106:41 | jQuery. ... tText() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:108:17:108:52 | UriPara ... ).get() | Remote flow source of type: Remote flow |
+| source.js:108:17:108:52 | UriPara ... ).get() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:108:17:108:52 | UriPara ... ).get() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:109:17:109:55 | UriPara ... etAll() | Remote flow source of type: Remote flow |
+| source.js:109:17:109:55 | UriPara ... etAll() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:109:17:109:55 | UriPara ... etAll() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:112:17:112:25 | obj.get() | Remote flow source of type: Remote flow |
+| source.js:112:17:112:25 | obj.get() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:112:17:112:25 | obj.get() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:113:17:113:28 | obj.getAll() | Remote flow source of type: Remote flow |
+| source.js:113:17:113:28 | obj.getAll() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:113:17:113:28 | obj.getAll() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:115:17:115:28 | obj.getAll() | Remote flow source of type: Remote flow |
+| source.js:115:17:115:28 | obj.getAll() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:115:17:115:28 | obj.getAll() | Remote flow source of type: Source node (remote) [from data-extension] |
-| source.js:117:17:117:25 | obj.get() | Remote flow source of type: Remote flow |
+| source.js:117:17:117:25 | obj.get() | Remote flow source of type: Source node (browser-url-query) [from data-extension] |
 | source.js:117:17:117:25 | obj.get() | Remote flow source of type: Source node (remote) [from data-extension] |
