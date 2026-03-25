@@ -2,9 +2,9 @@ name: Update CodeQL CLI Dependencies
 
 on:
   workflow_dispatch:
-  # Nightly check for new CodeQL CLI releases
+  # Check for new CodeQL CLI releases every 3 days
   schedule:
-    - cron: '30 0 * * *'
+    - cron: '30 0 */3 * *'
 
 permissions:
   contents: read
