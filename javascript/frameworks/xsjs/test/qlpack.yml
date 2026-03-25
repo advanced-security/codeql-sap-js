@@ -4,6 +4,6 @@ version: 2.25.0
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.6.24"
-  advanced-security/javascript-sap-xsjs-queries: "2.25.0"
-  advanced-security/javascript-sap-xsjs-all: "2.25.0"
-  advanced-security/javascript-sap-xsjs-models: "2.25.0"
+  advanced-security/javascript-sap-xsjs-queries: ${workspace}
+  advanced-security/javascript-sap-xsjs-all: ${workspace}
+  advanced-security/javascript-sap-xsjs-models: ${workspace}

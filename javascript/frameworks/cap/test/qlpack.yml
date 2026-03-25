@@ -4,6 +4,6 @@ version: 2.25.0
 extractor: javascript
 dependencies:
   codeql/javascript-all: "^2.6.24"
-  advanced-security/javascript-sap-cap-queries: "2.25.0"
-  advanced-security/javascript-sap-cap-models: "2.25.0"
-  advanced-security/javascript-sap-cap-all: "2.25.0"
+  advanced-security/javascript-sap-cap-queries: ${workspace}
+  advanced-security/javascript-sap-cap-models: ${workspace}
+  advanced-security/javascript-sap-cap-all: ${workspace}
