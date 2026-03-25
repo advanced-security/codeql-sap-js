@@ -11,8 +11,14 @@ import {
   setupJavaScriptExtractorEnv,
   getAutobuildScriptPath,
   configureLgtmIndexFilters,
+  applyPathsIgnoreToLgtmFilters,
   setupAndValidateEnvironment,
 } from '../../src/environment';
+import * as pathsIgnore from '../../src/paths-ignore';
+
+jest.mock('../../src/paths-ignore', () => ({
+  getPathsIgnorePatterns: jest.fn().mockReturnValue([]),
+}));
 
 // Mock modules
 jest.mock('child_process');
@@ -407,6 +413,41 @@ describe('environment', () => {
       expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:specific/path/**/*');
       expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
       expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
+    });
+  });
+
+  describe('applyPathsIgnoreToLgtmFilters', () => {
+    beforeEach(() => {
+      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue([]);
+    });
+
+    it('should append exclude lines to LGTM_INDEX_FILTERS when patterns exist', () => {
+      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue(['vendor', '**/*.test.js']);
+      process.env.LGTM_INDEX_FILTERS = 'include:**/*.cds.json';
+
+      applyPathsIgnoreToLgtmFilters('/source');
+
+      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:vendor');
+      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:**/*.test.js');
+      expect(process.env.LGTM_INDEX_FILTERS).toContain('include:**/*.cds.json');
+    });
+
+    it('should not modify LGTM_INDEX_FILTERS when no patterns exist', () => {
+      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue([]);
+      process.env.LGTM_INDEX_FILTERS = 'include:**/*.cds.json';
+
+      applyPathsIgnoreToLgtmFilters('/source');
+
+      expect(process.env.LGTM_INDEX_FILTERS).toBe('include:**/*.cds.json');
+    });
+
+    it('should handle missing LGTM_INDEX_FILTERS env var', () => {
+      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue(['vendor']);
+      delete process.env.LGTM_INDEX_FILTERS;
+
+      applyPathsIgnoreToLgtmFilters('/source');
+
+      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:vendor');
     });
   });
 

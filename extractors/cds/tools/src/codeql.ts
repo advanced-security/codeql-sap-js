@@ -2,7 +2,7 @@ import { spawnSync, SpawnSyncReturns } from 'child_process';
 
 import type { CdsDependencyGraph } from './cds/parser';
 import { addJavaScriptExtractorDiagnostic } from './diagnostics';
-import { configureLgtmIndexFilters } from './environment';
+import { applyPathsIgnoreToLgtmFilters, configureLgtmIndexFilters } from './environment';
 import { createMarkerFile, removeMarkerFile } from './filesystem';
 import {
   cdsExtractorLog,
@@ -91,6 +91,9 @@ export function runJavaScriptExtractionWithMarker(
 ): boolean {
   // Configure LGTM index filters
   configureLgtmIndexFilters();
+
+  // Apply paths-ignore patterns from CodeQL config to LGTM_INDEX_FILTERS
+  applyPathsIgnoreToLgtmFilters(sourceRoot);
 
   // Create marker file
   const markerFilePath = createMarkerFile(sourceRoot);
