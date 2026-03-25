@@ -92,7 +92,8 @@ upgrade_framework() {
   echo "Upgrading packs for: ${framework_path}"
 
   # Find all qlpack.yml files under this framework and upgrade their packs
-  find "${REPO_ROOT}/${framework_path}" -name "qlpack.yml" -type f | sort | while read -r qlpack_file; do
+  # Exclude .codeql directories which contain cached packs from previous installs
+  find "${REPO_ROOT}/${framework_path}" -name ".codeql" -prune -o -name "qlpack.yml" -type f -print | sort | while read -r qlpack_file; do
     local pack_dir
     pack_dir=$(dirname "${qlpack_file}")
     # Use relative path for cleaner output
