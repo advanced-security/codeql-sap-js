@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, relative, resolve } from 'path';
 
 import { load as yamlLoad } from 'js-yaml';
 import { minimatch } from 'minimatch';
@@ -10,7 +10,7 @@ import { cdsExtractorLog } from './logging';
  * Well-known paths where a CodeQL configuration file may be located,
  * relative to the source root directory. Checked in order of priority.
  */
-const CODEQL_CONFIG_PATHS = [
+const DEFAULT_CONFIG_RELATIVE_PATHS = [
   '.github/codeql/codeql-config.yml',
   '.github/codeql/codeql-config.yaml',
 ];
@@ -29,14 +29,44 @@ interface CodeqlConfig {
 }
 
 /**
- * Finds the CodeQL configuration file in the source root directory by
- * checking the well-known paths in order.
+ * Finds the CodeQL configuration file in the source root directory.
+ *
+ * When the `CODEQL_CONFIG_PATH` environment variable is set, its value
+ * is treated as a path (relative to `sourceRoot`) to the config file.
+ * The resolved path must reside under `sourceRoot`; otherwise it is
+ * rejected to prevent path-traversal issues.
+ *
+ * When the environment variable is not set, the well-known default
+ * paths are checked in order.
  *
  * @param sourceRoot - The source root directory
  * @returns The absolute path to the config file, or undefined if not found
  */
 export function findCodeqlConfigFile(sourceRoot: string): string | undefined {
-  for (const configPath of CODEQL_CONFIG_PATHS) {
+  const envConfigPath = process.env.CODEQL_CONFIG_PATH;
+  if (envConfigPath) {
+    const resolvedRoot = resolve(sourceRoot);
+    const fullPath = resolve(resolvedRoot, envConfigPath);
+    const rel = relative(resolvedRoot, fullPath);
+    if (rel.startsWith('..') || resolve(resolvedRoot, rel) !== fullPath) {
+      cdsExtractorLog(
+        'warn',
+        `CODEQL_CONFIG_PATH '${envConfigPath}' resolves outside the source root. Ignoring.`,
+      );
+      return undefined;
+    }
+    if (existsSync(fullPath)) {
+      cdsExtractorLog('info', `Using CodeQL config file from CODEQL_CONFIG_PATH: ${fullPath}`);
+      return fullPath;
+    }
+    cdsExtractorLog(
+      'warn',
+      `CODEQL_CONFIG_PATH is set to '${envConfigPath}', but no file exists at '${fullPath}'.`,
+    );
+    return undefined;
+  }
+
+  for (const configPath of DEFAULT_CONFIG_RELATIVE_PATHS) {
     const fullPath = join(sourceRoot, configPath);
     if (existsSync(fullPath)) {
       return fullPath;

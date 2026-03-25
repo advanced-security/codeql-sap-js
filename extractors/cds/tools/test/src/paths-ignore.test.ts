@@ -18,9 +18,12 @@ jest.mock('fs', () => ({
 jest.mock('js-yaml');
 
 describe('paths-ignore', () => {
+  const savedCodeqlConfigPath = process.env.CODEQL_CONFIG_PATH;
+
   beforeEach(() => {
     jest.resetAllMocks();
     clearPathsIgnoreCache();
+    delete process.env.CODEQL_CONFIG_PATH;
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -28,6 +31,11 @@ describe('paths-ignore', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    if (savedCodeqlConfigPath !== undefined) {
+      process.env.CODEQL_CONFIG_PATH = savedCodeqlConfigPath;
+    } else {
+      delete process.env.CODEQL_CONFIG_PATH;
+    }
   });
 
   describe('findCodeqlConfigFile', () => {
@@ -61,6 +69,61 @@ describe('paths-ignore', () => {
 
       const result = findCodeqlConfigFile('/source');
       expect(result).toBeUndefined();
+    });
+
+    it('should use CODEQL_CONFIG_PATH when set and file exists', () => {
+      process.env.CODEQL_CONFIG_PATH = 'default-codeql-config.yml';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/default-codeql-config.yml',
+      );
+
+      const result = findCodeqlConfigFile('/source');
+      expect(result).toBe('/source/default-codeql-config.yml');
+    });
+
+    it('should use CODEQL_CONFIG_PATH for nested paths under source root', () => {
+      process.env.CODEQL_CONFIG_PATH = 'config/my-codeql-config.yml';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/config/my-codeql-config.yml',
+      );
+
+      const result = findCodeqlConfigFile('/source');
+      expect(result).toBe('/source/config/my-codeql-config.yml');
+    });
+
+    it('should return undefined when CODEQL_CONFIG_PATH file does not exist', () => {
+      process.env.CODEQL_CONFIG_PATH = 'nonexistent-config.yml';
+      (existsSync as jest.Mock).mockReturnValue(false);
+
+      const result = findCodeqlConfigFile('/source');
+      expect(result).toBeUndefined();
+    });
+
+    it('should reject CODEQL_CONFIG_PATH that resolves outside source root', () => {
+      process.env.CODEQL_CONFIG_PATH = '../../etc/passwd';
+      (existsSync as jest.Mock).mockReturnValue(true);
+
+      const result = findCodeqlConfigFile('/source');
+      expect(result).toBeUndefined();
+    });
+
+    it('should not fall back to default paths when CODEQL_CONFIG_PATH is set but missing', () => {
+      process.env.CODEQL_CONFIG_PATH = 'missing-config.yml';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/.github/codeql/codeql-config.yml',
+      );
+
+      const result = findCodeqlConfigFile('/source');
+      // Should NOT find the default config when CODEQL_CONFIG_PATH is explicitly set
+      expect(result).toBeUndefined();
+    });
+
+    it('should take precedence over default paths when CODEQL_CONFIG_PATH is set', () => {
+      process.env.CODEQL_CONFIG_PATH = 'custom-config.yml';
+      (existsSync as jest.Mock).mockReturnValue(true);
+
+      const result = findCodeqlConfigFile('/source');
+      expect(result).toBe('/source/custom-config.yml');
     });
   });
 
@@ -191,6 +254,20 @@ describe('paths-ignore', () => {
 
       const result = getPathsIgnorePatterns('/source');
       expect(result).toEqual([]);
+    });
+
+    it('should read patterns from custom config via CODEQL_CONFIG_PATH', () => {
+      process.env.CODEQL_CONFIG_PATH = 'default-codeql-config.yml';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/default-codeql-config.yml',
+      );
+      (readFileSync as jest.Mock).mockReturnValue('yaml-content');
+      (yamlLoad as jest.Mock).mockReturnValue({
+        'paths-ignore': ['third_party', 'generated/**'],
+      });
+
+      const result = getPathsIgnorePatterns('/source');
+      expect(result).toEqual(['third_party', 'generated/**']);
     });
   });
 

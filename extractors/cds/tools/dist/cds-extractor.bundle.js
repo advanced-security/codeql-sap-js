@@ -9610,13 +9610,35 @@ minimatch.escape = escape;
 minimatch.unescape = unescape;
 
 // src/paths-ignore.ts
-var CODEQL_CONFIG_PATHS = [
+var DEFAULT_CONFIG_RELATIVE_PATHS = [
   ".github/codeql/codeql-config.yml",
   ".github/codeql/codeql-config.yaml"
 ];
 var patternsCache = /* @__PURE__ */ new Map();
 function findCodeqlConfigFile(sourceRoot2) {
-  for (const configPath of CODEQL_CONFIG_PATHS) {
+  const envConfigPath = process.env.CODEQL_CONFIG_PATH;
+  if (envConfigPath) {
+    const resolvedRoot = (0, import_path11.resolve)(sourceRoot2);
+    const fullPath = (0, import_path11.resolve)(resolvedRoot, envConfigPath);
+    const rel = (0, import_path11.relative)(resolvedRoot, fullPath);
+    if (rel.startsWith("..") || (0, import_path11.resolve)(resolvedRoot, rel) !== fullPath) {
+      cdsExtractorLog(
+        "warn",
+        `CODEQL_CONFIG_PATH '${envConfigPath}' resolves outside the source root. Ignoring.`
+      );
+      return void 0;
+    }
+    if ((0, import_fs6.existsSync)(fullPath)) {
+      cdsExtractorLog("info", `Using CodeQL config file from CODEQL_CONFIG_PATH: ${fullPath}`);
+      return fullPath;
+    }
+    cdsExtractorLog(
+      "warn",
+      `CODEQL_CONFIG_PATH is set to '${envConfigPath}', but no file exists at '${fullPath}'.`
+    );
+    return void 0;
+  }
+  for (const configPath of DEFAULT_CONFIG_RELATIVE_PATHS) {
     const fullPath = (0, import_path11.join)(sourceRoot2, configPath);
     if ((0, import_fs6.existsSync)(fullPath)) {
       return fullPath;
