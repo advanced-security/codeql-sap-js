@@ -4,7 +4,7 @@ on:
   # Automatically run the setup steps when an associated workflow is changed.
   push:
     paths:
-      - '.codeql-version'
+      - 'qlt.conf.json'
       - '.github/workflows/copilot-setup-steps.yml'
       - '.node-version'
       - '**/codeql-pack.yml'
@@ -14,7 +14,7 @@ on:
       - 'extractors/cds/tools/package-lock.json'
   pull_request:
     paths:
-      - '.codeql-version'
+      - 'qlt.conf.json'
       - '.github/workflows/copilot-setup-steps.yml'
       - '.node-version'
       - '**/codeql-pack.yml'
@@ -44,6 +44,12 @@ jobs:
       - name: Copilot Setup - Install CDS extractor dependencies
         working-directory: extractors/cds/tools
         run: npm ci
+
+      - name: Copilot Setup - Generate .codeql-version from qlt.conf.json
+        run: |
+          CODEQL_VERSION=$(jq -r '.CodeQLCLI' qlt.conf.json)
+          printf 'v%s\n' "${CODEQL_VERSION}" > .codeql-version
+          echo "Generated .codeql-version: $(cat .codeql-version)"
 
       - name: Copilot Setup - Setup CodeQL environment
         uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@main
