@@ -130,7 +130,7 @@ jobs:
 
     steps:
       - name: Release - Download CodeQL pack artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           name: codeql-pack-bundles-${{ needs.resolve-version.outputs.version }}
           path: dist-packs

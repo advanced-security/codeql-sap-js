@@ -56,7 +56,7 @@ jobs:
           echo "release_name=${VERSION#v}" >> $GITHUB_OUTPUT
 
       - name: CodeQL - Checkout tag
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           ref: refs/tags/${{ steps.version.outputs.version }}
 
@@ -101,7 +101,7 @@ jobs:
         run: ./scripts/bundle-packs.sh --output-dir dist-packs
 
       - name: CodeQL - Upload pack artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: codeql-pack-bundles-${{ steps.version.outputs.version }}
           path: dist-packs/*.tar.gz
