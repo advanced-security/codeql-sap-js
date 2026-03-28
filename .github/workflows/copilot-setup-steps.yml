@@ -1,0 +1,36 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    name: Copilot Setup Steps
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup - Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup - Set up Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+
+      - name: Setup - Install CDS extractor dependencies
+        working-directory: extractors/cds/tools
+        run: npm ci
+
+      - name: Setup - Generate .codeql-version from qlt.conf.json
+        run: |
+          CODEQL_VERSION=$(jq -r '.CodeQLCLI' qlt.conf.json)
+          echo "v${CODEQL_VERSION}" > .codeql-version
+          echo "Generated .codeql-version: $(cat .codeql-version)"
+
+      - name: Setup - Set up CodeQL environment
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@de78423de19152f49ed45d1df6e7b70f721132c8 # main
