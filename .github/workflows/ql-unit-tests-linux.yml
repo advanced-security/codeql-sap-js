@@ -20,11 +20,11 @@ jobs:
       matrix: ${{ steps.export-unit-test-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install QLT
         id: install-qlt
-        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
           qlt-version: 'latest'
           add-to-path: true
@@ -45,11 +45,11 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install QLT
         id: install-qlt
-        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
           qlt-version: 'latest'
           add-to-path: true
@@ -80,7 +80,7 @@ jobs:
           qlt query run install-packs
 
       - name: Setup Node.js for CDS compilation
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -123,7 +123,7 @@ jobs:
           --work-dir $RUNNER_TMP
 
       - name: Upload test results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: test-results-${{ runner.os }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}
           path: |
@@ -137,18 +137,18 @@ jobs:
     steps:
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Install QLT
         id: install-qlt
-        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@main
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
           qlt-version: 'latest'
           add-to-path: true
 
 
       - name: Collect test results
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
 
       - name: Validate test results
         run: |

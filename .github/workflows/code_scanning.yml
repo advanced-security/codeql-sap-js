@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Extract CodeQL bundle version from qlt.conf.json
         run: |
@@ -35,7 +35,7 @@ jobs:
 
       - name: Initialize CodeQL
         id: initialize-codeql
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@256d634097be96e792d6764f9edaefc4320557b1 # v4
         env:
           # Add our custom extractor to the CodeQL search path
           CODEQL_ACTION_EXTRA_OPTIONS: '{"database":{"init":["--search-path","${{ github.workspace }}/extractors:${{ github.workspace }}"]}}'
@@ -55,7 +55,7 @@ jobs:
 
       - name: Perform CodeQL Analysis
         id: analyze
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@256d634097be96e792d6764f9edaefc4320557b1 # v4
         env:
           LGTM_INDEX_XML_MODE: all
           LGTM_INDEX_FILETYPES: ".json:JSON"
@@ -63,11 +63,11 @@ jobs:
           CODEQL_ACTION_EXTRA_OPTIONS: '{"database":{"run-queries":["--additional-packs","${{ github.workspace }}/javascript/frameworks/xsjs/ext:${{ github.workspace }}/javascript/frameworks/cap/ext:${{ github.workspace }}/javascript/frameworks/ui5/ext"],"interpret-results":["--additional-packs","${{ github.workspace }}/javascript/frameworks/xsjs/ext:${{ github.workspace }}/javascript/frameworks/cap/ext:${{ github.workspace }}/javascript/frameworks/ui5/ext"]}}'
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.10"
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip
@@ -84,7 +84,7 @@ jobs:
 
       - name: Upload sarif change
         if: steps.validate.outcome != 'success'
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: sarif
           path: |
