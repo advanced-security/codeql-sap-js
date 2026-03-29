@@ -1,7 +1,7 @@
 import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 
 import type { CdsDependencyCombination } from './types';
 import { CdsDependencyGraph, CdsProject } from '../cds/parser/types';
@@ -45,6 +45,61 @@ function addDependencyVersionWarning(
       `Failed to add warning diagnostic for ${packageJsonPath}: ${String(err)}`,
     );
     return false;
+  }
+}
+
+/**
+ * Find the nearest `.npmrc` file by searching the given directory and its
+ * ancestors up to (and including) the filesystem root. npm itself walks the
+ * directory tree when looking for project-level `.npmrc` files, so we mirror
+ * that behaviour here.
+ *
+ * @param startDir The directory from which to start the upward search.
+ * @returns The absolute path to the nearest `.npmrc`, or `undefined` if none is found.
+ */
+export function findNearestNpmrc(startDir: string): string | undefined {
+  let current = resolve(startDir);
+
+  // Walk up the directory tree until we find an .npmrc or reach the root
+
+  while (true) {
+    const candidate = join(current, '.npmrc');
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = dirname(current);
+    if (parent === current) {
+      // Reached filesystem root without finding .npmrc
+      return undefined;
+    }
+    current = parent;
+  }
+}
+
+/**
+ * Copy the project's `.npmrc` file (if any) into the cache directory so that
+ * `npm install` inside the cache respects custom registry configuration such
+ * as scoped registries (`@sap:registry=...`), authentication tokens, and
+ * `strict-ssl` settings.
+ *
+ * @param cacheDir  The cache directory where dependencies will be installed.
+ * @param projectDir Absolute path to the project directory whose `.npmrc` should be used.
+ */
+export function copyNpmrcToCache(cacheDir: string, projectDir: string): void {
+  const npmrcPath = findNearestNpmrc(projectDir);
+  if (!npmrcPath) {
+    return;
+  }
+
+  const dest = join(cacheDir, '.npmrc');
+  try {
+    copyFileSync(npmrcPath, dest);
+    cdsExtractorLog('info', `Copied .npmrc from '${npmrcPath}' to cache directory '${cacheDir}'`);
+  } catch (err) {
+    cdsExtractorLog(
+      'warn',
+      `Failed to copy .npmrc to cache directory: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 }
 
@@ -203,6 +258,12 @@ export function cacheInstallDependencies(
           }`,
         );
         continue;
+      }
+
+      // Copy the project's .npmrc (if any) so npm respects custom registries
+      const firstProjectDir = Array.from(dependencyGraph.projects.keys())[0];
+      if (firstProjectDir) {
+        copyNpmrcToCache(cacheDir, join(sourceRoot, firstProjectDir));
       }
     }
 
