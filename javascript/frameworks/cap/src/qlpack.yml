@@ -1,7 +1,7 @@
 ---
 library: false
 name: advanced-security/javascript-sap-cap-queries
-version: 2.25.0
+version: 2.25.1
 suites: codeql-suites
 extractor: javascript
 dependencies:
