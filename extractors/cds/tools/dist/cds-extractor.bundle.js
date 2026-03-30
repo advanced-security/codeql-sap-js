@@ -7997,7 +7997,7 @@ function expand_(str2, max, isTop) {
       const x2 = numeric(n7[0]);
       const y = numeric(n7[1]);
       const width = Math.max(n7[0].length, n7[1].length);
-      let incr = n7.length === 3 && n7[2] !== void 0 ? Math.abs(numeric(n7[2])) : 1;
+      let incr = n7.length === 3 && n7[2] !== void 0 ? Math.max(Math.abs(numeric(n7[2])), 1) : 1;
       let test = lte;
       const reverse = y < x2;
       if (reverse) {
