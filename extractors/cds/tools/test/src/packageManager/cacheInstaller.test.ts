@@ -3,13 +3,18 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { CdsDependencyGraph, CdsProject } from '../../../src/cds/parser/types';
-import { cacheInstallDependencies } from '../../../src/packageManager';
+import {
+  cacheInstallDependencies,
+  copyNpmrcToCache,
+  findNearestNpmrc,
+} from '../../../src/packageManager';
 
 // Mock dependencies
 jest.mock('fs', () => ({
+  copyFileSync: jest.fn(),
   existsSync: jest.fn(),
-  readFileSync: jest.fn(),
   mkdirSync: jest.fn(),
+  readFileSync: jest.fn(),
   writeFileSync: jest.fn(),
 }));
 
@@ -636,6 +641,173 @@ describe('installer', () => {
       const result = cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
 
       expect(result.size).toBe(0);
+    });
+  });
+
+  describe('findNearestNpmrc', () => {
+    beforeEach(() => {
+      // Use actual path.dirname so the directory-walking loop works correctly
+      (path.dirname as jest.Mock).mockImplementation(jest.requireActual('path').dirname);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+    });
+
+    it('should return the .npmrc path when it exists in the start directory', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project/src');
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => p === '/project/src/.npmrc');
+
+      const result = findNearestNpmrc('/project/src');
+
+      expect(result).toBe('/project/src/.npmrc');
+    });
+
+    it('should return the .npmrc path when it exists in a parent directory', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project/src');
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => p === '/project/.npmrc');
+
+      const result = findNearestNpmrc('/project/src');
+
+      expect(result).toBe('/project/.npmrc');
+    });
+
+    it('should return undefined when no .npmrc exists in the directory tree', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project/src');
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      const result = findNearestNpmrc('/project/src');
+
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('copyNpmrcToCache', () => {
+    beforeEach(() => {
+      (path.dirname as jest.Mock).mockImplementation(jest.requireActual('path').dirname);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.copyFileSync as jest.Mock).mockReturnValue(undefined);
+    });
+
+    it('should copy .npmrc to the cache directory when found', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project');
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => p === '/project/.npmrc');
+
+      copyNpmrcToCache('/cache/dir', '/project');
+
+      expect(fs.copyFileSync).toHaveBeenCalledWith('/project/.npmrc', '/cache/dir/.npmrc');
+    });
+
+    it('should do nothing when no .npmrc is found', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project');
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      copyNpmrcToCache('/cache/dir', '/project');
+
+      expect(fs.copyFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should log a warning and not throw when copyFileSync fails', () => {
+      (path.resolve as jest.Mock).mockReturnValue('/project');
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => p === '/project/.npmrc');
+      (fs.copyFileSync as jest.Mock).mockImplementation(() => {
+        throw new Error('Permission denied');
+      });
+
+      expect(() => copyNpmrcToCache('/cache/dir', '/project')).not.toThrow();
+    });
+  });
+
+  describe('cacheInstallDependencies .npmrc propagation', () => {
+    beforeEach(() => {
+      (path.dirname as jest.Mock).mockImplementation(jest.requireActual('path').dirname);
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+      (fs.mkdirSync as jest.Mock).mockReturnValue(undefined);
+      (fs.writeFileSync as jest.Mock).mockReturnValue(undefined);
+      (fs.copyFileSync as jest.Mock).mockReturnValue(undefined);
+      (childProcess.execFileSync as jest.Mock).mockReturnValue('');
+
+      const mockResolveCdsVersions = jest.mocked(
+        jest.requireMock('../../../src/packageManager/versionResolver').resolveCdsVersions,
+      );
+      mockResolveCdsVersions.mockReturnValue({
+        resolvedCdsVersion: '6.1.3',
+        resolvedCdsDkVersion: '6.0.0',
+        cdsExactMatch: true,
+        cdsDkExactMatch: true,
+      });
+    });
+
+    it('should copy .npmrc to the cache directory before running npm install', () => {
+      // Simulate an .npmrc in the project directory
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/project1/.npmrc',
+      );
+
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: 'project1',
+          packageJson: {
+            name: 'project1',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+      ]);
+
+      cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
+
+      expect(fs.copyFileSync).toHaveBeenCalledWith(
+        '/source/project1/.npmrc',
+        expect.stringContaining('.npmrc'),
+      );
+    });
+
+    it('should succeed even when .npmrc copy fails', () => {
+      // Simulate an .npmrc in the project directory
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/project1/.npmrc',
+      );
+      (fs.copyFileSync as jest.Mock).mockImplementation(() => {
+        throw new Error('Permission denied');
+      });
+
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: 'project1',
+          packageJson: {
+            name: 'project1',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+      ]);
+
+      // Should not throw and should still attempt npm install
+      const result = cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
+
+      expect(childProcess.execFileSync).toHaveBeenCalledWith(
+        'npm',
+        ['install', '--quiet', '--no-audit', '--no-fund'],
+        expect.any(Object),
+      );
+      expect(result.size).toBe(1);
+    });
+
+    it('should not copy .npmrc when no .npmrc file is found', () => {
+      (fs.existsSync as jest.Mock).mockReturnValue(false);
+
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: 'project1',
+          packageJson: {
+            name: 'project1',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+      ]);
+
+      cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
+
+      expect(fs.copyFileSync).not.toHaveBeenCalled();
     });
   });
 });

@@ -12,6 +12,11 @@ if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
         -- ^
         "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
+    if %ERRORLEVEL% neq 0 (
+        echo database index-files for CDS (.cds) files failed with exit code %ERRORLEVEL%.
+        exit /b %ERRORLEVEL%
+    )
+
     echo Finished running database index-files for CDS (.cds) files.
 )
 
@@ -27,6 +32,11 @@ type NUL && "%CODEQL_DIST%\codeql.exe" database index-files ^
     -- ^
     "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
+if %ERRORLEVEL% neq 0 (
+    echo database index-files for UI5 (.view.xml and .fragment.xml) files failed with exit code %ERRORLEVEL%.
+    exit /b %ERRORLEVEL%
+)
+
 echo Finished running database index-files for UI5 (.view.xml and .fragment.xml) files.
 
 REM UI5 also requires *.view.json files and *.view.html files be indexed, but these are indexed by
@@ -35,4 +45,4 @@ REM default by CodeQL.
 REM XSJS also requires indexing of *.xsaccess files, *.xsjs files and xs-app.json files, but these
 REM are indexed by default by CodeQL.
 
-exit /b %ERRORLEVEL%
+exit /b 0
