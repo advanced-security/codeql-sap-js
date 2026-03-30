@@ -4250,6 +4250,36 @@ function addDependencyVersionWarning(packageJsonPath, warningMessage, codeqlExeP
     return false;
   }
 }
+function findNearestNpmrc(startDir) {
+  let current = (0, import_path7.resolve)(startDir);
+  while (true) {
+    const candidate = (0, import_path7.join)(current, ".npmrc");
+    if ((0, import_fs5.existsSync)(candidate)) {
+      return candidate;
+    }
+    const parent = (0, import_path7.dirname)(current);
+    if (parent === current) {
+      return void 0;
+    }
+    current = parent;
+  }
+}
+function copyNpmrcToCache(cacheDir, projectDir) {
+  const npmrcPath = findNearestNpmrc(projectDir);
+  if (!npmrcPath) {
+    return;
+  }
+  const dest = (0, import_path7.join)(cacheDir, ".npmrc");
+  try {
+    (0, import_fs5.copyFileSync)(npmrcPath, dest);
+    cdsExtractorLog("info", `Copied .npmrc from '${npmrcPath}' to cache directory '${cacheDir}'`);
+  } catch (err) {
+    cdsExtractorLog(
+      "warn",
+      `Failed to copy .npmrc to cache directory: ${err instanceof Error ? err.message : String(err)}`
+    );
+  }
+}
 function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2) {
   if (dependencyGraph2.projects.size === 0) {
     cdsExtractorLog("info", "No CDS projects found for dependency installation.");
@@ -4357,6 +4387,10 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
         );
         continue;
       }
+    }
+    const npmrcProjectDir = Array.from(dependencyGraph2.projects.values()).map((project) => project.projectDir).find((projectDir) => projectDir && (0, import_fs5.existsSync)((0, import_path7.join)(sourceRoot2, projectDir, ".npmrc")));
+    if (npmrcProjectDir) {
+      copyNpmrcToCache(cacheDir, (0, import_path7.join)(sourceRoot2, npmrcProjectDir));
     }
     const samplePackageJsonPath = Array.from(dependencyGraph2.projects.values()).find(
       (project) => project.packageJson
