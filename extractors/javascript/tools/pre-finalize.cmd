@@ -45,4 +45,4 @@ REM default by CodeQL.
 REM XSJS also requires indexing of *.xsaccess files, *.xsjs files and xs-app.json files, but these
 REM are indexed by default by CodeQL.
 
-exit /b 0
+exit /b %ERRORLEVEL%
