@@ -1,5 +1,5 @@
 // Export the new robust installer functionality (preferred)
-export { cacheInstallDependencies } from './cacheInstaller';
+export { cacheInstallDependencies, copyNpmrcToCache, findNearestNpmrc } from './cacheInstaller';
 export { needsFullDependencyInstallation, projectInstallDependencies } from './projectInstaller';
 export type { CdsDependencyCombination } from './types';
 export {
