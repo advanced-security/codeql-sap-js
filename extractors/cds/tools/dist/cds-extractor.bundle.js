@@ -4387,10 +4387,10 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
         );
         continue;
       }
-      const firstProjectDir = Array.from(dependencyGraph2.projects.keys())[0];
-      if (firstProjectDir) {
-        copyNpmrcToCache(cacheDir, (0, import_path7.join)(sourceRoot2, firstProjectDir));
-      }
+    }
+    const npmrcProjectDir = Array.from(dependencyGraph2.projects.values()).map((project) => project.projectDir).find((projectDir) => projectDir && (0, import_fs5.existsSync)((0, import_path7.join)(sourceRoot2, projectDir, ".npmrc")));
+    if (npmrcProjectDir) {
+      copyNpmrcToCache(cacheDir, (0, import_path7.join)(sourceRoot2, npmrcProjectDir));
     }
     const samplePackageJsonPath = Array.from(dependencyGraph2.projects.values()).find(
       (project) => project.packageJson

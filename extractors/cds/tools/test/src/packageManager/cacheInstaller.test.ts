@@ -809,5 +809,72 @@ describe('installer', () => {
 
       expect(fs.copyFileSync).not.toHaveBeenCalled();
     });
+
+    it('should find .npmrc from the project that has one, not just the first project', () => {
+      // Only project2 has an .npmrc; project1 does not
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/project2/.npmrc',
+      );
+
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: 'project1',
+          packageJson: {
+            name: 'project1',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+        {
+          projectDir: 'project2',
+          packageJson: {
+            name: 'project2',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+      ]);
+
+      cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
+
+      expect(fs.copyFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('.npmrc'),
+        expect.stringContaining('.npmrc'),
+      );
+    });
+
+    it('should copy .npmrc even when the cache directory already exists', () => {
+      // Simulate cache directory already existing but .npmrc present
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/source/project1/.npmrc') return true;
+        // Cache root exists
+        if (
+          p.includes('.cds-extractor-cache') &&
+          !p.includes('node_modules') &&
+          !p.includes('.npmrc')
+        )
+          return true;
+        return false;
+      });
+
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: 'project1',
+          packageJson: {
+            name: 'project1',
+            dependencies: { '@sap/cds': '6.1.3' },
+            devDependencies: { '@sap/cds-dk': '6.0.0' },
+          },
+        },
+      ]);
+
+      cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
+
+      // .npmrc should still be copied even though cache dir already exists
+      expect(fs.copyFileSync).toHaveBeenCalledWith(
+        '/source/project1/.npmrc',
+        expect.stringContaining('.npmrc'),
+      );
+    });
   });
 });

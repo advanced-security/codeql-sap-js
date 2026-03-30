@@ -12,9 +12,9 @@ if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
         -- ^
         "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
-    if %ERRORLEVEL% neq 0 (
-        echo database index-files for CDS (.cds) files failed with exit code %ERRORLEVEL%.
-        exit /b %ERRORLEVEL%
+    if errorlevel 1 (
+        echo database index-files for CDS (.cds) files failed.
+        exit /b 1
     )
 
     echo Finished running database index-files for CDS (.cds) files.

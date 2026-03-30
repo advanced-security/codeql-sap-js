@@ -259,12 +259,14 @@ export function cacheInstallDependencies(
         );
         continue;
       }
+    }
 
-      // Copy the project's .npmrc (if any) so npm respects custom registries
-      const firstProjectDir = Array.from(dependencyGraph.projects.keys())[0];
-      if (firstProjectDir) {
-        copyNpmrcToCache(cacheDir, join(sourceRoot, firstProjectDir));
-      }
+    // Ensure the cache directory has an .npmrc that reflects the projects' registry configuration
+    const npmrcProjectDir = Array.from(dependencyGraph.projects.values())
+      .map(project => project.projectDir)
+      .find(projectDir => projectDir && existsSync(join(sourceRoot, projectDir, '.npmrc')));
+    if (npmrcProjectDir) {
+      copyNpmrcToCache(cacheDir, join(sourceRoot, npmrcProjectDir));
     }
 
     // Try to install dependencies in the cache directory
