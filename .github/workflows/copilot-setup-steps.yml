@@ -1,0 +1,60 @@
+name: 'Copilot Setup Steps'
+
+on:
+  # Automatically run the setup steps when an associated workflow is changed.
+  push:
+    paths:
+      - 'qlt.conf.json'
+      - '.github/workflows/copilot-setup-steps.yml'
+      - '.node-version'
+      - '**/codeql-pack.yml'
+      - '**/codeql-pack.lock.yml'
+      - '**/qlpack.yml'
+      - 'extractors/cds/tools/package.json'
+      - 'extractors/cds/tools/package-lock.json'
+  pull_request:
+    paths:
+      - 'qlt.conf.json'
+      - '.github/workflows/copilot-setup-steps.yml'
+      - '.node-version'
+      - '**/codeql-pack.yml'
+      - '**/codeql-pack.lock.yml'
+      - '**/qlpack.yml'
+      - 'extractors/cds/tools/package.json'
+      - 'extractors/cds/tools/package-lock.json'
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Copilot Setup - Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Copilot Setup - Setup Node.js
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          cache: 'npm'
+          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+          node-version-file: '.node-version'
+
+      - name: Copilot Setup - Install CDS extractor dependencies
+        working-directory: extractors/cds/tools
+        run: npm ci
+
+      - name: Copilot Setup - Generate .codeql-version from qlt.conf.json
+        run: |
+          CODEQL_VERSION=$(jq -r '.CodeQLCLI' qlt.conf.json)
+          printf 'v%s\n' "${CODEQL_VERSION}" > .codeql-version
+          echo "Generated .codeql-version: $(cat .codeql-version)"
+
+      - name: Copilot Setup - Setup CodeQL environment
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@de78423de19152f49ed45d1df6e7b70f721132c8 # main
+        with:
+          install-language-runtimes: false
+
+      - name: Copilot Setup - Install CodeQL packs
+        run: ./scripts/install-packs.sh
