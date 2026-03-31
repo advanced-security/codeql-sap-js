@@ -7,6 +7,6 @@ dependencies:
   # no overlap occurs with the SAP UI5 queries. We therefore allow any version
   # greater than or equal to 1.2.0, as major breaking changes are not a concern.
   codeql/javascript-queries: ">1.2.0"
-  advanced-security/javascript-sap-ui5-queries: "2.25.0"
-  advanced-security/javascript-sap-ui5-models: "2.25.0"
-  advanced-security/javascript-sap-ui5-all: "2.25.0"
+  advanced-security/javascript-sap-ui5-queries: "2.25.1"
+  advanced-security/javascript-sap-ui5-models: "2.25.1"
+  advanced-security/javascript-sap-ui5-all: "2.25.1"
