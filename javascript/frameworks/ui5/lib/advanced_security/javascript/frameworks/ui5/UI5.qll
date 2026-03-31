@@ -1090,6 +1090,7 @@ module ManifestJson {
   }
 
   /** The manifest.json file serving as the app descriptor. */
+  pragma[nomagic]
   private string constructPathStringInner(Expr object) {
     if not object instanceof ObjectExpr
     then result = ""
@@ -1117,6 +1118,7 @@ module ManifestJson {
     )
   }
 
+  pragma[nomagic]
   private string constructPathStringInner(Expr object, Property property) {
     if not object instanceof ObjectExpr
     then result = ""

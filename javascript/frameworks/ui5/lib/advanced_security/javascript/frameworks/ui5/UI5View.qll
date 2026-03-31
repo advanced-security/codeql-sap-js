@@ -147,23 +147,10 @@ abstract class UI5BindingPath extends BindingPath {
    */
   Node getNode() {
     /* 1-1. Internal (Client-side) model, model hardcoded in JS code */
-    exists(Property p, JsonModel model |
-      /* Get the property of an JS object bound to this binding path. */
-      result.(DataFlow::PropWrite).getPropertyNameExpr() = p.getNameExpr() and
-      this.getAbsolutePath() = model.getPathString(p) and
-      /* Restrict search to inside the same webapp. */
-      inSameWebApp(this.getLocation().getFile(), result.getFile())
-    )
+    result = getHardcodedJsonModelNode(this)
     or
     /* 1-2. Internal (Client-side) model, model loaded from JSON file */
-    exists(string propName, JsonModel model |
-      /* Get the property of an JS object bound to this binding path. */
-      result = model.getArgument(0).getALocalSource() and
-      this.getPath() = model.getPathStringPropName(propName) and
-      exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
-      /* Restrict search to inside the same webapp. */
-      inSameWebApp(this.getLocation().getFile(), result.getFile())
-    )
+    result = getJsonFileModelNode(this)
     or
     /* 1-3. Internal (Client-side) model, content not statically visible */
     result = getNonStaticJsonModelNode(this)
@@ -195,6 +182,42 @@ private DefaultODataServiceModel getDefaultODataModel(UI5BindingPath bindingPath
         .matches("%" +
             bindingPath.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
     inSameWebApp(bindingPath.getLocation().getFile(), load.getFile())
+  )
+}
+
+/**
+ * Gets the `DataFlow::Node` for a binding path whose model data is hardcoded
+ * in a JS object literal. Matches the property write in the object against
+ * the binding path's absolute path.
+ *
+ * `nomagic` to prevent the `getAbsolutePath() = model.getPathString(p)` join
+ * from being inlined into `getNode()`, which caused a cross-product explosion
+ * on large codebases.
+ */
+pragma[nomagic]
+private Node getHardcodedJsonModelNode(UI5BindingPath bindingPath) {
+  exists(Property p, JsonModel model |
+    result.(DataFlow::PropWrite).getPropertyNameExpr() = p.getNameExpr() and
+    bindingPath.getAbsolutePath() = model.getPathString(p) and
+    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
+  )
+}
+
+/**
+ * Gets the `DataFlow::Node` for a binding path whose model data is loaded
+ * from a JSON file.
+ *
+ * `nomagic` to prevent the `getPath() = model.getPathStringPropName(propName)` join
+ * from being inlined into `getNode()`, which caused a cross-product explosion
+ * on large codebases.
+ */
+pragma[nomagic]
+private Node getJsonFileModelNode(UI5BindingPath bindingPath) {
+  exists(string propName, JsonModel model |
+    result = model.getArgument(0).getALocalSource() and
+    bindingPath.getPath() = model.getPathStringPropName(propName) and
+    exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
+    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
   )
 }
 
