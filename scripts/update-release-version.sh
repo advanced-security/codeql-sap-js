@@ -258,9 +258,11 @@ update_qlt_config() {
 }
 
 ## Update internal dependency references in a qlpack.yml file
-## e.g., advanced-security/javascript-sap-cap-models: "^2.3.0" -> "^2.4.0"
-## e.g., advanced-security/javascript-sap-cap-models: "^2.3.0" -> "^2.4.0-alpha"
-## and   advanced-security/javascript-heuristic-models: 2.3.0 -> 2.4.0
+## Handles all YAML key-value formats used across qlpack files:
+## e.g., advanced-security/javascript-sap-cap-models: "^2.3.0"  -> "^2.4.0"
+## e.g., advanced-security/javascript-sap-cap-models: "2.3.0"   -> "2.4.0"
+## e.g., "advanced-security/javascript-heuristic-models": "2.3.0" -> ... (quoted key)
+## and   advanced-security/javascript-heuristic-models: 2.3.0    -> 2.4.0
 update_internal_deps() {
   local file="$1"
   local old_version="$2"
@@ -271,11 +273,14 @@ update_internal_deps() {
   escaped_old_version=$(printf '%s' "${old_version}" | sed 's/\./\\./g')
 
   for pack_name in "${INTERNAL_PACKS[@]}"; do
-    # Update quoted caret-prefixed versions: "^X.Y.Z"
-    sed -i.bak "s|${pack_name}: \"\\^${escaped_old_version}\"|${pack_name}: \"^${new_version}\"|g" "${file}"
+    # Update quoted caret-prefixed versions: "^X.Y.Z" (pack name optionally quoted)
+    sed -i.bak "s|\"\\{0,1\\}${pack_name}\"\\{0,1\\}: \"\\^${escaped_old_version}\"|${pack_name}: \"^${new_version}\"|g" "${file}"
     rm -f "${file}.bak"
-    # Update unquoted exact versions: X.Y.Z
-    sed -i.bak "s|${pack_name}: ${escaped_old_version}$|${pack_name}: ${new_version}|g" "${file}"
+    # Update quoted exact versions: "X.Y.Z" (pack name optionally quoted)
+    sed -i.bak "s|\"\\{0,1\\}${pack_name}\"\\{0,1\\}: \"${escaped_old_version}\"|${pack_name}: \"${new_version}\"|g" "${file}"
+    rm -f "${file}.bak"
+    # Update unquoted exact versions: X.Y.Z (pack name optionally quoted)
+    sed -i.bak "s|\"\\{0,1\\}${pack_name}\"\\{0,1\\}: ${escaped_old_version}$|${pack_name}: ${new_version}|g" "${file}"
     rm -f "${file}.bak"
   done
 }
