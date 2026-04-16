@@ -5214,6 +5214,13 @@ function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap
     summary.results.push(result);
     if (result.success) {
       summary.successfulRuns++;
+      const installResult = projectInstallDependencies(project, sourceRoot2);
+      if (!installResult.success) {
+        cdsExtractorLog(
+          "warn",
+          `Full dependency installation failed for project '${projectDir}' after successful cds-indexer run: ${installResult.error ?? "unknown error"}`
+        );
+      }
     } else {
       summary.failedRuns++;
       if (codeqlExePath2) {

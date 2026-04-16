@@ -513,10 +513,7 @@ describe('cds/indexer', () => {
 
       orchestrateCdsIndexer(graph, '/source', new Map());
 
-      expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(
-        project,
-        '/source',
-      );
+      expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(project, '/source');
     });
 
     it('should not install full project dependencies when cds-indexer fails', () => {
