@@ -9758,7 +9758,8 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   try {
     const cdsFiles = Ui((0, import_path12.join)(projectDir, "**/*.cds"), {
       nodir: true,
-      ignore: ["**/node_modules/**", "**/*.testproj/**"]
+      ignore: ["**/node_modules/**", "**/*.testproj/**"],
+      windowsPathsNoEscape: true
     });
     const relativePaths = cdsFiles.map((file) => (0, import_path12.relative)(sourceRootDir, file));
     const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
@@ -9786,11 +9787,13 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   const foundProjects = /* @__PURE__ */ new Set();
   const packageJsonFiles = Ui((0, import_path12.join)(sourceRootDir, "**/package.json"), {
     nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"]
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
   });
   const cdsFiles = Ui((0, import_path12.join)(sourceRootDir, "**/*.cds"), {
     nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"]
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
   });
   const candidateDirectories = /* @__PURE__ */ new Set();
   for (const packageJsonFile of packageJsonFiles) {
@@ -9931,7 +9934,10 @@ function hasStandardCdsContent(dir) {
   const standardLocations = [(0, import_path12.join)(dir, "db"), (0, import_path12.join)(dir, "srv"), (0, import_path12.join)(dir, "app")];
   for (const location of standardLocations) {
     if ((0, import_fs7.existsSync)(location) && (0, import_fs7.statSync)(location).isDirectory()) {
-      const cdsFiles = Ui((0, import_path12.join)(location, "**/*.cds"), { nodir: true });
+      const cdsFiles = Ui((0, import_path12.join)(location, "**/*.cds"), {
+        nodir: true,
+        windowsPathsNoEscape: true
+      });
       if (cdsFiles.length > 0) {
         return true;
       }
@@ -9940,7 +9946,7 @@ function hasStandardCdsContent(dir) {
   return false;
 }
 function hasDirectCdsContent(dir) {
-  const directCdsFiles = Ui((0, import_path12.join)(dir, "*.cds"));
+  const directCdsFiles = Ui((0, import_path12.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
   return directCdsFiles.length > 0;
 }
 function readPackageJsonFile(filePath) {
@@ -10648,7 +10654,8 @@ try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
           ...Ui((0, import_path16.join)(sourceRoot, "**/*.cds"), {
-            ignore: ["**/node_modules/**", "**/.git/**"]
+            ignore: ["**/node_modules/**", "**/.git/**"],
+            windowsPathsNoEscape: true
           })
         ])
       );

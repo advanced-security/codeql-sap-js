@@ -47,6 +47,7 @@ export function determineCdsFilesForProjectDir(
     const cdsFiles = sync(join(projectDir, '**/*.cds'), {
       nodir: true,
       ignore: ['**/node_modules/**', '**/*.testproj/**'],
+      windowsPathsNoEscape: true,
     });
 
     // Convert absolute paths to paths relative to sourceRootDir
@@ -91,11 +92,13 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
   const packageJsonFiles = sync(join(sourceRootDir, '**/package.json'), {
     nodir: true,
     ignore: ['**/node_modules/**', '**/*.testproj/**'],
+    windowsPathsNoEscape: true,
   });
 
   const cdsFiles = sync(join(sourceRootDir, '**/*.cds'), {
     nodir: true,
     ignore: ['**/node_modules/**', '**/*.testproj/**'],
+    windowsPathsNoEscape: true,
   });
 
   // Collect all potential project directories
@@ -369,7 +372,10 @@ function hasStandardCdsContent(dir: string): boolean {
   for (const location of standardLocations) {
     if (existsSync(location) && statSync(location).isDirectory()) {
       // Check for any .cds files at any level under these directories.
-      const cdsFiles = sync(join(location, '**/*.cds'), { nodir: true });
+      const cdsFiles = sync(join(location, '**/*.cds'), {
+        nodir: true,
+        windowsPathsNoEscape: true,
+      });
       if (cdsFiles.length > 0) {
         return true;
       }
@@ -383,7 +389,7 @@ function hasStandardCdsContent(dir: string): boolean {
  * Check if a directory has direct CDS files.
  */
 function hasDirectCdsContent(dir: string): boolean {
-  const directCdsFiles = sync(join(dir, '*.cds'));
+  const directCdsFiles = sync(join(dir, '*.cds'), { windowsPathsNoEscape: true });
   return directCdsFiles.length > 0;
 }
 

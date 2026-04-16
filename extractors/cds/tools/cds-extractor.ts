@@ -115,6 +115,7 @@ try {
         new Set([
           ...globSync(join(sourceRoot, '**/*.cds'), {
             ignore: ['**/node_modules/**', '**/.git/**'],
+            windowsPathsNoEscape: true,
           }),
         ]),
       );

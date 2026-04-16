@@ -1,7 +1,7 @@
 @echo off
 
 if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
-    echo Running database index-files for CDS (.cds) files ...
+    echo Running database index-files for CDS ^(.cds^) files ...
 
     type NUL && "%CODEQL_DIST%\codeql.exe" database index-files ^
         --include-extension=.cds ^
@@ -13,11 +13,11 @@ if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
         "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
     if errorlevel 1 (
-        echo database index-files for CDS (.cds) files failed.
+        echo database index-files for CDS ^(.cds^) files failed.
         exit /b 1
     )
 
-    echo Finished running database index-files for CDS (.cds) files.
+    echo Finished running database index-files for CDS ^(.cds^) files.
 )
 
 echo Running database index-files for UI5 (.view.xml and .fragment.xml) files ...
@@ -33,11 +33,11 @@ type NUL && "%CODEQL_DIST%\codeql.exe" database index-files ^
     "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
 if %ERRORLEVEL% neq 0 (
-    echo database index-files for UI5 (.view.xml and .fragment.xml) files failed with exit code %ERRORLEVEL%.
+    echo database index-files for UI5 ^(.view.xml and .fragment.xml^) files failed with exit code %ERRORLEVEL%.
     exit /b %ERRORLEVEL%
 )
 
-echo Finished running database index-files for UI5 (.view.xml and .fragment.xml) files.
+echo Finished running database index-files for UI5 ^(.view.xml and .fragment.xml^) files.
 
 REM UI5 also requires *.view.json files and *.view.html files be indexed, but these are indexed by
 REM default by CodeQL.
