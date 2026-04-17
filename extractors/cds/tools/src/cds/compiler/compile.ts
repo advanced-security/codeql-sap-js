@@ -250,7 +250,7 @@ function createSpawnOptions(
 ): SpawnSyncOptions {
   const spawnOptions: SpawnSyncOptions = {
     cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: false, // Use shell=false to ensure proper argument handling for paths with spaces
+    shell: true, // Required on Windows where npm/npx are .cmd files
     stdio: 'pipe',
     env: { ...process.env },
   };

@@ -3739,8 +3739,8 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
   const spawnOptions = {
     cwd: projectBaseDir,
     // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: false,
-    // Use shell=false to ensure proper argument handling for paths with spaces
+    shell: true,
+    // Required on Windows where npm/npx are .cmd files
     stdio: "pipe",
     env: { ...process.env }
   };
@@ -10404,17 +10404,17 @@ function configureLgtmIndexFilters() {
       `Found $LGTM_INDEX_FILTERS already set to:
 ${process.env.LGTM_INDEX_FILTERS}`
     );
-    const allowedExcludePatterns = [(0, import_path14.join)("exclude:**", "*"), (0, import_path14.join)("exclude:**", "*.*")];
+    const allowedExcludePatterns = ["exclude:**/*", "exclude:**/*.*"];
     excludeFilters = "\n" + process.env.LGTM_INDEX_FILTERS.split("\n").filter(
       (line) => line.startsWith("exclude") && !allowedExcludePatterns.some((pattern) => line.includes(pattern))
     ).join("\n");
   }
   const lgtmIndexFiltersPatterns = [
-    (0, import_path14.join)("exclude:**", "*.*"),
-    (0, import_path14.join)("include:**", "*.cds.json"),
-    (0, import_path14.join)("include:**", "*.cds"),
-    (0, import_path14.join)("include:**", cdsExtractorMarkerFileName),
-    (0, import_path14.join)("exclude:**", "node_modules", "**", "*.*")
+    "exclude:**/*.*",
+    "include:**/*.cds.json",
+    "include:**/*.cds",
+    `include:**/${cdsExtractorMarkerFileName}`,
+    "exclude:**/node_modules/**/*.*"
   ].join("\n");
   process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
   process.env.LGTM_INDEX_TYPESCRIPT = "NONE";
