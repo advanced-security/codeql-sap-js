@@ -4537,7 +4537,8 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
   try {
     (0, import_child_process6.execFileSync)("npm", ["install", "--quiet", "--no-audit", "--no-fund"], {
       cwd: cacheDir,
-      stdio: "inherit"
+      stdio: "inherit",
+      shell: true
     });
     if (isFallback && warning && packageJsonPath && codeqlExePath2) {
       addDependencyVersionWarning(packageJsonPath, warning, codeqlExePath2);
@@ -4585,8 +4586,9 @@ function projectInstallDependencies(project, sourceRoot2) {
       (0, import_child_process7.execFileSync)("npm", ["install", "--quiet", "--no-audit", "--no-fund"], {
         cwd: projectPath,
         stdio: "inherit",
-        timeout: 12e4
+        timeout: 12e4,
         // 2-minute timeout
+        shell: true
       });
       result.success = true;
       cdsExtractorLog(
@@ -5162,7 +5164,8 @@ function runCdsIndexer(project, sourceRoot2, cacheDir) {
       cwd: projectAbsPath,
       env,
       stdio: "pipe",
-      timeout: CDS_INDEXER_TIMEOUT_MS
+      timeout: CDS_INDEXER_TIMEOUT_MS,
+      shell: true
     });
     result.durationMs = Date.now() - startTime;
     if (spawnResult.signal === "SIGTERM" || spawnResult.signal === "SIGKILL") {
