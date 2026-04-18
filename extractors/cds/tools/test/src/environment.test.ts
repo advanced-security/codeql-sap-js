@@ -6,6 +6,8 @@ import * as path from 'path';
 
 import {
   getPlatformInfo,
+  npmExecutable,
+  npxExecutable,
   getCodeQLExePath,
   getJavaScriptExtractorRoot,
   setupJavaScriptExtractorEnv,
@@ -122,6 +124,40 @@ describe('environment', () => {
       expect(platformInfo.arch).toBe('x64');
       expect(platformInfo.isWindows).toBe(false);
       expect(platformInfo.exeExtension).toBe('');
+    });
+  });
+
+  describe('npmExecutable', () => {
+    it('should return npm.cmd on Windows', () => {
+      (os.platform as jest.Mock).mockReturnValue('win32');
+      expect(npmExecutable()).toBe('npm.cmd');
+    });
+
+    it('should return npm on Linux', () => {
+      (os.platform as jest.Mock).mockReturnValue('linux');
+      expect(npmExecutable()).toBe('npm');
+    });
+
+    it('should return npm on macOS', () => {
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      expect(npmExecutable()).toBe('npm');
+    });
+  });
+
+  describe('npxExecutable', () => {
+    it('should return npx.cmd on Windows', () => {
+      (os.platform as jest.Mock).mockReturnValue('win32');
+      expect(npxExecutable()).toBe('npx.cmd');
+    });
+
+    it('should return npx on Linux', () => {
+      (os.platform as jest.Mock).mockReturnValue('linux');
+      expect(npxExecutable()).toBe('npx');
+    });
+
+    it('should return npx on macOS', () => {
+      (os.platform as jest.Mock).mockReturnValue('darwin');
+      expect(npxExecutable()).toBe('npx');
     });
   });
 

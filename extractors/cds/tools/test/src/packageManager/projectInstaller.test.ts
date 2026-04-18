@@ -64,12 +64,11 @@ describe('CDS Compiler Installer', () => {
 
       expect(mockExecFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--quiet', '--no-audit', '--no-fund'],
+        ['install', '--ignore-scripts', '--quiet', '--no-audit', '--no-fund'],
         {
           cwd: '/test/source/test-project',
           stdio: 'inherit',
           timeout: 120000,
-          shell: true,
         },
       );
     });
