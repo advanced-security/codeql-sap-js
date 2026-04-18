@@ -115,6 +115,7 @@ export function runCdsIndexer(
       env,
       stdio: 'pipe',
       timeout: CDS_INDEXER_TIMEOUT_MS,
+      shell: true,
     });
 
     result.durationMs = Date.now() - startTime;

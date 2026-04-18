@@ -69,6 +69,7 @@ describe('CDS Compiler Installer', () => {
           cwd: '/test/source/test-project',
           stdio: 'inherit',
           timeout: 120000,
+          shell: true,
         },
       );
     });

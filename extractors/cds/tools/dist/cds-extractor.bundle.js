@@ -3739,8 +3739,8 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
   const spawnOptions = {
     cwd: projectBaseDir,
     // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: false,
-    // Use shell=false to ensure proper argument handling for paths with spaces
+    shell: true,
+    // Required on Windows where npm/npx are .cmd files
     stdio: "pipe",
     env: { ...process.env }
   };
@@ -4537,7 +4537,8 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
   try {
     (0, import_child_process6.execFileSync)("npm", ["install", "--quiet", "--no-audit", "--no-fund"], {
       cwd: cacheDir,
-      stdio: "inherit"
+      stdio: "inherit",
+      shell: true
     });
     if (isFallback && warning && packageJsonPath && codeqlExePath2) {
       addDependencyVersionWarning(packageJsonPath, warning, codeqlExePath2);
@@ -4585,8 +4586,9 @@ function projectInstallDependencies(project, sourceRoot2) {
       (0, import_child_process7.execFileSync)("npm", ["install", "--quiet", "--no-audit", "--no-fund"], {
         cwd: projectPath,
         stdio: "inherit",
-        timeout: 12e4
+        timeout: 12e4,
         // 2-minute timeout
+        shell: true
       });
       result.success = true;
       cdsExtractorLog(
@@ -5162,7 +5164,8 @@ function runCdsIndexer(project, sourceRoot2, cacheDir) {
       cwd: projectAbsPath,
       env,
       stdio: "pipe",
-      timeout: CDS_INDEXER_TIMEOUT_MS
+      timeout: CDS_INDEXER_TIMEOUT_MS,
+      shell: true
     });
     result.durationMs = Date.now() - startTime;
     if (spawnResult.signal === "SIGTERM" || spawnResult.signal === "SIGKILL") {
@@ -9758,7 +9761,8 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   try {
     const cdsFiles = Ui((0, import_path12.join)(projectDir, "**/*.cds"), {
       nodir: true,
-      ignore: ["**/node_modules/**", "**/*.testproj/**"]
+      ignore: ["**/node_modules/**", "**/*.testproj/**"],
+      windowsPathsNoEscape: true
     });
     const relativePaths = cdsFiles.map((file) => (0, import_path12.relative)(sourceRootDir, file));
     const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
@@ -9786,11 +9790,13 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   const foundProjects = /* @__PURE__ */ new Set();
   const packageJsonFiles = Ui((0, import_path12.join)(sourceRootDir, "**/package.json"), {
     nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"]
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
   });
   const cdsFiles = Ui((0, import_path12.join)(sourceRootDir, "**/*.cds"), {
     nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"]
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
   });
   const candidateDirectories = /* @__PURE__ */ new Set();
   for (const packageJsonFile of packageJsonFiles) {
@@ -9931,7 +9937,10 @@ function hasStandardCdsContent(dir) {
   const standardLocations = [(0, import_path12.join)(dir, "db"), (0, import_path12.join)(dir, "srv"), (0, import_path12.join)(dir, "app")];
   for (const location of standardLocations) {
     if ((0, import_fs7.existsSync)(location) && (0, import_fs7.statSync)(location).isDirectory()) {
-      const cdsFiles = Ui((0, import_path12.join)(location, "**/*.cds"), { nodir: true });
+      const cdsFiles = Ui((0, import_path12.join)(location, "**/*.cds"), {
+        nodir: true,
+        windowsPathsNoEscape: true
+      });
       if (cdsFiles.length > 0) {
         return true;
       }
@@ -9940,7 +9949,7 @@ function hasStandardCdsContent(dir) {
   return false;
 }
 function hasDirectCdsContent(dir) {
-  const directCdsFiles = Ui((0, import_path12.join)(dir, "*.cds"));
+  const directCdsFiles = Ui((0, import_path12.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
   return directCdsFiles.length > 0;
 }
 function readPackageJsonFile(filePath) {
@@ -10395,17 +10404,17 @@ function configureLgtmIndexFilters() {
       `Found $LGTM_INDEX_FILTERS already set to:
 ${process.env.LGTM_INDEX_FILTERS}`
     );
-    const allowedExcludePatterns = [(0, import_path14.join)("exclude:**", "*"), (0, import_path14.join)("exclude:**", "*.*")];
+    const allowedExcludePatterns = ["exclude:**/*", "exclude:**/*.*"];
     excludeFilters = "\n" + process.env.LGTM_INDEX_FILTERS.split("\n").filter(
       (line) => line.startsWith("exclude") && !allowedExcludePatterns.some((pattern) => line.includes(pattern))
     ).join("\n");
   }
   const lgtmIndexFiltersPatterns = [
-    (0, import_path14.join)("exclude:**", "*.*"),
-    (0, import_path14.join)("include:**", "*.cds.json"),
-    (0, import_path14.join)("include:**", "*.cds"),
-    (0, import_path14.join)("include:**", cdsExtractorMarkerFileName),
-    (0, import_path14.join)("exclude:**", "node_modules", "**", "*.*")
+    "exclude:**/*.*",
+    "include:**/*.cds.json",
+    "include:**/*.cds",
+    `include:**/${cdsExtractorMarkerFileName}`,
+    "exclude:**/node_modules/**/*.*"
   ].join("\n");
   process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
   process.env.LGTM_INDEX_TYPESCRIPT = "NONE";
@@ -10648,7 +10657,8 @@ try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
           ...Ui((0, import_path16.join)(sourceRoot, "**/*.cds"), {
-            ignore: ["**/node_modules/**", "**/.git/**"]
+            ignore: ["**/node_modules/**", "**/.git/**"],
+            windowsPathsNoEscape: true
           })
         ])
       );
