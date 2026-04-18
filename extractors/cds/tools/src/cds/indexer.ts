@@ -4,6 +4,7 @@ import { spawnSync } from 'child_process';
 import { delimiter, join } from 'path';
 
 import { addCdsIndexerDiagnostic } from '../diagnostics';
+import { npxExecutable } from '../environment';
 import { cdsExtractorLog } from '../logging';
 import { projectInstallDependencies } from '../packageManager';
 import type { CdsDependencyGraph, CdsProject } from './parser/types';
@@ -110,12 +111,11 @@ export function runCdsIndexer(
       `Running ${CDS_INDEXER_PACKAGE} for project '${project.projectDir}'...`,
     );
 
-    const spawnResult = spawnSync('npx', ['--yes', CDS_INDEXER_PACKAGE], {
+    const spawnResult = spawnSync(npxExecutable(), ['--yes', CDS_INDEXER_PACKAGE], {
       cwd: projectAbsPath,
       env,
       stdio: 'pipe',
       timeout: CDS_INDEXER_TIMEOUT_MS,
-      shell: true,
     });
 
     result.durationMs = Date.now() - startTime;

@@ -49,6 +49,28 @@ export function getPlatformInfo(): PlatformInfo {
 }
 
 /**
+ * Returns the platform-specific `npm` executable name.
+ * On Windows, npm is a `.cmd` script that requires the full name for
+ * `execFileSync`/`spawnSync` when `shell` is `false`.
+ *
+ * @returns `'npm.cmd'` on Windows, `'npm'` elsewhere.
+ */
+export function npmExecutable(): string {
+  return getPlatformInfo().isWindows ? 'npm.cmd' : 'npm';
+}
+
+/**
+ * Returns the platform-specific `npx` executable name.
+ * On Windows, npx is a `.cmd` script that requires the full name for
+ * `execFileSync`/`spawnSync` when `shell` is `false`.
+ *
+ * @returns `'npx.cmd'` on Windows, `'npx'` elsewhere.
+ */
+export function npxExecutable(): string {
+  return getPlatformInfo().isWindows ? 'npx.cmd' : 'npx';
+}
+
+/**
  * Get the path to the CodeQL executable.
  * Prioritizes CODEQL_DIST if set and valid. Otherwise, tries to find CodeQL via system PATH.
  * @returns The resolved path to the CodeQL executable, or an empty string if not found.
