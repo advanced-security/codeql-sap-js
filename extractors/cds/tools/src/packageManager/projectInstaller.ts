@@ -3,6 +3,7 @@
 import { execFileSync } from 'child_process';
 import { join } from 'path';
 
+import { npmExecutable } from '../environment';
 import type { FullDependencyInstallationResult } from './types';
 import type { CdsProject } from '../cds/parser';
 import { cdsExtractorLog } from '../logging';
@@ -71,11 +72,15 @@ export function projectInstallDependencies(
     );
 
     try {
-      execFileSync('npm', ['install', '--quiet', '--no-audit', '--no-fund'], {
-        cwd: projectPath,
-        stdio: 'inherit',
-        timeout: 120000, // 2-minute timeout
-      });
+      execFileSync(
+        npmExecutable(),
+        ['install', '--ignore-scripts', '--quiet', '--no-audit', '--no-fund'],
+        {
+          cwd: projectPath,
+          stdio: 'inherit',
+          timeout: 120000, // 2-minute timeout
+        },
+      );
 
       result.success = true;
       cdsExtractorLog(

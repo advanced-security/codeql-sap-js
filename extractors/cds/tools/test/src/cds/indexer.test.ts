@@ -6,6 +6,7 @@ import {
   runCdsIndexer,
 } from '../../../src/cds/indexer';
 import { CdsDependencyGraph, CdsProject, PackageJson } from '../../../src/cds/parser/types';
+import * as projectInstaller from '../../../src/packageManager/projectInstaller';
 
 // Mock dependencies
 jest.mock('child_process', () => ({
@@ -25,6 +26,17 @@ jest.mock('../../../src/diagnostics', () => ({
     Error: 'error',
     Warning: 'warning',
   },
+}));
+
+jest.mock('../../../src/packageManager/projectInstaller', () => ({
+  projectInstallDependencies: jest.fn().mockReturnValue({
+    success: true,
+    projectDir: '/source/myProject',
+    warnings: [],
+    durationMs: 1000,
+    timedOut: false,
+  }),
+  needsFullDependencyInstallation: jest.fn().mockReturnValue(false),
 }));
 
 // Helper to create a minimal CdsProject mock
@@ -480,6 +492,96 @@ describe('cds/indexer', () => {
           }),
         }),
       );
+    });
+
+    it('should install full project dependencies after successful cds-indexer run', () => {
+      (childProcess.spawnSync as jest.Mock).mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(''),
+        stderr: Buffer.from(''),
+        error: undefined,
+      });
+
+      const project = createMockProject('myProject', {
+        name: 'my-cap-app',
+        dependencies: {
+          '@sap/cds': '^7.0.0',
+          '@sap/cds-indexer': '^1.0.0',
+        },
+      });
+      const graph = createMockDependencyGraph([project]);
+
+      orchestrateCdsIndexer(graph, '/source', new Map());
+
+      expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(project, '/source');
+    });
+
+    it('should not install full project dependencies when cds-indexer fails', () => {
+      (childProcess.spawnSync as jest.Mock).mockReturnValue({
+        status: 1,
+        stdout: Buffer.from(''),
+        stderr: Buffer.from('indexer error'),
+        error: undefined,
+      });
+
+      const project = createMockProject('myProject', {
+        name: 'my-cap-app',
+        dependencies: {
+          '@sap/cds': '^7.0.0',
+          '@sap/cds-indexer': '^1.0.0',
+        },
+      });
+      const graph = createMockDependencyGraph([project]);
+
+      orchestrateCdsIndexer(graph, '/source', new Map());
+
+      expect(projectInstaller.projectInstallDependencies).not.toHaveBeenCalled();
+    });
+
+    it('should not install full project dependencies for projects without cds-indexer', () => {
+      const project = createMockProject('myProject', {
+        name: 'my-cap-app',
+        dependencies: { '@sap/cds': '^7.0.0' },
+      });
+      const graph = createMockDependencyGraph([project]);
+
+      orchestrateCdsIndexer(graph, '/source', new Map());
+
+      expect(projectInstaller.projectInstallDependencies).not.toHaveBeenCalled();
+    });
+
+    it('should continue even when full dependency installation fails after indexer success', () => {
+      (childProcess.spawnSync as jest.Mock).mockReturnValue({
+        status: 0,
+        stdout: Buffer.from(''),
+        stderr: Buffer.from(''),
+        error: undefined,
+      });
+
+      (projectInstaller.projectInstallDependencies as jest.Mock).mockReturnValue({
+        success: false,
+        projectDir: '/source/myProject',
+        warnings: ['npm install failed'],
+        durationMs: 500,
+        timedOut: false,
+        error: 'npm install failed',
+      });
+
+      const project = createMockProject('myProject', {
+        name: 'my-cap-app',
+        dependencies: {
+          '@sap/cds': '^7.0.0',
+          '@sap/cds-indexer': '^1.0.0',
+        },
+      });
+      const graph = createMockDependencyGraph([project]);
+
+      const summary = orchestrateCdsIndexer(graph, '/source', new Map());
+
+      // Indexer itself succeeded; dependency install failure is non-fatal
+      expect(summary.successfulRuns).toBe(1);
+      expect(summary.failedRuns).toBe(0);
+      expect(projectInstaller.projectInstallDependencies).toHaveBeenCalled();
     });
   });
 });

@@ -4,7 +4,9 @@ import { spawnSync } from 'child_process';
 import { delimiter, join } from 'path';
 
 import { addCdsIndexerDiagnostic } from '../diagnostics';
+import { npxExecutable } from '../environment';
 import { cdsExtractorLog } from '../logging';
+import { projectInstallDependencies } from '../packageManager';
 import type { CdsDependencyGraph, CdsProject } from './parser/types';
 
 /** Maximum time (ms) allowed for a single cds-indexer invocation. */
@@ -109,7 +111,7 @@ export function runCdsIndexer(
       `Running ${CDS_INDEXER_PACKAGE} for project '${project.projectDir}'...`,
     );
 
-    const spawnResult = spawnSync('npx', ['--yes', CDS_INDEXER_PACKAGE], {
+    const spawnResult = spawnSync(npxExecutable(), ['--yes', CDS_INDEXER_PACKAGE], {
       cwd: projectAbsPath,
       env,
       stdio: 'pipe',
@@ -199,6 +201,19 @@ export function orchestrateCdsIndexer(
 
     if (result.success) {
       summary.successfulRuns++;
+
+      // Install the project's full dependencies so the CDS compiler can
+      // resolve all CDS model imports (e.g. `@sap/cds-shim`) during
+      // compilation.  The cache directory only contains `@sap/cds`,
+      // `@sap/cds-dk`, and `@sap/cds-indexer`, which is not enough for
+      // projects that reference additional CDS packages.
+      const installResult = projectInstallDependencies(project, sourceRoot);
+      if (!installResult.success) {
+        cdsExtractorLog(
+          'warn',
+          `Full dependency installation failed for project '${projectDir}' after successful cds-indexer run: ${installResult.error ?? 'unknown error'}`,
+        );
+      }
     } else {
       summary.failedRuns++;
 

@@ -49,6 +49,28 @@ export function getPlatformInfo(): PlatformInfo {
 }
 
 /**
+ * Returns the platform-specific `npm` executable name.
+ * On Windows, npm is a `.cmd` script that requires the full name for
+ * `execFileSync`/`spawnSync` when `shell` is `false`.
+ *
+ * @returns `'npm.cmd'` on Windows, `'npm'` elsewhere.
+ */
+export function npmExecutable(): string {
+  return getPlatformInfo().isWindows ? 'npm.cmd' : 'npm';
+}
+
+/**
+ * Returns the platform-specific `npx` executable name.
+ * On Windows, npx is a `.cmd` script that requires the full name for
+ * `execFileSync`/`spawnSync` when `shell` is `false`.
+ *
+ * @returns `'npx.cmd'` on Windows, `'npx'` elsewhere.
+ */
+export function npxExecutable(): string {
+  return getPlatformInfo().isWindows ? 'npx.cmd' : 'npx';
+}
+
+/**
  * Get the path to the CodeQL executable.
  * Prioritizes CODEQL_DIST if set and valid. Otherwise, tries to find CodeQL via system PATH.
  * @returns The resolved path to the CodeQL executable, or an empty string if not found.
@@ -227,7 +249,9 @@ export function configureLgtmIndexFilters(): void {
       `Found $LGTM_INDEX_FILTERS already set to:
 ${process.env.LGTM_INDEX_FILTERS}`,
     );
-    const allowedExcludePatterns = [join('exclude:**', '*'), join('exclude:**', '*.*')];
+    // Use forward slashes explicitly — join() uses backslashes on Windows
+    // which causes 'Illegal use of **' errors in the JS extractor.
+    const allowedExcludePatterns = ['exclude:**/*', 'exclude:**/*.*'];
 
     excludeFilters =
       '\n' +
@@ -245,12 +269,14 @@ ${process.env.LGTM_INDEX_FILTERS}`,
   // The cdsExtractorMarkerFileName file is auto-created by the CDS extractor in order
   // to force the underlying JS extractor to see at least one .js file, which became a
   // requirement starting with v2.23.5 of the CodeQL CLI.
+  // Use forward slashes explicitly — join() uses backslashes on Windows
+  // which causes 'Illegal use of **' errors in the JS extractor.
   const lgtmIndexFiltersPatterns = [
-    join('exclude:**', '*.*'),
-    join('include:**', '*.cds.json'),
-    join('include:**', '*.cds'),
-    join('include:**', cdsExtractorMarkerFileName),
-    join('exclude:**', 'node_modules', '**', '*.*'),
+    'exclude:**/*.*',
+    'include:**/*.cds.json',
+    'include:**/*.cds',
+    `include:**/${cdsExtractorMarkerFileName}`,
+    'exclude:**/node_modules/**/*.*',
   ].join('\n');
 
   process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;

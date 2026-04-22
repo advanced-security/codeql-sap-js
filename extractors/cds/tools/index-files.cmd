@@ -6,7 +6,7 @@ REM - assumes it is run from the root of the project source directory;
 
 where node >nul 2>nul
 if %ERRORLEVEL% neq 0 (
-    echo node executable is required (in PATH) to run the 'cds-extractor.bundle.js' script. Please install Node.js and try again.
+    echo node executable is required ^(in PATH^) to run the 'cds-extractor.bundle.js' script. Please install Node.js and try again.
     exit /b 2
 )
 

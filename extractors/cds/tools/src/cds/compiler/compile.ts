@@ -4,6 +4,7 @@ import { basename, delimiter, dirname, join, relative, resolve, sep } from 'path
 import { CdsCompilationResult } from './types';
 import { getCdsVersion } from './version';
 import { modelCdsJsonFile } from '../../constants';
+import { getPlatformInfo } from '../../environment';
 import {
   fileExists,
   dirExists,
@@ -248,18 +249,22 @@ function createSpawnOptions(
   cdsCommand: string,
   cacheDir?: string,
 ): SpawnSyncOptions {
-  const spawnOptions: SpawnSyncOptions = {
-    cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: false, // Use shell=false to ensure proper argument handling for paths with spaces
-    stdio: 'pipe',
-    env: { ...process.env },
-  };
-
   // Check if we're using a direct binary path (contains node_modules/.bin/ or node_modules\.bin\) or npx-style command
   // Check both platform-native separator and forward slash for cross-platform compatibility
   const binPathNative = `node_modules${sep}.bin${sep}`;
   const binPathPosix = 'node_modules/.bin/';
   const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
+
+  // Only enable shell on Windows for npx-style commands where .cmd resolution is needed.
+  // Direct binary paths (node_modules/.bin/cds) don't need shell on any platform.
+  const useShell = getPlatformInfo().isWindows && !isDirectBinary;
+
+  const spawnOptions: SpawnSyncOptions = {
+    cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation
+    shell: useShell,
+    stdio: 'pipe',
+    env: { ...process.env },
+  };
 
   // Only set up Node.js environment for npx-style commands, not for direct binary execution
   if (cacheDir && !isDirectBinary) {
