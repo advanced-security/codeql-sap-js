@@ -11,7 +11,7 @@ on:
     branches:
       - "main"
     paths:
-      - "**/workflows/ql-unit-tests-windows.yml"
+      - ".github/workflows/ql-unit-tests-windows.yml"
       - "qlt.conf.json"
       - "extractors/cds/**"
       - "extractors/javascript/tools/**"
@@ -20,7 +20,7 @@ on:
     branches:
       - "main"
     paths:
-      - "**/workflows/ql-unit-tests-windows.yml"
+      - ".github/workflows/ql-unit-tests-windows.yml"
       - "qlt.conf.json"
       - "extractors/cds/**"
       - "extractors/javascript/tools/**"
