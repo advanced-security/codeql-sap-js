@@ -9,22 +9,22 @@ name: QL Unit Tests (Windows)
 on:
   pull_request:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - '.github/workflows/ql-unit-tests-windows.yml'
-      - 'qlt.conf.json'
-      - 'extractors/cds/**'
-      - 'extractors/javascript/tools/**'
-      - 'javascript/**'
+      - "**/workflows/ql-unit-tests-windows.yml"
+      - "qlt.conf.json"
+      - "extractors/cds/**"
+      - "extractors/javascript/tools/**"
+      - "javascript/**"
   push:
     branches:
-      - 'main'
+      - "main"
     paths:
-      - '.github/workflows/ql-unit-tests-windows.yml'
-      - 'qlt.conf.json'
-      - 'extractors/cds/**'
-      - 'extractors/javascript/tools/**'
-      - 'javascript/**'
+      - "**/workflows/ql-unit-tests-windows.yml"
+      - "qlt.conf.json"
+      - "extractors/cds/**"
+      - "extractors/javascript/tools/**"
+      - "javascript/**"
   workflow_dispatch:
 
 permissions:
@@ -157,9 +157,9 @@ jobs:
       - name: Setup Node.js for CDS compilation
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "extractors/cds/tools/package-lock.json"
 
       - name: Verify Node.js and npm tools
         shell: pwsh
@@ -292,7 +292,7 @@ jobs:
           name: windows-test-results-${{ matrix.test_suite }}
           path: |
             ${{ runner.temp }}/test-results/
-	  # No files here would mean there was a test error overall
+          # No files here would mean there was a test error overall
           if-no-files-found: error
 
       - name: Upload CAP test artifacts
