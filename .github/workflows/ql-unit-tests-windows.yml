@@ -35,7 +35,7 @@ jobs:
     name: ${{ matrix.test_suite }}
     runs-on: windows-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         test_suite:
           - cap-models
@@ -292,7 +292,8 @@ jobs:
           name: windows-test-results-${{ matrix.test_suite }}
           path: |
             ${{ runner.temp }}/test-results/
-          if-no-files-found: warn
+	  # No files here would mean there was a test error overall
+          if-no-files-found: error
 
       - name: Upload CAP test artifacts
         if: ${{ always() && (matrix.test_suite == 'cap-models' || matrix.test_suite == 'cap-queries') }}
