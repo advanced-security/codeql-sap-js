@@ -146,7 +146,7 @@ export function getAvailableVersions(packageName: CachedPackageName): string[] {
   try {
     const output = execSync(`npm view ${packageName} versions --json`, {
       encoding: 'utf8',
-      timeout: 30000, // 30 second timeout
+      timeout: 120000, // 120 second timeout
     });
 
     const versions: unknown = JSON.parse(output);
