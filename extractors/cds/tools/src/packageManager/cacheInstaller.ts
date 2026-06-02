@@ -495,12 +495,20 @@ function installDependenciesInCache(
   }
 
   try {
-    execFileSync(npmExecutable(), ['install', '--quiet', '--no-audit', '--no-fund'], {
-      cwd: cacheDir,
-      stdio: 'inherit',
-      // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
-      shell: getPlatformInfo().isWindows,
-    });
+    execFileSync(
+      npmExecutable(),
+      // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
+      // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
+      // npm's default is non-strict; we make that explicit so a project-level .npmrc
+      // copied into the cache can't flip it on.
+      ['install', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
+      {
+        cwd: cacheDir,
+        stdio: 'inherit',
+        // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+        shell: getPlatformInfo().isWindows,
+      },
+    );
 
     // Add warning diagnostic if using fallback versions
     if (isFallback && warning && packageJsonPath && codeqlExePath) {
