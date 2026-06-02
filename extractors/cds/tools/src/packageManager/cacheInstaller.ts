@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'path';
 import type { CdsDependencyCombination } from './types';
 import { CdsDependencyGraph, CdsProject } from '../cds/parser/types';
 import { DiagnosticSeverity } from '../diagnostics';
-import { npmExecutable } from '../environment';
+import { npmExecutable, getPlatformInfo } from '../environment';
 import { cdsExtractorLog } from '../logging';
 import { resolveCdsVersions } from './versionResolver';
 
@@ -498,7 +498,8 @@ function installDependenciesInCache(
     execFileSync(npmExecutable(), ['install', '--quiet', '--no-audit', '--no-fund'], {
       cwd: cacheDir,
       stdio: 'inherit',
-      shell: true,
+      // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+      shell: getPlatformInfo().isWindows,
     });
 
     // Add warning diagnostic if using fallback versions

@@ -4,7 +4,7 @@ import { spawnSync } from 'child_process';
 import { delimiter, join } from 'path';
 
 import { addCdsIndexerDiagnostic } from '../diagnostics';
-import { npxExecutable } from '../environment';
+import { npxExecutable, getPlatformInfo } from '../environment';
 import { cdsExtractorLog } from '../logging';
 import { projectInstallDependencies } from '../packageManager';
 import type { CdsDependencyGraph, CdsProject } from './parser/types';
@@ -116,6 +116,8 @@ export function runCdsIndexer(
       env,
       stdio: 'pipe',
       timeout: CDS_INDEXER_TIMEOUT_MS,
+      // .cmd/.bat shims (npx.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+      shell: getPlatformInfo().isWindows,
     });
 
     result.durationMs = Date.now() - startTime;

@@ -255,9 +255,11 @@ function createSpawnOptions(
   const binPathPosix = 'node_modules/.bin/';
   const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
 
-  // Only enable shell on Windows for npx-style commands where .cmd resolution is needed.
-  // Direct binary paths (node_modules/.bin/cds) don't need shell on any platform.
-  const useShell = getPlatformInfo().isWindows && !isDirectBinary;
+  // On Windows we always need shell: true so spawnSync can execute .cmd shims —
+  // both the npx.cmd entry point AND the cds.cmd shim under node_modules/.bin/.
+  // Node 20.12.2+ (CVE-2024-27980) refuses to spawn .cmd/.bat files without a shell.
+  // On non-Windows, only npx-style commands need shell to resolve the executable on PATH.
+  const useShell = getPlatformInfo().isWindows || !isDirectBinary;
 
   const spawnOptions: SpawnSyncOptions = {
     cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation

@@ -3,7 +3,7 @@
 import { execFileSync } from 'child_process';
 import { join } from 'path';
 
-import { npmExecutable } from '../environment';
+import { npmExecutable, getPlatformInfo } from '../environment';
 import type { FullDependencyInstallationResult } from './types';
 import type { CdsProject } from '../cds/parser';
 import { cdsExtractorLog } from '../logging';
@@ -79,7 +79,8 @@ export function projectInstallDependencies(
           cwd: projectPath,
           stdio: 'inherit',
           timeout: 120000, // 2-minute timeout
-          shell: true,
+          // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+          shell: getPlatformInfo().isWindows,
         },
       );
 
