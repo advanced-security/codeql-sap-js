@@ -3011,18 +3011,24 @@ var Ze = Object.assign(Je, { glob: Je, globSync: ts, sync: Ui, globStream: Qe, s
 Ze.glob = Ze;
 
 // src/cds/compiler/command.ts
-var import_child_process = require("child_process");
-var import_fs3 = require("fs");
-var import_path2 = require("path");
+var import_child_process2 = require("child_process");
+var import_fs5 = require("fs");
+var import_path4 = require("path");
 
-// src/filesystem.ts
-var import_fs2 = require("fs");
-var import_path = require("path");
+// src/environment.ts
+var import_child_process = require("child_process");
+var import_fs4 = require("fs");
+var import_os = require("os");
+var import_path3 = require("path");
 
 // src/constants.ts
 var modelCdsJsonFile = "model.cds.json";
 var cdsExtractorMarkerFileName = "cds-extractor-marker.js";
 var cdsExtractorMarkerFileContent = '"Placeholder content created by the CDS extractor. This file can be safely deleted.";';
+
+// src/filesystem.ts
+var import_fs2 = require("fs");
+var import_path = require("path");
 
 // src/logging/cdsExtractorLog.ts
 var sourceRootDirectory;
@@ -3276,357 +3282,9 @@ function normalizeLocationPathsInFile(filePath) {
   }
 }
 
-// src/cds/compiler/command.ts
-var DEFAULT_COMMAND_TIMEOUT_MS = 1e4;
-var cdsCommandCache = {
-  commandResults: /* @__PURE__ */ new Map(),
-  availableCacheDirs: [],
-  initialized: false
-};
-var createCdsCommands = {
-  // Global CDS command
-  cds: () => ({
-    executable: "cds",
-    args: [],
-    originalCommand: "cds"
-  }),
-  // NPX with @sap/cds package
-  npxCds: () => ({
-    executable: "npx",
-    args: ["--yes", "--package", "@sap/cds", "cds"],
-    originalCommand: "npx --yes --package @sap/cds cds"
-  }),
-  // NPX with @sap/cds-dk package
-  npxCdsDk: () => ({
-    executable: "npx",
-    args: ["--yes", "--package", "@sap/cds-dk", "cds"],
-    originalCommand: "npx --yes --package @sap/cds-dk cds"
-  }),
-  // NPX with @sap/cds-dk package (alternative flag)
-  npxCdsDkAlt: () => ({
-    executable: "npx",
-    args: ["--yes", "@sap/cds-dk", "cds"],
-    originalCommand: "npx --yes @sap/cds-dk cds"
-  }),
-  // NPX with versioned @sap/cds-dk package
-  npxCdsDkWithVersion: (version) => ({
-    executable: "npx",
-    args: ["--yes", "--package", `@sap/cds-dk@${version}`, "cds"],
-    originalCommand: `npx --yes --package @sap/cds-dk@${version} cds`
-  }),
-  // NPX with versioned @sap/cds package
-  npxCdsWithVersion: (version) => ({
-    executable: "npx",
-    args: ["--yes", "--package", `@sap/cds@${version}`, "cds"],
-    originalCommand: `npx --yes --package @sap/cds@${version} cds`
-  })
-};
-function parseCommandString(commandString) {
-  const parts = commandString.trim().split(/\s+/);
-  if (parts.length === 0) {
-    throw new Error("Empty command string");
-  }
-  const executable = parts[0];
-  const args = parts.slice(1);
-  return {
-    executable,
-    args,
-    originalCommand: commandString
-  };
-}
-function determineVersionAwareCdsCommands(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
-  try {
-    const commandString = getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2);
-    const primaryCommand = parseCommandString(commandString);
-    let retryCommand;
-    if (projectPath && dependencyGraph2) {
-      try {
-        const versionInfo = resolveCdsVersions(projectPath, dependencyGraph2);
-        if (versionInfo?.preferredDkVersion) {
-          retryCommand = createCdsCommands.npxCdsDkWithVersion(versionInfo.preferredDkVersion);
-        } else if (versionInfo?.cdsDkVersion) {
-          retryCommand = createCdsCommands.npxCdsDkWithVersion(versionInfo.cdsDkVersion);
-        } else {
-          retryCommand = createCdsCommands.npxCdsDk();
-        }
-      } catch (error) {
-        cdsExtractorLog(
-          "warn",
-          `Failed to resolve version info for ${projectPath}: ${String(error)}`
-        );
-        retryCommand = createCdsCommands.npxCdsDk();
-      }
-    } else {
-      retryCommand = createCdsCommands.npxCdsDk();
-    }
-    return { primaryCommand, retryCommand };
-  } catch (error) {
-    cdsExtractorLog("error", `Failed to determine version-aware commands: ${String(error)}`);
-    const fallbackCommand = parseCommandString("cds");
-    return {
-      primaryCommand: fallbackCommand,
-      retryCommand: createCdsCommands.npxCdsDk()
-    };
-  }
-}
-function createCdsCommandForPath(absolutePath) {
-  try {
-    const resolvedPath = (0, import_path2.resolve)(absolutePath);
-    if (resolvedPath && fileExists(resolvedPath)) {
-      return {
-        executable: resolvedPath,
-        args: [],
-        originalCommand: absolutePath
-      };
-    }
-  } catch {
-  }
-  return null;
-}
-function resolveCdsVersions(projectPath, dependencyGraph2) {
-  const project = dependencyGraph2.projects.get(projectPath);
-  if (!project?.packageJson) {
-    return void 0;
-  }
-  const { dependencies = {}, devDependencies = {} } = project.packageJson;
-  const allDependencies = { ...dependencies, ...devDependencies };
-  const cdsVersion = allDependencies["@sap/cds"];
-  const cdsDkVersion = allDependencies["@sap/cds-dk"];
-  if (!cdsVersion && !cdsDkVersion) {
-    return void 0;
-  }
-  let preferredDkVersion;
-  if (cdsDkVersion) {
-    preferredDkVersion = enforceMinimumCdsDkVersion(cdsDkVersion);
-  } else if (cdsVersion) {
-    preferredDkVersion = deriveCompatibleCdsDkVersion(cdsVersion);
-  }
-  return {
-    cdsVersion,
-    cdsDkVersion,
-    preferredDkVersion
-  };
-}
-function enforceMinimumCdsDkVersion(version) {
-  const minimumVersion = 8;
-  const majorVersionMatch = version.match(/\^?(\d+)/);
-  if (majorVersionMatch) {
-    const majorVersion = parseInt(majorVersionMatch[1], 10);
-    if (majorVersion < minimumVersion) {
-      return `^${minimumVersion}`;
-    }
-  }
-  return version;
-}
-function deriveCompatibleCdsDkVersion(cdsVersion) {
-  const majorVersionMatch = cdsVersion.match(/\^?(\d+)/);
-  let derivedVersion;
-  if (majorVersionMatch) {
-    const majorVersion = majorVersionMatch[1];
-    derivedVersion = `^${majorVersion}`;
-  } else {
-    derivedVersion = cdsVersion;
-  }
-  return enforceMinimumCdsDkVersion(derivedVersion);
-}
-function createVersionAwareCdsCommand(projectPath, dependencyGraph2) {
-  const versionInfo = resolveCdsVersions(projectPath, dependencyGraph2);
-  if (!versionInfo?.preferredDkVersion) {
-    return null;
-  }
-  return createCdsCommands.npxCdsDkWithVersion(versionInfo.preferredDkVersion);
-}
-function determineCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
-  try {
-    return getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2);
-  } catch (error) {
-    const errorMessage = `Failed to determine CDS command: ${String(error)}`;
-    cdsExtractorLog("error", errorMessage);
-    throw new Error(errorMessage);
-  }
-}
-function discoverAvailableCacheDirs(sourceRoot2) {
-  if (cdsCommandCache.availableCacheDirs.length > 0) {
-    return cdsCommandCache.availableCacheDirs;
-  }
-  const cacheRootDir = (0, import_path2.join)(sourceRoot2, ".cds-extractor-cache");
-  const availableDirs = [];
-  try {
-    if ((0, import_fs3.existsSync)(cacheRootDir)) {
-      const entries = (0, import_fs3.readdirSync)(cacheRootDir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory() && entry.name.startsWith("cds-")) {
-          const cacheDir = (0, import_path2.join)(cacheRootDir, entry.name);
-          const cdsBin = (0, import_path2.join)(cacheDir, "node_modules", ".bin", "cds");
-          if (fileExists(cdsBin)) {
-            availableDirs.push(cacheDir);
-          }
-        }
-      }
-    }
-  } catch (error) {
-    cdsExtractorLog("debug", `Failed to discover cache directories: ${String(error)}`);
-  }
-  cdsCommandCache.availableCacheDirs = availableDirs;
-  return availableDirs;
-}
-function getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
-  initializeCdsCommandCache(sourceRoot2);
-  if (cacheDir) {
-    const localCdsBin = (0, import_path2.join)(cacheDir, "node_modules", ".bin", "cds");
-    const command = createCdsCommandForPath(localCdsBin);
-    if (command) {
-      const result = testCdsCommand(command, sourceRoot2, true);
-      if (result.works) {
-        return localCdsBin;
-      }
-    }
-  }
-  for (const availableCacheDir of cdsCommandCache.availableCacheDirs) {
-    const localCdsBin = (0, import_path2.join)(availableCacheDir, "node_modules", ".bin", "cds");
-    const command = createCdsCommandForPath(localCdsBin);
-    if (command) {
-      const result = testCdsCommand(command, sourceRoot2, true);
-      if (result.works) {
-        return localCdsBin;
-      }
-    }
-  }
-  if (projectPath && dependencyGraph2) {
-    const versionAwareCommand = createVersionAwareCdsCommand(projectPath, dependencyGraph2);
-    if (versionAwareCommand) {
-      const result = testCdsCommand(versionAwareCommand, sourceRoot2, true);
-      if (result.works) {
-        return versionAwareCommand.originalCommand;
-      }
-    }
-  }
-  if (cdsCommandCache.globalCommand) {
-    return cdsCommandCache.globalCommand;
-  }
-  const fallbackCommands = [createCdsCommands.npxCds(), createCdsCommands.npxCdsDk()];
-  for (const command of fallbackCommands) {
-    const result = testCdsCommand(command, sourceRoot2, true);
-    if (result.works) {
-      return command.originalCommand;
-    }
-  }
-  return createCdsCommands.npxCdsDk().originalCommand;
-}
-function initializeCdsCommandCache(sourceRoot2) {
-  if (cdsCommandCache.initialized) {
-    return;
-  }
-  cdsExtractorLog("info", "Initializing CDS command cache...");
-  const globalCommands = [createCdsCommands.cds(), createCdsCommands.npxCdsDk()];
-  for (const command of globalCommands) {
-    const result = testCdsCommand(command, sourceRoot2, true);
-    if (result.works) {
-      cdsCommandCache.globalCommand = command.originalCommand;
-      cdsExtractorLog(
-        "info",
-        `Found working global CDS command: ${command.originalCommand} (v${result.version ?? "unknown"})`
-      );
-      break;
-    }
-  }
-  const cacheDirs = discoverAvailableCacheDirs(sourceRoot2);
-  if (cacheDirs.length > 0) {
-    cdsExtractorLog(
-      "info",
-      `Discovered ${cacheDirs.length} CDS cache director${cacheDirs.length === 1 ? "y" : "ies"}`
-    );
-  }
-  cdsCommandCache.initialized = true;
-}
-function testCdsCommand(validatedCommand, sourceRoot2, silent = false) {
-  const cacheKey = validatedCommand.originalCommand;
-  const cachedResult = cdsCommandCache.commandResults.get(cacheKey);
-  if (cachedResult) {
-    return cachedResult;
-  }
-  try {
-    const cleanEnv = {
-      ...process.env,
-      // Remove any CodeQL-specific environment variables that might interfere.
-      CODEQL_EXTRACTOR_CDS_WIP_DATABASE: void 0,
-      CODEQL_RUNNER: void 0
-    };
-    const result = (0, import_child_process.execFileSync)(
-      validatedCommand.executable,
-      [...validatedCommand.args, "--version"],
-      {
-        encoding: "utf8",
-        stdio: "pipe",
-        timeout: DEFAULT_COMMAND_TIMEOUT_MS,
-        // timeout after 10 seconds
-        cwd: sourceRoot2,
-        env: cleanEnv
-      }
-    ).toString();
-    const versionMatch = result.match(/(\d+\.\d+\.\d+)/);
-    const version = versionMatch ? versionMatch[1] : void 0;
-    const testResult = { works: true, version };
-    cdsCommandCache.commandResults.set(cacheKey, testResult);
-    return testResult;
-  } catch (error) {
-    const errorMessage = String(error);
-    if (!silent) {
-      cdsExtractorLog("debug", `CDS command test failed for '${cacheKey}': ${errorMessage}`);
-    }
-    const testResult = { works: false, error: errorMessage };
-    cdsCommandCache.commandResults.set(cacheKey, testResult);
-    return testResult;
-  }
-}
-
-// src/cds/compiler/compile.ts
-var import_child_process4 = require("child_process");
-var import_path6 = require("path");
-
-// src/cds/compiler/version.ts
-var import_child_process2 = require("child_process");
-var import_path3 = require("path");
-function getCdsVersion(cdsCommand, cacheDir) {
-  try {
-    const spawnOptions = {
-      shell: true,
-      stdio: "pipe",
-      env: { ...process.env }
-    };
-    if (cacheDir) {
-      const nodePath = (0, import_path3.join)(cacheDir, "node_modules");
-      spawnOptions.env = {
-        ...process.env,
-        NODE_PATH: `${nodePath}${import_path3.delimiter}${process.env.NODE_PATH ?? ""}`,
-        PATH: `${(0, import_path3.join)(nodePath, ".bin")}${import_path3.delimiter}${process.env.PATH}`,
-        npm_config_prefix: cacheDir
-      };
-    }
-    const result = (0, import_child_process2.spawnSync)(`${cdsCommand} --version`, spawnOptions);
-    if (result.status === 0 && result.stdout) {
-      const versionOutput = result.stdout.toString().trim();
-      const match2 = versionOutput.match(/@sap\/cds[^0-9]*([0-9]+\.[0-9]+\.[0-9]+)/);
-      if (match2?.[1]) {
-        return match2[1];
-      }
-      return versionOutput;
-    }
-    return void 0;
-  } catch {
-    return void 0;
-  }
-}
-
-// src/environment.ts
-var import_child_process3 = require("child_process");
-var import_fs5 = require("fs");
-var import_os = require("os");
-var import_path5 = require("path");
-
 // src/paths-ignore.ts
-var import_fs4 = require("fs");
-var import_path4 = require("path");
+var import_fs3 = require("fs");
+var import_path2 = require("path");
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function isNothing(subject) {
@@ -8032,17 +7690,17 @@ var patternsCache = /* @__PURE__ */ new Map();
 function findCodeqlConfigFile(sourceRoot2) {
   const envConfigPath = process.env.CODEQL_CONFIG_PATH;
   if (envConfigPath) {
-    const resolvedRoot = (0, import_path4.resolve)(sourceRoot2);
-    const fullPath = (0, import_path4.resolve)(resolvedRoot, envConfigPath);
-    const rel = (0, import_path4.relative)(resolvedRoot, fullPath);
-    if (rel.startsWith("..") || (0, import_path4.resolve)(resolvedRoot, rel) !== fullPath) {
+    const resolvedRoot = (0, import_path2.resolve)(sourceRoot2);
+    const fullPath = (0, import_path2.resolve)(resolvedRoot, envConfigPath);
+    const rel = (0, import_path2.relative)(resolvedRoot, fullPath);
+    if (rel.startsWith("..") || (0, import_path2.resolve)(resolvedRoot, rel) !== fullPath) {
       cdsExtractorLog(
         "warn",
         `CODEQL_CONFIG_PATH '${envConfigPath}' resolves outside the source root. Ignoring.`
       );
       return void 0;
     }
-    if ((0, import_fs4.existsSync)(fullPath)) {
+    if ((0, import_fs3.existsSync)(fullPath)) {
       cdsExtractorLog("info", `Using CodeQL config file from CODEQL_CONFIG_PATH: ${fullPath}`);
       return fullPath;
     }
@@ -8053,8 +7711,8 @@ function findCodeqlConfigFile(sourceRoot2) {
     return void 0;
   }
   for (const configPath of DEFAULT_CONFIG_RELATIVE_PATHS) {
-    const fullPath = (0, import_path4.join)(sourceRoot2, configPath);
-    if ((0, import_fs4.existsSync)(fullPath)) {
+    const fullPath = (0, import_path2.join)(sourceRoot2, configPath);
+    if ((0, import_fs3.existsSync)(fullPath)) {
       return fullPath;
     }
   }
@@ -8071,7 +7729,7 @@ function getPathsIgnorePatterns(sourceRoot2) {
     return [];
   }
   try {
-    const content = (0, import_fs4.readFileSync)(configPath, "utf8");
+    const content = (0, import_fs3.readFileSync)(configPath, "utf8");
     const config = load(content);
     if (!config || !Array.isArray(config["paths-ignore"])) {
       patternsCache.set(sourceRoot2, []);
@@ -8138,8 +7796,8 @@ function getCodeQLExePath() {
   const codeqlExeName = platformInfo2.isWindows ? "codeql.exe" : "codeql";
   const codeqlDist = process.env.CODEQL_DIST;
   if (codeqlDist) {
-    const codeqlPathFromDist = (0, import_path5.resolve)((0, import_path5.join)(codeqlDist, codeqlExeName));
-    if ((0, import_fs5.existsSync)(codeqlPathFromDist)) {
+    const codeqlPathFromDist = (0, import_path3.resolve)((0, import_path3.join)(codeqlDist, codeqlExeName));
+    if ((0, import_fs4.existsSync)(codeqlPathFromDist)) {
       cdsExtractorLog("info", `Using CodeQL executable from CODEQL_DIST: ${codeqlPathFromDist}`);
       return codeqlPathFromDist;
     } else {
@@ -8154,7 +7812,7 @@ function getCodeQLExePath() {
     'CODEQL_DIST environment variable not set or invalid. Attempting to find CodeQL executable via system PATH using "codeql version --format=json".'
   );
   try {
-    const versionOutput = (0, import_child_process3.execFileSync)(codeqlExeName, ["version", "--format=json"], {
+    const versionOutput = (0, import_child_process.execFileSync)(codeqlExeName, ["version", "--format=json"], {
       encoding: "utf8",
       timeout: 5e3,
       // 5 seconds timeout
@@ -8164,8 +7822,8 @@ function getCodeQLExePath() {
     try {
       const versionInfo = JSON.parse(versionOutput);
       if (versionInfo && typeof versionInfo.unpackedLocation === "string" && versionInfo.unpackedLocation) {
-        const resolvedPathFromVersion = (0, import_path5.resolve)((0, import_path5.join)(versionInfo.unpackedLocation, codeqlExeName));
-        if ((0, import_fs5.existsSync)(resolvedPathFromVersion)) {
+        const resolvedPathFromVersion = (0, import_path3.resolve)((0, import_path3.join)(versionInfo.unpackedLocation, codeqlExeName));
+        if ((0, import_fs4.existsSync)(resolvedPathFromVersion)) {
           cdsExtractorLog(
             "info",
             `CodeQL executable found via 'codeql version --format=json' at: ${resolvedPathFromVersion}`
@@ -8219,7 +7877,7 @@ function getJavaScriptExtractorRoot(codeqlExePath2) {
     return "";
   }
   try {
-    jsExtractorRoot = (0, import_child_process3.execFileSync)(
+    jsExtractorRoot = (0, import_child_process.execFileSync)(
       codeqlExePath2,
       ["resolve", "extractor", "--language=javascript"],
       { stdio: "pipe" }
@@ -8254,7 +7912,7 @@ function getAutobuildScriptPath(jsExtractorRoot) {
   if (!jsExtractorRoot) return "";
   const platformInfo2 = getPlatformInfo();
   const autobuildScriptName = platformInfo2.isWindows ? "autobuild.cmd" : "autobuild.sh";
-  return (0, import_path5.resolve)((0, import_path5.join)(jsExtractorRoot, "tools", autobuildScriptName));
+  return (0, import_path3.resolve)((0, import_path3.join)(jsExtractorRoot, "tools", autobuildScriptName));
 }
 function configureLgtmIndexFilters() {
   let excludeFilters = "";
@@ -8332,6 +7990,355 @@ function setupAndValidateEnvironment(sourceRoot2) {
     autobuildScriptPath: autobuildScriptPath2,
     platformInfo: platformInfo2
   };
+}
+
+// src/cds/compiler/command.ts
+var DEFAULT_COMMAND_TIMEOUT_MS = 1e4;
+function localCdsBinName() {
+  return getPlatformInfo().isWindows ? "cds.cmd" : "cds";
+}
+var cdsCommandCache = {
+  commandResults: /* @__PURE__ */ new Map(),
+  availableCacheDirs: [],
+  initialized: false
+};
+var createCdsCommands = {
+  // Global CDS command
+  cds: () => ({
+    executable: "cds",
+    args: [],
+    originalCommand: "cds"
+  }),
+  // NPX with @sap/cds package
+  npxCds: () => ({
+    executable: "npx",
+    args: ["--yes", "--package", "@sap/cds", "cds"],
+    originalCommand: "npx --yes --package @sap/cds cds"
+  }),
+  // NPX with @sap/cds-dk package
+  npxCdsDk: () => ({
+    executable: "npx",
+    args: ["--yes", "--package", "@sap/cds-dk", "cds"],
+    originalCommand: "npx --yes --package @sap/cds-dk cds"
+  }),
+  // NPX with @sap/cds-dk package (alternative flag)
+  npxCdsDkAlt: () => ({
+    executable: "npx",
+    args: ["--yes", "@sap/cds-dk", "cds"],
+    originalCommand: "npx --yes @sap/cds-dk cds"
+  }),
+  // NPX with versioned @sap/cds-dk package
+  npxCdsDkWithVersion: (version) => ({
+    executable: "npx",
+    args: ["--yes", "--package", `@sap/cds-dk@${version}`, "cds"],
+    originalCommand: `npx --yes --package @sap/cds-dk@${version} cds`
+  }),
+  // NPX with versioned @sap/cds package
+  npxCdsWithVersion: (version) => ({
+    executable: "npx",
+    args: ["--yes", "--package", `@sap/cds@${version}`, "cds"],
+    originalCommand: `npx --yes --package @sap/cds@${version} cds`
+  })
+};
+function parseCommandString(commandString) {
+  const parts = commandString.trim().split(/\s+/);
+  if (parts.length === 0) {
+    throw new Error("Empty command string");
+  }
+  const executable = parts[0];
+  const args = parts.slice(1);
+  return {
+    executable,
+    args,
+    originalCommand: commandString
+  };
+}
+function determineVersionAwareCdsCommands(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
+  try {
+    const commandString = getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2);
+    const primaryCommand = parseCommandString(commandString);
+    let retryCommand;
+    if (projectPath && dependencyGraph2) {
+      try {
+        const versionInfo = resolveCdsVersions(projectPath, dependencyGraph2);
+        if (versionInfo?.preferredDkVersion) {
+          retryCommand = createCdsCommands.npxCdsDkWithVersion(versionInfo.preferredDkVersion);
+        } else if (versionInfo?.cdsDkVersion) {
+          retryCommand = createCdsCommands.npxCdsDkWithVersion(versionInfo.cdsDkVersion);
+        } else {
+          retryCommand = createCdsCommands.npxCdsDk();
+        }
+      } catch (error) {
+        cdsExtractorLog(
+          "warn",
+          `Failed to resolve version info for ${projectPath}: ${String(error)}`
+        );
+        retryCommand = createCdsCommands.npxCdsDk();
+      }
+    } else {
+      retryCommand = createCdsCommands.npxCdsDk();
+    }
+    return { primaryCommand, retryCommand };
+  } catch (error) {
+    cdsExtractorLog("error", `Failed to determine version-aware commands: ${String(error)}`);
+    const fallbackCommand = parseCommandString("cds");
+    return {
+      primaryCommand: fallbackCommand,
+      retryCommand: createCdsCommands.npxCdsDk()
+    };
+  }
+}
+function createCdsCommandForPath(absolutePath) {
+  try {
+    const resolvedPath = (0, import_path4.resolve)(absolutePath);
+    if (resolvedPath && fileExists(resolvedPath)) {
+      return {
+        executable: resolvedPath,
+        args: [],
+        originalCommand: absolutePath
+      };
+    }
+  } catch {
+  }
+  return null;
+}
+function resolveCdsVersions(projectPath, dependencyGraph2) {
+  const project = dependencyGraph2.projects.get(projectPath);
+  if (!project?.packageJson) {
+    return void 0;
+  }
+  const { dependencies = {}, devDependencies = {} } = project.packageJson;
+  const allDependencies = { ...dependencies, ...devDependencies };
+  const cdsVersion = allDependencies["@sap/cds"];
+  const cdsDkVersion = allDependencies["@sap/cds-dk"];
+  if (!cdsVersion && !cdsDkVersion) {
+    return void 0;
+  }
+  let preferredDkVersion;
+  if (cdsDkVersion) {
+    preferredDkVersion = enforceMinimumCdsDkVersion(cdsDkVersion);
+  } else if (cdsVersion) {
+    preferredDkVersion = deriveCompatibleCdsDkVersion(cdsVersion);
+  }
+  return {
+    cdsVersion,
+    cdsDkVersion,
+    preferredDkVersion
+  };
+}
+function enforceMinimumCdsDkVersion(version) {
+  const minimumVersion = 8;
+  const majorVersionMatch = version.match(/\^?(\d+)/);
+  if (majorVersionMatch) {
+    const majorVersion = parseInt(majorVersionMatch[1], 10);
+    if (majorVersion < minimumVersion) {
+      return `^${minimumVersion}`;
+    }
+  }
+  return version;
+}
+function deriveCompatibleCdsDkVersion(cdsVersion) {
+  const majorVersionMatch = cdsVersion.match(/\^?(\d+)/);
+  let derivedVersion;
+  if (majorVersionMatch) {
+    const majorVersion = majorVersionMatch[1];
+    derivedVersion = `^${majorVersion}`;
+  } else {
+    derivedVersion = cdsVersion;
+  }
+  return enforceMinimumCdsDkVersion(derivedVersion);
+}
+function createVersionAwareCdsCommand(projectPath, dependencyGraph2) {
+  const versionInfo = resolveCdsVersions(projectPath, dependencyGraph2);
+  if (!versionInfo?.preferredDkVersion) {
+    return null;
+  }
+  return createCdsCommands.npxCdsDkWithVersion(versionInfo.preferredDkVersion);
+}
+function determineCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
+  try {
+    return getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2);
+  } catch (error) {
+    const errorMessage = `Failed to determine CDS command: ${String(error)}`;
+    cdsExtractorLog("error", errorMessage);
+    throw new Error(errorMessage);
+  }
+}
+function discoverAvailableCacheDirs(sourceRoot2) {
+  if (cdsCommandCache.availableCacheDirs.length > 0) {
+    return cdsCommandCache.availableCacheDirs;
+  }
+  const cacheRootDir = (0, import_path4.join)(sourceRoot2, ".cds-extractor-cache");
+  const availableDirs = [];
+  try {
+    if ((0, import_fs5.existsSync)(cacheRootDir)) {
+      const entries = (0, import_fs5.readdirSync)(cacheRootDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory() && entry.name.startsWith("cds-")) {
+          const cacheDir = (0, import_path4.join)(cacheRootDir, entry.name);
+          const cdsBin = (0, import_path4.join)(cacheDir, "node_modules", ".bin", localCdsBinName());
+          if (fileExists(cdsBin)) {
+            availableDirs.push(cacheDir);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    cdsExtractorLog("debug", `Failed to discover cache directories: ${String(error)}`);
+  }
+  cdsCommandCache.availableCacheDirs = availableDirs;
+  return availableDirs;
+}
+function getBestCdsCommand(cacheDir, sourceRoot2, projectPath, dependencyGraph2) {
+  initializeCdsCommandCache(sourceRoot2);
+  if (cacheDir) {
+    const localCdsBin = (0, import_path4.join)(cacheDir, "node_modules", ".bin", localCdsBinName());
+    const command = createCdsCommandForPath(localCdsBin);
+    if (command) {
+      const result = testCdsCommand(command, sourceRoot2, true);
+      if (result.works) {
+        return localCdsBin;
+      }
+    }
+  }
+  for (const availableCacheDir of cdsCommandCache.availableCacheDirs) {
+    const localCdsBin = (0, import_path4.join)(availableCacheDir, "node_modules", ".bin", localCdsBinName());
+    const command = createCdsCommandForPath(localCdsBin);
+    if (command) {
+      const result = testCdsCommand(command, sourceRoot2, true);
+      if (result.works) {
+        return localCdsBin;
+      }
+    }
+  }
+  if (projectPath && dependencyGraph2) {
+    const versionAwareCommand = createVersionAwareCdsCommand(projectPath, dependencyGraph2);
+    if (versionAwareCommand) {
+      const result = testCdsCommand(versionAwareCommand, sourceRoot2, true);
+      if (result.works) {
+        return versionAwareCommand.originalCommand;
+      }
+    }
+  }
+  if (cdsCommandCache.globalCommand) {
+    return cdsCommandCache.globalCommand;
+  }
+  const fallbackCommands = [createCdsCommands.npxCds(), createCdsCommands.npxCdsDk()];
+  for (const command of fallbackCommands) {
+    const result = testCdsCommand(command, sourceRoot2, true);
+    if (result.works) {
+      return command.originalCommand;
+    }
+  }
+  return createCdsCommands.npxCdsDk().originalCommand;
+}
+function initializeCdsCommandCache(sourceRoot2) {
+  if (cdsCommandCache.initialized) {
+    return;
+  }
+  cdsExtractorLog("info", "Initializing CDS command cache...");
+  const globalCommands = [createCdsCommands.cds(), createCdsCommands.npxCdsDk()];
+  for (const command of globalCommands) {
+    const result = testCdsCommand(command, sourceRoot2, true);
+    if (result.works) {
+      cdsCommandCache.globalCommand = command.originalCommand;
+      cdsExtractorLog(
+        "info",
+        `Found working global CDS command: ${command.originalCommand} (v${result.version ?? "unknown"})`
+      );
+      break;
+    }
+  }
+  const cacheDirs = discoverAvailableCacheDirs(sourceRoot2);
+  if (cacheDirs.length > 0) {
+    cdsExtractorLog(
+      "info",
+      `Discovered ${cacheDirs.length} CDS cache director${cacheDirs.length === 1 ? "y" : "ies"}`
+    );
+  }
+  cdsCommandCache.initialized = true;
+}
+function testCdsCommand(validatedCommand, sourceRoot2, silent = false) {
+  const cacheKey = validatedCommand.originalCommand;
+  const cachedResult = cdsCommandCache.commandResults.get(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+  try {
+    const cleanEnv = {
+      ...process.env,
+      // Remove any CodeQL-specific environment variables that might interfere.
+      CODEQL_EXTRACTOR_CDS_WIP_DATABASE: void 0,
+      CODEQL_RUNNER: void 0
+    };
+    const result = (0, import_child_process2.execFileSync)(
+      validatedCommand.executable,
+      [...validatedCommand.args, "--version"],
+      {
+        encoding: "utf8",
+        stdio: "pipe",
+        timeout: DEFAULT_COMMAND_TIMEOUT_MS,
+        // timeout after 10 seconds
+        cwd: sourceRoot2,
+        env: cleanEnv,
+        // Required on Windows + Node 20+ to execute .cmd shims (e.g. cds.cmd, npx.cmd).
+        // All inputs here come from the extractor's own command construction, so there is
+        // no shell-injection surface from external input.
+        shell: getPlatformInfo().isWindows
+      }
+    ).toString();
+    const versionMatch = result.match(/(\d+\.\d+\.\d+)/);
+    const version = versionMatch ? versionMatch[1] : void 0;
+    const testResult = { works: true, version };
+    cdsCommandCache.commandResults.set(cacheKey, testResult);
+    return testResult;
+  } catch (error) {
+    const errorMessage = String(error);
+    if (!silent) {
+      cdsExtractorLog("debug", `CDS command test failed for '${cacheKey}': ${errorMessage}`);
+    }
+    const testResult = { works: false, error: errorMessage };
+    cdsCommandCache.commandResults.set(cacheKey, testResult);
+    return testResult;
+  }
+}
+
+// src/cds/compiler/compile.ts
+var import_child_process4 = require("child_process");
+var import_path6 = require("path");
+
+// src/cds/compiler/version.ts
+var import_child_process3 = require("child_process");
+var import_path5 = require("path");
+function getCdsVersion(cdsCommand, cacheDir) {
+  try {
+    const spawnOptions = {
+      shell: true,
+      stdio: "pipe",
+      env: { ...process.env }
+    };
+    if (cacheDir) {
+      const nodePath = (0, import_path5.join)(cacheDir, "node_modules");
+      spawnOptions.env = {
+        ...process.env,
+        NODE_PATH: `${nodePath}${import_path5.delimiter}${process.env.NODE_PATH ?? ""}`,
+        PATH: `${(0, import_path5.join)(nodePath, ".bin")}${import_path5.delimiter}${process.env.PATH}`,
+        npm_config_prefix: cacheDir
+      };
+    }
+    const result = (0, import_child_process3.spawnSync)(`${cdsCommand} --version`, spawnOptions);
+    if (result.status === 0 && result.stdout) {
+      const versionOutput = result.stdout.toString().trim();
+      const match2 = versionOutput.match(/@sap\/cds[^0-9]*([0-9]+\.[0-9]+\.[0-9]+)/);
+      if (match2?.[1]) {
+        return match2[1];
+      }
+      return versionOutput;
+    }
+    return void 0;
+  } catch {
+    return void 0;
+  }
 }
 
 // src/cds/compiler/compile.ts
@@ -8455,7 +8462,7 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
   const binPathNative = `node_modules${import_path6.sep}.bin${import_path6.sep}`;
   const binPathPosix = "node_modules/.bin/";
   const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
-  const useShell = getPlatformInfo().isWindows && !isDirectBinary;
+  const useShell = getPlatformInfo().isWindows || !isDirectBinary;
   const spawnOptions = {
     cwd: projectBaseDir,
     // CRITICAL: Always use project base directory as cwd to ensure correct path generation
@@ -8463,11 +8470,12 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
     stdio: "pipe",
     env: { ...process.env }
   };
+  const projectNodeModules = (0, import_path6.join)(projectBaseDir, "node_modules");
   if (cacheDir && !isDirectBinary) {
     const nodePath = (0, import_path6.join)(cacheDir, "node_modules");
     spawnOptions.env = {
       ...process.env,
-      NODE_PATH: `${nodePath}${import_path6.delimiter}${process.env.NODE_PATH ?? ""}`,
+      NODE_PATH: [nodePath, projectNodeModules, process.env.NODE_PATH ?? ""].filter(Boolean).join(import_path6.delimiter),
       PATH: `${(0, import_path6.join)(nodePath, ".bin")}${import_path6.delimiter}${process.env.PATH}`,
       // Add NPM configuration to ensure dependencies are resolved from the cache directory
       npm_config_prefix: cacheDir,
@@ -8482,6 +8490,7 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
     delete cleanEnv.npm_config_prefix;
     delete cleanEnv.npm_config_global;
     delete cleanEnv.CDS_HOME;
+    cleanEnv.NODE_PATH = projectNodeModules;
     spawnOptions.env = cleanEnv;
   }
   return spawnOptions;
@@ -8835,8 +8844,8 @@ function getAvailableVersions(packageName) {
   try {
     const output = (0, import_child_process6.execSync)(`npm view ${packageName} versions --json`, {
       encoding: "utf8",
-      timeout: 3e4
-      // 30 second timeout
+      timeout: 12e4
+      // 120 second timeout
     });
     const versions = JSON.parse(output);
     let versionArray = [];
@@ -9251,10 +9260,20 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
     cdsExtractorLog("warn", warning);
   }
   try {
-    (0, import_child_process7.execFileSync)(npmExecutable(), ["install", "--quiet", "--no-audit", "--no-fund"], {
-      cwd: cacheDir,
-      stdio: "inherit"
-    });
+    (0, import_child_process7.execFileSync)(
+      npmExecutable(),
+      // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
+      // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
+      // npm's default is non-strict; we make that explicit so a project-level .npmrc
+      // copied into the cache can't flip it on.
+      ["install", "--engine-strict=false", "--quiet", "--no-audit", "--no-fund"],
+      {
+        cwd: cacheDir,
+        stdio: "inherit",
+        // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+        shell: getPlatformInfo().isWindows
+      }
+    );
     if (isFallback && warning && packageJsonPath && codeqlExePath2) {
       addDependencyVersionWarning(packageJsonPath, warning, codeqlExePath2);
     }
@@ -9300,12 +9319,25 @@ function projectInstallDependencies(project, sourceRoot2) {
     try {
       (0, import_child_process8.execFileSync)(
         npmExecutable(),
-        ["install", "--ignore-scripts", "--quiet", "--no-audit", "--no-fund"],
+        // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
+        // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
+        // npm's default is non-strict; we make that explicit so the project's .npmrc
+        // can't flip it on and break the retry path.
+        [
+          "install",
+          "--engine-strict=false",
+          "--ignore-scripts",
+          "--quiet",
+          "--no-audit",
+          "--no-fund"
+        ],
         {
           cwd: projectPath,
           stdio: "inherit",
-          timeout: 12e4
+          timeout: 12e4,
           // 2-minute timeout
+          // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+          shell: getPlatformInfo().isWindows
         }
       );
       result.success = true;
@@ -9882,7 +9914,9 @@ function runCdsIndexer(project, sourceRoot2, cacheDir) {
       cwd: projectAbsPath,
       env,
       stdio: "pipe",
-      timeout: CDS_INDEXER_TIMEOUT_MS
+      timeout: CDS_INDEXER_TIMEOUT_MS,
+      // .cmd/.bat shims (npx.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+      shell: getPlatformInfo().isWindows
     });
     result.durationMs = Date.now() - startTime;
     if (spawnResult.signal === "SIGTERM" || spawnResult.signal === "SIGKILL") {
