@@ -1,5 +1,7 @@
 /** Tests for retry orchestration logic */
 
+import { join } from 'path';
+
 import * as compile from '../../../../src/cds/compiler/compile';
 import { orchestrateRetryAttempts } from '../../../../src/cds/compiler/retry';
 import type { CompilationTask } from '../../../../src/cds/compiler/types';
@@ -453,10 +455,12 @@ describe('retry.ts', () => {
       // Execute
       orchestrateRetryAttempts(mockDependencyGraph, codeqlExePath);
 
-      // Verify diagnostics are added for failed tasks
+      // Verify a single project-level diagnostic is added (attached to the project's
+      // package.json) rather than one per source file.
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledTimes(1);
       expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledWith(
-        '/test/project/db/schema.cds',
-        expect.any(String),
+        join('test-project', 'package.json'),
+        expect.stringContaining('1 CDS file in this project was not extracted.'),
         codeqlExePath,
         '/test',
       );
@@ -482,9 +486,74 @@ describe('retry.ts', () => {
 
       orchestrateRetryAttempts(mockDependencyGraph, codeqlExePath);
 
-      // Verify diagnostics are added for tasks that were never retried (retryInfo is undefined)
+      // Verify a single project-level diagnostic is added for tasks that were never
+      // retried (retryInfo is undefined), rather than one per source file.
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledTimes(1);
       expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledWith(
-        '/test/project/db/schema.cds',
+        join('test-project', 'package.json'),
+        expect.stringContaining('1 CDS file in this project was not extracted.'),
+        codeqlExePath,
+        '/test',
+      );
+    });
+
+    it('should emit a single diagnostic per failed task regardless of source file count', () => {
+      // Setup: A single failed task with many source files (simulating a large project).
+      const manyFiles = Array.from({ length: 250 }, (_, i) => `/test/project/db/file${i}.cds`);
+      const failedTask: CompilationTask = {
+        ...mockFailedTask,
+        sourceFiles: manyFiles,
+        retryInfo: { hasBeenRetried: true, retryReason: 'Test retry' },
+        status: 'failed',
+      };
+      mockProject.compilationTasks = [failedTask];
+      mockProject.cdsFiles = manyFiles;
+
+      const tasksRequiringRetry = new Map([['test-project', [failedTask]]]);
+      mockValidator.identifyTasksRequiringRetry.mockReturnValue(tasksRequiringRetry);
+      mockPackageManager.needsFullDependencyInstallation.mockReturnValue(false);
+
+      mockCompile.compileCdsToJson.mockReturnValue({
+        success: false,
+        message: 'Compilation failed',
+        durationMs: 500,
+      });
+
+      orchestrateRetryAttempts(mockDependencyGraph, codeqlExePath);
+
+      // One diagnostic per failed task — not one per source file.
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledTimes(1);
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledWith(
+        join('test-project', 'package.json'),
+        expect.stringContaining('250 CDS files in this project were not extracted.'),
+        codeqlExePath,
+        '/test',
+      );
+    });
+
+    it('should attach the diagnostic to the project directory when no package.json exists', () => {
+      // Setup: A failed task on a project that has no package.json.
+      const failedTask = { ...mockFailedTask };
+      failedTask.retryInfo = { hasBeenRetried: true, retryReason: 'Test retry' };
+      failedTask.status = 'failed';
+      mockProject.compilationTasks = [failedTask];
+      mockProject.packageJson = undefined;
+
+      const tasksRequiringRetry = new Map([['test-project', [failedTask]]]);
+      mockValidator.identifyTasksRequiringRetry.mockReturnValue(tasksRequiringRetry);
+      mockPackageManager.needsFullDependencyInstallation.mockReturnValue(false);
+
+      mockCompile.compileCdsToJson.mockReturnValue({
+        success: false,
+        message: 'Compilation failed',
+        durationMs: 500,
+      });
+
+      orchestrateRetryAttempts(mockDependencyGraph, codeqlExePath);
+
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledTimes(1);
+      expect(mockDiagnostics.addCompilationDiagnostic).toHaveBeenCalledWith(
+        'test-project',
         expect.any(String),
         codeqlExePath,
         '/test',
