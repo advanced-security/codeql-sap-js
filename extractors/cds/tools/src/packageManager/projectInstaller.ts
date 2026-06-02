@@ -79,6 +79,7 @@ export function projectInstallDependencies(
           cwd: projectPath,
           stdio: 'inherit',
           timeout: 120000, // 2-minute timeout
+          shell: true,
         },
       );
 
