@@ -498,6 +498,7 @@ function installDependenciesInCache(
     execFileSync(npmExecutable(), ['install', '--quiet', '--no-audit', '--no-fund'], {
       cwd: cacheDir,
       stdio: 'inherit',
+      shell: true,
     });
 
     // Add warning diagnostic if using fallback versions
