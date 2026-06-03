@@ -65,7 +65,14 @@ describe('CDS Compiler Installer', () => {
 
       expect(mockExecFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--engine-strict=false', '--ignore-scripts', '--quiet', '--no-audit', '--no-fund'],
+        [
+          'install',
+          '--engine-strict=false',
+          '--ignore-scripts',
+          '--quiet',
+          '--no-audit',
+          '--no-fund',
+        ],
         {
           cwd: '/test/source/test-project',
           shell: getPlatformInfo().isWindows,
