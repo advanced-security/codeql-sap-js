@@ -344,7 +344,7 @@ describe('diagnostics', () => {
             '--ready-for-status-page',
             '--source-id=cds/compilation-failure',
             '--source-name=Failure to compile one or more SAP CAP CDS files',
-            '--severity=error',
+            '--severity=warning',
             `--markdown-message=${errorMessage}`,
             `--file-path=${cdsFilePath}`,
             '--',
@@ -375,7 +375,7 @@ describe('diagnostics', () => {
         expect(result).toBe(false);
         expect(console.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `ERROR: Failed to add error diagnostic for source file=${cdsFilePath}`,
+            `ERROR: Failed to add warning diagnostic for source file=${cdsFilePath}`,
           ),
         );
 

@@ -1,5 +1,7 @@
 /** Main retry orchestration logic for CDS compilation failures. */
 
+import { join } from 'path';
+
 import { compileCdsToJson } from './compile';
 import type {
   CompilationAttempt,
@@ -16,6 +18,15 @@ import type { CdsDependencyGraph, CdsProject } from '../parser';
 
 /**
  * Add diagnostics only for tasks with `status: failed` in the {@link CdsDependencyGraph}.
+ *
+ * Compilation is project-level: a single failed task represents the whole project's
+ * compilation failure, even though the task's `sourceFiles` may list every CDS file
+ * in the project. To avoid spawning the CodeQL CLI once per source file (which can
+ * take tens of minutes for projects with hundreds of `.cds` files), we emit a single
+ * diagnostic per failed task, attached to the project's `package.json` when available
+ * (or the project directory otherwise), and mention the affected file count in the
+ * message body so that information is preserved.
+ *
  * @param dependencyGraph The dependency graph to use as the source of truth for task status
  * @param codeqlExePath Path to CodeQL executable used to add a diagnostic notification
  * @param sourceRoot Source root directory to use for making file paths relative
@@ -35,14 +46,18 @@ function addCompilationDiagnosticsForFailedTasks(
         const shouldAddDiagnostic = task.retryInfo?.hasBeenRetried ?? !task.retryInfo;
 
         if (shouldAddDiagnostic) {
-          for (const sourceFile of task.sourceFiles) {
-            addCompilationDiagnostic(
-              sourceFile,
-              task.errorSummary ?? 'Compilation failed',
-              codeqlExePath,
-              sourceRoot,
-            );
-          }
+          // Attach the diagnostic to the project's package.json when available,
+          // otherwise fall back to the project directory itself.
+          const diagnosticPath = project.packageJson
+            ? join(project.projectDir, 'package.json')
+            : project.projectDir;
+
+          const fileCount = task.sourceFiles.length;
+          const fileWord = fileCount === 1 ? 'file' : 'files';
+          const baseMessage = task.errorSummary ?? 'Compilation failed';
+          const messageWithCount = `${baseMessage}\n\n${fileCount} CDS ${fileWord} in this project ${fileCount === 1 ? 'was' : 'were'} not extracted.`;
+
+          addCompilationDiagnostic(diagnosticPath, messageWithCount, codeqlExePath, sourceRoot);
         }
       }
     }

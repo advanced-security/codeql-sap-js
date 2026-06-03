@@ -148,7 +148,7 @@ export function addCdsIndexerDiagnostic(
 }
 
 /**
- * Add a diagnostic error to the CodeQL database for a failed CDS compilation
+ * Add a diagnostic warning to the CodeQL database for a failed CDS compilation
  * @param cdsFilePath Path to the CDS file that failed to compile
  * @param errorMessage The error message from the compilation
  * @param codeqlExePath Path to the CodeQL executable
@@ -167,7 +167,7 @@ export function addCompilationDiagnostic(
     codeqlExePath,
     'cds/compilation-failure',
     'Failure to compile one or more SAP CAP CDS files',
-    DiagnosticSeverity.Error,
+    DiagnosticSeverity.Warning,
     'source file',
     sourceRoot,
   );
