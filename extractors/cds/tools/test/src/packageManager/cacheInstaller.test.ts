@@ -172,7 +172,7 @@ describe('installer', () => {
       expect(fs.writeFileSync).toHaveBeenCalled();
       expect(childProcess.execFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--quiet', '--no-audit', '--no-fund'],
+        ['install', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
         expect.objectContaining({ cwd: expect.stringContaining('cds-') }),
       );
       expect(result.size).toBe(1);
@@ -327,7 +327,7 @@ describe('installer', () => {
       expect(childProcess.execFileSync).toHaveBeenCalledTimes(1);
       expect(childProcess.execFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--quiet', '--no-audit', '--no-fund'],
+        ['install', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
         expect.objectContaining({ cwd: expect.stringContaining('cds-') }),
       );
 
@@ -785,7 +785,7 @@ describe('installer', () => {
 
       expect(childProcess.execFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--quiet', '--no-audit', '--no-fund'],
+        ['install', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
         expect.any(Object),
       );
       expect(result.size).toBe(1);
