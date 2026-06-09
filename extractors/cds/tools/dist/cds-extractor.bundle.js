@@ -9290,6 +9290,7 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
 
 // src/packageManager/projectInstaller.ts
 var import_child_process8 = require("child_process");
+var import_fs8 = require("fs");
 var import_path10 = require("path");
 function needsFullDependencyInstallation(project) {
   if (project.retryStatus?.fullDependenciesInstalled) {
@@ -9315,9 +9316,11 @@ function projectInstallDependencies(project, sourceRoot2) {
       result.error = "No package.json found for project";
       return result;
     }
+    const hasLockfile = (0, import_fs8.existsSync)((0, import_path10.join)(projectPath, "package-lock.json"));
+    const installSubcommand = hasLockfile ? "ci" : "install";
     cdsExtractorLog(
       "info",
-      `Installing full dependencies for project ${project.projectDir} in project's node_modules`
+      `Installing full dependencies for project ${project.projectDir} via 'npm ${installSubcommand}' in project's node_modules`
     );
     try {
       (0, import_child_process8.execFileSync)(
@@ -9326,14 +9329,7 @@ function projectInstallDependencies(project, sourceRoot2) {
         // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
         // npm's default is non-strict; we make that explicit so the project's .npmrc
         // can't flip it on and break the retry path.
-        [
-          "install",
-          "--engine-strict=false",
-          "--ignore-scripts",
-          "--quiet",
-          "--no-audit",
-          "--no-fund"
-        ],
+        [installSubcommand, "--engine-strict=false", "--quiet", "--no-audit", "--no-fund"],
         {
           cwd: projectPath,
           stdio: "inherit",
@@ -9967,17 +9963,30 @@ function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap
     }
     summary.projectsRequiringIndexer++;
     const cacheDir = projectCacheDirMap2.get(projectDir);
+    const installResult = projectInstallDependencies(project, sourceRoot2);
+    project.retryStatus ??= {
+      fullDependenciesInstalled: false,
+      tasksRequiringRetry: 0,
+      tasksRetried: 0,
+      installationErrors: []
+    };
+    if (installResult.success) {
+      project.retryStatus.fullDependenciesInstalled = true;
+      dependencyGraph2.retryStatus.projectsWithFullDependencies.add(projectDir);
+    } else {
+      project.retryStatus.installationErrors = [
+        ...project.retryStatus.installationErrors ?? [],
+        installResult.error ?? "Unknown installation error"
+      ];
+      cdsExtractorLog(
+        "warn",
+        `Full dependency installation failed for project '${projectDir}' before cds-indexer run: ${installResult.error ?? "unknown error"}. Continuing with indexer attempt \u2014 it may still produce useful output.`
+      );
+    }
     const result = runCdsIndexer(project, sourceRoot2, cacheDir);
     summary.results.push(result);
     if (result.success) {
       summary.successfulRuns++;
-      const installResult = projectInstallDependencies(project, sourceRoot2);
-      if (!installResult.success) {
-        cdsExtractorLog(
-          "warn",
-          `Full dependency installation failed for project '${projectDir}' after successful cds-indexer run: ${installResult.error ?? "unknown error"}`
-        );
-      }
     } else {
       summary.failedRuns++;
       if (codeqlExePath2) {
@@ -10005,7 +10014,7 @@ function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap
 var import_path15 = require("path");
 
 // src/cds/parser/functions.ts
-var import_fs8 = require("fs");
+var import_fs9 = require("fs");
 var import_path14 = require("path");
 function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   if (!sourceRootDir || !projectDir) {
@@ -10046,7 +10055,7 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   }
 }
 function determineCdsProjectsUnderSourceDir(sourceRootDir) {
-  if (!sourceRootDir || !(0, import_fs8.existsSync)(sourceRootDir)) {
+  if (!sourceRootDir || !(0, import_fs9.existsSync)(sourceRootDir)) {
     throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
   }
   const foundProjects = /* @__PURE__ */ new Set();
@@ -10109,10 +10118,10 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   return Array.from(foundProjects).sort();
 }
 function extractCdsImports(filePath) {
-  if (!(0, import_fs8.existsSync)(filePath)) {
+  if (!(0, import_fs9.existsSync)(filePath)) {
     throw new Error(`File does not exist: ${filePath}`);
   }
-  const content = (0, import_fs8.readFileSync)(filePath, "utf8");
+  const content = (0, import_fs9.readFileSync)(filePath, "utf8");
   const imports = [];
   const usingRegex = /using\s+(?:{[^}]+}|[\w.]+(?:\s+as\s+[\w.]+)?)\s+from\s+['"`]([^'"`]+)['"`]\s*;/g;
   let match2;
@@ -10144,18 +10153,18 @@ function findProjectRootFromCdsFile(cdsFileDir, sourceRootDir) {
       }
       const parentDir2 = (0, import_path14.dirname)(currentDir);
       if (parentDir2 !== currentDir && parentDir2.startsWith(sourceRootDir) && !parentDir2.includes("node_modules") && !parentDir2.includes(".testproj")) {
-        const hasDbDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "db")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "db")).isDirectory();
-        const hasSrvDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "srv")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "srv")).isDirectory();
-        const hasAppDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "app")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "app")).isDirectory();
+        const hasDbDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "db")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "db")).isDirectory();
+        const hasSrvDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "srv")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "srv")).isDirectory();
+        const hasAppDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "app")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "app")).isDirectory();
         if (hasDbDir2 && hasSrvDir2 || hasSrvDir2 && hasAppDir2) {
           return parentDir2;
         }
       }
       return currentDir;
     }
-    const hasDbDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "db")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "db")).isDirectory();
-    const hasSrvDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "srv")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "srv")).isDirectory();
-    const hasAppDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "app")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "app")).isDirectory();
+    const hasDbDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "db")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "db")).isDirectory();
+    const hasSrvDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "srv")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "srv")).isDirectory();
+    const hasAppDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "app")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "app")).isDirectory();
     if (hasDbDir && hasSrvDir || hasSrvDir && hasAppDir) {
       return currentDir;
     }
@@ -10198,7 +10207,7 @@ function isLikelyCdsProject(dir) {
 function hasStandardCdsContent(dir) {
   const standardLocations = [(0, import_path14.join)(dir, "db"), (0, import_path14.join)(dir, "srv"), (0, import_path14.join)(dir, "app")];
   for (const location of standardLocations) {
-    if ((0, import_fs8.existsSync)(location) && (0, import_fs8.statSync)(location).isDirectory()) {
+    if ((0, import_fs9.existsSync)(location) && (0, import_fs9.statSync)(location).isDirectory()) {
       const cdsFiles = Ui((0, import_path14.join)(location, "**/*.cds"), {
         nodir: true,
         windowsPathsNoEscape: true
@@ -10215,11 +10224,11 @@ function hasDirectCdsContent(dir) {
   return directCdsFiles.length > 0;
 }
 function readPackageJsonFile(filePath) {
-  if (!(0, import_fs8.existsSync)(filePath)) {
+  if (!(0, import_fs9.existsSync)(filePath)) {
     return void 0;
   }
   try {
-    const content = (0, import_fs8.readFileSync)(filePath, "utf8");
+    const content = (0, import_fs9.readFileSync)(filePath, "utf8");
     const packageJson = JSON.parse(content);
     return packageJson;
   } catch (error) {
@@ -10236,7 +10245,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   }
   const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs8.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
+  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,
