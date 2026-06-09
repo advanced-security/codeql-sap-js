@@ -3,7 +3,7 @@
 import { execFileSync } from 'child_process';
 import { join } from 'path';
 
-import { npmExecutable } from '../environment';
+import { npmExecutable, getPlatformInfo } from '../environment';
 import type { FullDependencyInstallationResult } from './types';
 import type { CdsProject } from '../cds/parser';
 import { cdsExtractorLog } from '../logging';
@@ -74,11 +74,24 @@ export function projectInstallDependencies(
     try {
       execFileSync(
         npmExecutable(),
-        ['install', '--ignore-scripts', '--quiet', '--no-audit', '--no-fund'],
+        // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
+        // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
+        // npm's default is non-strict; we make that explicit so the project's .npmrc
+        // can't flip it on and break the retry path.
+        [
+          'install',
+          '--engine-strict=false',
+          '--ignore-scripts',
+          '--quiet',
+          '--no-audit',
+          '--no-fund',
+        ],
         {
           cwd: projectPath,
           stdio: 'inherit',
           timeout: 120000, // 2-minute timeout
+          // .cmd/.bat shims (npm.cmd) require shell: true on Windows + Node 20+ (CVE-2024-27980).
+          shell: getPlatformInfo().isWindows,
         },
       );
 
