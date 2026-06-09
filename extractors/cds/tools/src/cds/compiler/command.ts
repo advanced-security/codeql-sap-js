@@ -3,12 +3,24 @@ import { existsSync, readdirSync } from 'fs';
 import { join, resolve } from 'path';
 
 import type { ValidatedCdsCommand } from './types';
+import { getPlatformInfo } from '../../environment';
 import { fileExists } from '../../filesystem';
 import { cdsExtractorLog } from '../../logging';
 import type { CdsDependencyGraph } from '../parser/types';
 
 /** Default timeout for command execution in milliseconds. **/
 export const DEFAULT_COMMAND_TIMEOUT_MS = 10000;
+
+/**
+ * Returns the platform-appropriate name of the local cds binary as
+ * created by `npm install` under `node_modules/.bin/`. On Windows the
+ * directly-executable file is `cds.cmd`; on Unix it is `cds` (a shell
+ * script). Using the wrong name causes execFileSync to fail (EINVAL on
+ * Windows + Node 20+ for shimless paths).
+ */
+function localCdsBinName(): string {
+  return getPlatformInfo().isWindows ? 'cds.cmd' : 'cds';
+}
 
 /**
  * Cache for CDS command test results to avoid running the same CLI commands repeatedly.
@@ -336,7 +348,7 @@ function discoverAvailableCacheDirs(sourceRoot: string): string[] {
       for (const entry of entries) {
         if (entry.isDirectory() && entry.name.startsWith('cds-')) {
           const cacheDir = join(cacheRootDir, entry.name);
-          const cdsBin = join(cacheDir, 'node_modules', '.bin', 'cds');
+          const cdsBin = join(cacheDir, 'node_modules', '.bin', localCdsBinName());
           if (fileExists(cdsBin)) {
             availableDirs.push(cacheDir);
           }
@@ -370,7 +382,7 @@ function getBestCdsCommand(
 
   // If a specific cache directory is provided and valid, prefer it
   if (cacheDir) {
-    const localCdsBin = join(cacheDir, 'node_modules', '.bin', 'cds');
+    const localCdsBin = join(cacheDir, 'node_modules', '.bin', localCdsBinName());
     const command = createCdsCommandForPath(localCdsBin);
     if (command) {
       const result = testCdsCommand(command, sourceRoot, true);
@@ -382,7 +394,7 @@ function getBestCdsCommand(
 
   // Try any available cache directories
   for (const availableCacheDir of cdsCommandCache.availableCacheDirs) {
-    const localCdsBin = join(availableCacheDir, 'node_modules', '.bin', 'cds');
+    const localCdsBin = join(availableCacheDir, 'node_modules', '.bin', localCdsBinName());
     const command = createCdsCommandForPath(localCdsBin);
     if (command) {
       const result = testCdsCommand(command, sourceRoot, true);
@@ -508,6 +520,10 @@ function testCdsCommand(
         timeout: DEFAULT_COMMAND_TIMEOUT_MS, // timeout after 10 seconds
         cwd: sourceRoot,
         env: cleanEnv,
+        // Required on Windows + Node 20+ to execute .cmd shims (e.g. cds.cmd, npx.cmd).
+        // All inputs here come from the extractor's own command construction, so there is
+        // no shell-injection surface from external input.
+        shell: getPlatformInfo().isWindows,
       },
     ).toString();
 

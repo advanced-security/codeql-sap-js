@@ -3,6 +3,7 @@
 import { execFileSync } from 'child_process';
 
 import type { CdsProject } from '../../../src/cds/parser';
+import { getPlatformInfo } from '../../../src/environment';
 import {
   needsFullDependencyInstallation,
   projectInstallDependencies,
@@ -64,9 +65,17 @@ describe('CDS Compiler Installer', () => {
 
       expect(mockExecFileSync).toHaveBeenCalledWith(
         'npm',
-        ['install', '--ignore-scripts', '--quiet', '--no-audit', '--no-fund'],
+        [
+          'install',
+          '--engine-strict=false',
+          '--ignore-scripts',
+          '--quiet',
+          '--no-audit',
+          '--no-fund',
+        ],
         {
           cwd: '/test/source/test-project',
+          shell: getPlatformInfo().isWindows,
           stdio: 'inherit',
           timeout: 120000,
         },

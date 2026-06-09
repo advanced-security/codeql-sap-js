@@ -9,6 +9,7 @@ import {
   DEFAULT_COMMAND_TIMEOUT_MS,
   determineVersionAwareCdsCommands,
 } from '../../../../src/cds/compiler/command';
+import { getPlatformInfo } from '../../../../src/environment';
 import { fileExists } from '../../../../src/filesystem';
 import { cdsExtractorLog } from '../../../../src/logging';
 
@@ -66,6 +67,7 @@ describe('cds compiler command', () => {
         stdio: 'pipe',
         timeout: DEFAULT_COMMAND_TIMEOUT_MS,
         cwd: '/mock/source/root',
+        shell: getPlatformInfo().isWindows,
         env: expect.objectContaining({
           CODEQL_EXTRACTOR_CDS_WIP_DATABASE: undefined,
           CODEQL_RUNNER: undefined,
@@ -98,6 +100,7 @@ describe('cds compiler command', () => {
         stdio: 'pipe',
         timeout: DEFAULT_COMMAND_TIMEOUT_MS,
         cwd: '/mock/source/root',
+        shell: getPlatformInfo().isWindows,
         env: expect.objectContaining({
           CODEQL_EXTRACTOR_CDS_WIP_DATABASE: undefined,
           CODEQL_RUNNER: undefined,
@@ -111,6 +114,7 @@ describe('cds compiler command', () => {
           stdio: 'pipe',
           timeout: DEFAULT_COMMAND_TIMEOUT_MS,
           cwd: '/mock/source/root',
+          shell: getPlatformInfo().isWindows,
           env: expect.objectContaining({
             CODEQL_EXTRACTOR_CDS_WIP_DATABASE: undefined,
             CODEQL_RUNNER: undefined,

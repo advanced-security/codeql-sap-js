@@ -255,9 +255,11 @@ function createSpawnOptions(
   const binPathPosix = 'node_modules/.bin/';
   const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
 
-  // Only enable shell on Windows for npx-style commands where .cmd resolution is needed.
-  // Direct binary paths (node_modules/.bin/cds) don't need shell on any platform.
-  const useShell = getPlatformInfo().isWindows && !isDirectBinary;
+  // On Windows we always need shell: true so spawnSync can execute .cmd shims —
+  // both the npx.cmd entry point AND the cds.cmd shim under node_modules/.bin/.
+  // Node 20.12.2+ (CVE-2024-27980) refuses to spawn .cmd/.bat files without a shell.
+  // On non-Windows, only npx-style commands need shell to resolve the executable on PATH.
+  const useShell = getPlatformInfo().isWindows || !isDirectBinary;
 
   const spawnOptions: SpawnSyncOptions = {
     cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation
@@ -266,14 +268,25 @@ function createSpawnOptions(
     env: { ...process.env },
   };
 
+  // Always make the project's own node_modules visible to the spawned cds
+  // process via NODE_PATH. The cds CLI's plugin loader (`require('@cap-js/...')`)
+  // walks up node_modules from inside the cds-dk install location — when cds-dk
+  // lives in a cache directory outside the project, that walk never reaches the
+  // project's node_modules. Adding the project node_modules to NODE_PATH gives
+  // Node's resolver an explicit fallback so installed plugins are found.
+  const projectNodeModules = join(projectBaseDir, 'node_modules');
+
   // Only set up Node.js environment for npx-style commands, not for direct binary execution
   if (cacheDir && !isDirectBinary) {
     const nodePath = join(cacheDir, 'node_modules');
 
-    // Set up environment to use the cached dependencies
+    // Set up environment to use the cached dependencies, with the project's
+    // node_modules appended so locally-installed cds plugins remain resolvable.
     spawnOptions.env = {
       ...process.env,
-      NODE_PATH: `${nodePath}${delimiter}${process.env.NODE_PATH ?? ''}`,
+      NODE_PATH: [nodePath, projectNodeModules, process.env.NODE_PATH ?? '']
+        .filter(Boolean)
+        .join(delimiter),
       PATH: `${join(nodePath, '.bin')}${delimiter}${process.env.PATH}`,
       // Add NPM configuration to ensure dependencies are resolved from the cache directory
       npm_config_prefix: cacheDir,
@@ -290,6 +303,12 @@ function createSpawnOptions(
     delete cleanEnv.npm_config_prefix;
     delete cleanEnv.npm_config_global;
     delete cleanEnv.CDS_HOME;
+
+    // Re-add the project's node_modules to NODE_PATH so the cds plugin loader
+    // can resolve packages the project itself installed (e.g. @cap-js/telemetry).
+    // Without this, the cache binary fails on any project that uses cds-plugin
+    // packages declared in its package.json.
+    cleanEnv.NODE_PATH = projectNodeModules;
 
     spawnOptions.env = cleanEnv;
   }
