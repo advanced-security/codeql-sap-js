@@ -24,7 +24,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 
 // cds-extractor.ts
-var import_path16 = require("path");
+var import_path17 = require("path");
 
 // node_modules/glob/dist/esm/index.min.js
 var import_node_url = require("node:url");
@@ -8496,6 +8496,9 @@ function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
   return spawnOptions;
 }
 
+// src/cds/compiler/retry.ts
+var import_path11 = require("path");
+
 // src/cds/compiler/validator.ts
 var import_fs6 = require("fs");
 var import_path7 = require("path");
@@ -8699,7 +8702,7 @@ function addCompilationDiagnostic(cdsFilePath, errorMessage, codeqlExePath2, sou
     codeqlExePath2,
     "cds/compilation-failure",
     "Failure to compile one or more SAP CAP CDS files",
-    "error" /* Error */,
+    "warning" /* Warning */,
     "source file",
     sourceRoot2
   );
@@ -9373,14 +9376,14 @@ function addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath
       if (task.status === "failed") {
         const shouldAddDiagnostic = task.retryInfo?.hasBeenRetried ?? !task.retryInfo;
         if (shouldAddDiagnostic) {
-          for (const sourceFile of task.sourceFiles) {
-            addCompilationDiagnostic(
-              sourceFile,
-              task.errorSummary ?? "Compilation failed",
-              codeqlExePath2,
-              sourceRoot2
-            );
-          }
+          const diagnosticPath = project.packageJson ? (0, import_path11.join)(project.projectDir, "package.json") : project.projectDir;
+          const fileCount = task.sourceFiles.length;
+          const fileWord = fileCount === 1 ? "file" : "files";
+          const baseMessage = task.errorSummary ?? "Compilation failed";
+          const messageWithCount = `${baseMessage}
+
+${fileCount} CDS ${fileWord} in this project ${fileCount === 1 ? "was" : "were"} not extracted.`;
+          addCompilationDiagnostic(diagnosticPath, messageWithCount, codeqlExePath2, sourceRoot2);
         }
       }
     }
@@ -9872,11 +9875,11 @@ function planCompilationTasks(dependencyGraph2, projectCacheDirMap2) {
 }
 
 // src/cds/compiler/project.ts
-var import_path11 = require("path");
+var import_path12 = require("path");
 
 // src/cds/indexer.ts
 var import_child_process9 = require("child_process");
-var import_path12 = require("path");
+var import_path13 = require("path");
 var CDS_INDEXER_TIMEOUT_MS = 6e5;
 var CDS_INDEXER_PACKAGE = "@sap/cds-indexer";
 function projectUsesCdsIndexer(project) {
@@ -9888,7 +9891,7 @@ function projectUsesCdsIndexer(project) {
   return inDeps || inDevDeps;
 }
 function runCdsIndexer(project, sourceRoot2, cacheDir) {
-  const projectAbsPath = (0, import_path12.join)(sourceRoot2, project.projectDir);
+  const projectAbsPath = (0, import_path13.join)(sourceRoot2, project.projectDir);
   const startTime = Date.now();
   const result = {
     success: false,
@@ -9899,12 +9902,12 @@ function runCdsIndexer(project, sourceRoot2, cacheDir) {
   try {
     const nodePaths = [];
     if (cacheDir) {
-      nodePaths.push((0, import_path12.join)(cacheDir, "node_modules"));
+      nodePaths.push((0, import_path13.join)(cacheDir, "node_modules"));
     }
-    nodePaths.push((0, import_path12.join)(projectAbsPath, "node_modules"));
+    nodePaths.push((0, import_path13.join)(projectAbsPath, "node_modules"));
     const env = {
       ...process.env,
-      NODE_PATH: nodePaths.join(import_path12.delimiter)
+      NODE_PATH: nodePaths.join(import_path13.delimiter)
     };
     cdsExtractorLog(
       "info",
@@ -9999,11 +10002,11 @@ function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap
 }
 
 // src/cds/parser/graph.ts
-var import_path14 = require("path");
+var import_path15 = require("path");
 
 // src/cds/parser/functions.ts
 var import_fs8 = require("fs");
-var import_path13 = require("path");
+var import_path14 = require("path");
 function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   if (!sourceRootDir || !projectDir) {
     throw new Error(
@@ -10018,12 +10021,12 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
     );
   }
   try {
-    const cdsFiles = Ui((0, import_path13.join)(projectDir, "**/*.cds"), {
+    const cdsFiles = Ui((0, import_path14.join)(projectDir, "**/*.cds"), {
       nodir: true,
       ignore: ["**/node_modules/**", "**/*.testproj/**"],
       windowsPathsNoEscape: true
     });
-    const relativePaths = cdsFiles.map((file) => (0, import_path13.relative)(sourceRootDir, file));
+    const relativePaths = cdsFiles.map((file) => (0, import_path14.relative)(sourceRootDir, file));
     const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
     if (pathsIgnorePatterns.length > 0) {
       const filtered = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
@@ -10031,7 +10034,7 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
       if (ignoredCount > 0) {
         cdsExtractorLog(
           "info",
-          `Filtered ${ignoredCount} CDS file(s) matching paths-ignore patterns in project ${(0, import_path13.relative)(sourceRootDir, projectDir) || "."}`
+          `Filtered ${ignoredCount} CDS file(s) matching paths-ignore patterns in project ${(0, import_path14.relative)(sourceRootDir, projectDir) || "."}`
         );
       }
       return filtered;
@@ -10047,22 +10050,22 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
     throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
   }
   const foundProjects = /* @__PURE__ */ new Set();
-  const packageJsonFiles = Ui((0, import_path13.join)(sourceRootDir, "**/package.json"), {
+  const packageJsonFiles = Ui((0, import_path14.join)(sourceRootDir, "**/package.json"), {
     nodir: true,
     ignore: ["**/node_modules/**", "**/*.testproj/**"],
     windowsPathsNoEscape: true
   });
-  const cdsFiles = Ui((0, import_path13.join)(sourceRootDir, "**/*.cds"), {
+  const cdsFiles = Ui((0, import_path14.join)(sourceRootDir, "**/*.cds"), {
     nodir: true,
     ignore: ["**/node_modules/**", "**/*.testproj/**"],
     windowsPathsNoEscape: true
   });
   const candidateDirectories = /* @__PURE__ */ new Set();
   for (const packageJsonFile of packageJsonFiles) {
-    candidateDirectories.add((0, import_path13.dirname)(packageJsonFile));
+    candidateDirectories.add((0, import_path14.dirname)(packageJsonFile));
   }
   for (const cdsFile of cdsFiles) {
-    const cdsDir = (0, import_path13.dirname)(cdsFile);
+    const cdsDir = (0, import_path14.dirname)(cdsFile);
     const projectRoot = findProjectRootFromCdsFile(cdsDir, sourceRootDir);
     if (projectRoot) {
       candidateDirectories.add(projectRoot);
@@ -10072,14 +10075,14 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   }
   for (const dir of candidateDirectories) {
     if (isLikelyCdsProject(dir)) {
-      const relativePath = (0, import_path13.relative)(sourceRootDir, dir);
+      const relativePath = (0, import_path14.relative)(sourceRootDir, dir);
       const projectDir = relativePath || ".";
       let shouldAdd = true;
       const existingProjects = Array.from(foundProjects);
       for (const existingProject of existingProjects) {
-        const existingAbsPath = (0, import_path13.join)(sourceRootDir, existingProject);
-        if (dir.startsWith(existingAbsPath + import_path13.sep)) {
-          const parentPackageJsonPath = (0, import_path13.join)(existingAbsPath, "package.json");
+        const existingAbsPath = (0, import_path14.join)(sourceRootDir, existingProject);
+        if (dir.startsWith(existingAbsPath + import_path14.sep)) {
+          const parentPackageJsonPath = (0, import_path14.join)(existingAbsPath, "package.json");
           const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
           const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
           if (isParentMonorepo && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
@@ -10089,8 +10092,8 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
           }
           break;
         }
-        if (existingAbsPath.startsWith(dir + import_path13.sep)) {
-          const currentPackageJsonPath = (0, import_path13.join)(dir, "package.json");
+        if (existingAbsPath.startsWith(dir + import_path14.sep)) {
+          const currentPackageJsonPath = (0, import_path14.join)(dir, "package.json");
           const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
           const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
           if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
@@ -10131,32 +10134,32 @@ function findProjectRootFromCdsFile(cdsFileDir, sourceRootDir) {
   let currentDir = cdsFileDir;
   while (currentDir.startsWith(sourceRootDir)) {
     if (isLikelyCdsProject(currentDir)) {
-      const currentDirName = (0, import_path13.basename)(currentDir);
+      const currentDirName = (0, import_path14.basename)(currentDir);
       const isStandardSubdir = ["srv", "db", "app"].includes(currentDirName);
       if (isStandardSubdir) {
-        const parentDir3 = (0, import_path13.dirname)(currentDir);
+        const parentDir3 = (0, import_path14.dirname)(currentDir);
         if (parentDir3 !== currentDir && parentDir3.startsWith(sourceRootDir) && !parentDir3.includes("node_modules") && !parentDir3.includes(".testproj") && isLikelyCdsProject(parentDir3)) {
           return parentDir3;
         }
       }
-      const parentDir2 = (0, import_path13.dirname)(currentDir);
+      const parentDir2 = (0, import_path14.dirname)(currentDir);
       if (parentDir2 !== currentDir && parentDir2.startsWith(sourceRootDir) && !parentDir2.includes("node_modules") && !parentDir2.includes(".testproj")) {
-        const hasDbDir2 = (0, import_fs8.existsSync)((0, import_path13.join)(parentDir2, "db")) && (0, import_fs8.statSync)((0, import_path13.join)(parentDir2, "db")).isDirectory();
-        const hasSrvDir2 = (0, import_fs8.existsSync)((0, import_path13.join)(parentDir2, "srv")) && (0, import_fs8.statSync)((0, import_path13.join)(parentDir2, "srv")).isDirectory();
-        const hasAppDir2 = (0, import_fs8.existsSync)((0, import_path13.join)(parentDir2, "app")) && (0, import_fs8.statSync)((0, import_path13.join)(parentDir2, "app")).isDirectory();
+        const hasDbDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "db")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "db")).isDirectory();
+        const hasSrvDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "srv")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "srv")).isDirectory();
+        const hasAppDir2 = (0, import_fs8.existsSync)((0, import_path14.join)(parentDir2, "app")) && (0, import_fs8.statSync)((0, import_path14.join)(parentDir2, "app")).isDirectory();
         if (hasDbDir2 && hasSrvDir2 || hasSrvDir2 && hasAppDir2) {
           return parentDir2;
         }
       }
       return currentDir;
     }
-    const hasDbDir = (0, import_fs8.existsSync)((0, import_path13.join)(currentDir, "db")) && (0, import_fs8.statSync)((0, import_path13.join)(currentDir, "db")).isDirectory();
-    const hasSrvDir = (0, import_fs8.existsSync)((0, import_path13.join)(currentDir, "srv")) && (0, import_fs8.statSync)((0, import_path13.join)(currentDir, "srv")).isDirectory();
-    const hasAppDir = (0, import_fs8.existsSync)((0, import_path13.join)(currentDir, "app")) && (0, import_fs8.statSync)((0, import_path13.join)(currentDir, "app")).isDirectory();
+    const hasDbDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "db")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "db")).isDirectory();
+    const hasSrvDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "srv")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "srv")).isDirectory();
+    const hasAppDir = (0, import_fs8.existsSync)((0, import_path14.join)(currentDir, "app")) && (0, import_fs8.statSync)((0, import_path14.join)(currentDir, "app")).isDirectory();
     if (hasDbDir && hasSrvDir || hasSrvDir && hasAppDir) {
       return currentDir;
     }
-    const parentDir = (0, import_path13.dirname)(currentDir);
+    const parentDir = (0, import_path14.dirname)(currentDir);
     if (parentDir === currentDir) {
       break;
     }
@@ -10177,7 +10180,7 @@ function isLikelyCdsProject(dir) {
       if (!hasCdsFiles) {
         return false;
       }
-      const packageJsonPath = (0, import_path13.join)(dir, "package.json");
+      const packageJsonPath = (0, import_path14.join)(dir, "package.json");
       const packageJson = readPackageJsonFile(packageJsonPath);
       if (packageJson?.workspaces && Array.isArray(packageJson.workspaces) && packageJson.workspaces.length > 0) {
         if (!hasCdsFiles) {
@@ -10193,10 +10196,10 @@ function isLikelyCdsProject(dir) {
   }
 }
 function hasStandardCdsContent(dir) {
-  const standardLocations = [(0, import_path13.join)(dir, "db"), (0, import_path13.join)(dir, "srv"), (0, import_path13.join)(dir, "app")];
+  const standardLocations = [(0, import_path14.join)(dir, "db"), (0, import_path14.join)(dir, "srv"), (0, import_path14.join)(dir, "app")];
   for (const location of standardLocations) {
     if ((0, import_fs8.existsSync)(location) && (0, import_fs8.statSync)(location).isDirectory()) {
-      const cdsFiles = Ui((0, import_path13.join)(location, "**/*.cds"), {
+      const cdsFiles = Ui((0, import_path14.join)(location, "**/*.cds"), {
         nodir: true,
         windowsPathsNoEscape: true
       });
@@ -10208,7 +10211,7 @@ function hasStandardCdsContent(dir) {
   return false;
 }
 function hasDirectCdsContent(dir) {
-  const directCdsFiles = Ui((0, import_path13.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
+  const directCdsFiles = Ui((0, import_path14.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
   return directCdsFiles.length > 0;
 }
 function readPackageJsonFile(filePath) {
@@ -10228,36 +10231,36 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   if (!project.cdsFiles || project.cdsFiles.length === 0) {
     return {
       compilationTargets: [],
-      expectedOutputFile: (0, import_path13.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
     };
   }
-  const absoluteProjectDir = (0, import_path13.join)(sourceRootDir, project.projectDir);
+  const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs8.existsSync)((0, import_path13.join)(absoluteProjectDir, dir)));
+  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs8.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,
-      expectedOutputFile: (0, import_path13.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
     };
   }
-  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path13.dirname)((0, import_path13.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path13.basename)(file));
+  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path14.dirname)((0, import_path14.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path14.basename)(file));
   if (rootCdsFiles.length > 0) {
     return {
       compilationTargets: rootCdsFiles,
-      expectedOutputFile: (0, import_path13.join)(project.projectDir, modelCdsJsonFile)
+      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
     };
   }
   const compilationTargets = project.cdsFiles.map(
-    (file) => (0, import_path13.relative)(absoluteProjectDir, (0, import_path13.join)(sourceRootDir, file))
+    (file) => (0, import_path14.relative)(absoluteProjectDir, (0, import_path14.join)(sourceRootDir, file))
   );
   return {
     compilationTargets,
-    expectedOutputFile: (0, import_path13.join)(project.projectDir, modelCdsJsonFile)
+    expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
   };
 }
 function hasPackageJsonWithCapDeps(dir) {
   try {
-    const packageJsonPath = (0, import_path13.join)(dir, "package.json");
+    const packageJsonPath = (0, import_path14.join)(dir, "package.json");
     const packageJson = readPackageJsonFile(packageJsonPath);
     if (packageJson) {
       const dependencies = {
@@ -10288,7 +10291,7 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
       cdsExtractorLog("info", `Skipping project '${projectDir}' \u2014 matches paths-ignore pattern`);
       continue;
     }
-    const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, projectDir);
+    const absoluteProjectDir = (0, import_path15.join)(sourceRootDir, projectDir);
     const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
     if (cdsFiles.length === 0) {
       cdsExtractorLog(
@@ -10297,14 +10300,14 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
       );
       continue;
     }
-    const packageJsonPath = (0, import_path14.join)(absoluteProjectDir, "package.json");
+    const packageJsonPath = (0, import_path15.join)(absoluteProjectDir, "package.json");
     const packageJson = readPackageJsonFile(packageJsonPath);
     projectMap.set(projectDir, {
       projectDir,
       cdsFiles,
       compilationTargets: [],
       // Will be populated in the third pass
-      expectedOutputFile: (0, import_path14.join)(projectDir, modelCdsJsonFile),
+      expectedOutputFile: (0, import_path15.join)(projectDir, modelCdsJsonFile),
       packageJson,
       dependencies: [],
       imports: /* @__PURE__ */ new Map()
@@ -10313,18 +10316,18 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   cdsExtractorLog("info", "Analyzing dependencies between CDS projects...");
   for (const [projectDir, project] of projectMap.entries()) {
     for (const relativeFilePath of project.cdsFiles) {
-      const absoluteFilePath = (0, import_path14.join)(sourceRootDir, relativeFilePath);
+      const absoluteFilePath = (0, import_path15.join)(sourceRootDir, relativeFilePath);
       try {
         const imports = extractCdsImports(absoluteFilePath);
         const enrichedImports = [];
         for (const importInfo of imports) {
           const enrichedImport = { ...importInfo };
           if (importInfo.isRelative) {
-            const importedFilePath = (0, import_path14.resolve)((0, import_path14.dirname)(absoluteFilePath), importInfo.path);
+            const importedFilePath = (0, import_path15.resolve)((0, import_path15.dirname)(absoluteFilePath), importInfo.path);
             const normalizedImportedPath = importedFilePath.endsWith(".cds") ? importedFilePath : `${importedFilePath}.cds`;
             try {
-              const relativeToDirPath = (0, import_path14.dirname)(relativeFilePath);
-              const resolvedPath = (0, import_path14.resolve)((0, import_path14.join)(sourceRootDir, relativeToDirPath), importInfo.path);
+              const relativeToDirPath = (0, import_path15.dirname)(relativeFilePath);
+              const resolvedPath = (0, import_path15.resolve)((0, import_path15.join)(sourceRootDir, relativeToDirPath), importInfo.path);
               const normalizedResolvedPath = resolvedPath.endsWith(".cds") ? resolvedPath : `${resolvedPath}.cds`;
               if (normalizedResolvedPath.startsWith(sourceRootDir)) {
                 enrichedImport.resolvedPath = normalizedResolvedPath.substring(sourceRootDir.length).replace(/^[/\\]/, "");
@@ -10337,10 +10340,10 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
             }
             for (const [otherProjectDir, otherProject] of projectMap.entries()) {
               if (otherProjectDir === projectDir) continue;
-              const otherProjectAbsoluteDir = (0, import_path14.join)(sourceRootDir, otherProjectDir);
+              const otherProjectAbsoluteDir = (0, import_path15.join)(sourceRootDir, otherProjectDir);
               const isInOtherProject = otherProject.cdsFiles.some((otherFile) => {
-                const otherAbsolutePath = (0, import_path14.join)(sourceRootDir, otherFile);
-                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path14.sep);
+                const otherAbsolutePath = (0, import_path15.join)(sourceRootDir, otherFile);
+                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path15.sep);
               });
               if (isInOtherProject) {
                 project.dependencies ??= [];
@@ -10383,8 +10386,8 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
         "warn",
         `Error determining files to compile for project ${project.projectDir}: ${String(error)}`
       );
-      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path14.basename)(file));
-      project.expectedOutputFile = (0, import_path14.join)(project.projectDir, modelCdsJsonFile);
+      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path15.basename)(file));
+      project.expectedOutputFile = (0, import_path15.join)(project.projectDir, modelCdsJsonFile);
     }
   }
   return projectMap;
@@ -10592,13 +10595,13 @@ function handleEarlyExit(sourceRoot2, autobuildScriptPath2, codeqlExePath2, skip
 }
 
 // src/utils.ts
-var import_path15 = require("path");
+var import_path16 = require("path");
 var USAGE_MESSAGE = `	Usage: node <script> <source-root>`;
 function resolveSourceRoot(sourceRoot2) {
   if (!sourceRoot2 || typeof sourceRoot2 !== "string") {
     throw new Error("Source root must be a non-empty string");
   }
-  const normalizedPath = (0, import_path15.resolve)(sourceRoot2);
+  const normalizedPath = (0, import_path16.resolve)(sourceRoot2);
   if (!normalizedPath || normalizedPath === "/") {
     throw new Error("Source root must point to a valid directory");
   }
@@ -10695,7 +10698,7 @@ try {
     try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
-          ...Ui((0, import_path16.join)(sourceRoot, "**/*.cds"), {
+          ...Ui((0, import_path17.join)(sourceRoot, "**/*.cds"), {
             ignore: ["**/node_modules/**", "**/.git/**"],
             windowsPathsNoEscape: true
           })
