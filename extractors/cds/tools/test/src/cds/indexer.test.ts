@@ -514,6 +514,14 @@ describe('cds/indexer', () => {
       orchestrateCdsIndexer(graph, '/source', new Map());
 
       expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(project, '/source');
+
+      // The cds-indexer must run before the full dependency installation, so
+      // that dependencies are only installed after a successful indexer run.
+      const indexerSpawnOrder = (childProcess.spawnSync as jest.Mock).mock
+        .invocationCallOrder[0];
+      const installOrder = (projectInstaller.projectInstallDependencies as jest.Mock).mock
+        .invocationCallOrder[0];
+      expect(indexerSpawnOrder).toBeLessThan(installOrder);
     });
 
     it('should not install full project dependencies when cds-indexer fails', () => {
