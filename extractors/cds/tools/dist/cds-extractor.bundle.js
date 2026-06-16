@@ -6044,7 +6044,7 @@ function expand_(str2, max, isTop) {
       }
       const pad = n7.some(isPadded);
       N2 = [];
-      for (let i2 = x2; test(i2, y); i2 += incr) {
+      for (let i2 = x2; test(i2, y) && N2.length < max; i2 += incr) {
         let c;
         if (isAlphaSequence) {
           c = String.fromCharCode(i2);
