@@ -1,6 +1,7 @@
 /** Tests for CDS compiler installer functionality */
 
 import { execFileSync } from 'child_process';
+import { existsSync } from 'fs';
 
 import type { CdsProject } from '../../../src/cds/parser';
 import { getPlatformInfo } from '../../../src/environment';
@@ -11,14 +12,19 @@ import {
 
 // Mock all external dependencies
 jest.mock('child_process');
+jest.mock('fs');
 
 const mockExecFileSync = execFileSync as jest.MockedFunction<typeof execFileSync>;
+const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
 
 describe('CDS Compiler Installer', () => {
   const mockSourceRoot = '/test/source';
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default: no package-lock.json present, so projectInstallDependencies
+    // falls through to 'npm install'. Tests that need 'npm ci' override this.
+    mockExistsSync.mockReturnValue(false);
     // Mock Date.now to return a consistent timestamp for testing
     jest.spyOn(Date, 'now').mockReturnValue(1640995200000);
     // Mock process.hrtime.bigint for performance timing
@@ -65,14 +71,28 @@ describe('CDS Compiler Installer', () => {
 
       expect(mockExecFileSync).toHaveBeenCalledWith(
         'npm',
-        [
-          'install',
-          '--engine-strict=false',
-          '--ignore-scripts',
-          '--quiet',
-          '--no-audit',
-          '--no-fund',
-        ],
+        ['install', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
+        {
+          cwd: '/test/source/test-project',
+          shell: getPlatformInfo().isWindows,
+          stdio: 'inherit',
+          timeout: 120000,
+        },
+      );
+    });
+
+    it("should use 'npm ci' when a package-lock.json exists in the project", () => {
+      const project = createMockProject();
+
+      mockExistsSync.mockReturnValue(true);
+      mockExecFileSync.mockReturnValue(Buffer.from(''));
+
+      const result = projectInstallDependencies(project, mockSourceRoot);
+
+      expect(result.success).toBe(true);
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'npm',
+        ['ci', '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
         {
           cwd: '/test/source/test-project',
           shell: getPlatformInfo().isWindows,

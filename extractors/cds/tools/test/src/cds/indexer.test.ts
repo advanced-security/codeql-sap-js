@@ -494,7 +494,7 @@ describe('cds/indexer', () => {
       );
     });
 
-    it('should install full project dependencies after successful cds-indexer run', () => {
+    it('should install full project dependencies before running cds-indexer', () => {
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
         status: 0,
         stdout: Buffer.from(''),
@@ -516,7 +516,10 @@ describe('cds/indexer', () => {
       expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(project, '/source');
     });
 
-    it('should not install full project dependencies when cds-indexer fails', () => {
+    it('should still install full project dependencies even when cds-indexer subsequently fails', () => {
+      // Install runs BEFORE the indexer now, so an indexer failure can no longer
+      // gate the install. We still want the install to have happened so that
+      // downstream compilation has a fully-populated node_modules to work with.
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
         status: 1,
         stdout: Buffer.from(''),
@@ -535,7 +538,7 @@ describe('cds/indexer', () => {
 
       orchestrateCdsIndexer(graph, '/source', new Map());
 
-      expect(projectInstaller.projectInstallDependencies).not.toHaveBeenCalled();
+      expect(projectInstaller.projectInstallDependencies).toHaveBeenCalledWith(project, '/source');
     });
 
     it('should not install full project dependencies for projects without cds-indexer', () => {
@@ -550,7 +553,7 @@ describe('cds/indexer', () => {
       expect(projectInstaller.projectInstallDependencies).not.toHaveBeenCalled();
     });
 
-    it('should continue even when full dependency installation fails after indexer success', () => {
+    it('should continue even when full dependency installation fails before the indexer runs', () => {
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
         status: 0,
         stdout: Buffer.from(''),

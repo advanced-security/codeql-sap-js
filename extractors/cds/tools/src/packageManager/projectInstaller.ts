@@ -1,6 +1,7 @@
 /** Full dependency installation utilities for retry scenarios. */
 
 import { execFileSync } from 'child_process';
+import { existsSync } from 'fs';
 import { join } from 'path';
 
 import { npmExecutable, getPlatformInfo } from '../environment';
@@ -65,10 +66,24 @@ export function projectInstallDependencies(
       return result;
     }
 
-    // Install dependencies using npm in the project's directory
+    // Install dependencies using npm in the project's directory.
+    //
+    // Prefer `npm ci` when a lockfile exists: it installs exactly the versions
+    // the project pinned, matching what `npm ci` would do in CI. Fall back to
+    // `npm install` only when there is no lockfile.
+    //
+    // We deliberately do NOT pass `--ignore-scripts`. Many cds plugins
+    // (e.g. file-based local plugins, and packages whose `cds-plugin.js`
+    // entries get wired via `postinstall`/`prepare`) need their lifecycle
+    // scripts to run for the cds runtime to discover them. Without those
+    // scripts, the indexer walks an under-populated model and the resulting
+    // `index.cds` files omit artifacts that annotation files reference,
+    // causing later `cds compile` to fail with "Artifact not found".
+    const hasLockfile = existsSync(join(projectPath, 'package-lock.json'));
+    const installSubcommand = hasLockfile ? 'ci' : 'install';
     cdsExtractorLog(
       'info',
-      `Installing full dependencies for project ${project.projectDir} in project's node_modules`,
+      `Installing full dependencies for project ${project.projectDir} via 'npm ${installSubcommand}' in project's node_modules`,
     );
 
     try {
@@ -78,14 +93,7 @@ export function projectInstallDependencies(
         // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
         // npm's default is non-strict; we make that explicit so the project's .npmrc
         // can't flip it on and break the retry path.
-        [
-          'install',
-          '--engine-strict=false',
-          '--ignore-scripts',
-          '--quiet',
-          '--no-audit',
-          '--no-fund',
-        ],
+        [installSubcommand, '--engine-strict=false', '--quiet', '--no-audit', '--no-fund'],
         {
           cwd: projectPath,
           stdio: 'inherit',

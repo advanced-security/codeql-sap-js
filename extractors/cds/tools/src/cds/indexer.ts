@@ -198,24 +198,53 @@ export function orchestrateCdsIndexer(
 
     summary.projectsRequiringIndexer++;
     const cacheDir = projectCacheDirMap.get(projectDir);
+
+    // Install the project's full dependencies BEFORE running cds-indexer.
+    //
+    // The indexer loads the project's cds runtime to walk the model and decide
+    // which `.cds` files to include in the generated `index.cds` files. If the
+    // project's plugins (e.g. `@sap/cds-shim`, `@sap/cds-mtxs`, `@cap-js/hana`,
+    // file-based local plugins) are not yet installed, those plugins never
+    // register their hooks, and the indexer sees a stripped-down model. The
+    // resulting `index.cds` files then fail to transitively include every file
+    // the project's annotations reference, and later `cds compile` fails with
+    // "Artifact not found" errors.
+    //
+    // The cache directory only contains `@sap/cds`, `@sap/cds-dk`, and
+    // `@sap/cds-indexer`, which is not enough for projects that reference
+    // additional CDS packages — hence the project-local install.
+    const installResult = projectInstallDependencies(project, sourceRoot);
+
+    // Record the install on the project's retry status so the retry path
+    // (see needsFullDependencyInstallation) doesn't run a second redundant
+    // `npm install` after compilation. Mirrors the bookkeeping done in
+    // retry.ts when the retry path itself drives the install.
+    project.retryStatus ??= {
+      fullDependenciesInstalled: false,
+      tasksRequiringRetry: 0,
+      tasksRetried: 0,
+      installationErrors: [],
+    };
+
+    if (installResult.success) {
+      project.retryStatus.fullDependenciesInstalled = true;
+      dependencyGraph.retryStatus.projectsWithFullDependencies.add(projectDir);
+    } else {
+      project.retryStatus.installationErrors = [
+        ...(project.retryStatus.installationErrors ?? []),
+        installResult.error ?? 'Unknown installation error',
+      ];
+      cdsExtractorLog(
+        'warn',
+        `Full dependency installation failed for project '${projectDir}' before cds-indexer run: ${installResult.error ?? 'unknown error'}. Continuing with indexer attempt — it may still produce useful output.`,
+      );
+    }
+
     const result = runCdsIndexer(project, sourceRoot, cacheDir);
     summary.results.push(result);
 
     if (result.success) {
       summary.successfulRuns++;
-
-      // Install the project's full dependencies so the CDS compiler can
-      // resolve all CDS model imports (e.g. `@sap/cds-shim`) during
-      // compilation.  The cache directory only contains `@sap/cds`,
-      // `@sap/cds-dk`, and `@sap/cds-indexer`, which is not enough for
-      // projects that reference additional CDS packages.
-      const installResult = projectInstallDependencies(project, sourceRoot);
-      if (!installResult.success) {
-        cdsExtractorLog(
-          'warn',
-          `Full dependency installation failed for project '${projectDir}' after successful cds-indexer run: ${installResult.error ?? 'unknown error'}`,
-        );
-      }
     } else {
       summary.failedRuns++;
 
