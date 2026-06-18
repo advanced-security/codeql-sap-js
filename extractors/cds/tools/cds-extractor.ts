@@ -14,6 +14,7 @@ import {
   addNoCdsProjectsDiagnostic,
 } from './src/diagnostics';
 import { setupAndValidateEnvironment } from './src/environment';
+import { filterIgnoredPaths, getPathsIgnorePatterns } from './src/paths-ignore';
 import {
   cdsExtractorLog,
   generateStatusReport,
@@ -104,12 +105,11 @@ try {
       );
     }
   } else {
-    // No CDS projects detected - try direct file search as diagnostic
-    cdsExtractorLog(
-      'error',
-      'No CDS projects were detected. This is an unrecoverable error as there is nothing to scan.',
-    );
-
+    // No CDS projects detected - try direct file search to distinguish:
+    //   (a) the source has no .cds files at all,
+    //   (b) every .cds file was excluded by paths-ignore (intentional),
+    //   (c) .cds files exist and survive paths-ignore but were not grouped
+    //       into any project — a real project-detection bug.
     try {
       const allCdsFiles = Array.from(
         new Set([
@@ -124,19 +124,35 @@ try {
         `Direct search found ${allCdsFiles.length} CDS files in the source tree.`,
       );
 
-      if (allCdsFiles.length > 0) {
+      // Apply paths-ignore so we don't flag an intentional full-exclusion as a bug.
+      const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRoot);
+      const relativePaths = allCdsFiles.map(f =>
+        f.startsWith(sourceRoot) ? f.substring(sourceRoot.length).replace(/^[/\\]+/, '') : f,
+      );
+      const survivingPaths = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
+
+      if (allCdsFiles.length === 0) {
+        cdsExtractorLog(
+          'info',
+          'No CDS files found in the source tree. This may be expected if the source does not contain CAP/CDS projects.',
+        );
+      } else if (survivingPaths.length === 0) {
+        cdsExtractorLog(
+          'info',
+          `All ${allCdsFiles.length} CDS file(s) were excluded by paths-ignore; nothing to scan.`,
+        );
+      } else {
         cdsExtractorLog(
           'info',
           `Sample CDS files: ${allCdsFiles.slice(0, 5).join(', ')}${allCdsFiles.length > 5 ? ', ...' : ''}`,
         );
         cdsExtractorLog(
           'error',
-          'CDS files were found but no projects were detected. This indicates a problem with project detection logic.',
+          'No CDS projects were detected. This is an unrecoverable error as there is nothing to scan.',
         );
-      } else {
         cdsExtractorLog(
-          'info',
-          'No CDS files found in the source tree. This may be expected if the source does not contain CAP/CDS projects.',
+          'error',
+          'CDS files were found but no projects were detected. This indicates a problem with project detection logic.',
         );
       }
     } catch (globError) {
