@@ -14,7 +14,6 @@ import {
   addNoCdsProjectsDiagnostic,
 } from './src/diagnostics';
 import { setupAndValidateEnvironment } from './src/environment';
-import { filterIgnoredPaths, getPathsIgnorePatterns } from './src/paths-ignore';
 import {
   cdsExtractorLog,
   generateStatusReport,
@@ -26,6 +25,7 @@ import {
   setSourceRootDirectory,
 } from './src/logging';
 import { cacheInstallDependencies } from './src/packageManager';
+import { filterIgnoredPaths, getPathsIgnorePatterns } from './src/paths-ignore';
 import { validateArguments } from './src/utils';
 
 // ============================================================================

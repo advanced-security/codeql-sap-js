@@ -453,7 +453,7 @@ export function determineCdsFilesToCompile(
   // project.cdsFiles is already filtered upstream by determineCdsFilesForProjectDir,
   // so a directory with no surviving files here is "fully ignored" (or empty of .cds).
   if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
-    const norm = (p: string) => p.replace(/\\/g, '/');
+    const norm = (p: string): string => p.replace(/\\/g, '/');
     const before = existingCapDirs.length;
     existingCapDirs = existingCapDirs.filter(dir => {
       const dirPrefix = norm(join(project.projectDir, dir)) + '/';
