@@ -447,7 +447,26 @@ export function determineCdsFilesToCompile(
 
   // Check for standard CAP directories
   const capDirectories = ['db', 'srv', 'app'];
-  const existingCapDirs = capDirectories.filter(dir => existsSync(join(absoluteProjectDir, dir)));
+  let existingCapDirs = capDirectories.filter(dir => existsSync(join(absoluteProjectDir, dir)));
+
+  // Drop any CAP directory whose .cds files are entirely covered by paths-ignore.
+  // project.cdsFiles is already filtered upstream by determineCdsFilesForProjectDir,
+  // so a directory with no surviving files here is "fully ignored" (or empty of .cds).
+  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
+    const norm = (p: string) => p.replace(/\\/g, '/');
+    const before = existingCapDirs.length;
+    existingCapDirs = existingCapDirs.filter(dir => {
+      const dirPrefix = norm(join(project.projectDir, dir)) + '/';
+      return project.cdsFiles.some(file => norm(file).startsWith(dirPrefix));
+    });
+    const skipped = before - existingCapDirs.length;
+    if (skipped > 0) {
+      cdsExtractorLog(
+        'info',
+        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || '.'}`,
+      );
+    }
+  }
 
   if (existingCapDirs.length > 0) {
     // Use standard CAP directories
