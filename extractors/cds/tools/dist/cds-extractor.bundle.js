@@ -10245,7 +10245,22 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   }
   const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
+  let existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
+  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
+    const norm = (p) => p.replace(/\\/g, "/");
+    const before = existingCapDirs.length;
+    existingCapDirs = existingCapDirs.filter((dir) => {
+      const dirPrefix = norm((0, import_path14.join)(project.projectDir, dir)) + "/";
+      return project.cdsFiles.some((file) => norm(file).startsWith(dirPrefix));
+    });
+    const skipped = before - existingCapDirs.length;
+    if (skipped > 0) {
+      cdsExtractorLog(
+        "info",
+        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || "."}`
+      );
+    }
+  }
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,

@@ -7521,6 +7521,78 @@ minimatch.Minimatch = Minimatch;
 minimatch.escape = escape;
 minimatch.unescape = unescape;
 
+// src/paths-ignore.ts
+var DEFAULT_CONFIG_RELATIVE_PATHS = [
+  ".github/codeql/codeql-config.yml",
+  ".github/codeql/codeql-config.yaml"
+];
+var patternsCache = /* @__PURE__ */ new Map();
+function findCodeqlConfigFile(sourceRoot) {
+  const envConfigPath = process.env.CODEQL_CONFIG_PATH;
+  if (envConfigPath) {
+    const resolvedRoot = (0, import_path2.resolve)(sourceRoot);
+    const fullPath = (0, import_path2.resolve)(resolvedRoot, envConfigPath);
+    const rel = (0, import_path2.relative)(resolvedRoot, fullPath);
+    if (rel.startsWith("..") || (0, import_path2.resolve)(resolvedRoot, rel) !== fullPath) {
+      cdsExtractorLog(
+        "warn",
+        `CODEQL_CONFIG_PATH '${envConfigPath}' resolves outside the source root. Ignoring.`
+      );
+      return void 0;
+    }
+    if ((0, import_fs3.existsSync)(fullPath)) {
+      cdsExtractorLog("info", `Using CodeQL config file from CODEQL_CONFIG_PATH: ${fullPath}`);
+      return fullPath;
+    }
+    cdsExtractorLog(
+      "warn",
+      `CODEQL_CONFIG_PATH is set to '${envConfigPath}', but no file exists at '${fullPath}'.`
+    );
+    return void 0;
+  }
+  for (const configPath of DEFAULT_CONFIG_RELATIVE_PATHS) {
+    const fullPath = (0, import_path2.join)(sourceRoot, configPath);
+    if ((0, import_fs3.existsSync)(fullPath)) {
+      return fullPath;
+    }
+  }
+  return void 0;
+}
+function getPathsIgnorePatterns(sourceRoot) {
+  const cached = patternsCache.get(sourceRoot);
+  if (cached !== void 0) {
+    return cached;
+  }
+  const configPath = findCodeqlConfigFile(sourceRoot);
+  if (!configPath) {
+    patternsCache.set(sourceRoot, []);
+    return [];
+  }
+  try {
+    const content = (0, import_fs3.readFileSync)(configPath, "utf8");
+    const config = load(content);
+    if (!config || !Array.isArray(config["paths-ignore"])) {
+      patternsCache.set(sourceRoot, []);
+      return [];
+    }
+    const patterns = config["paths-ignore"].filter(
+      (p) => typeof p === "string" && p.length > 0
+    );
+    if (patterns.length > 0) {
+      cdsExtractorLog(
+        "info",
+        `Found ${patterns.length} paths-ignore pattern(s) in ${configPath}: ${patterns.join(", ")}`
+      );
+    }
+    patternsCache.set(sourceRoot, patterns);
+    return patterns;
+  } catch (error) {
+    cdsExtractorLog("warn", `Failed to read CodeQL config file at ${configPath}: ${String(error)}`);
+    patternsCache.set(sourceRoot, []);
+    return [];
+  }
+}
+
 // src/cds/parser/functions.ts
 function readPackageJsonFile(filePath) {
   if (!(0, import_fs4.existsSync)(filePath)) {
@@ -7544,7 +7616,22 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   }
   const absoluteProjectDir = (0, import_path3.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs4.existsSync)((0, import_path3.join)(absoluteProjectDir, dir)));
+  let existingCapDirs = capDirectories.filter((dir) => (0, import_fs4.existsSync)((0, import_path3.join)(absoluteProjectDir, dir)));
+  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
+    const norm = (p) => p.replace(/\\/g, "/");
+    const before = existingCapDirs.length;
+    existingCapDirs = existingCapDirs.filter((dir) => {
+      const dirPrefix = norm((0, import_path3.join)(project.projectDir, dir)) + "/";
+      return project.cdsFiles.some((file) => norm(file).startsWith(dirPrefix));
+    });
+    const skipped = before - existingCapDirs.length;
+    if (skipped > 0) {
+      cdsExtractorLog(
+        "info",
+        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || "."}`
+      );
+    }
+  }
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,
