@@ -10245,7 +10245,22 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   }
   const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
+  let existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
+  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
+    const norm = (p) => p.replace(/\\/g, "/");
+    const before = existingCapDirs.length;
+    existingCapDirs = existingCapDirs.filter((dir) => {
+      const dirPrefix = norm((0, import_path14.join)(project.projectDir, dir)) + "/";
+      return project.cdsFiles.some((file) => norm(file).startsWith(dirPrefix));
+    });
+    const skipped = before - existingCapDirs.length;
+    if (skipped > 0) {
+      cdsExtractorLog(
+        "info",
+        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || "."}`
+      );
+    }
+  }
   if (existingCapDirs.length > 0) {
     return {
       compilationTargets: existingCapDirs,
@@ -10700,10 +10715,6 @@ try {
       );
     }
   } else {
-    cdsExtractorLog(
-      "error",
-      "No CDS projects were detected. This is an unrecoverable error as there is nothing to scan."
-    );
     try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
@@ -10717,19 +10728,33 @@ try {
         "info",
         `Direct search found ${allCdsFiles.length} CDS files in the source tree.`
       );
-      if (allCdsFiles.length > 0) {
+      const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRoot);
+      const relativePaths = allCdsFiles.map(
+        (f) => f.startsWith(sourceRoot) ? f.substring(sourceRoot.length).replace(/^[/\\]+/, "") : f
+      );
+      const survivingPaths = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
+      if (allCdsFiles.length === 0) {
+        cdsExtractorLog(
+          "info",
+          "No CDS files found in the source tree. This may be expected if the source does not contain CAP/CDS projects."
+        );
+      } else if (survivingPaths.length === 0) {
+        cdsExtractorLog(
+          "info",
+          `All ${allCdsFiles.length} CDS file(s) were excluded by paths-ignore; nothing to scan.`
+        );
+      } else {
         cdsExtractorLog(
           "info",
           `Sample CDS files: ${allCdsFiles.slice(0, 5).join(", ")}${allCdsFiles.length > 5 ? ", ..." : ""}`
         );
         cdsExtractorLog(
           "error",
-          "CDS files were found but no projects were detected. This indicates a problem with project detection logic."
+          "No CDS projects were detected. This is an unrecoverable error as there is nothing to scan."
         );
-      } else {
         cdsExtractorLog(
-          "info",
-          "No CDS files found in the source tree. This may be expected if the source does not contain CAP/CDS projects."
+          "error",
+          "CDS files were found but no projects were detected. This indicates a problem with project detection logic."
         );
       }
     } catch (globError) {
