@@ -7,8 +7,8 @@ updates:
     groups:
       all-actions:
         patterns: ["*"]
-    versioning-strategy: lockfile-only
-    default-days: 7
+    cooldown:
+      default-days: 7
   - package-ecosystem: "npm"
     directory: "/extractors/cds/tools"
     schedule:
@@ -17,4 +17,5 @@ updates:
       all-npm:
         patterns: ["*"]
     versioning-strategy: lockfile-only
-    default-days: 7
+    cooldown:
+      default-days: 7
