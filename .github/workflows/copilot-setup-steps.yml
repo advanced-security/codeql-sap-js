@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Copilot Setup - Setup Node.js
-        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
         with:
           cache: 'npm'
           cache-dependency-path: 'extractors/cds/tools/package-lock.json'
@@ -52,7 +52,7 @@ jobs:
           echo "Generated .codeql-version: $(cat .codeql-version)"
 
       - name: Copilot Setup - Setup CodeQL environment
-        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@de78423de19152f49ed45d1df6e7b70f721132c8 # main
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@b3a4b770e475ffc8f974830d084a51b417ead8ae # main
         with:
           install-language-runtimes: false
 
