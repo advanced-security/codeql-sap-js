@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "dependencies": {
     "@sap/cds": "*",
-    "express": "^4.22.2",
+    "express": "^5.2.1",
     "@cap-js/sqlite": "*"
   },
   "scripts": {

@@ -2,8 +2,8 @@
   "name": "@advanced-security/mocked-authentication",
   "version": "1.0.0",
   "dependencies": {
-    "@sap/cds": "^7",
-    "express": "^4.17.1",
+    "@sap/cds": "^10",
+    "express": "^5.2.1",
     "@cap-js/sqlite": "*"
   },
   "scripts": {
