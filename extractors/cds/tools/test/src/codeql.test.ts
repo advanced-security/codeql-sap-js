@@ -286,9 +286,9 @@ describe('codeql', () => {
     let consoleLogSpy: jest.SpyInstance;
 
     beforeEach(() => {
-      mockExit = jest.spyOn(process, 'exit').mockImplementation((() => {
+      mockExit = jest.spyOn(process, 'exit').mockImplementation(() => {
         throw new Error('process.exit called');
-      }) as never);
+      });
       consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
       (filesystem.createMarkerFile as jest.Mock).mockReturnValue('/path/to/marker.js');
       (filesystem.removeMarkerFile as jest.Mock).mockReturnValue(undefined);
