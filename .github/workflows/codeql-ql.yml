@@ -12,5 +12,5 @@ permissions:
 
 jobs:
   codeql:
-    uses: advanced-security/reusable-workflows/.github/workflows/codeql-ql.yml@2028787a231ffa7d5445cfbf3d63db40b6131489 # main
+    uses: advanced-security/reusable-workflows/.github/workflows/codeql-ql.yml@cdb58ebdac3e974822957b34c90394db7dd44ccc # main
     secrets: inherit
