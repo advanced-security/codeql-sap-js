@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "dependencies": {
     "@cap-js/sqlite": "*",
-    "@sap/cds": "^9",
-    "@sap/cds-dk": "^9.0.5",
-    "express": "^4.17.1"
+    "@sap/cds": "^10",
+    "@sap/cds-dk": "^10.0.4",
+    "express": "^5.2.1"
   },
   "scripts": {
     "start": "cds-serve",
