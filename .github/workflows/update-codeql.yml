@@ -58,11 +58,28 @@ jobs:
           echo "Latest CodeQL CLI version: ${latest_clean}"
 
           if [ "${latest_clean}" != "${current_version}" ]; then
-            echo "✅ Update available: ${current_version} → ${latest_clean}"
-            echo "update_needed=true" >> $GITHUB_OUTPUT
             echo "current_version=${current_version}" >> $GITHUB_OUTPUT
             echo "latest_version=${latest_clean}" >> $GITHUB_OUTPUT
             echo "version=v${latest_clean}" >> $GITHUB_OUTPUT
+
+            standard_library_tag="codeql-cli/v${latest_clean}"
+            echo "Checking for standard-library tag ${standard_library_tag}..."
+            if ! matching_refs=$(gh api --paginate --slurp \
+              "repos/github/codeql/git/matching-refs/tags/${standard_library_tag}"); then
+              echo "❌ Error: Could not check for ${standard_library_tag} in github/codeql" >&2
+              exit 1
+            fi
+
+            exact_match_count=$(jq --arg ref "refs/tags/${standard_library_tag}" \
+              '[.[][] | select(.ref == $ref)] | length' <<< "${matching_refs}")
+            if [ "${exact_match_count}" -eq 0 ]; then
+              echo "⏳ Update deferred: ${standard_library_tag} is not yet available in github/codeql"
+              echo "update_needed=false" >> $GITHUB_OUTPUT
+              echo "update_deferred=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ Update available: ${current_version} → ${latest_clean}"
+              echo "update_needed=true" >> $GITHUB_OUTPUT
+            fi
           else
             echo "ℹ️ CodeQL CLI is already up-to-date at version ${current_version}"
             echo "update_needed=false" >> $GITHUB_OUTPUT
@@ -76,6 +93,10 @@ jobs:
             echo "✅ Update available: ${{ steps.check-version.outputs.current_version }} → ${{ steps.check-version.outputs.latest_version }}" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "Initiating update pipeline for \`${{ steps.check-version.outputs.version }}\`..." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check-version.outputs.update_deferred }}" == "true" ]; then
+            echo "⏳ Update deferred: CodeQL CLI \`${{ steps.check-version.outputs.version }}\` is available, but standard-library tag \`codeql-cli/${{ steps.check-version.outputs.version }}\` is not yet available in \`github/codeql\`." >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "No pull request was created. The next scheduled run will retry." >> $GITHUB_STEP_SUMMARY
           else
             echo "ℹ️ CodeQL CLI is already up-to-date. No changes needed." >> $GITHUB_STEP_SUMMARY
           fi
