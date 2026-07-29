@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Copilot Setup - Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Copilot Setup - Setup Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
@@ -52,7 +52,7 @@ jobs:
           echo "Generated .codeql-version: $(cat .codeql-version)"
 
       - name: Copilot Setup - Setup CodeQL environment
-        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@65a6c42e9017991a8b298814c329021b3274bfc6 # main
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@93ace74fbce15ccb84ce598a0d732345f6d47694 # main
         with:
           install-language-runtimes: false
 
