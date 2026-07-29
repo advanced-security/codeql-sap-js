@@ -70,8 +70,11 @@ jobs:
               exit 1
             fi
 
-            exact_match_count=$(jq --arg ref "refs/tags/${standard_library_tag}" \
-              '[.[][] | select(.ref == $ref)] | length' <<< "${matching_refs}")
+            if ! exact_match_count=$(jq --arg ref "refs/tags/${standard_library_tag}" \
+              '[.[][] | select(.ref == $ref)] | length' <<< "${matching_refs}"); then
+              echo "❌ Error: Could not parse github/codeql API response for ${standard_library_tag}" >&2
+              exit 1
+            fi
             if [ "${exact_match_count}" -eq 0 ]; then
               echo "⏳ Update deferred: ${standard_library_tag} is not yet available in github/codeql"
               echo "update_needed=false" >> $GITHUB_OUTPUT
