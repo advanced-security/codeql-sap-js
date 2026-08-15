@@ -6414,6 +6414,7 @@ var closePattern = /\\}/g;
 var commaPattern = /\\,/g;
 var periodPattern = /\\\./g;
 var EXPANSION_MAX = 1e5;
+var EXPANSION_MAX_LENGTH = 4e6;
 function numeric(str2) {
   return !isNaN(str2) ? parseInt(str2, 10) : str2.charCodeAt(0);
 }
@@ -6448,11 +6449,11 @@ function expand(str2, options = {}) {
   if (!str2) {
     return [];
   }
-  const { max = EXPANSION_MAX } = options;
+  const { max = EXPANSION_MAX, maxLength = EXPANSION_MAX_LENGTH } = options;
   if (str2.slice(0, 2) === "{}") {
     str2 = "\\{\\}" + str2.slice(2);
   }
-  return expand_(escapeBraces(str2), max, true).map(unescapeBraces);
+  return expand_(escapeBraces(str2), max, maxLength, true).map(unescapeBraces);
 }
 function embrace(str2) {
   return "{" + str2 + "}";
@@ -6466,19 +6467,88 @@ function lte(i, y) {
 function gte(i, y) {
   return i >= y;
 }
-function expand_(str2, max, isTop) {
-  const expansions = [];
-  const m = balanced("{", "}", str2);
-  if (!m)
-    return [str2];
-  const pre = m.pre;
-  const post = m.post.length ? expand_(m.post, max, false) : [""];
-  if (/\$$/.test(m.pre)) {
-    for (let k2 = 0; k2 < post.length && k2 < max; k2++) {
-      const expansion = pre + "{" + m.body + "}" + post[k2];
-      expansions.push(expansion);
+function combine(acc, pre, values, max, maxLength, dropEmpties) {
+  const out = [];
+  let length = 0;
+  for (let a = 0; a < acc.length; a++) {
+    for (let v2 = 0; v2 < values.length; v2++) {
+      if (out.length >= max)
+        return out;
+      const expansion = acc[a] + pre + values[v2];
+      if (dropEmpties && !expansion)
+        continue;
+      if (length + expansion.length > maxLength)
+        return out;
+      out.push(expansion);
+      length += expansion.length;
     }
-  } else {
+  }
+  return out;
+}
+function expandSequence(body, isAlphaSequence, max, maxLength) {
+  const n7 = body.split(/\.\./);
+  const N2 = [];
+  if (n7[0] === void 0 || n7[1] === void 0) {
+    return N2;
+  }
+  const x2 = numeric(n7[0]);
+  const y = numeric(n7[1]);
+  const width = Math.max(n7[0].length, n7[1].length);
+  let incr = n7.length === 3 && n7[2] !== void 0 ? Math.max(Math.abs(numeric(n7[2])), 1) : 1;
+  let test = lte;
+  const reverse = y < x2;
+  if (reverse) {
+    incr *= -1;
+    test = gte;
+  }
+  const pad = n7.some(isPadded);
+  let length = 0;
+  for (let i = x2; test(i, y) && N2.length < max; i += incr) {
+    let c;
+    if (isAlphaSequence) {
+      c = String.fromCharCode(i);
+      if (c === "\\") {
+        c = "";
+      }
+    } else {
+      c = String(i);
+      if (pad) {
+        const need = width - c.length;
+        if (need > 0) {
+          const z = new Array(need + 1).join("0");
+          if (i < 0) {
+            c = "-" + z + c.slice(1);
+          } else {
+            c = z + c;
+          }
+        }
+      }
+    }
+    if (length + c.length > maxLength)
+      break;
+    N2.push(c);
+    length += c.length;
+  }
+  return N2;
+}
+function expand_(str2, max, maxLength, isTop) {
+  let acc = [""];
+  let dropEmpties = false;
+  let firstGroup = true;
+  for (; ; ) {
+    const m = balanced("{", "}", str2);
+    if (!m) {
+      return combine(acc, str2, [""], max, maxLength, dropEmpties);
+    }
+    const pre = m.pre;
+    if (/\$$/.test(pre)) {
+      acc = combine(acc, pre + "{" + m.body + "}", [""], max, maxLength, dropEmpties && !m.post.length);
+      firstGroup = false;
+      if (!m.post.length)
+        break;
+      str2 = m.post;
+      continue;
+    }
     const isNumericSequence = /^-?\d+\.\.-?\d+(?:\.\.-?\d+)?$/.test(m.body);
     const isAlphaSequence = /^[a-zA-Z]\.\.[a-zA-Z](?:\.\.-?\d+)?$/.test(m.body);
     const isSequence = isNumericSequence || isAlphaSequence;
@@ -6486,75 +6556,58 @@ function expand_(str2, max, isTop) {
     if (!isSequence && !isOptions) {
       if (m.post.match(/,(?!,).*\}/)) {
         str2 = m.pre + "{" + m.body + escClose + m.post;
-        return expand_(str2, max, true);
+        isTop = true;
+        continue;
       }
-      return [str2];
+      return combine(acc, pre + "{" + m.body + "}" + m.post, [""], max, maxLength, dropEmpties);
     }
-    let n7;
+    if (firstGroup) {
+      dropEmpties = isTop && !isSequence;
+      firstGroup = false;
+    }
+    let values;
     if (isSequence) {
-      n7 = m.body.split(/\.\./);
+      values = expandSequence(m.body, isAlphaSequence, max, maxLength);
     } else {
-      n7 = parseCommaParts(m.body);
+      let n7 = parseCommaParts(m.body);
       if (n7.length === 1 && n7[0] !== void 0) {
-        n7 = expand_(n7[0], max, false).map(embrace);
+        n7 = expand_(n7[0], max, maxLength, false).map(embrace);
         if (n7.length === 1) {
-          return post.map((p) => m.pre + n7[0] + p);
+          acc = combine(acc, pre + n7[0], [""], max, maxLength, dropEmpties && !m.post.length);
+          if (!m.post.length)
+            break;
+          str2 = m.post;
+          continue;
         }
       }
-    }
-    let N2;
-    if (isSequence && n7[0] !== void 0 && n7[1] !== void 0) {
-      const x2 = numeric(n7[0]);
-      const y = numeric(n7[1]);
-      const width = Math.max(n7[0].length, n7[1].length);
-      let incr = n7.length === 3 && n7[2] !== void 0 ? Math.max(Math.abs(numeric(n7[2])), 1) : 1;
-      let test = lte;
-      const reverse = y < x2;
-      if (reverse) {
-        incr *= -1;
-        test = gte;
+      let dropsEmpties = dropEmpties && !m.post.length && !pre;
+      for (let d = 0; dropsEmpties && d < acc.length; d++) {
+        if (acc[d]) {
+          dropsEmpties = false;
+        }
       }
-      const pad = n7.some(isPadded);
-      N2 = [];
-      for (let i = x2; test(i, y) && N2.length < max; i += incr) {
-        let c;
-        if (isAlphaSequence) {
-          c = String.fromCharCode(i);
-          if (c === "\\") {
-            c = "";
+      values = [];
+      let valuesLength = 0;
+      outer: for (let j2 = 0; j2 < n7.length; j2++) {
+        const expanded = expand_(n7[j2], max, maxLength, false);
+        for (let k2 = 0; k2 < expanded.length; k2++) {
+          const v2 = expanded[k2];
+          if (dropsEmpties && !v2)
+            continue;
+          if (values.length >= max || valuesLength + v2.length > maxLength) {
+            break outer;
           }
-        } else {
-          c = String(i);
-          if (pad) {
-            const need = width - c.length;
-            if (need > 0) {
-              const z = new Array(need + 1).join("0");
-              if (i < 0) {
-                c = "-" + z + c.slice(1);
-              } else {
-                c = z + c;
-              }
-            }
-          }
-        }
-        N2.push(c);
-      }
-    } else {
-      N2 = [];
-      for (let j2 = 0; j2 < n7.length; j2++) {
-        N2.push.apply(N2, expand_(n7[j2], max, false));
-      }
-    }
-    for (let j2 = 0; j2 < N2.length; j2++) {
-      for (let k2 = 0; k2 < post.length && expansions.length < max; k2++) {
-        const expansion = pre + N2[j2] + post[k2];
-        if (!isTop || isSequence || expansion) {
-          expansions.push(expansion);
+          values.push(v2);
+          valuesLength += v2.length;
         }
       }
     }
+    acc = combine(acc, pre, values, max, maxLength, dropEmpties && !m.post.length);
+    if (!m.post.length)
+      break;
+    str2 = m.post;
   }
-  return expansions;
+  return acc;
 }
 
 // node_modules/minimatch/dist/esm/assert-valid-pattern.js
