@@ -71,18 +71,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Cache CodeQL CLI
-        id: cache-codeql-cli
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.tool_cache }}/codeql
-          key: ${{ runner.os }}-codeql-cli-${{ hashFiles('qlt.conf.json') }}
-
       - name: Setup CodeQL CLI
         id: setup-codeql
         shell: pwsh
-        env:
-          CODEQL_CACHE_HIT: ${{ steps.cache-codeql-cli.outputs.cache-hit }}
         run: |
           # Read CodeQL CLI version from qlt.conf.json
           $qltConfig = Get-Content "qlt.conf.json" | ConvertFrom-Json
@@ -104,17 +95,13 @@ jobs:
           $installDir = "$env:RUNNER_TOOL_CACHE\codeql"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
-          if ($env:CODEQL_CACHE_HIT -ne "true") {
-            # Download and extract CodeQL CLI
-            $zipPath = "$env:RUNNER_TEMP\codeql.zip"
-            Write-Host "Downloading from: $downloadUrl"
-            Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
+          # Download and extract CodeQL CLI
+          $zipPath = "$env:RUNNER_TEMP\codeql.zip"
+          Write-Host "Downloading from: $downloadUrl"
+          Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
 
-            Write-Host "Extracting CodeQL CLI to: $installDir"
-            Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
-          } else {
-            Write-Host "Using cached CodeQL CLI"
-          }
+          Write-Host "Extracting CodeQL CLI to: $installDir"
+          Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
 
           # Set up environment
           $codeqlPath = "$installDir\codeql"
