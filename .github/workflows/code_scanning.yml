@@ -33,10 +33,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/codeql-compilation-cache
-          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ hashFiles('qlt.conf.json', 'javascript/**/*.ql', 'javascript/**/*.qll', 'javascript/**/qlpack.yml', 'javascript/**/codeql-pack.lock.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-
-            ${{ runner.os }}-codeql-compilation-
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}
 
       - name: Extract CodeQL bundle version from qlt.conf.json
         run: |

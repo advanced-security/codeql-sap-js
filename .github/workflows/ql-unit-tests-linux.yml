@@ -58,7 +58,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.qlt/packages
-          key: ${{ runner.os }}-codeql-cli-${{ hashFiles('qlt.conf.json') }}
+          key: ${{ runner.os }}-codeql-cli-${{ github.workflow }}
 
       - name: Install CodeQL
         id: install-codeql
@@ -94,11 +94,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/codeql-compilation-cache
-          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}-${{ hashFiles('javascript/**/*.ql', 'javascript/**/*.qll', 'javascript/**/qlpack.yml', 'javascript/**/codeql-pack.lock.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}-
-            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-
-            ${{ runner.os }}-codeql-compilation-
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}
 
       - name: Install QL Packs
         shell: bash
