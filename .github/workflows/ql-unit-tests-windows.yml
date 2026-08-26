@@ -71,9 +71,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Cache CodeQL CLI
+        id: cache-codeql-cli
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.tool_cache }}/codeql
+          key: ${{ runner.os }}-codeql-cli-${{ hashFiles('qlt.conf.json') }}
+
       - name: Setup CodeQL CLI
         id: setup-codeql
         shell: pwsh
+        env:
+          CODEQL_CACHE_HIT: ${{ steps.cache-codeql-cli.outputs.cache-hit }}
         run: |
           # Read CodeQL CLI version from qlt.conf.json
           $qltConfig = Get-Content "qlt.conf.json" | ConvertFrom-Json
@@ -95,13 +104,17 @@ jobs:
           $installDir = "$env:RUNNER_TOOL_CACHE\codeql"
           New-Item -ItemType Directory -Force -Path $installDir | Out-Null
 
-          # Download and extract CodeQL CLI
-          $zipPath = "$env:RUNNER_TEMP\codeql.zip"
-          Write-Host "Downloading from: $downloadUrl"
-          Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
+          if ($env:CODEQL_CACHE_HIT -ne "true") {
+            # Download and extract CodeQL CLI
+            $zipPath = "$env:RUNNER_TEMP\codeql.zip"
+            Write-Host "Downloading from: $downloadUrl"
+            Invoke-WebRequest -Uri $downloadUrl -OutFile $zipPath
 
-          Write-Host "Extracting CodeQL CLI to: $installDir"
-          Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
+            Write-Host "Extracting CodeQL CLI to: $installDir"
+            Expand-Archive -Path $zipPath -DestinationPath $installDir -Force
+          } else {
+            Write-Host "Using cached CodeQL CLI"
+          }
 
           # Set up environment
           $codeqlPath = "$installDir\codeql"
@@ -132,11 +145,15 @@ jobs:
           Write-Host "CodeQL resolve languages:"
           codeql resolve languages
 
-      - name: CodeQL Cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      - name: CodeQL Compilation Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.codeql
-          key: codeql-cache    
+          path: ${{ runner.temp }}/codeql-compilation-cache
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.test_suite }}-${{ hashFiles('javascript/**/*.ql', 'javascript/**/*.qll', 'javascript/**/qlpack.yml', 'javascript/**/codeql-pack.lock.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.test_suite }}-
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-
+            ${{ runner.os }}-codeql-compilation-
 
       - name: Install QL Packs
         shell: pwsh
@@ -258,7 +275,8 @@ jobs:
           $errorFile = Join-Path $resultsDir "test-errors.txt"
 
           # Build argument list for codeql test run
-          $codeqlArgs = @("test", "run", "--format=text", "--")
+          $compilationCache = Join-Path $env:RUNNER_TEMP "codeql-compilation-cache"
+          $codeqlArgs = @("test", "run", "--format=text", "--compilation-cache=$compilationCache", "--")
           $codeqlArgs += $testDirs
 
           # Run tests and capture output

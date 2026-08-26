@@ -54,15 +54,31 @@ jobs:
           qlt-version: 'latest'
           add-to-path: true
 
+      - name: Cache CodeQL CLI
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .qlt/repo/packages
+          key: ${{ runner.os }}-codeql-cli-${{ hashFiles('qlt.conf.json') }}
+
       - name: Install CodeQL
         id: install-codeql
         shell: bash
         run: |
           echo "Installing CodeQL"
           qlt codeql run install
+
+          codeql_path="$(find .qlt/repo/packages -type f -path '*/codeql/codeql' -perm -u+x -print -quit)"
+          if [[ -z "$codeql_path" ]]; then
+            echo "::error::CodeQL executable not found in .qlt/repo/packages"
+            exit 1
+          fi
+
+          codeql_home="$(dirname "$codeql_path")"
+          echo "QLT_CODEQL_HOME=$codeql_home" >> "$GITHUB_ENV"
+          echo "QLT_CODEQL_PATH=$codeql_path" >> "$GITHUB_ENV"
           echo "-----------------------------"
-          echo "CodeQL Home: $QLT_CODEQL_HOME"
-          echo "CodeQL Binary: $QLT_CODEQL_PATH"
+          echo "CodeQL Home: $codeql_home"
+          echo "CodeQL Binary: $codeql_path"
 
       - name: Verify Versions of Tooling
         shell: bash
@@ -74,11 +90,15 @@ jobs:
           echo "QLT Home: ${{ steps.install-qlt.outputs.qlt-home }}"
           qlt version
       
-      - name: CodeQL Cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      - name: CodeQL Compilation Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: ~/.codeql
-          key: codeql-cache
+          path: ${{ runner.temp }}/codeql-compilation-cache
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}-${{ hashFiles('javascript/**/*.ql', 'javascript/**/*.qll', 'javascript/**/qlpack.yml', 'javascript/**/codeql-pack.lock.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.codeql_cli }}-${{ matrix.codeql_standard_library_ident }}-
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-
+            ${{ runner.os }}-codeql-compilation-
 
       - name: Install QL Packs
         shell: bash
@@ -122,7 +142,7 @@ jobs:
         shell: bash
         run: >
           qlt test run execute-unit-tests
-          --codeql-args "--threads=0 --strict-test-discovery"
+          --codeql-args "--threads=0 --strict-test-discovery --compilation-cache=${{ runner.temp }}/codeql-compilation-cache"
           --num-threads 2
           --language javascript
           --runner-os $RUNNER_OS
