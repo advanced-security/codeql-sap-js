@@ -57,7 +57,7 @@ jobs:
       - name: Cache CodeQL CLI
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: .qlt/repo/packages
+          path: ~/.qlt/packages
           key: ${{ runner.os }}-codeql-cli-${{ hashFiles('qlt.conf.json') }}
 
       - name: Install CodeQL
@@ -67,9 +67,9 @@ jobs:
           echo "Installing CodeQL"
           qlt codeql run install
 
-          codeql_path="$(find .qlt/repo/packages -type f -path '*/codeql/codeql' -perm -u+x -print -quit)"
+          codeql_path="$(find "$HOME/.qlt/packages" -type f -path '*/codeql/codeql' -perm -u+x -print -quit)"
           if [[ -z "$codeql_path" ]]; then
-            echo "::error::CodeQL executable not found in .qlt/repo/packages"
+            echo "::error::CodeQL executable not found in $HOME/.qlt/packages"
             exit 1
           fi
 
