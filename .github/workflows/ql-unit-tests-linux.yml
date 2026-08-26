@@ -75,7 +75,7 @@ jobs:
           qlt version
       
       - name: CodeQL Cache
-        uses: actions/cache@v6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
           path: ~/.codeql
           key: codeql-cache
