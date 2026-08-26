@@ -66,19 +66,9 @@ jobs:
         run: |
           echo "Installing CodeQL"
           qlt codeql run install
-
-          codeql_path="$(find "$HOME/.qlt/packages" -type f -path '*/codeql/codeql' -perm -u+x -print -quit)"
-          if [[ -z "$codeql_path" ]]; then
-            echo "::error::CodeQL executable not found in $HOME/.qlt/packages"
-            exit 1
-          fi
-
-          codeql_home="$(dirname "$codeql_path")"
-          echo "QLT_CODEQL_HOME=$codeql_home" >> "$GITHUB_ENV"
-          echo "QLT_CODEQL_PATH=$codeql_path" >> "$GITHUB_ENV"
           echo "-----------------------------"
-          echo "CodeQL Home: $codeql_home"
-          echo "CodeQL Binary: $codeql_path"
+          echo "CodeQL Home: $QLT_CODEQL_HOME"
+          echo "CodeQL Binary: $QLT_CODEQL_PATH"
 
       - name: Verify Versions of Tooling
         shell: bash
