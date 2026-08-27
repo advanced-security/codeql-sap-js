@@ -3,10 +3,10 @@ name: QL Unit Tests (Linux)
 on:
   push:
     branches:
-      - 'main'
+      - "main"
   pull_request:
     branches:
-      - 'main'
+      - "main"
   workflow_dispatch:
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
         id: install-qlt
         uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
 
       - name: Export unit test matrix
@@ -51,7 +51,7 @@ jobs:
         id: install-qlt
         uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
 
       - name: Install CodeQL
@@ -74,6 +74,13 @@ jobs:
           echo "QLT Home: ${{ steps.install-qlt.outputs.qlt-home }}"
           qlt version
 
+      - name: CodeQL Compilation Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/codeql-compilation-cache
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}
+
       - name: Install QL Packs
         shell: bash
         run: |
@@ -82,9 +89,9 @@ jobs:
       - name: Setup Node.js for CDS compilation
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'extractors/cds/tools/package-lock.json'
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: "extractors/cds/tools/package-lock.json"
 
       - name: Verify Node.js and npm tools
         run: |
@@ -116,7 +123,7 @@ jobs:
         shell: bash
         run: >
           qlt test run execute-unit-tests
-          --codeql-args "--threads=0 --strict-test-discovery"
+          --codeql-args "--threads=0 --strict-test-discovery --compilation-cache=${{ runner.temp }}/codeql-compilation-cache"
           --num-threads 2
           --language javascript
           --runner-os $RUNNER_OS
@@ -135,7 +142,6 @@ jobs:
     needs: [run-test-suites]
     runs-on: ubuntu-latest
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -143,9 +149,8 @@ jobs:
         id: install-qlt
         uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
         with:
-          qlt-version: 'latest'
+          qlt-version: "latest"
           add-to-path: true
-
 
       - name: Collect test results
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

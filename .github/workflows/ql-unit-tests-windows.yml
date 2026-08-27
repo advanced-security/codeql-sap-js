@@ -132,6 +132,15 @@ jobs:
           Write-Host "CodeQL resolve languages:"
           codeql resolve languages
 
+      - name: CodeQL Compilation Cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/codeql-compilation-cache
+          key: ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.test_suite }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}-${{ matrix.test_suite }}
+            ${{ runner.os }}-codeql-compilation-${{ github.workflow }}
+
       - name: Install QL Packs
         shell: pwsh
         run: |
@@ -252,7 +261,8 @@ jobs:
           $errorFile = Join-Path $resultsDir "test-errors.txt"
 
           # Build argument list for codeql test run
-          $codeqlArgs = @("test", "run", "--format=text", "--")
+          $compilationCache = Join-Path $env:RUNNER_TEMP "codeql-compilation-cache"
+          $codeqlArgs = @("test", "run", "--format=text", "--compilation-cache=$compilationCache", "--")
           $codeqlArgs += $testDirs
 
           # Run tests and capture output
