@@ -52,7 +52,7 @@ jobs:
           echo "Generated .codeql-version: $(cat .codeql-version)"
 
       - name: Copilot Setup - Setup CodeQL environment
-        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@df074c132e312f08327eac51c15056c961e4a3c2 # main
+        uses: advanced-security/codeql-development-mcp-server/.github/actions/setup-codeql-environment@0b1f017f37cffeddf902986eb82504e1e08b2152 # main
         with:
           install-language-runtimes: false
 
