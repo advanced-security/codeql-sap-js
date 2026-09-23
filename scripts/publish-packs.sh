@@ -240,11 +240,19 @@ for pack_dir in "${PUBLISHABLE_PACKS[@]}"; do
     continue
   fi
 
-  if codeql pack publish --threads=-1 ${PRERELEASE_FLAG} -- "${pack_dir}"; then
+  set +e
+  PUBLISH_OUTPUT=$(codeql pack publish --threads=-1 ${PRERELEASE_FLAG} -- "${pack_dir}" 2>&1)
+  EXIT_CODE=$?
+  set -e
+  printf '%s\n' "${PUBLISH_OUTPUT}"
+
+  if [[ "${EXIT_CODE}" -eq 0 ]]; then
     echo "   ✅ Published ${pack_name}@${pack_version}"
     PUBLISHED=$((PUBLISHED + 1))
+  elif [[ "${PUBLISH_OUTPUT}" == *"Package '${pack_name}@${pack_version}' already exists."* ]]; then
+    echo "   ⏭️ ${pack_name}@${pack_version} is already published"
+    SKIPPED=$((SKIPPED + 1))
   else
-    EXIT_CODE=$?
     echo "   ❌ Failed to publish ${pack_name} (exit code: ${EXIT_CODE})" >&2
     FAILED=$((FAILED + 1))
   fi
@@ -271,5 +279,5 @@ fi
 if [[ "${DRY_RUN}" == true ]]; then
   echo "✅ Dry run complete. No packs were actually published."
 else
-  echo "✅ All CodeQL packs published successfully."
+  echo "✅ All CodeQL packs are published."
 fi

@@ -1,9 +1,6 @@
 name: Release - CodeQL SAP JavaScript
 
 on:
-  push:
-    tags:
-      - 'v*'
   workflow_dispatch:
     inputs:
       create_github_release:
@@ -13,7 +10,7 @@ on:
         type: boolean
       publish_codeql_packs:
         default: true
-        description: 'Publish CodeQL packs to GHCR. Disable for pre-release or re-run scenarios where packs already exist. Packs are always bundled as release artifacts regardless of this setting.'
+        description: 'Publish CodeQL packs to GHCR. Existing versions are skipped, so retries publish only missing packs. Packs are always bundled.'
         required: false
         type: boolean
       version:
@@ -25,16 +22,15 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.event.inputs.version || github.ref_name }}
+  group: release-${{ inputs.version }}
   cancel-in-progress: true
 
 jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   # Step 1: Determine the release version
   #
-  # Resolves the version from either the tag push event or the workflow_dispatch
-  # input, and validates the format. This output is consumed by all downstream
-  # jobs.
+  # Resolves and validates the workflow_dispatch inputs. This output is consumed
+  # by all downstream jobs.
   # ─────────────────────────────────────────────────────────────────────────────
   resolve-version:
     name: Resolve Release Version
@@ -50,11 +46,7 @@ jobs:
       - name: Version - Resolve and validate
         id: resolve
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${{ github.ref_name }}"
-          fi
+          VERSION="${{ inputs.version }}"
 
           # Validate version starts with 'v'
           if [[ ! "${VERSION}" =~ ^v ]]; then
@@ -62,27 +54,16 @@ jobs:
             exit 1
           fi
 
-          # Resolve publish flags (default true for tag pushes)
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            CREATE_RELEASE="${{ github.event.inputs.create_github_release }}"
-            PUBLISH_PACKS="${{ github.event.inputs.publish_codeql_packs }}"
-          else
-            CREATE_RELEASE="true"
-            PUBLISH_PACKS="true"
-          fi
-
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "release_name=${VERSION#v}" >> $GITHUB_OUTPUT
-          echo "create_github_release=${CREATE_RELEASE}" >> $GITHUB_OUTPUT
-          echo "publish_codeql_packs=${PUBLISH_PACKS}" >> $GITHUB_OUTPUT
+          echo "create_github_release=${{ inputs.create_github_release }}" >> $GITHUB_OUTPUT
+          echo "publish_codeql_packs=${{ inputs.publish_codeql_packs }}" >> $GITHUB_OUTPUT
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Step 2: Ensure the release tag exists
   #
-  # For workflow_dispatch, ensures a properly validated tag exists. For tag push
-  # events, this is a no-op (tag already exists). The release-tag workflow
-  # handles version updates, pack lock upgrades, test validation, and tag
-  # creation.
+  # Ensures a properly validated tag exists. The release-tag workflow handles
+  # version updates, pack lock upgrades, test validation, and tag creation.
   # ─────────────────────────────────────────────────────────────────────────────
   ensure-tag:
     name: Ensure Release Tag
