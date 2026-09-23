@@ -201,7 +201,7 @@ check_versions() {
 ## Validate version format (X.Y.Z or X.Y.Z-<SemVer pre-release>; +build metadata is rejected)
 validate_version() {
   local version="$1"
-  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+  if [[ ! "${version}" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*)|([0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*))(\.((0|[1-9][0-9]*)|([0-9A-Za-z-]*[A-Za-z-][0-9A-Za-z-]*)))*)?$ ]]; then
     echo "ERROR: Invalid version format '${version}'" >&2
     echo "Expected format: X.Y.Z or X.Y.Z-suffix (e.g., 2.4.0, 2.4.0-alpha, 2.4.0-rc1, 2.4.0-next.1)" >&2
     return 1
