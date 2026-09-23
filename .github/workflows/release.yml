@@ -13,7 +13,7 @@ on:
         type: boolean
       publish_codeql_packs:
         default: true
-        description: 'Publish CodeQL packs to GHCR. Disable for pre-release or re-run scenarios where packs already exist. Packs are always bundled as release artifacts regardless of this setting.'
+        description: 'Publish CodeQL packs to GHCR. Existing versions are skipped, so retries publish only missing packs. Packs are always bundled.'
         required: false
         type: boolean
       version:
@@ -75,6 +75,25 @@ jobs:
           echo "release_name=${VERSION#v}" >> $GITHUB_OUTPUT
           echo "create_github_release=${CREATE_RELEASE}" >> $GITHUB_OUTPUT
           echo "publish_codeql_packs=${PUBLISH_PACKS}" >> $GITHUB_OUTPUT
+
+      - name: Release - Validate existing release
+        if: steps.resolve.outputs.create_github_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.resolve.outputs.version }}
+        run: |
+          if RELEASE_STATE=$(gh api \
+            "repos/${GITHUB_REPOSITORY}/releases/tags/${VERSION}" \
+            --jq 'if .draft then "draft" else "published" end' 2>&1); then
+            if [ "${RELEASE_STATE}" = "published" ]; then
+              echo "::error::Release ${VERSION} is already published and cannot accept assets."
+              echo "::error::Push the tag directly or run this workflow instead of publishing the release first."
+              exit 1
+            fi
+          elif ! grep -Fq "HTTP 404" <<< "${RELEASE_STATE}"; then
+            echo "::error::Unable to inspect release ${VERSION}: ${RELEASE_STATE}"
+            exit 1
+          fi
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Step 2: Ensure the release tag exists
