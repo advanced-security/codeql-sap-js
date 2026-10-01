@@ -1,7 +1,7 @@
 {
   "_version": "2.0.0",
   "sap.app": {
-    "id": "codeql-sap-js-oneway",
+    "id": "codeql-sap-js",
     "type": "application",
     "title": "UI5 one-way internal model"
   },
@@ -14,7 +14,7 @@
       }
     },
     "rootView": {
-      "viewName": "codeql-sap-js-oneway.view.app",
+      "viewName": "codeql-sap-js.view.app",
       "type": "XML",
       "id": "app"
     },

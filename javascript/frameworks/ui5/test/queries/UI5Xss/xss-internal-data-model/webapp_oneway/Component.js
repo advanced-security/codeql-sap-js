@@ -3,7 +3,7 @@ sap.ui.define(
   function (UIComponent, BindingMode) {
     "use strict";
 
-    return UIComponent.extend("codeql-sap-js-oneway.Component", {
+    return UIComponent.extend("codeql-sap-js.Component", {
       metadata: {
         manifest: "json"
       },

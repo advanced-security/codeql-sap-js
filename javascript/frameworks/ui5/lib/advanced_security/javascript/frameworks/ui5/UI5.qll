@@ -65,7 +65,7 @@ class ResourceRoot extends Container {
 
   WebApp getWebApp() { result = webApp }
 
-  predicate contains(File file) { this.getAChildContainer+().getAFile() = file }
+  predicate contains(File file) { this.getAChildContainer*().getAFile() = file }
 }
 
 class SapUiCoreScriptElement extends HTML::ScriptElement {
@@ -874,7 +874,8 @@ class Component extends SapExtendCall {
 
   ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
-    result.getId() = this.getId()
+    result.getId() = this.getId() and
+    inSameWebApp(this.getFile(), result)
   }
 
   /** Get a definition of this component's model whose data source is remote. */
