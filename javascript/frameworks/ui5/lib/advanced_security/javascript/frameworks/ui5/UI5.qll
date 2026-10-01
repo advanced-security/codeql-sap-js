@@ -816,6 +816,13 @@ abstract class UI5Model extends InvokeNode {
   MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
 }
 
+/** A path-specific content node of a manifest-created default JSON model. */
+abstract class ManifestJsonModelContentNode extends DataFlow::Node {
+  abstract DefaultManifestJsonModel getModel();
+
+  abstract string getAbsolutePath();
+}
+
 /**
  * Represents models that are loaded from an internal source, i.e. XML Models or JSON models
  * whose contents are hardcoded in a JS file or loaded from a JSON file.
@@ -835,14 +842,14 @@ abstract class UI5InternalModel extends UI5Model {
 
   /**
    * Gets a node representing content stored in this model. For `new JSONModel({ value: "" })`,
-   * this includes the `value` property; for a manifest-created model, it is the component node.
+   * this includes the `value` property; manifest-created models use path-specific binding nodes.
    */
   DataFlow::Node getAContentNode() {
     result = this.(JsonModel).getAProperty()
     or
     result.asExpr().(StringLiteral).getParent() = this.(JsonModel).asExpr()
     or
-    result = this.(DefaultManifestJsonModel)
+    result.(ManifestJsonModelContentNode).getModel() = this.(DefaultManifestJsonModel)
   }
 
   /**
@@ -959,15 +966,19 @@ module ManifestJson {
   class RouteManifest extends JsonObject {
     RouteManifest() { this = any(RouterManifest router).getPropValue("routes").getElementValue(_) }
 
+    string getPattern() { result = this.getPropStringValue("pattern") }
+
     /**
      * Holds if, for example, this route has pattern `somePath/{someSuffix}` and `path` is
      * `someSuffix`.
      */
     predicate matchesPathString(string path) {
-      path = this.getPropStringValue("pattern").regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
+      path = this.getPattern().regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
     }
 
     string getName() { result = this.getPropStringValue("name") }
+
+    string getTarget() { result = this.getPropStringValue("target") }
   }
 
   class RoutingTargetManifest extends JsonObject {

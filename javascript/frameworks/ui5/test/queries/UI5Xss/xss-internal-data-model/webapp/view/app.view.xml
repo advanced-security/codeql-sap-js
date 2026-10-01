@@ -11,4 +11,10 @@
     </CustomListItem>
   </List>
   <mvc:XMLView viewName="codeql-sap-js.view.local" />
+  <Input value="{/input}" />
+  <core:HTML content="{/output}" />
+  <VBox id="ancestorModelControl">
+    <Input value="{/overridden}" />
+    <core:HTML content="{/overridden}" />
+  </VBox>
 </mvc:View>
