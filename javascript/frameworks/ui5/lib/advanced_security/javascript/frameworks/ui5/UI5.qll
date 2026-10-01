@@ -864,15 +864,21 @@ abstract class UI5InternalModel extends UI5Model {
 
 import ManifestJson
 
-/** Holds if `file` belongs to the component root declared by `manifest`. */
+/**
+ * Holds if `file` belongs to the component root declared by `manifest`, that is, if `manifest` is
+ * the nearest enclosing manifest of `file`. Manifests of enclosing components of a nested
+ * application are therefore excluded, even when they declare the same component ID.
+ */
 bindingset[file, manifest]
 predicate inSameUI5Component(File file, ManifestJson manifest) {
   manifest.getParentContainer().getAChildContainer*().getAFile() = file and
-  (
-    inSameWebApp(file, manifest)
-    or
-    not exists(WebApp webApp | webApp.getAResource() = file)
-  )
+  manifest.getAbsolutePath().length() =
+    max(ManifestJson enclosingManifest |
+      enclosingManifest.getParentContainer().getAChildContainer*().getAFile() = file
+    |
+      enclosingManifest.getAbsolutePath().length()
+    ) and
+  forall(WebApp webApp | webApp.getAResource() = file | webApp.getManifest() = manifest)
 }
 
 /**

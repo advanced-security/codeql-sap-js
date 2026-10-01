@@ -1,4 +1,10 @@
 nodes
+| nested_component/child/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/child/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
@@ -22,6 +28,16 @@ nodes
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 edges
+| nested_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
@@ -68,6 +84,7 @@ edges
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 #select
+| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |
 | webapp/view/app.view.xml:10:7:10:38 | content={value} | webapp/view/app.view.xml:9:7:9:32 | value={value} | webapp/view/app.view.xml:10:7:10:38 | content={value} | XSS vulnerability due to $@. | webapp/view/app.view.xml:9:7:9:32 | value={value} | user-provided value |
 | webapp/view/app.view.xml:22:5:22:38 | content={/shared} | webapp/view/app.view.xml:21:5:21:32 | value={/shared} | webapp/view/app.view.xml:22:5:22:38 | content={/shared} | XSS vulnerability due to $@. | webapp/view/app.view.xml:21:5:21:32 | value={/shared} | user-provided value |
