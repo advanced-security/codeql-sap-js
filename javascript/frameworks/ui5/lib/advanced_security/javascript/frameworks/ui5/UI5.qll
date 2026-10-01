@@ -1263,6 +1263,7 @@ module ManifestJson {
 
     private ModelReference getAReference() {
       result.isDefaultModelReference() and
+      not exists(result.getAMatchingSetModelCall()) and
       (
         result = this.(Component).getAThisNode().getAMemberCall("getModel")
         or

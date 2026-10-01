@@ -1,0 +1,6 @@
+<mvc:View
+  controllerName="codeql-sap-js.controller.local"
+  xmlns="sap.m"
+  xmlns:mvc="sap.ui.core.mvc">
+  <Text text="View-local model" />
+</mvc:View>

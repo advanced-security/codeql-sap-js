@@ -10,4 +10,5 @@
       <core:HTML content="{value}" />
     </CustomListItem>
   </List>
+  <mvc:XMLView viewName="codeql-sap-js.view.local" />
 </mvc:View>
