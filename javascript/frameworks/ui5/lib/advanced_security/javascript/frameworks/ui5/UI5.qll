@@ -864,6 +864,17 @@ abstract class UI5InternalModel extends UI5Model {
 
 import ManifestJson
 
+/** Holds if `file` belongs to the component root declared by `manifest`. */
+bindingset[file, manifest]
+predicate inSameUI5Component(File file, ManifestJson manifest) {
+  manifest.getParentContainer().getAChildContainer*().getAFile() = file and
+  (
+    inSameWebApp(file, manifest)
+    or
+    not exists(WebApp webApp | webApp.getAResource() = file)
+  )
+}
+
 /**
  * A UI5 Component that may contain other controllers or controls.
  */
@@ -882,7 +893,7 @@ class Component extends SapExtendCall {
   ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
     result.getId() = this.getId() and
-    inSameWebApp(this.getFile(), result)
+    inSameUI5Component(this.getFile(), result)
   }
 
   /** Get a definition of this component's model whose data source is remote. */
@@ -1278,7 +1289,7 @@ module ManifestJson {
       (
         result = this.(Component).getAThisNode().getAMemberCall("getModel")
         or
-        inSameWebApp(result.getFile(), this.(Component).getParentManifestJson())
+        inSameUI5Component(result.getFile(), this.(Component).getParentManifestJson())
       )
     }
 

@@ -3,4 +3,5 @@
   xmlns="sap.m"
   xmlns:mvc="sap.ui.core.mvc">
   <Text text="View-local model" />
+  <VBox id="sharedControl" />
 </mvc:View>

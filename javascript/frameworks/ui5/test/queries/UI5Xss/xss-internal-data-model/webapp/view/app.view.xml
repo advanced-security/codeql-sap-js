@@ -17,4 +17,8 @@
     <Input value="{/overridden}" />
     <core:HTML content="{/overridden}" />
   </VBox>
+  <VBox id="sharedControl">
+    <Input value="{/shared}" />
+    <core:HTML content="{/shared}" />
+  </VBox>
 </mvc:View>

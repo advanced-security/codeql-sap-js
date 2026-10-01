@@ -10,6 +10,7 @@ sap.ui.define(
     return Controller.extend("codeql-sap-js.controller.local", {
       onInit: function () {
         this.getView().setModel(new JSONModel({}));
+        this.byId("sharedControl").setModel(new JSONModel({}));
         // This changes only the view-local model, not the component's manifest model.
         this.getView().getModel().setDefaultBindingMode(BindingMode.OneWay);
       }

@@ -236,7 +236,7 @@ private class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode 
  */
 private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
   not exists(bindingPath.getModelName()) and
-  inSameWebApp(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
+  inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
   not hasDefaultModelOverride(bindingPath)
 }
 
@@ -245,13 +245,19 @@ private predicate hasDefaultModelOverride(UI5BindingPath bindingPath) {
   exists(MethodCallNode setModelCall |
     setModelCall =
       [
-        getAControlInBindingHierarchy(bindingPath).getAReference().getALocalSource(),
+        getAControlReferenceInOwningController(bindingPath).getALocalSource(),
         bindingPath.getView().getController().getAViewReference().getALocalSource(),
-        any(Component component).getAThisNode().getALocalSource()
+        any(Component component |
+          inSameUI5Component(bindingPath.getLocation().getFile(), component.getParentManifestJson())
+        ).getAThisNode().getALocalSource()
       ].getAMemberCall("setModel") and
-    setModelCall.getNumArgument() = 1 and
-    inSameWebApp(bindingPath.getLocation().getFile(), setModelCall.getFile())
+    setModelCall.getNumArgument() = 1
   )
+}
+
+private ControlReference getAControlReferenceInOwningController(UI5BindingPath bindingPath) {
+  result = getAControlInBindingHierarchy(bindingPath).getAReference() and
+  result.getFile() = bindingPath.getView().getController().getFile()
 }
 
 private UI5Control getAControlInBindingHierarchy(UI5BindingPath bindingPath) {
