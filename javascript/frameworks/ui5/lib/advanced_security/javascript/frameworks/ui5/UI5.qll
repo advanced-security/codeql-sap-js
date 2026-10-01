@@ -8,6 +8,10 @@ import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
+/** Converts a qualified UI5 name such as `sap.m.Input` to `sap/m/Input`. */
+bindingset[qualifiedName]
+string ui5TypeNameToModulePath(string qualifiedName) { result = qualifiedName.replaceAll(".", "/") }
+
 private module WebAppResourceRootJsonReader implements JsonParser::MakeJsonReaderSig<WebApp> {
   class JsonReader extends WebApp {
     string getJson() {
@@ -242,7 +246,7 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
       importedModuleDefinitionPath = result.getExtendCall().getName() and
       importedModuleDefinitionPathSlashNormalized =
-        importedModuleDefinitionPath.replaceAll(".", "/") and
+        ui5TypeNameToModulePath(importedModuleDefinitionPath) and
       importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
     )
     or
@@ -815,9 +819,11 @@ abstract class UI5Model extends InvokeNode {
 /**
  * Represents models that are loaded from an internal source, i.e. XML Models or JSON models
  * whose contents are hardcoded in a JS file or loaded from a JSON file.
- * It is always the constructor call that creates the model.
+ *
+ * For example, this includes `new JSONModel({ value: "" })` and client data models declared in
+ * `manifest.json`.
  */
-abstract class UI5InternalModel extends UI5Model, NewNode {
+abstract class UI5InternalModel extends UI5Model {
   abstract string getPathString();
 
   abstract string getPathString(Property property);
@@ -826,6 +832,27 @@ abstract class UI5InternalModel extends UI5Model, NewNode {
    * Holds if the content of the model is statically determinable.
    */
   abstract predicate contentIsStaticallyVisible();
+
+  /**
+   * Gets a node representing content stored in this model. For `new JSONModel({ value: "" })`,
+   * this includes the `value` property; for a manifest-created model, it is the component node.
+   */
+  DataFlow::Node getAContentNode() {
+    result = this.(JsonModel).getAProperty()
+    or
+    result.asExpr().(StringLiteral).getParent() = this.(JsonModel).asExpr()
+    or
+    result = this.(DefaultManifestJsonModel)
+  }
+
+  /**
+   * Holds if property bindings can update this model.
+   */
+  predicate hasTwoWayBinding() {
+    this.(JsonModel).isTwoWayBinding()
+    or
+    this.(DefaultManifestJsonModel).isTwoWayBinding()
+  }
 }
 
 import ManifestJson
@@ -871,9 +898,15 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
+
+  InternalModelManifest getInternalModelDef(string modelName) {
+    result.getFile() = this.getParentManifestJson() and
+    result.getName() = modelName
+  }
 }
 
 module ManifestJson {
+  /* Data sources */
   class DataSourceManifest extends JsonObject {
     string dataSourceName;
     ManifestJson manifestJson;
@@ -897,6 +930,43 @@ module ManifestJson {
     ManifestJson getParentManifestJson() { result = manifestJson }
 
     string getType() { result = this.getPropValue("type").(JsonString).getValue() }
+  }
+
+  class ODataDataSourceManifest extends DataSourceManifest {
+    ODataDataSourceManifest() { this.getType() = "OData" }
+  }
+
+  class JsonDataSourceDefinition extends DataSourceManifest {
+    JsonDataSourceDefinition() { this.getType() = "JSON" }
+  }
+
+  /* Routing */
+  class RouterManifest extends JsonObject {
+    ManifestJson manifestJson;
+
+    RouterManifest() {
+      exists(JsonObject rootObj |
+        this.getJsonFile() = manifestJson and
+        rootObj.getJsonFile() = manifestJson and
+        this = rootObj.getPropValue("sap.ui5").(JsonObject).getPropValue("routing")
+      )
+    }
+
+    RouteManifest getRoute() { result = this.getPropValue("routes").getElementValue(_) }
+  }
+
+  class RouteManifest extends JsonObject {
+    RouteManifest() { this = any(RouterManifest router).getPropValue("routes").getElementValue(_) }
+
+    /**
+     * Holds if, for example, this route has pattern `somePath/{someSuffix}` and `path` is
+     * `someSuffix`.
+     */
+    predicate matchesPathString(string path) {
+      path = this.getPropStringValue("pattern").regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
+    }
+
+    string getName() { result = this.getPropStringValue("name") }
   }
 
   class RoutingTargetManifest extends JsonObject {
@@ -939,49 +1009,39 @@ module ManifestJson {
     ManifestJson getParentManifestJson() { result = manifestJson }
   }
 
-  class ODataDataSourceManifest extends DataSourceManifest {
-    ODataDataSourceManifest() { this.getType() = "OData" }
-  }
-
-  class JsonDataSourceDefinition extends DataSourceManifest {
-    JsonDataSourceDefinition() { this.getType() = "JSON" }
-  }
-
-  class RouterManifest extends JsonObject {
-    ManifestJson manifestJson;
-
-    RouterManifest() {
-      exists(JsonObject rootObj |
-        this.getJsonFile() = manifestJson and
-        rootObj.getJsonFile() = manifestJson and
-        this = rootObj.getPropValue("sap.ui5").(JsonObject).getPropValue("routing")
-      )
-    }
-
-    RouteManifest getRoute() { result = this.getPropValue("routes").getElementValue(_) }
-  }
-
-  class RouteManifest extends JsonObject {
-    RouterManifest parentRouterManifest;
-
-    RouteManifest() { this = parentRouterManifest.getPropValue("routes").getElementValue(_) }
-
-    string getPattern() { result = this.getPropStringValue("pattern") }
-
-    /**
-     *  Holds if, e.g., `this.getPattern() = "somePath/{someSuffix}"` and `path = "someSuffix"`
-     */
-    predicate matchesPathString(string path) {
-      path = this.getPattern().regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
-    }
-
-    string getName() { result = this.getPropStringValue("name") }
-
-    string getTarget() { result = this.getPropStringValue("target") }
-  }
-
+  /* Models */
   abstract class ModelManifest extends JsonObject { }
 
+  /** Gets the canonical UI5 module path represented by a MaD client data model alias. */
+  private string getInternalModelType(string typeAlias) {
+    ApiGraphModelsExtensions::typeModel("UI5ClientDataModel", typeAlias, "") and
+    ApiGraphModelsExtensions::typeModel(typeAlias, result, "")
+  }
+
+  private DataSourceManifest getReferencedDataSource(JsonObject model) {
+    result.getName() = model.getPropStringValue("dataSource") and
+    result.getParentManifestJson() = model.getJsonFile()
+  }
+
+  /**
+   * Gets the internal model type explicitly configured on `model`, or the type inferred by UI5
+   * from its referenced data source. For example, a model referencing a data source with
+   * `"type": "JSON"` resolves to `sap/ui/model/json/JSONModel`.
+   */
+  private string getEffectiveInternalModelType(JsonObject model) {
+    result = ui5TypeNameToModulePath(model.getPropStringValue("type")) and
+    result = getInternalModelType(_)
+    or
+    not exists(model.getPropStringValue("type")) and
+    result = getInternalModelType("UI5" + getReferencedDataSource(model).getType() + "DataModel")
+  }
+
+  /**
+   * A JSON or XML client data model declared in `sap.ui5/models`.
+   *
+   * This covers both `{ "type": "sap.ui.model.json.JSONModel" }` and
+   * `{ "dataSource": "modelData" }` when `modelData` is a JSON data source.
+   */
   class InternalModelManifest extends ModelManifest {
     string modelName;
     string type;
@@ -990,12 +1050,7 @@ module ManifestJson {
       exists(JsonObject models, JsonObject modelsParent |
         models = modelsParent.getPropValue("models") and
         this = models.getPropValue(modelName) and
-        type = this.getPropStringValue("type") and
-        this.getPropStringValue("type") =
-          [
-            "sap.ui.model.json.JSONModel", // A JSON Model
-            "sap.ui.model.xml.XMLModel", // An XML Model
-          ]
+        type = getEffectiveInternalModelType(this)
       )
     }
 
@@ -1052,6 +1107,7 @@ module ManifestJson {
     }
   }
 
+  /* App descriptor */
   class ManifestJson extends File {
     string id;
 
@@ -1187,6 +1243,53 @@ module ManifestJson {
   bindingset[path]
   private JsonObject resolveIndirectPath(string path) {
     result = any(JsonObject tODO | tODO.getFile().getAbsolutePath() = path)
+  }
+
+  /**
+   * The default `JSONModel` automatically created from the application manifest.
+   *
+   * For example, this represents `"models": { "": { "type":
+   * "sap.ui.model.json.JSONModel" } }`.
+   *
+   * The MaD-modeled component call serves as this model's data-flow node. UI5 creates and attaches
+   * the manifest-declared model during component initialization, so application code has no
+   * corresponding `JSONModel` constructor call.
+   */
+  class DefaultManifestJsonModel extends UI5InternalModel {
+    DefaultManifestJsonModel() {
+      this.(Component).getInternalModelDef("").getType() = "sap/ui/model/json/JSONModel"
+    }
+
+    private ModelReference getAReference() {
+      result.isDefaultModelReference() and
+      (
+        result = this.(Component).getAThisNode().getAMemberCall("getModel")
+        or
+        inSameWebApp(result.getFile(), this.(Component).getParentManifestJson())
+      )
+    }
+
+    private MethodCallNode getASetDefaultBindingModeCall() {
+      result = this.getAReference().getAMemberCall("setDefaultBindingMode")
+    }
+
+    /**
+     * Holds unless the application changes the model to another binding mode, for example with
+     * `this.getModel().setDefaultBindingMode(BindingMode.OneWay)`.
+     */
+    predicate isTwoWayBinding() {
+      exists(BindingMode bindingMode |
+        bindingMode.getTwoWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
+      )
+      or
+      not exists(this.getASetDefaultBindingModeCall())
+    }
+
+    override string getPathString() { none() }
+
+    override string getPathString(Property property) { none() }
+
+    override predicate contentIsStaticallyVisible() { none() }
   }
 
   class JsonModel extends UI5InternalModel {

@@ -108,6 +108,17 @@ extensions:
       - ["CustomRenderer", "Renderer", "Member[extend]"]
       - ["ViewReference", "CustomController", "Member[getView].ReturnValue"]
       - ["ControlReference", "ViewReference", "Member[byId].ReturnValue"]
+      # client-side data model types hierarchy
+      - ["UI5ClientDataModel", "UI5ClientDataModel", "Instance"]
+      - ["UI5ClientDataModel", "sap/ui/model/ClientModel", ""]
+      - ["UI5ClientDataModel", "UI5JSONDataModel", ""]
+      - ["UI5ClientDataModel", "UI5XMLDataModel", ""]
+      - ["UI5JSONDataModel", "UI5JSONDataModel", "Instance"]
+      - ["UI5JSONDataModel", "sap/ui/model/json/JSONModel", ""]
+      - ["UI5JSONDataModel", "global", "Member[sap].Member[ui].Member[model].Member[json].Member[JSONModel]"]
+      - ["UI5XMLDataModel", "UI5XMLDataModel", "Instance"]
+      - ["UI5XMLDataModel", "sap/ui/model/xml/XMLModel", ""]
+      - ["UI5XMLDataModel", "global", "Member[sap].Member[ui].Member[model].Member[xml].Member[XMLModel]"]
 
   - addsTo:
       pack: codeql/javascript-all

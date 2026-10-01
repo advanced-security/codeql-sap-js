@@ -95,7 +95,7 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the qualified type name, e.g. `sap/m/SearchField`.
    */
-  string getImportPath() { result = this.getQualifiedType().replaceAll(".", "/") }
+  string getImportPath() { result = ui5TypeNameToModulePath(this.getQualifiedType()) }
 
   /**
    * Gets the definition of this control if this is a custom one.
@@ -185,7 +185,7 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the full import path of the associated control.
    */
-  string getControlTypeName() { result = this.getQualifiedType().replaceAll(".", "/") }
+  string getControlTypeName() { result = ui5TypeNameToModulePath(this.getQualifiedType()) }
 
   /**
    * Holds if the control content is sanitized for HTML

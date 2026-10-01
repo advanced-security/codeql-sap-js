@@ -1,0 +1,11 @@
+<mvc:View
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <List items="{/items}">
+    <CustomListItem>
+      <Input value="{value}" />
+      <core:HTML content="{value}" />
+    </CustomListItem>
+  </List>
+</mvc:View>
