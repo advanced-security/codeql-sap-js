@@ -1,7 +1,9 @@
 <mvc:View
+  controllerName="codeql-sap-js.controller.app"
   xmlns="sap.m"
   xmlns:core="sap.ui.core"
   xmlns:mvc="sap.ui.core.mvc">
+  <Button id="localModelControl" />
   <List items="{/items}">
     <CustomListItem>
       <Input value="{value}" />

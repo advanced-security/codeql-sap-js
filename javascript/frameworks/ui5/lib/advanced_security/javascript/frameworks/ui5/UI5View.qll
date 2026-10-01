@@ -211,10 +211,19 @@ abstract class UI5BindingPath extends BindingPath {
 private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
   not exists(bindingPath.getModelName()) and
   inSameWebApp(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
-  not exists(MethodCallNode setModelCall |
+  not hasLocalDefaultModelOverride(bindingPath)
+}
+
+/** Holds if a control- or view-local default model overrides the inherited component model. */
+private predicate hasLocalDefaultModelOverride(UI5BindingPath bindingPath) {
+  exists(MethodCallNode setModelCall |
     setModelCall.getMethodName() = "setModel" and
     not exists(setModelCall.getArgument(1)) and
-    inSameWebApp(bindingPath.getLocation().getFile(), setModelCall.getFile())
+    (
+      bindingPath.getControlDeclaration().getAReference().flowsTo(setModelCall.getReceiver())
+      or
+      bindingPath.getView().getController().getAViewReference().flowsTo(setModelCall.getReceiver())
+    )
   )
 }
 
@@ -505,7 +514,7 @@ class HtmlBindingPath extends UI5BindingPath {
 
   override HtmlBindingPath getAnEnclosingItemsBinding() {
     result != this and
-    result.getPropertyName() = "items" and
+    result.getPropertyName() = "data-items" and
     result.getBindingTarget().getElement() = this.getBindingTarget().getElement().getParent+()
   }
 

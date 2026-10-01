@@ -1,21 +1,21 @@
 nodes
 | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
-| webapp/view/app.view.xml:5:3:5:26 | items={/items} |
-| webapp/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp/view/app.view.xml:8:7:8:38 | content={value} |
+| webapp/view/app.view.xml:7:3:7:26 | items={/items} |
+| webapp/view/app.view.xml:9:7:9:32 | value={value} |
+| webapp/view/app.view.xml:10:7:10:38 | content={value} |
 | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} |
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 edges
-| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:5:3:5:26 | items={/items} |
-| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:8:7:8:38 | content={value} |
-| webapp/view/app.view.xml:5:3:5:26 | items={/items} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
-| webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
-| webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
+| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:7:3:7:26 | items={/items} |
+| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:9:7:9:32 | value={value} |
+| webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) | webapp/view/app.view.xml:10:7:10:38 | content={value} |
+| webapp/view/app.view.xml:7:3:7:26 | items={/items} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
+| webapp/view/app.view.xml:9:7:9:32 | value={value} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
+| webapp/view/app.view.xml:10:7:10:38 | content={value} | webapp/Component.js:4:10:8:4 | UICompo ... }\\r\\n  }) |
 | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) |
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) |
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) |
 #select
-| webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:7:7:32 | value={value} | user-provided value |
+| webapp/view/app.view.xml:10:7:10:38 | content={value} | webapp/view/app.view.xml:9:7:9:32 | value={value} | webapp/view/app.view.xml:10:7:10:38 | content={value} | XSS vulnerability due to $@. | webapp/view/app.view.xml:9:7:9:32 | value={value} | user-provided value |

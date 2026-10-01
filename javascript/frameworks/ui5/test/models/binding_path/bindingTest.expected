@@ -35,6 +35,14 @@
 | bindingComposite.xml:20:25:28:13 | title={i18n>stockValue} | i18n>stockValue |
 | bindingComposite.xml:34:5:36:28 | value={/input} | /input |
 | bindingComposite.xml:38:5:38:45 | content={path: '/input'} | /input |
+| bindingNested.json:6:16:6:26 | "items": "{/groups}" | /groups |
+| bindingNested.json:10:20:10:30 | "items": "{entries}" | /groups/entries |
+| bindingNested.json:14:24:14:32 | "value": "{value}" | /groups/entries/value |
+| bindingNested.json:18:26:18:34 | "content": "{value}" | /groups/entries/value |
+| bindingNested.view.html:2:38:2:59 | data-items={/groups} | /groups |
+| bindingNested.view.html:3:40:3:61 | data-items={entries} | /groups/entries |
+| bindingNested.view.html:4:43:4:62 | data-value={value} | /groups/entries/value |
+| bindingNested.view.html:5:48:5:69 | data-content={value} | /groups/entries/value |
 | bindingNested.xml:5:3:5:27 | items={/groups} | /groups |
 | bindingNested.xml:7:7:7:31 | items={entries} | /groups/entries |
 | bindingNested.xml:9:11:9:36 | value={value} | /groups/entries/value |
