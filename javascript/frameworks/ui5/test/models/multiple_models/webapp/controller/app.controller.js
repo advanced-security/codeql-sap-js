@@ -32,6 +32,9 @@ sap.ui.define([
             oControl2.setModel(oModelDefault3);
             oControl2.setModel(oModel31, "controlRefModel1");
             oControl2.setModel(oModel32, "controlRefModel2");
+            oControl2.getModel("controlRefModel1");
+            oControl2.getModel("controlRefModel2");
+            oControl2.getModel("missingModel");
 
             var oControl3 = this.getView().byId("unit-test-target2");
             var oModel41 = new JSONModel();

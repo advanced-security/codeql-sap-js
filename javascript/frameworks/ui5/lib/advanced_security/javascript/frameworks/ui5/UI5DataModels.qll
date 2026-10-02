@@ -21,6 +21,8 @@ class ModelReference extends MethodCallNode {
   ModelReference() {
     exists(ViewReference view | this = view.getAMemberCall("getModel"))
     or
+    exists(ControlReference control | this = control.getAMemberCall("getModel"))
+    or
     exists(CustomController controller |
       this = controller.getAViewReference().getAMemberCall("getModel") or
       this = controller.getOwnerComponentRef().getAMemberCall("getModel")
@@ -48,10 +50,11 @@ class ModelReference extends MethodCallNode {
    */
   MethodCallNode getAMatchingSetModelCall() {
     result.getMethodName() = "setModel" and
+    modelNamesMatch(this, result) and
     (
       modelControlOwnersMatch(this, result)
       or
-      modelViewOwnersMatch(this, result) and modelNamesMatch(this, result)
+      modelViewOwnersMatch(this, result)
     )
   }
 
