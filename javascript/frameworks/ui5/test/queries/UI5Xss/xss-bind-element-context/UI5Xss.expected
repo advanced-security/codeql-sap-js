@@ -1,4 +1,12 @@
 nodes
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
+| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
+| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
+| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
+| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} |
@@ -15,6 +23,24 @@ nodes
 | webapp/view/app.view.xml:30:7:30:56 | content={name} |
 | webapp/view/app.view.xml:32:5:32:52 | content={name} |
 edges
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
+| json_component/view/app.view.json:26:26:26:33 | "content": "{name}" | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
+| json_component/view/app.view.json:26:26:26:33 | "content": "{name}" | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
+| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" | json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
+| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" | json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
+| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
+| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
+| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
+| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:16:11:16:62 | content={name} |
@@ -25,21 +51,9 @@ edges
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:32:5:32:52 | content={name} |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
 | webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/view/app.view.xml:14:7:14:34 | items={/otherList} | webapp/view/app.view.xml:14:7:14:34 | items={/otherList} |
@@ -47,40 +61,18 @@ edges
 | webapp/view/app.view.xml:16:11:16:62 | content={name} | webapp/view/app.view.xml:16:11:16:62 | content={name} |
 | webapp/view/app.view.xml:16:11:16:62 | content={name} | webapp/view/app.view.xml:16:11:16:62 | content={name} |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
-| webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:21:7:21:53 | content={name} |
-| webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
 | webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:24:7:24:53 | content={name} |
 | webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
 | webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
-| webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
-| webapp/view/app.view.xml:27:7:27:58 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
-| webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
-| webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
 | webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
-| webapp/view/app.view.xml:30:7:30:56 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
-| webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
-| webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:27:7:27:58 | content={name} |
-| webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:30:7:30:56 | content={name} |
-| webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
 | webapp/view/app.view.xml:32:5:32:52 | content={name} | webapp/view/app.view.xml:32:5:32:52 | content={name} |
 #select
+| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | XSS vulnerability due to $@. | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | user-provided value |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
 | webapp/view/app.view.xml:21:7:21:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:21:7:21:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
 | webapp/view/app.view.xml:24:7:24:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:24:7:24:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |

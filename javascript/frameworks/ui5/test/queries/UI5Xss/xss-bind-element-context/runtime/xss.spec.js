@@ -1,5 +1,11 @@
 const { test, expect } = require("@playwright/test");
 
+function markerInSink(page, sinkId) {
+  return page.locator(
+    `[id$="${sinkId}"][data-xss-marker="true"], [id$="${sinkId}"] [data-xss-marker="true"]`
+  );
+}
+
 test("renders input through the bindElement context without sanitization", async ({ page }) => {
   await page.goto("/index.html");
 
@@ -9,7 +15,18 @@ test("renders input through the bindElement context without sanitization", async
   await input.fill('<span data-xss-marker="true">injected</span>');
   await input.blur();
 
-  const markers = page.locator('[data-xss-marker="true"]');
-  await expect(markers).toHaveCount(3);
-  await expect(markers).toHaveText(["injected", "injected", "injected"]);
+  for (const sinkId of ["htmlSink", "legacySink", "objectSink"]) {
+    await expect(markerInSink(page, sinkId)).toHaveText("injected");
+  }
+
+  for (const sinkId of [
+    "namedSink",
+    "nestedSink",
+    "aggregationSink",
+    "namedObjectSink",
+    "namedPathSink",
+    "siblingSink"
+  ]) {
+    await expect(markerInSink(page, sinkId)).toHaveCount(0);
+  }
 });
