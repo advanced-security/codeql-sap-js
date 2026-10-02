@@ -781,7 +781,7 @@ DataFlow::Node getManifestBindingTargetNode(UI5BindingPath bindingPath) {
   result = bindingPath.getBinding().getBindingTarget().asDataFlowNode()
 }
 
-private string getManifestBindingKey(UI5BindingPath bindingPath) {
+private string getManifestBindingLocationKey(UI5BindingPath bindingPath) {
   exists(Location location | location = bindingPath.getLocation() |
     result =
       location.getFile().getAbsolutePath() + ":" + location.getStartLine().toString() + ":" +
@@ -789,6 +789,12 @@ private string getManifestBindingKey(UI5BindingPath bindingPath) {
         location.getEndColumn().toString() + ":" + bindingPath.getPropertyName() + ":" +
         bindingPath.getLiteralRepr()
   )
+}
+
+private string getManifestBindingKey(UI5BindingPath bindingPath) {
+  if bindingPath = any(UI5View view).getASource()
+  then result = "1:" + getManifestBindingLocationKey(bindingPath)
+  else result = "0:" + getManifestBindingLocationKey(bindingPath)
 }
 
 private string getCanonicalManifestBindingKey(DefaultManifestJsonModel model, string absolutePath) {

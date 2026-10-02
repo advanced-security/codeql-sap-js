@@ -10,11 +10,11 @@ predicate manifestJsonModelBindingStep(DataFlow::Node start, DataFlow::Node end)
     content.getModel() = bindingPath.getModel() and
     content.getAbsolutePath() = bindingPath.getAbsolutePath() and
     (
-      start = getManifestBindingTargetNode(bindingPath) and
-      end = content
-      or
       start = content and
-      end = getManifestBindingTargetNode(bindingPath) and
+      end = getManifestBindingTargetNode(bindingPath)
+      or
+      start = getManifestBindingTargetNode(bindingPath) and
+      end = content and
       content.getModel().hasTwoWayBinding()
     ) and
     start != end
