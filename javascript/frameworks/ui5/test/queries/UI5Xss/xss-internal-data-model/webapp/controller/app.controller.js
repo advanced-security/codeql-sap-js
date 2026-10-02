@@ -5,8 +5,8 @@ sap.ui.define(
 
     return Controller.extend("codeql-sap-js.controller.app", {
       onInit: function () {
-        this.byId("localModelControl").setModel(new JSONModel({}));
-        this.byId("ancestorModelControl").setModel(new JSONModel({}));
+        this.byId("localModelControl").setModel(new JSONModel({ controlOverride: "" }));
+        this.byId("ancestorModelControl").setModel(new JSONModel({ overridden: "" }));
       }
     });
   }

@@ -9,6 +9,7 @@ sap.ui.define([
                 input: null
             };
             var oModel = new JSONModel(oData);
+            oModel.setDefaultBindingMode("TwoWay");
             this.getView().setModel(oModel);
         }
     });

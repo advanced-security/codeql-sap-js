@@ -9,6 +9,7 @@ private newtype TUI5Control =
         .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
   } or
   TJsonControl(JsonObject control) {
+    exists(control.getPropStringValue("Type")) and
     exists(JsonView view | control.getParent+() = view.getRoot().getPropValue("content"))
   } or
   TJsControl(NewNode control) {

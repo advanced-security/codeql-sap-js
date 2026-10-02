@@ -11,6 +11,7 @@ nodes
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | unrelated_models/view/app.view.xml:5:3:5:29 | value={/value} |
 | unrelated_models/view/app.view.xml:6:3:6:35 | content={/value} |
+| webapp/controller/app.controller.js:9:68:9:81 | overridden: "" |
 | webapp/view/app.view.xml:7:5:7:41 | value={/controlOverride} |
 | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} |
 | webapp/view/app.view.xml:10:3:10:26 | items={/items} |
@@ -37,6 +38,7 @@ nodes
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp_component_override/Component.js:13:39:13:47 | value: "" |
 | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} |
 | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
 | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} |
@@ -53,8 +55,8 @@ edges
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
-| standalone_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
-| standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
+| standalone_component/Component.js:4:10:13:4 | UICompo ...  }\\n  }) | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
+| standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/Component.js:4:10:13:4 | UICompo ...  }\\n  }) |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
@@ -69,7 +71,13 @@ edges
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp/controller/app.controller.js:8:65:8:83 | controlOverride: "" | webapp/view/app.view.xml:7:5:7:41 | value={/controlOverride} |
+| webapp/controller/app.controller.js:9:52:9:84 | new JSO ... : "" }) | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} |
+| webapp/controller/app.controller.js:9:68:9:81 | overridden: "" | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} |
+| webapp/controller/app.controller.js:9:68:9:81 | overridden: "" | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} |
 | webapp/controller/local.controller.js:12:33:12:49 | new JSONModel({}) | webapp/view/local.view.xml:8:3:8:42 | content={/viewOverride} |
+| webapp/view/app.view.xml:7:5:7:41 | value={/controlOverride} | webapp/controller/app.controller.js:8:49:8:86 | new JSO ... : "" }) |
+| webapp/view/app.view.xml:7:5:7:41 | value={/controlOverride} | webapp/controller/app.controller.js:8:65:8:83 | controlOverride: "" |
 | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} |
 | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} |
 | webapp/view/app.view.xml:10:3:10:26 | items={/items} | webapp/view/app.view.xml:10:3:10:26 | items={/items} |
@@ -88,6 +96,9 @@ edges
 | webapp/view/app.view.xml:17:3:17:29 | value={/input} | webapp/view/app.view.xml:17:3:17:29 | value={/input} |
 | webapp/view/app.view.xml:18:3:18:36 | content={/output} | webapp/view/app.view.xml:18:3:18:36 | content={/output} |
 | webapp/view/app.view.xml:18:3:18:36 | content={/output} | webapp/view/app.view.xml:18:3:18:36 | content={/output} |
+| webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | webapp/controller/app.controller.js:9:52:9:84 | new JSO ... : "" }) |
+| webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | webapp/controller/app.controller.js:9:68:9:81 | overridden: "" |
+| webapp/view/app.view.xml:21:5:21:42 | content={/overridden} | webapp/controller/app.controller.js:9:68:9:81 | overridden: "" |
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
@@ -119,6 +130,12 @@ edges
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp_component_override/Component.js:13:23:13:50 | new JSO ... : "" }) | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
+| webapp_component_override/Component.js:13:39:13:47 | value: "" | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} |
+| webapp_component_override/Component.js:13:39:13:47 | value: "" | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
+| webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | webapp_component_override/Component.js:13:23:13:50 | new JSO ... : "" }) |
+| webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | webapp_component_override/Component.js:13:39:13:47 | value: "" |
+| webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} | webapp_component_override/Component.js:13:39:13:47 | value: "" |
 | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} |
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) |
@@ -130,6 +147,8 @@ edges
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |
 | webapp/view/app.view.xml:13:7:13:38 | content={value} | webapp/view/app.view.xml:12:7:12:32 | value={value} | webapp/view/app.view.xml:13:7:13:38 | content={value} | XSS vulnerability due to $@. | webapp/view/app.view.xml:12:7:12:32 | value={value} | user-provided value |
+| webapp/view/app.view.xml:21:5:21:42 | content={/overridden} | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} | XSS vulnerability due to $@. | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | user-provided value |
 | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | XSS vulnerability due to $@. | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | user-provided value |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | XSS vulnerability due to $@. | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | user-provided value |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | XSS vulnerability due to $@. | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | user-provided value |
+| webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |

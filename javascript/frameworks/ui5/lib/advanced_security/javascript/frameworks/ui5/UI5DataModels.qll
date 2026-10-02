@@ -431,9 +431,7 @@ class DefaultManifestJsonModel extends UI5InternalModel {
    * Holds unless the application changes the model to another binding mode.
    */
   predicate isTwoWayBinding() {
-    exists(BindingMode bindingMode |
-      bindingMode.getTwoWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
-    )
+    isTwoWayBindingMode(this.getASetDefaultBindingModeCall().getArgument(0))
     or
     not exists(this.getASetDefaultBindingModeCall())
   }
@@ -511,15 +509,11 @@ class JsonModel extends UI5InternalModel {
   }
 
   predicate isOneWayBinding() {
-    exists(BindingMode bindingMode |
-      bindingMode.getOneWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
-    )
+    isOneWayBindingMode(this.getASetDefaultBindingModeCall().getArgument(0))
   }
 
   predicate isTwoWayBinding() {
-    exists(BindingMode bindingMode |
-      bindingMode.getTwoWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
-    )
+    isTwoWayBindingMode(this.getASetDefaultBindingModeCall().getArgument(0))
     or
     not exists(this.getASetDefaultBindingModeCall())
   }
@@ -589,6 +583,18 @@ class BindingMode extends RequiredObject {
   PropRead getDefault_() { result = this.asSourceNode().getAPropertyRead("Default") }
 
   PropRead getOneTime() { result = this.asSourceNode().getAPropertyRead("OneTime") }
+}
+
+private predicate isOneWayBindingMode(DataFlow::Node argument) {
+  argument.getALocalSource().getStringValue() = "OneWay"
+  or
+  exists(BindingMode bindingMode | bindingMode.getOneWay().flowsTo(argument))
+}
+
+private predicate isTwoWayBindingMode(DataFlow::Node argument) {
+  argument.getALocalSource().getStringValue() = "TwoWay"
+  or
+  exists(BindingMode bindingMode | bindingMode.getTwoWay().flowsTo(argument))
 }
 
 /**
@@ -670,14 +676,32 @@ private predicate modelNameMatchesBindingPath(
   else not exists(setModelCall.getArgument(1))
 }
 
-private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
+private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath, UI5Control control) {
   exists(ControlReference reference |
-    reference = bindingPath.getControlDeclaration().getAReference() and
+    reference = control.getAReference() and
     controlReferenceBelongsToBindingView(reference, bindingPath) and
     reference.flowsTo(result.getReceiver())
   ) and
   result.getMethodName() = "setModel" and
   modelNameMatchesBindingPath(result, bindingPath)
+}
+
+private predicate controlIsStrictDescendant(UI5Control descendant, UI5Control ancestor) {
+  descendant.asXmlControl().getParent+() = ancestor.asXmlControl()
+  or
+  descendant.asJsonControl().getParent+() = ancestor.asJsonControl()
+}
+
+private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
+  exists(UI5Control control |
+    control = getAControlInBindingHierarchy(bindingPath) and
+    result = getControlSetModelCall(bindingPath, control) and
+    not exists(UI5Control closer |
+      closer = getAControlInBindingHierarchy(bindingPath) and
+      controlIsStrictDescendant(closer, control) and
+      exists(getControlSetModelCall(bindingPath, closer))
+    )
+  )
 }
 
 private MethodCallNode getViewSetModelCall(UI5BindingPath bindingPath) {
@@ -686,11 +710,33 @@ private MethodCallNode getViewSetModelCall(UI5BindingPath bindingPath) {
   modelNameMatchesBindingPath(result, bindingPath)
 }
 
+private MethodCallNode getComponentSetModelCall(UI5BindingPath bindingPath) {
+  (
+    result =
+      bindingPath
+          .getView()
+          .getController()
+          .getOwnerComponentRef()
+          .getALocalSource()
+          .getAMemberCall("setModel")
+    or
+    exists(Component component |
+      inSameUI5Component(bindingPath.getLocation().getFile(), component.getParentManifestJson()) and
+      result = component.getAThisNode().getALocalSource().getAMemberCall("setModel")
+    )
+  ) and
+  modelNameMatchesBindingPath(result, bindingPath)
+}
+
 private MethodCallNode getNearestSetModelCall(UI5BindingPath bindingPath) {
   result = getControlSetModelCall(bindingPath)
   or
   result = getViewSetModelCall(bindingPath) and
   not exists(getControlSetModelCall(bindingPath))
+  or
+  result = getComponentSetModelCall(bindingPath) and
+  not exists(getControlSetModelCall(bindingPath)) and
+  not exists(getViewSetModelCall(bindingPath))
 }
 
 /**
@@ -698,12 +744,14 @@ private MethodCallNode getNearestSetModelCall(UI5BindingPath bindingPath) {
  */
 DataFlow::Node getModelNode(UI5BindingPath bindingPath) {
   exists(Property p, JsonModel model |
+    model = bindingPath.getModel() and
     result.(DataFlow::PropWrite).getPropertyNameExpr() = p.getNameExpr() and
     bindingPath.getAbsolutePath() = model.getPathString(p) and
     inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
   )
   or
   exists(string propName, JsonModel model |
+    model = bindingPath.getModel() and
     result = model.getArgument(0).getALocalSource() and
     bindingPath.getPath() = model.getPathStringPropName(propName) and
     exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
@@ -799,10 +847,7 @@ private DefaultODataServiceModel getDefaultODataModel(UI5BindingPath bindingPath
 pragma[nomagic]
 private JsonModel getNonStaticJsonModelNode(UI5BindingPath bindingPath) {
   not result.contentIsStaticallyVisible() and
-  exists(CustomController controller |
-    bindingPath.getView() = controller.getAViewReference().getDefinition() and
-    controller.getModel() = result
-  )
+  result = bindingPath.getModel()
 }
 
 pragma[nomagic]
