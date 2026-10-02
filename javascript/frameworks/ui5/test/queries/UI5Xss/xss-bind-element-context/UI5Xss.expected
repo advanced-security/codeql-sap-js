@@ -1,0 +1,34 @@
+nodes
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:10:7:10:58 | content={named>name} |
+| webapp/view/app.view.xml:12:9:12:55 | content={name} |
+| webapp/view/app.view.xml:14:7:14:34 | items={/otherList} |
+| webapp/view/app.view.xml:16:11:16:62 | content={name} |
+| webapp/view/app.view.xml:20:5:20:52 | content={name} |
+edges
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:12:9:12:55 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:16:11:16:62 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:20:5:20:52 | content={name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
+| webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
+| webapp/view/app.view.xml:14:7:14:34 | items={/otherList} | webapp/view/app.view.xml:14:7:14:34 | items={/otherList} |
+| webapp/view/app.view.xml:14:7:14:34 | items={/otherList} | webapp/view/app.view.xml:14:7:14:34 | items={/otherList} |
+| webapp/view/app.view.xml:16:11:16:62 | content={name} | webapp/view/app.view.xml:16:11:16:62 | content={name} |
+| webapp/view/app.view.xml:16:11:16:62 | content={name} | webapp/view/app.view.xml:16:11:16:62 | content={name} |
+| webapp/view/app.view.xml:20:5:20:52 | content={name} | webapp/view/app.view.xml:20:5:20:52 | content={name} |
+| webapp/view/app.view.xml:20:5:20:52 | content={name} | webapp/view/app.view.xml:20:5:20:52 | content={name} |
+#select
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
