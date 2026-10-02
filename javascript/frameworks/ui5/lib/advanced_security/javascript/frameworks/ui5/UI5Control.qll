@@ -91,7 +91,11 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the `id` property of this control.
    */
-  string getId() { result = this.getProperty("id").getValue() }
+  string getId() {
+    result = this.getProperty("id").getValue()
+    or
+    result = this.asJsControl().getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+  }
 
   /**
    * Gets the qualified type name, e.g. `sap/m/SearchField`.
@@ -117,13 +121,11 @@ class UI5Control extends TUI5Control {
     (
       // Standard byId: ID in first argument
       result.getNumArgument() = 1 and
-      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
       or
       // Fragment.byId: ID in second argument
       result.getNumArgument() = 2 and
-      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
     )
   }
 

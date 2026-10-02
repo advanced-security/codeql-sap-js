@@ -862,6 +862,8 @@ private UI5Control getAControlInBindingHierarchy(UI5BindingPath bindingPath) {
   result.asXmlControl() = bindingPath.getControlDeclaration().asXmlControl().getParent*()
   or
   result.asJsonControl() = bindingPath.getControlDeclaration().asJsonControl().getParent*()
+  or
+  result.asJsControl() = bindingPath.getControlDeclaration().asJsControl()
 }
 
 pragma[nomagic]
