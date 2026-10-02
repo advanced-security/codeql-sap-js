@@ -12,10 +12,7 @@ edges
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
-| webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
 #select
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:7:7:32 | value={value} | user-provided value |

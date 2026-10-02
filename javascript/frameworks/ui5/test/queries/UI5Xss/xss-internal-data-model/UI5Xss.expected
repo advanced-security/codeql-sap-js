@@ -50,20 +50,14 @@ edges
 | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
-| nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
-| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} |
-| nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/Component.js:4:10:13:4 | UICompo ...  }\\n  }) | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/Component.js:4:10:13:4 | UICompo ...  }\\n  }) |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
 | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
-| standalone_component/view/app.view.xml:5:3:5:29 | value={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
-| standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:5:3:5:29 | value={/value} |
-| standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} | standalone_component/view/app.view.xml:6:3:6:35 | content={/value} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:9:3:9:45 | content={/controlOverride} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:13:7:13:38 | content={value} |
@@ -86,10 +80,7 @@ edges
 | webapp/view/app.view.xml:12:7:12:32 | value={value} | webapp/view/app.view.xml:12:7:12:32 | value={value} |
 | webapp/view/app.view.xml:12:7:12:32 | value={value} | webapp/view/app.view.xml:12:7:12:32 | value={value} |
 | webapp/view/app.view.xml:12:7:12:32 | value={value} | webapp/view/app.view.xml:13:7:13:38 | content={value} |
-| webapp/view/app.view.xml:12:7:12:32 | value={value} | webapp/view/app.view.xml:13:7:13:38 | content={value} |
 | webapp/view/app.view.xml:13:7:13:38 | content={value} | webapp/view/app.view.xml:12:7:12:32 | value={value} |
-| webapp/view/app.view.xml:13:7:13:38 | content={value} | webapp/view/app.view.xml:12:7:12:32 | value={value} |
-| webapp/view/app.view.xml:13:7:13:38 | content={value} | webapp/view/app.view.xml:13:7:13:38 | content={value} |
 | webapp/view/app.view.xml:13:7:13:38 | content={value} | webapp/view/app.view.xml:13:7:13:38 | content={value} |
 | webapp/view/app.view.xml:17:3:17:29 | value={/input} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/app.view.xml:17:3:17:29 | value={/input} | webapp/view/app.view.xml:17:3:17:29 | value={/input} |
@@ -103,10 +94,7 @@ edges
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
 | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
-| webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
 | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
-| webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} |
-| webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
 | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
 | webapp/view/local.view.xml:7:3:7:36 | value={/viewOverride} | webapp/controller/local.controller.js:12:33:12:49 | new JSONModel({}) |
 | webapp/view/local.view.xml:8:3:8:42 | content={/viewOverride} | webapp/controller/local.controller.js:12:33:12:49 | new JSONModel({}) |
@@ -114,9 +102,6 @@ edges
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
-| webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
-| webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
-| webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
@@ -124,11 +109,8 @@ edges
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
+| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
 | webapp_component_override/Component.js:13:23:13:50 | new JSO ... : "" }) | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
 | webapp_component_override/Component.js:13:39:13:47 | value: "" | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} |
@@ -140,8 +122,6 @@ edges
 | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} | webapp_oneway/view/app.view.xml:5:3:5:26 | items={/items} |
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} | webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) |
 | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
-| webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} | webapp_oneway/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} | webapp_oneway/view/app.view.xml:8:7:8:38 | content={value} |
 #select
 | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | nested_component/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | nested_component/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |

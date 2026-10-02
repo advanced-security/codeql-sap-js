@@ -3,6 +3,31 @@ import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5View
 
 /**
+ * Connects each manifest-model binding target to one canonical node for its component and path.
+ */
+predicate manifestJsonModelBindingStep(DataFlow::Node start, DataFlow::Node end) {
+  exists(UI5BindingPath bindingPath, ManifestJsonModelContentNode content |
+    content.getModel() = bindingPath.getModel() and
+    content.getAbsolutePath() = bindingPath.getAbsolutePath() and
+    (
+      start = getManifestBindingTargetNode(bindingPath) and
+      end = content
+      or
+      start = content and
+      end = getManifestBindingTargetNode(bindingPath) and
+      content.getModel().hasTwoWayBinding()
+    ) and
+    start != end
+  )
+}
+
+class ManifestJsonModelBindingStep extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    manifestJsonModelBindingStep(start, end)
+  }
+}
+
+/**
  * Step from a value assigned to a JSONModel property to the binding path that reads it.
  * This enables tracking data flowing INTO a model constructor argument and OUT through XML bindings.
  *

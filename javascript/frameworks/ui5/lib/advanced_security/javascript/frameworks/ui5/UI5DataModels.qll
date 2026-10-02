@@ -140,8 +140,7 @@ abstract class UI5Model extends InvokeNode {
 }
 
 /**
- * A path-specific content node of a manifest-created default JSON model, such as the node for
- * `/input` referenced by `value="{/input}"`.
+ * A path-specific content node of a manifest-created default JSON model.
  */
 abstract class ManifestJsonModelContentNode extends DataFlow::Node {
   abstract DefaultManifestJsonModel getModel();
@@ -176,6 +175,15 @@ abstract class UI5InternalModel extends UI5Model {
     result.asExpr().(StringLiteral).getParent() = this.(JsonModel).asExpr()
     or
     result.(ManifestJsonModelContentNode).getModel() = this.(DefaultManifestJsonModel)
+  }
+
+  predicate hasContentNodeForBinding(UI5BindingPath bindingPath, DataFlow::Node node) {
+    node = bindingPath.getNode() and
+    (
+      node = this.getAContentNode()
+      or
+      this = bindingPath.getModel().(DefaultManifestJsonModel)
+    )
   }
 
   /**
@@ -760,20 +768,47 @@ DataFlow::Node getModelNode(UI5BindingPath bindingPath) {
   or
   result = getNonStaticJsonModelNode(bindingPath)
   or
-  exists(ManifestJsonModelContentNode content |
-    content.getModel() = bindingPath.getModel() and
-    content.getAbsolutePath() = bindingPath.getAbsolutePath() and
-    result = content
-  )
+  bindingPath.getModel() instanceof DefaultManifestJsonModel and
+  result = getManifestBindingTargetNode(bindingPath)
   or
   result = getExternalModelNode(bindingPath)
 }
 
+DataFlow::Node getManifestBindingTargetNode(UI5BindingPath bindingPath) {
+  result.(DataFlow::XmlAttributeNode).getAttribute() =
+    bindingPath.getBinding().getBindingTarget().asXmlAttribute()
+  or
+  result = bindingPath.getBinding().getBindingTarget().asDataFlowNode()
+}
+
+private string getManifestBindingKey(UI5BindingPath bindingPath) {
+  exists(Location location | location = bindingPath.getLocation() |
+    result =
+      location.getFile().getAbsolutePath() + ":" + location.getStartLine().toString() + ":" +
+        location.getStartColumn().toString() + ":" + location.getEndLine().toString() + ":" +
+        location.getEndColumn().toString() + ":" + bindingPath.getPropertyName() + ":" +
+        bindingPath.getLiteralRepr()
+  )
+}
+
+private string getCanonicalManifestBindingKey(DefaultManifestJsonModel model, string absolutePath) {
+  result =
+    min(string key |
+      exists(UI5BindingPath bindingPath |
+        bindingPath.getModel() = model and
+        bindingPath.getAbsolutePath() = absolutePath and
+        exists(getManifestBindingTargetNode(bindingPath)) and
+        key = getManifestBindingKey(bindingPath)
+      )
+    |
+      key
+    )
+}
+
 /**
- * A binding target backed by a manifest-created JSON model, for example `value="{/input}"` in an
- * XML view or `"value": "{/input}"` in a JSON view.
+ * The canonical binding-backed content node for one path in a manifest-created JSON model.
  */
-private class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
+class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
   DefaultManifestJsonModel model;
   string absolutePath;
 
@@ -781,12 +816,8 @@ private class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode 
     exists(UI5BindingPath bindingPath |
       model = bindingPath.getModel() and
       absolutePath = bindingPath.getAbsolutePath() and
-      (
-        this.(DataFlow::XmlAttributeNode).getAttribute() =
-          bindingPath.getBinding().getBindingTarget().asXmlAttribute()
-        or
-        this = bindingPath.getBinding().getBindingTarget().asDataFlowNode()
-      )
+      getManifestBindingKey(bindingPath) = getCanonicalManifestBindingKey(model, absolutePath) and
+      this = getManifestBindingTargetNode(bindingPath)
     )
   }
 
