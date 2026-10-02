@@ -877,8 +877,7 @@ predicate inSameUI5Component(File file, ManifestJson manifest) {
       enclosingManifest.getParentContainer().getAChildContainer*().getAFile() = file
     |
       enclosingManifest.getAbsolutePath().length()
-    ) and
-  forall(WebApp webApp | webApp.getAResource() = file | webApp.getManifest() = manifest)
+    )
 }
 
 /**
