@@ -3,24 +3,10 @@ import DataFlow
 import advanced_security.javascript.frameworks.ui5.JsonParser
 import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
-private import advanced_security.javascript.frameworks.ui5.UI5DataModels as UI5DataModels
+import advanced_security.javascript.frameworks.ui5.UI5DataModels
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
-
-class ModelReference = UI5DataModels::ModelReference;
-
-class UI5Model = UI5DataModels::UI5Model;
-
-class ManifestJsonModelContentNode = UI5DataModels::ManifestJsonModelContentNode;
-
-class UI5InternalModel = UI5DataModels::UI5InternalModel;
-
-class UI5ExternalModel = UI5DataModels::UI5ExternalModel;
-
-class DefaultODataServiceModel = UI5DataModels::DefaultODataServiceModel;
-
-class ODataServiceModel = UI5DataModels::ODataServiceModel;
 
 /** Converts a qualified UI5 name such as `sap.m.Input` to `sap/m/Input`. */
 bindingset[qualifiedName]
@@ -818,26 +804,6 @@ module ManifestJson {
   class ODataDataSourceManifest extends DataSourceManifest {
     ODataDataSourceManifest() { this.getType() = "OData" }
   }
-
-  class JsonDataSourceDefinition = UI5DataModels::JsonDataSourceDefinition;
-
-  class ModelManifest = UI5DataModels::ModelManifest;
-
-  class InternalModelManifest = UI5DataModels::InternalModelManifest;
-
-  class ResourceModelManifest = UI5DataModels::ResourceModelManifest;
-
-  class ExternalModelManifest = UI5DataModels::ExternalModelManifest;
-
-  class DefaultManifestJsonModel = UI5DataModels::DefaultManifestJsonModel;
-
-  class JsonModel = UI5DataModels::JsonModel;
-
-  class XmlModel = UI5DataModels::XmlModel;
-
-  class ResourceModel = UI5DataModels::ResourceModel;
-
-  class BindingMode = UI5DataModels::BindingMode;
 
   /* Routing */
   class RouterManifest extends JsonObject {
