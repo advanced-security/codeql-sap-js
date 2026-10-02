@@ -69,8 +69,13 @@ abstract class UI5BindingPath extends BindingPath {
    */
   UI5BindingPath getNearestEnclosingItemsBinding() {
     result = this.getAnEnclosingItemsBinding() and
-    not result = this.getAnEnclosingItemsBinding().getAnEnclosingItemsBinding() and
-    not exists(this.getModelName())
+    not exists(this.getModelName()) and
+    not exists(result.getModelName()) and
+    not exists(UI5BindingPath closer |
+      closer = this.getAnEnclosingItemsBinding() and
+      not exists(closer.getModelName()) and
+      result = closer.getAnEnclosingItemsBinding()
+    )
   }
 
   /**
