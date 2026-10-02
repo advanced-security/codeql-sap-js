@@ -1,5 +1,6 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 import advanced_security.javascript.frameworks.ui5.UI5View
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
@@ -53,6 +54,8 @@ module UI5Xss implements DataFlow::ConfigSig {
     (
       /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
       DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
+      or
+      manifestJsonModelBindingStep(start, end)
       or
       /* TODO: Legacy code */
       /* Handler argument node to handler parameter */

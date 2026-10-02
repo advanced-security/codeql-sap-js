@@ -1,5 +1,6 @@
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5Control
+import advanced_security.javascript.frameworks.ui5.UI5DataModels as UI5DataModels
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
@@ -45,7 +46,38 @@ abstract class UI5BindingPath extends BindingPath {
   /**
    * Resolve this path to an absolute one. It gets itself for an already absolute path.
    */
-  abstract string getAbsolutePath();
+  string getAbsolutePath() {
+    if this.isAbsolute()
+    then result = this.getPath()
+    else
+      if exists(this.getNearestEnclosingItemsBinding())
+      then result = this.getNearestEnclosingItemsBinding().getAbsolutePath() + "/" + this.getPath()
+      else result = this.getPath()
+  }
+
+  /**
+   * Gets an `items` aggregation binding whose context encloses this binding.
+   *
+   * For example, in `<List items="{/groups}"><List items="{entries}"><Input value="{name}"/>`,
+   * both `items` bindings enclose the `name` binding.
+   */
+  abstract UI5BindingPath getAnEnclosingItemsBinding();
+
+  /**
+   * Gets the nearest enclosing `items` binding. In the nested-list example above, this gets
+   * `{entries}`, allowing `{name}` to resolve to `/groups/entries/name`. Non-nearest bindings are
+   * those that also enclose another enclosing `items` binding.
+   */
+  UI5BindingPath getNearestEnclosingItemsBinding() {
+    result = this.getAnEnclosingItemsBinding() and
+    not exists(this.getModelName()) and
+    not exists(result.getModelName()) and
+    not exists(UI5BindingPath closer |
+      closer = this.getAnEnclosingItemsBinding() and
+      not exists(closer.getModelName()) and
+      result = closer.getAnEnclosingItemsBinding()
+    )
+  }
 
   /**
    * Gets the name of the associated control.
@@ -60,7 +92,7 @@ abstract class UI5BindingPath extends BindingPath {
   /**
    * Gets the full import path of the associated control.
    */
-  string getControlTypeName() { result = this.getControlQualifiedType().replaceAll(".", "/") }
+  string getControlTypeName() { result = ui5TypeNameToModulePath(this.getControlQualifiedType()) }
 
   /**
    * Gets the view that this binding path resides in.
@@ -84,145 +116,12 @@ abstract class UI5BindingPath extends BindingPath {
   /**
    * Gets the model, attached to either a control or a view, that this binding path refers to.
    */
-  UI5Model getModel() {
-    (
-      /* 1. The result is a named model and the names in the controlSetModel call and in the binding path match up, but the viewSetModelCall isn't the case. */
-      exists(MethodCallNode controlSetModelCall |
-        controlSetModelCall.getMethodName() = "setModel" and
-        this.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-        controlSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-          this.getModelName() and
-        result.flowsTo(controlSetModelCall.getArgument(0))
-      )
-      or
-      /* 2. The result is a default (nameless) model and both the controlSetModel call and the binding path lack a model name, but the viewSetModeCall isn't the case. */
-      exists(MethodCallNode controlSetModelCall |
-        controlSetModelCall.getMethodName() = "setModel" and
-        this.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-        not exists(controlSetModelCall.getArgument(1)) and
-        not exists(this.getModelName()) and
-        result.flowsTo(controlSetModelCall.getArgument(0))
-      )
-      or
-      /* 3. There is no call to `setModel` on a control reference that sets a named model, so we look if the view reference has one. */
-      exists(MethodCallNode viewSetModelCall |
-        viewSetModelCall.getMethodName() = "setModel" and
-        this.getView().getController().getAViewReference().flowsTo(viewSetModelCall.getReceiver()) and
-        viewSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-          this.getModelName() and
-        result.flowsTo(viewSetModelCall.getArgument(0))
-      ) and
-      not exists(MethodCallNode controlSetModelCall |
-        controlSetModelCall.getMethodName() = "setModel" and
-        this.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-        controlSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-          this.getModelName()
-      )
-      or
-      /* 4. There is no call to `setModel` on a control reference that set an unnamed model, so we look if the view reference has one. */
-      exists(MethodCallNode viewSetModelCall |
-        viewSetModelCall.getMethodName() = "setModel" and
-        this.getView().getController().getAViewReference().flowsTo(viewSetModelCall.getReceiver()) and
-        not exists(viewSetModelCall.getArgument(1)) and
-        not exists(this.getModelName()) and
-        result.flowsTo(viewSetModelCall.getArgument(0))
-      ) and
-      not exists(MethodCallNode controlSetModelCall |
-        controlSetModelCall.getMethodName() = "setModel" and
-        this.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-        not exists(controlSetModelCall.getArgument(1)) and
-        not exists(this.getModelName())
-      )
-      or
-      /* 5.  There is no call to `setModel` in the same webapp and a default model exists that is related to the binding path this refers to */
-      result = getDefaultODataModel(this)
-    )
-    // and
-    // /* This binding path and the resulting model should live inside the same webapp */
-    // inSameWebApp(this.getFile(), result.getFile())
-  }
+  UI5Model getModel() { result = UI5DataModels::resolveModel(this) }
 
   /**
    * Gets the `DataFlow::Node` that represents this binding path.
    */
-  Node getNode() {
-    /* 1-1. Internal (Client-side) model, model hardcoded in JS code */
-    exists(Property p, JsonModel model |
-      /* Get the property of an JS object bound to this binding path. */
-      result.(DataFlow::PropWrite).getPropertyNameExpr() = p.getNameExpr() and
-      this.getAbsolutePath() = model.getPathString(p) and
-      /* Restrict search to inside the same webapp. */
-      inSameWebApp(this.getLocation().getFile(), result.getFile())
-    )
-    or
-    /* 1-2. Internal (Client-side) model, model loaded from JSON file */
-    exists(string propName, JsonModel model |
-      /* Get the property of an JS object bound to this binding path. */
-      result = model.getArgument(0).getALocalSource() and
-      this.getPath() = model.getPathStringPropName(propName) and
-      exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
-      /* Restrict search to inside the same webapp. */
-      inSameWebApp(this.getLocation().getFile(), result.getFile())
-    )
-    or
-    /* 1-3. Internal (Client-side) model, content not statically visible */
-    result = getNonStaticJsonModelNode(this)
-    or
-    /* 2. External (Server-side) model */
-    result = getExternalModelNode(this)
-  }
-}
-
-/**
- * Gets the `DefaultODataServiceModel` for a binding path in a fragment,
- * when no explicit `setModel` call exists in the webapp.
- *
- * `nomagic` to keep the `FragmentLoad` cross-flow analysis separate from the
- * main `getModel()` evaluation.
- */
-pragma[nomagic]
-private DefaultODataServiceModel getDefaultODataModel(UI5BindingPath bindingPath) {
-  // Only applies to fragment XML files
-  bindingPath.getLocation().getFile().getBaseName().matches("%.fragment.xml") and
-  not exists(MethodCallNode viewSetModelCall |
-    viewSetModelCall.getMethodName() = "setModel" and
-    inSameWebApp(bindingPath.getLocation().getFile(), viewSetModelCall.getFile())
-  ) and
-  exists(FragmentLoad load |
-    load.getCallbackObjectReference().flowsTo(result.asBinding().asDataFlowNode()) and
-    load.getNameArgument()
-        .getStringValue()
-        .matches("%" +
-            bindingPath.getLocation().getFile().getBaseName().replaceAll(".fragment.xml", "") + "%") and
-    inSameWebApp(bindingPath.getLocation().getFile(), load.getFile())
-  )
-}
-
-/**
- * Gets the `DataFlow::Node` for a non-statically-visible `JsonModel`.
- *
- * `nomagic` to avoid re-evaluation of `getModel()` when combined with other
- * `getNode()` disjuncts.
- */
-pragma[nomagic]
-private JsonModel getNonStaticJsonModelNode(UI5BindingPath bindingPath) {
-  not result.contentIsStaticallyVisible() and
-  exists(CustomController controller |
-    bindingPath.getView() = controller.getAViewReference().getDefinition() and
-    controller.getModel() = result
-  )
-}
-
-/**
- * Gets the external (server-side) model node associated with a binding path.
- *
- * `nomagic` to prevent `getModel()` from being inlined and duplicated across
- * the `getNode()` disjuncts.
- */
-pragma[nomagic]
-private UI5ExternalModel getExternalModelNode(UI5BindingPath bindingPath) {
-  result = bindingPath.getModel() and
-  inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
+  Node getNode() { result = UI5DataModels::getModelNode(this) }
 }
 
 /**
@@ -248,16 +147,6 @@ abstract class UI5View extends File {
   abstract UI5BindingPath getAnHtmlISink();
 }
 
-JsonBindingPath getJsonItemsBinding(JsonBindingPath bindingPath) {
-  exists(Binding itemsBinding |
-    itemsBinding.getBindingTarget().asJsonObjectProperty("items") =
-      bindingPath.getBindingTarget().getParent+() and
-    result = itemsBinding.getBindingPath() and
-    result != bindingPath // exclude ourselves
-  ) and
-  not exists(bindingPath.getModelName())
-}
-
 /**
  * A UI5BindingPath found in a JSON View.
  */
@@ -281,13 +170,10 @@ class JsonBindingPath extends UI5BindingPath {
 
   override string getPath() { result = this.asString() }
 
-  override string getAbsolutePath() {
-    if this.isAbsolute()
-    then result = this.asString()
-    else
-      if exists(getJsonItemsBinding(this))
-      then result = getJsonItemsBinding(this).getAbsolutePath() + "/" + this.asString()
-      else result = this.asString()
+  override JsonBindingPath getAnEnclosingItemsBinding() {
+    result != this and
+    result.getPropertyName() = "items" and
+    result.getBindingTarget() = this.getBindingTarget().getParent+()
   }
 
   override string getPropertyName() { result = boundPropertyName }
@@ -402,6 +288,7 @@ class JsonView extends UI5View {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getPropertyName() = property and
       result.getBindingTarget() = control
     )
   }
@@ -412,6 +299,7 @@ class JsonView extends UI5View {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getPropertyName() = property and
       result.getBindingTarget() = control
     )
   }
@@ -440,10 +328,7 @@ class JsViewBindingPath extends UI5BindingPath {
           .getQualifiedName()
   }
 
-  override string getAbsolutePath() {
-    /* TODO: Implement this properly! */
-    result = this.getPath()
-  }
+  override UI5BindingPath getAnEnclosingItemsBinding() { none() }
 
   override string getPath() { result = this.asString() }
 
@@ -456,17 +341,6 @@ class JsViewBindingPath extends UI5BindingPath {
   override UI5Control getControlDeclaration() {
     result.asJsControl().asExpr() = bindingTarget.getPropertyNameExpr().getParentExpr+().(NewExpr)
   }
-}
-
-HtmlBindingPath getHtmlItemsBinding(HtmlBindingPath bindingPath) {
-  exists(Binding itemsBinding |
-    result != bindingPath and
-    itemsBinding.getBindingTarget().asXmlAttribute().getName() = "items" and
-    bindingPath.getBindingTarget().getElement().getParent+().(HTML::Element).getAnAttribute() =
-      itemsBinding.getBindingTarget().asXmlAttribute() and
-    result = itemsBinding.getBindingPath()
-  ) and
-  not exists(bindingPath.getModelName())
 }
 
 /**
@@ -485,13 +359,10 @@ class HtmlBindingPath extends UI5BindingPath {
 
   override string getLiteralRepr() { result = bindingTarget.getValue() }
 
-  override string getAbsolutePath() {
-    if this.isAbsolute()
-    then result = this.asString()
-    else
-      if exists(getHtmlItemsBinding(this))
-      then result = getHtmlItemsBinding(this).getPath() + "/" + this.getPath()
-      else result = this.asString()
+  override HtmlBindingPath getAnEnclosingItemsBinding() {
+    result != this and
+    result.getPropertyName() = "data-items" and
+    result.getBindingTarget().getElement() = this.getBindingTarget().getElement().getParent+()
   }
 
   override string getPropertyName() { result = bindingTarget.getName() }
@@ -565,17 +436,6 @@ class HtmlView extends UI5View, HTML::HtmlFile {
   }
 }
 
-XmlBindingPath getXmlItemsBinding(XmlBindingPath bindingPath) {
-  exists(Binding itemsBinding |
-    result != bindingPath and
-    itemsBinding.getBindingTarget().asXmlAttribute().getName() = "items" and
-    bindingPath.getBindingTarget().getElement().getParent+().(XmlElement).getAnAttribute() =
-      itemsBinding.getBindingTarget().asXmlAttribute() and
-    result = itemsBinding.getBindingPath()
-  ) and
-  not exists(bindingPath.getModelName())
-}
-
 /**
  * A UI5BindingPath found in an XML View.
  */
@@ -593,17 +453,10 @@ class XmlBindingPath extends UI5BindingPath {
 
   override string getPath() { result = this.asString() }
 
-  /**
-   * TODO: take into consideration bindElement() method call
-   * e.g.
-   */
-  override string getAbsolutePath() {
-    if this.isAbsolute()
-    then result = this.asString()
-    else
-      if exists(getXmlItemsBinding(this))
-      then result = getXmlItemsBinding(this).getPath() + "/" + this.getPath()
-      else result = this.asString()
+  override XmlBindingPath getAnEnclosingItemsBinding() {
+    result != this and
+    result.getPropertyName() = "items" and
+    result.getBindingTarget().getElement() = this.getBindingTarget().getElement().getParent+()
   }
 
   override string getPropertyName() { result = bindingTarget.getName() }

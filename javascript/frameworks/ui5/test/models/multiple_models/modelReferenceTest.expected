@@ -1,0 +1,2 @@
+| webapp/controller/app.controller.js:35:13:35:50 | oContro ... odel1") | webapp/controller/app.controller.js:30:28:30:42 | new JSONModel() |
+| webapp/controller/app.controller.js:36:13:36:50 | oContro ... odel2") | webapp/controller/app.controller.js:31:28:31:42 | new JSONModel() |

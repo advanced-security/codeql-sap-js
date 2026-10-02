@@ -3,10 +3,14 @@ import DataFlow
 import advanced_security.javascript.frameworks.ui5.JsonParser
 import advanced_security.javascript.frameworks.ui5.dataflow.TypeTrackers
 import semmle.javascript.security.dataflow.DomBasedXssCustomizations
+import advanced_security.javascript.frameworks.ui5.UI5DataModels
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
 import codeql.util.FileSystem
-private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
+
+/** Converts a qualified UI5 name such as `sap.m.Input` to `sap/m/Input`. */
+bindingset[qualifiedName]
+string ui5TypeNameToModulePath(string qualifiedName) { result = qualifiedName.replaceAll(".", "/") }
 
 private module WebAppResourceRootJsonReader implements JsonParser::MakeJsonReaderSig<WebApp> {
   class JsonReader extends WebApp {
@@ -61,7 +65,7 @@ class ResourceRoot extends Container {
 
   WebApp getWebApp() { result = webApp }
 
-  predicate contains(File file) { this.getAChildContainer+().getAFile() = file }
+  predicate contains(File file) { this.getAChildContainer*().getAFile() = file }
 }
 
 class SapUiCoreScriptElement extends HTML::ScriptElement {
@@ -242,7 +246,7 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
       importPath = this.asModule().getAnImport().getImportedPathExpr().getStringValue() and
       importedModuleDefinitionPath = result.getExtendCall().getName() and
       importedModuleDefinitionPathSlashNormalized =
-        importedModuleDefinitionPath.replaceAll(".", "/") and
+        ui5TypeNameToModulePath(importedModuleDefinitionPath) and
       importPath.matches(importedModuleDefinitionPathSlashNormalized + "%")
     )
     or
@@ -703,132 +707,23 @@ class DisplayEventHandler extends EventHandler {
   }
 }
 
-/**
- * A reference to a model obtained by a method call to `getModel`.
- */
-class ModelReference extends MethodCallNode {
-  ModelReference() {
-    exists(ViewReference view | this = view.getAMemberCall("getModel"))
-    or
-    exists(CustomController controller |
-      this = controller.getAViewReference().getAMemberCall("getModel") or
-      this = controller.getOwnerComponentRef().getAMemberCall("getModel")
-    )
-    or
-    exists(Component component | this = component.getAThisNode().getAMemberCall("getModel"))
-  }
-
-  predicate isDefaultModelReference() { this.getNumArgument() = 0 }
-
-  /**
-   * Gets the models' name being referred to, given that it can be statically determined.
-   */
-  string getModelName() { result = this.getArgument(0).getALocalSource().getStringValue() }
-
-  predicate isLocalModelReference() {
-    exists(InternalModelManifest internalModelManifest |
-      internalModelManifest.getName() = this.getModelName()
-    ) or
-    this.getResolvedModel() instanceof UI5InternalModel
-  }
-
-  /**
-   * Gets the matching `setModel` method call of this `ModelReference`.
-   */
-  MethodCallNode getAMatchingSetModelCall() {
-    exists(MethodCallNode setModelCall |
-      setModelCall.getMethodName() = "setModel" and
-      result = setModelCall and
-      (
-        if this.isDefaultModelReference()
-        then (
-          /* ========== A nameless default model ========== */
-          setModelCall.getNumArgument() = 1 and
-          /* 1. A matching `setModel` call is on a `ViewReference` */
-          exists(ViewReference getModelCallViewRef, ViewReference setModelCallViewRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallViewRef and
-            this.getReceiver().getALocalSource() = getModelCallViewRef and
-            setModelCallViewRef.getDefinition() = getModelCallViewRef.getDefinition()
-          )
-          or
-          /* 2. A matching `setModel` call is on a `ControlReference` */
-          exists(ControlReference getModelCallControlRef, ControlReference setModelCallControlRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallControlRef and
-            this.getReceiver().getALocalSource() = getModelCallControlRef and
-            (
-              setModelCallControlRef.getDefinition() = getModelCallControlRef.getDefinition() or
-              setModelCallControlRef.getId() = getModelCallControlRef.getId()
-            )
-          )
-        ) else (
-          /* ========== A named non-default model ========== */
-          setModelCall.getNumArgument() = 2 and
-          setModelCall.getArgument(1).getALocalSource().getStringValue() = this.getModelName() and
-          /* 1. A matching `setModel` call is on a `ViewReference` */
-          exists(ViewReference getModelCallViewRef, ViewReference setModelCallViewRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallViewRef and
-            this.getReceiver().getALocalSource() = getModelCallViewRef and
-            setModelCallViewRef.getDefinition() = getModelCallViewRef.getDefinition()
-          )
-          or
-          /* 2. A matching `setModel` call is on a `ControlReference` */
-          exists(ControlReference getModelCallControlRef, ControlReference setModelCallControlRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallControlRef and
-            this.getReceiver().getALocalSource() = getModelCallControlRef and
-            (
-              setModelCallControlRef.getDefinition() = getModelCallControlRef.getDefinition() or
-              setModelCallControlRef.getId() = getModelCallControlRef.getId()
-            )
-          )
-        )
-      )
-    )
-  }
-
-  /**
-   * Gets a `getProperty` or `getObject` method call on this `ModelReference`. These methods read from a single property of the model this refers to.
-   */
-  MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
-
-  /**
-   * Gets the resolved model of this `ModelReference` by looking for a matching `setModel` call.
-   */
-  UI5Model getResolvedModel() {
-    /* TODO: If the argument of the setModelCall is another ModelReference, then we should recursively resolve that */
-    result = this.getAMatchingSetModelCall().getArgument(0).getALocalSource()
-  }
-}
-
-abstract class UI5Model extends InvokeNode {
-  CustomController getController() { result.asExpr() = this.asExpr().getParent+() }
-
-  /**
-   * A `getProperty` or `getObject` method call on this `UI5Model`. These methods read from a single property of this model.
-   */
-  MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
-}
-
-/**
- * Represents models that are loaded from an internal source, i.e. XML Models or JSON models
- * whose contents are hardcoded in a JS file or loaded from a JSON file.
- * It is always the constructor call that creates the model.
- */
-abstract class UI5InternalModel extends UI5Model, NewNode {
-  abstract string getPathString();
-
-  abstract string getPathString(Property property);
-
-  /**
-   * Holds if the content of the model is statically determinable.
-   */
-  abstract predicate contentIsStaticallyVisible();
-}
-
 import ManifestJson
+
+/**
+ * Holds if `file` belongs to the component root declared by `manifest`, that is, if `manifest` is
+ * the nearest enclosing manifest of `file`. Manifests of enclosing components of a nested
+ * application are therefore excluded, even when they declare the same component ID.
+ */
+bindingset[file, manifest]
+predicate inSameUI5Component(File file, ManifestJson manifest) {
+  manifest.getParentContainer().getAChildContainer*().getAFile() = file and
+  manifest.getAbsolutePath().length() =
+    max(ManifestJson enclosingManifest |
+      enclosingManifest.getParentContainer().getAChildContainer*().getAFile() = file
+    |
+      enclosingManifest.getAbsolutePath().length()
+    )
+}
 
 /**
  * A UI5 Component that may contain other controllers or controls.
@@ -847,7 +742,8 @@ class Component extends SapExtendCall {
 
   ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
-    result.getId() = this.getId()
+    result.getId() = this.getId() and
+    inSameUI5Component(this.getFile(), result)
   }
 
   /** Get a definition of this component's model whose data source is remote. */
@@ -871,9 +767,15 @@ class Component extends SapExtendCall {
   }
 
   ExternalModelManifest getAnExternalModelDef() { result = this.getExternalModelDef(_) }
+
+  InternalModelManifest getInternalModelDef(string modelName) {
+    result.getFile() = this.getParentManifestJson() and
+    result.getName() = modelName
+  }
 }
 
 module ManifestJson {
+  /* Data sources */
   class DataSourceManifest extends JsonObject {
     string dataSourceName;
     ManifestJson manifestJson;
@@ -897,6 +799,43 @@ module ManifestJson {
     ManifestJson getParentManifestJson() { result = manifestJson }
 
     string getType() { result = this.getPropValue("type").(JsonString).getValue() }
+  }
+
+  class ODataDataSourceManifest extends DataSourceManifest {
+    ODataDataSourceManifest() { this.getType() = "OData" }
+  }
+
+  /* Routing */
+  class RouterManifest extends JsonObject {
+    ManifestJson manifestJson;
+
+    RouterManifest() {
+      exists(JsonObject rootObj |
+        this.getJsonFile() = manifestJson and
+        rootObj.getJsonFile() = manifestJson and
+        this = rootObj.getPropValue("sap.ui5").(JsonObject).getPropValue("routing")
+      )
+    }
+
+    RouteManifest getRoute() { result = this.getPropValue("routes").getElementValue(_) }
+  }
+
+  class RouteManifest extends JsonObject {
+    RouteManifest() { this = any(RouterManifest router).getPropValue("routes").getElementValue(_) }
+
+    string getPattern() { result = this.getPropStringValue("pattern") }
+
+    /**
+     * Holds if, for example, this route has pattern `somePath/{someSuffix}` and `path` is
+     * `someSuffix`.
+     */
+    predicate matchesPathString(string path) {
+      path = this.getPattern().regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
+    }
+
+    string getName() { result = this.getPropStringValue("name") }
+
+    string getTarget() { result = this.getPropStringValue("target") }
   }
 
   class RoutingTargetManifest extends JsonObject {
@@ -939,119 +878,7 @@ module ManifestJson {
     ManifestJson getParentManifestJson() { result = manifestJson }
   }
 
-  class ODataDataSourceManifest extends DataSourceManifest {
-    ODataDataSourceManifest() { this.getType() = "OData" }
-  }
-
-  class JsonDataSourceDefinition extends DataSourceManifest {
-    JsonDataSourceDefinition() { this.getType() = "JSON" }
-  }
-
-  class RouterManifest extends JsonObject {
-    ManifestJson manifestJson;
-
-    RouterManifest() {
-      exists(JsonObject rootObj |
-        this.getJsonFile() = manifestJson and
-        rootObj.getJsonFile() = manifestJson and
-        this = rootObj.getPropValue("sap.ui5").(JsonObject).getPropValue("routing")
-      )
-    }
-
-    RouteManifest getRoute() { result = this.getPropValue("routes").getElementValue(_) }
-  }
-
-  class RouteManifest extends JsonObject {
-    RouterManifest parentRouterManifest;
-
-    RouteManifest() { this = parentRouterManifest.getPropValue("routes").getElementValue(_) }
-
-    string getPattern() { result = this.getPropStringValue("pattern") }
-
-    /**
-     *  Holds if, e.g., `this.getPattern() = "somePath/{someSuffix}"` and `path = "someSuffix"`
-     */
-    predicate matchesPathString(string path) {
-      path = this.getPattern().regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
-    }
-
-    string getName() { result = this.getPropStringValue("name") }
-
-    string getTarget() { result = this.getPropStringValue("target") }
-  }
-
-  abstract class ModelManifest extends JsonObject { }
-
-  class InternalModelManifest extends ModelManifest {
-    string modelName;
-    string type;
-
-    InternalModelManifest() {
-      exists(JsonObject models, JsonObject modelsParent |
-        models = modelsParent.getPropValue("models") and
-        this = models.getPropValue(modelName) and
-        type = this.getPropStringValue("type") and
-        this.getPropStringValue("type") =
-          [
-            "sap.ui.model.json.JSONModel", // A JSON Model
-            "sap.ui.model.xml.XMLModel", // An XML Model
-          ]
-      )
-    }
-
-    string getName() { result = modelName }
-
-    string getType() { result = type }
-  }
-
-  class ResourceModelManifest extends ModelManifest {
-    string modelName;
-    string type;
-
-    ResourceModelManifest() {
-      exists(JsonObject models, JsonObject modelsParent |
-        models = modelsParent.getPropValue("models") and
-        this = models.getPropValue(modelName) and
-        type = this.getPropStringValue("type") and
-        this.getPropStringValue("type") = "sap.ui.model.resource.ResourceModel" // A Resource Model, typically for i18n
-      )
-    }
-
-    string getName() { result = modelName }
-
-    string getType() { result = type }
-  }
-
-  /**
-   * The definition of an external model in the `manifest.json`, in the `"models"` property.
-   */
-  class ExternalModelManifest extends ModelManifest {
-    string modelName;
-    string dataSourceName;
-
-    ExternalModelManifest() {
-      exists(JsonObject models |
-        this = models.getPropValue(modelName) and
-        dataSourceName = this.getPropStringValue("dataSource") and
-        /* This data source can be found in the "dataSources" property of the same manifest */
-        exists(DataSourceManifest dataSource |
-          dataSource.getName() = dataSourceName and
-          dataSource.getParentManifestJson() = this.getJsonFile()
-        )
-      )
-    }
-
-    string getName() { result = modelName }
-
-    string getDataSourceName() { result = dataSourceName }
-
-    /** Gets the data source for this external model from the same manifest file. */
-    DataSourceManifest getDataSource() {
-      result.getName() = dataSourceName and
-      result.getParentManifestJson() = this.getJsonFile()
-    }
-  }
-
+  /* App descriptor */
   class ManifestJson extends File {
     string id;
 
@@ -1087,283 +914,6 @@ module ManifestJson {
       result.getViewName() = viewName and
       result.getParentManifestJson() = this
     }
-  }
-
-  /** The manifest.json file serving as the app descriptor. */
-  private string constructPathStringInner(Expr object) {
-    if not object instanceof ObjectExpr
-    then result = ""
-    else
-      exists(Property property | property = object.(ObjectExpr).getAProperty().(ValueProperty) |
-        result = "/" + property.getName() + constructPathStringInner(property.getInit())
-      )
-  }
-
-  /**
-   * Create all recursive path strings of an object literal, e.g.
-   * if `object = { p1: { p2: 1 }, p3: 2 }`, then create:
-   * - `p1/p2`, and
-   * - `p3/`.
-   */
-  private string constructPathString(DataFlow::ObjectLiteralNode object) {
-    result = constructPathStringInner(object.asExpr())
-  }
-
-  /** Holds if the `property` is in any way nested inside the `object`. */
-  private predicate propertyNestedInObject(ObjectExpr object, Property property) {
-    exists(Property property2 | property2 = object.getAProperty() |
-      property = property2 or
-      propertyNestedInObject(property2.getInit().(ObjectExpr), property)
-    )
-  }
-
-  private string constructPathStringInner(Expr object, Property property) {
-    if not object instanceof ObjectExpr
-    then result = ""
-    else
-      exists(Property property2 | property2 = object.(ObjectExpr).getAProperty().(ValueProperty) |
-        if property = property2
-        then result = "/" + property2.getName()
-        else (
-          /* We're sure this property is inside this object */
-          propertyNestedInObject(property2.getInit().(ObjectExpr), property) and
-          result =
-            "/" + property2.getName() + constructPathStringInner(property2.getInit(), property)
-        )
-      )
-  }
-
-  /**
-   * Create all possible path strings of an object literal up to a certain property, e.g.
-   * if `object = { p1: { p2: 1 }, p3: 2 }` and `property = {p3: 2}` then create `"p3/"`.
-   */
-  string constructPathString(DataFlow::ObjectLiteralNode object, Property property) {
-    result = constructPathStringInner(object.asExpr(), property)
-  }
-
-  /**
-   * Create all recursive path strings of a JSON object, e.g.
-   * if `object = { "p1": { "p2": 1 }, "p3": 2 }`, then create:
-   * - `/p1/p2`, and
-   * - `/p3`.
-   */
-  string constructPathStringJson(JsonValue object) {
-    if not object instanceof JsonObject
-    then result = ""
-    else
-      exists(string property |
-        result = "/" + property + constructPathStringJson(object.getPropValue(property))
-      )
-  }
-
-  /**
-   * Create all possible path strings of a JSON object up to a certain property name, e.g.
-   * if `object = { "p1": { "p2": 1 }, "p3": 2 }` and `propName = "p3"` then create `"/p3"`.
-   * PRECONDITION: All of `object`'s keys are unique.
-   */
-  bindingset[propName]
-  string constructPathStringJson(JsonValue object, string propName) {
-    exists(string pathString | pathString = constructPathStringJson(object) |
-      pathString.regexpMatch(".*" + propName + ".*") and
-      result = pathString
-    )
-  }
-
-  /**
-   *  When given a constructor call `new JSONModel("controller/model.json")`,
-   *  get the content of the file referred to by URI (`"controller/model.json"`)
-   *  inside the string argument.
-   */
-  bindingset[path]
-  JsonObject resolveDirectPath(string path) {
-    exists(WebApp webApp | result.getJsonFile() = webApp.getResource(path))
-  }
-
-  /**
-   *  When given a constructor call `new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")`,
-   *  get the content of the file referred to by resolving the argument.
-   *  Currently only supports `sap.ui.require.toUrl`.
-   */
-  bindingset[path]
-  private JsonObject resolveIndirectPath(string path) {
-    result = any(JsonObject tODO | tODO.getFile().getAbsolutePath() = path)
-  }
-
-  class JsonModel extends UI5InternalModel {
-    JsonModel() {
-      this instanceof NewNode and
-      (
-        exists(RequiredObject jsonModel |
-          jsonModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-          jsonModel.getDependency() = "sap/ui/model/json/JSONModel"
-        )
-        or
-        /* Fallback */
-        this.getCalleeName() = "JSONModel"
-      )
-    }
-
-    /**
-     *  Gets all possible path strings that can be constructed from this JSON model.
-     */
-    override string getPathString() {
-      /* 1. new JSONModel("controller/model.json") */
-      if this.getAnArgument().asExpr() instanceof StringLiteral
-      then
-        result =
-          constructPathStringJson(resolveDirectPath(this.getAnArgument()
-                  .asExpr()
-                  .(StringLiteral)
-                  .getValue()))
-      else
-        if this.getAnArgument().(MethodCallNode).getAnArgument().asExpr() instanceof StringLiteral
-        then
-          /* 2. new JSONModel(sap.ui.require.toUrl("sap/ui/demo/mock/products.json")) */
-          result =
-            constructPathStringJson(resolveIndirectPath(this.getAnArgument()
-                    .(MethodCallNode)
-                    .getAnArgument()
-                    .asExpr()
-                    .(StringLiteral)
-                    .getValue()))
-        else
-          /*
-           * 3. new JSONModel(oData) where
-           *    var oData = { input: null };
-           */
-
-          exists(ObjectLiteralNode objectNode |
-            objectNode.flowsTo(this.getAnArgument()) and constructPathString(objectNode) = result
-          )
-    }
-
-    override string getPathString(Property property) {
-      /*
-       * 3. new JSONModel(oData) where
-       *    var oData = { input: null };
-       */
-
-      exists(ObjectLiteralNode objectNode |
-        objectNode.flowsTo(this.getAnArgument()) and
-        constructPathString(objectNode, property) = result
-      )
-    }
-
-    bindingset[propName]
-    string getPathStringPropName(string propName) {
-      exists(JsonObject jsonObject |
-        jsonObject =
-          resolveDirectPath(this.getArgument(0)
-                .getALocalSource()
-                .asExpr()
-                .(StringLiteral)
-                .getValue())
-      |
-        constructPathStringJson(jsonObject, propName) = result
-      )
-    }
-
-    override predicate contentIsStaticallyVisible() {
-      /* 1. There is at least one path string that can be constructed out of the path string. */
-      exists(this.getPathString())
-      or
-      /* 2. There is a JSON file that can be loaded from. */
-      exists(JsonObject jsonObject |
-        jsonObject = resolveDirectPath(this.getArgument(0).getStringValue())
-      )
-    }
-
-    /**
-     * A model possibly supporting two-way binding explicitly set as a one-way binding model.
-     */
-    predicate isOneWayBinding() {
-      exists(MethodCallNode call, BindingMode bindingMode |
-        this.flowsTo(call.getReceiver()) and
-        call.getMethodName() = "setDefaultBindingMode" and
-        bindingMode.getOneWay().flowsTo(call.getArgument(0))
-      )
-    }
-
-    predicate isTwoWayBinding() {
-      // Either explicitly set as two-way, or
-      exists(MethodCallNode call, BindingMode bindingMode |
-        this.flowsTo(call.getReceiver()) and
-        call.getMethodName() = "setDefaultBindingMode" and
-        bindingMode.getTwoWay().flowsTo(call.getArgument(0))
-      )
-      or
-      // left untouched as default mode which is two-way.
-      not exists(MethodCallNode call |
-        this.flowsTo(call.getReceiver()) and
-        call.getMethodName() = "setDefaultBindingMode"
-      )
-    }
-
-    /**
-     * Get a property of this `JsonModel`, e.g. given a JSON model `oModel` defined either of the following:
-     * ```javascript
-     * oModel = new JSONModel({x: null});
-     * ```
-     * ```javascript
-     * oContent = {x: null};
-     * oModel = new JSONModel(oContent);
-     * ```
-     * Get `x: null` as its result.
-     */
-    DataFlow::PropWrite getAProperty() {
-      this.getArgument(0).getALocalSource().asExpr() = result.getPropertyNameExpr().getParent+()
-    }
-  }
-
-  class XmlModel extends UI5InternalModel {
-    XmlModel() {
-      this instanceof NewNode and
-      exists(RequiredObject xmlModel |
-        xmlModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-        xmlModel.getDependency() = "sap/ui/model/xml/XMLModel"
-      )
-    }
-
-    override string getPathString(Property property) {
-      /* TODO */
-      result = property.toString()
-    }
-
-    override string getPathString() { result = "TODO" }
-
-    override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
-  }
-
-  class ResourceModel extends UI5Model, ModelReference {
-    string modelName;
-
-    ResourceModel() {
-      /* A model reference obtained from this.getOwnerComponent().getModel("i18n") */
-      exists(CustomController controller, ResourceModelManifest manifest |
-        (
-          this = controller.getAThisNode().getAMemberCall("getModel") or
-          this = controller.getOwnerComponentRef().getAMemberCall("getModel")
-        ) and
-        modelName = this.getModelName() and
-        manifest.getName() = modelName
-      )
-    }
-
-    override MethodCallNode getARead() { result = ModelReference.super.getARead() }
-
-    MethodCallNode getResourceBundle() { result = this.getAMemberCall("getResourceBundle") }
-  }
-
-  class BindingMode extends RequiredObject {
-    BindingMode() { this.getDependency() = "sap/ui/model/BindingMode" }
-
-    PropRead getOneWay() { result = this.asSourceNode().getAPropertyRead("OneWay") }
-
-    PropRead getTwoWay() { result = this.asSourceNode().getAPropertyRead("TwoWay") }
-
-    PropRead getDefault_() { result = this.asSourceNode().getAPropertyRead("Default") }
-
-    PropRead getOneTime() { result = this.asSourceNode().getAPropertyRead("OneTime") }
   }
 
   class RequiredObject extends Expr {
