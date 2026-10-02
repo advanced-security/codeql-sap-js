@@ -46,6 +46,7 @@ sap.ui.define([
             oControl3.setModel(oModel43, "viewModel2");
 
             /* The controller's viewModel2 collides with unit-test-target2's viewModel2 */
+            this.byId("sharedAcrossViews").getModel("sharedModel");
         }
     });
 })

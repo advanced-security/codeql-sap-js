@@ -93,11 +93,38 @@ private predicate modelControlOwnersMatch(ModelReference getModelCall, MethodCal
   exists(ControlReference getModelControl, ControlReference setModelControl |
     getModelCall.getReceiver().getALocalSource() = getModelControl and
     setModelCall.getReceiver().getALocalSource() = setModelControl and
+    controlReferenceScopesMatch(getModelControl, setModelControl) and
     (
       getModelControl.getDefinition() = setModelControl.getDefinition() or
       getModelControl.getId() = setModelControl.getId()
     )
   )
+}
+
+private CustomController getControlReferenceController(ControlReference reference) {
+  reference = result.getAViewReference().getAMemberCall("byId")
+  or
+  reference = result.getAThisNode().getAMemberCall("byId")
+}
+
+private predicate controlReferenceScopesMatch(ControlReference left, ControlReference right) {
+  exists(CustomController controller |
+    controller = getControlReferenceController(left) and
+    controller = getControlReferenceController(right)
+  )
+  or
+  not exists(getControlReferenceController(left)) and
+  not exists(getControlReferenceController(right)) and
+  left.getFile() = right.getFile()
+}
+
+private predicate controlReferenceBelongsToBindingView(
+  ControlReference reference, UI5BindingPath bindingPath
+) {
+  getControlReferenceController(reference) = bindingPath.getView().getController()
+  or
+  not exists(getControlReferenceController(reference)) and
+  reference.getFile() = bindingPath.getView().getController().getFile()
 }
 
 /**
@@ -644,8 +671,12 @@ private predicate modelNameMatchesBindingPath(
 }
 
 private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
+  exists(ControlReference reference |
+    reference = bindingPath.getControlDeclaration().getAReference() and
+    controlReferenceBelongsToBindingView(reference, bindingPath) and
+    reference.flowsTo(result.getReceiver())
+  ) and
   result.getMethodName() = "setModel" and
-  bindingPath.getControlDeclaration().getAReference().flowsTo(result.getReceiver()) and
   modelNameMatchesBindingPath(result, bindingPath)
 }
 
