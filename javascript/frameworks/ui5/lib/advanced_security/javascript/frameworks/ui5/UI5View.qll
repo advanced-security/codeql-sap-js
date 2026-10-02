@@ -288,6 +288,7 @@ class JsonView extends UI5View {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getPropertyName() = property and
       result.getBindingTarget() = control
     )
   }
@@ -298,6 +299,7 @@ class JsonView extends UI5View {
       type = result.getControlTypeName() and
       ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
+      result.getPropertyName() = property and
       result.getBindingTarget() = control
     )
   }

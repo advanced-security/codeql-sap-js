@@ -6,7 +6,8 @@ sap.ui.define([
     return Controller.extend("codeql-sap-js.controller.app", {
         onInit: function () {
             var oData = {
-                input: null
+                input: null,
+                unrelated: null
             };
             var oModel = new JSONModel(oData);
             oModel.setDefaultBindingMode("TwoWay");
