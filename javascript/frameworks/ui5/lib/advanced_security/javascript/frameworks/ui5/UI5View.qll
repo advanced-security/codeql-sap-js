@@ -1,6 +1,6 @@
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5Control
-import advanced_security.javascript.frameworks.ui5.UI5DataModels
+import advanced_security.javascript.frameworks.ui5.UI5DataModels as UI5DataModels
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
@@ -116,12 +116,12 @@ abstract class UI5BindingPath extends BindingPath {
   /**
    * Gets the model, attached to either a control or a view, that this binding path refers to.
    */
-  UI5Model getModel() { result = resolveModel(this) }
+  UI5Model getModel() { result = UI5DataModels::resolveModel(this) }
 
   /**
    * Gets the `DataFlow::Node` that represents this binding path.
    */
-  Node getNode() { result = getModelNode(this) }
+  Node getNode() { result = UI5DataModels::getModelNode(this) }
 }
 
 /**

@@ -47,56 +47,11 @@ class ModelReference extends MethodCallNode {
    * Gets the matching `setModel` method call of this `ModelReference`.
    */
   MethodCallNode getAMatchingSetModelCall() {
-    exists(MethodCallNode setModelCall |
-      setModelCall.getMethodName() = "setModel" and
-      result = setModelCall and
-      (
-        if this.isDefaultModelReference()
-        then (
-          /* ========== A nameless default model ========== */
-          setModelCall.getNumArgument() = 1 and
-          /* 1. A matching `setModel` call is on a `ViewReference` */
-          exists(ViewReference getModelCallViewRef, ViewReference setModelCallViewRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallViewRef and
-            this.getReceiver().getALocalSource() = getModelCallViewRef and
-            setModelCallViewRef.getDefinition() = getModelCallViewRef.getDefinition()
-          )
-          or
-          /* 2. A matching `setModel` call is on a `ControlReference` */
-          exists(ControlReference getModelCallControlRef, ControlReference setModelCallControlRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallControlRef and
-            this.getReceiver().getALocalSource() = getModelCallControlRef and
-            (
-              setModelCallControlRef.getDefinition() = getModelCallControlRef.getDefinition() or
-              setModelCallControlRef.getId() = getModelCallControlRef.getId()
-            )
-          )
-        ) else (
-          /* ========== A named non-default model ========== */
-          setModelCall.getNumArgument() = 2 and
-          setModelCall.getArgument(1).getALocalSource().getStringValue() = this.getModelName() and
-          /* 1. A matching `setModel` call is on a `ViewReference` */
-          exists(ViewReference getModelCallViewRef, ViewReference setModelCallViewRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallViewRef and
-            this.getReceiver().getALocalSource() = getModelCallViewRef and
-            setModelCallViewRef.getDefinition() = getModelCallViewRef.getDefinition()
-          )
-          or
-          /* 2. A matching `setModel` call is on a `ControlReference` */
-          exists(ControlReference getModelCallControlRef, ControlReference setModelCallControlRef |
-            /* Find the `setModelCall` that matches this */
-            setModelCall.getReceiver().getALocalSource() = setModelCallControlRef and
-            this.getReceiver().getALocalSource() = getModelCallControlRef and
-            (
-              setModelCallControlRef.getDefinition() = getModelCallControlRef.getDefinition() or
-              setModelCallControlRef.getId() = getModelCallControlRef.getId()
-            )
-          )
-        )
-      )
+    result.getMethodName() = "setModel" and
+    (
+      modelControlOwnersMatch(this, result)
+      or
+      modelViewOwnersMatch(this, result) and modelNamesMatch(this, result)
     )
   }
 
@@ -112,6 +67,34 @@ class ModelReference extends MethodCallNode {
     /* TODO: If the argument of the setModelCall is another ModelReference, then we should recursively resolve that */
     result = this.getAMatchingSetModelCall().getArgument(0).getALocalSource()
   }
+}
+
+private predicate modelNamesMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+  if getModelCall.isDefaultModelReference()
+  then setModelCall.getNumArgument() = 1
+  else (
+    setModelCall.getNumArgument() = 2 and
+    setModelCall.getArgument(1).getALocalSource().getStringValue() = getModelCall.getModelName()
+  )
+}
+
+private predicate modelViewOwnersMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+  exists(ViewReference getModelView, ViewReference setModelView |
+    getModelCall.getReceiver().getALocalSource() = getModelView and
+    setModelCall.getReceiver().getALocalSource() = setModelView and
+    getModelView.getDefinition() = setModelView.getDefinition()
+  )
+}
+
+private predicate modelControlOwnersMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+  exists(ControlReference getModelControl, ControlReference setModelControl |
+    getModelCall.getReceiver().getALocalSource() = getModelControl and
+    setModelCall.getReceiver().getALocalSource() = setModelControl and
+    (
+      getModelControl.getDefinition() = setModelControl.getDefinition() or
+      getModelControl.getId() = setModelControl.getId()
+    )
+  )
 }
 
 /**
@@ -187,6 +170,18 @@ class JsonDataSourceDefinition extends DataSourceManifest {
  */
 abstract class ModelManifest extends JsonObject { }
 
+private JsonObject getManifestModelDefinition(string modelName) {
+  exists(JsonObject root |
+    root.isTopLevel() and
+    result =
+      root.getPropValue("sap.ui5")
+          .(JsonObject)
+          .getPropValue("models")
+          .(JsonObject)
+          .getPropValue(modelName)
+  )
+}
+
 /** Gets the canonical UI5 module path represented by a MaD client data model alias. */
 private string getInternalModelType(string typeAlias) {
   ApiGraphModelsExtensions::typeModel("UI5ClientDataModel", typeAlias, "") and
@@ -222,11 +217,8 @@ class InternalModelManifest extends ModelManifest {
   string type;
 
   InternalModelManifest() {
-    exists(JsonObject models, JsonObject modelsParent |
-      models = modelsParent.getPropValue("models") and
-      this = models.getPropValue(modelName) and
-      type = getEffectiveInternalModelType(this)
-    )
+    this = getManifestModelDefinition(modelName) and
+    type = getEffectiveInternalModelType(this)
   }
 
   string getName() { result = modelName }
@@ -243,12 +235,9 @@ class ResourceModelManifest extends ModelManifest {
   string type;
 
   ResourceModelManifest() {
-    exists(JsonObject models, JsonObject modelsParent |
-      models = modelsParent.getPropValue("models") and
-      this = models.getPropValue(modelName) and
-      type = this.getPropStringValue("type") and
-      this.getPropStringValue("type") = "sap.ui.model.resource.ResourceModel"
-    )
+    this = getManifestModelDefinition(modelName) and
+    type = this.getPropStringValue("type") and
+    type = "sap.ui.model.resource.ResourceModel"
   }
 
   string getName() { result = modelName }
@@ -266,14 +255,11 @@ class ExternalModelManifest extends ModelManifest {
   string dataSourceName;
 
   ExternalModelManifest() {
-    exists(JsonObject models |
-      this = models.getPropValue(modelName) and
-      dataSourceName = this.getPropStringValue("dataSource") and
-      /* This data source can be found in the "dataSources" property of the same manifest */
-      exists(DataSourceManifest dataSource |
-        dataSource.getName() = dataSourceName and
-        dataSource.getParentManifestJson() = this.getJsonFile()
-      )
+    this = getManifestModelDefinition(modelName) and
+    dataSourceName = this.getPropStringValue("dataSource") and
+    exists(DataSourceManifest dataSource |
+      dataSource.getName() = dataSourceName and
+      dataSource.getParentManifestJson() = this.getJsonFile()
     )
   }
 
@@ -445,28 +431,24 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  private JsonObject getAConstructorJsonObject() {
+    result = resolveDirectPath(this.getAnArgument().asExpr().(StringLiteral).getValue())
+    or
+    result =
+      resolveIndirectPath(this.getAnArgument()
+            .(MethodCallNode)
+            .getAnArgument()
+            .asExpr()
+            .(StringLiteral)
+            .getValue())
+  }
+
   override string getPathString() {
-    if this.getAnArgument().asExpr() instanceof StringLiteral
-    then
-      result =
-        constructPathStringJson(resolveDirectPath(this.getAnArgument()
-                .asExpr()
-                .(StringLiteral)
-                .getValue()))
-    else
-      if this.getAnArgument().(MethodCallNode).getAnArgument().asExpr() instanceof StringLiteral
-      then
-        result =
-          constructPathStringJson(resolveIndirectPath(this.getAnArgument()
-                  .(MethodCallNode)
-                  .getAnArgument()
-                  .asExpr()
-                  .(StringLiteral)
-                  .getValue()))
-      else
-        exists(ObjectLiteralNode objectNode |
-          objectNode.flowsTo(this.getAnArgument()) and constructPathString(objectNode) = result
-        )
+    result = constructPathStringJson(this.getAConstructorJsonObject())
+    or
+    exists(ObjectLiteralNode objectNode |
+      objectNode.flowsTo(this.getAnArgument()) and constructPathString(objectNode) = result
+    )
   }
 
   override string getPathString(Property property) {
@@ -494,25 +476,22 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  private MethodCallNode getASetDefaultBindingModeCall() {
+    this.flowsTo(result.getReceiver()) and result.getMethodName() = "setDefaultBindingMode"
+  }
+
   predicate isOneWayBinding() {
-    exists(MethodCallNode call, BindingMode bindingMode |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode" and
-      bindingMode.getOneWay().flowsTo(call.getArgument(0))
+    exists(BindingMode bindingMode |
+      bindingMode.getOneWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
     )
   }
 
   predicate isTwoWayBinding() {
-    exists(MethodCallNode call, BindingMode bindingMode |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode" and
-      bindingMode.getTwoWay().flowsTo(call.getArgument(0))
+    exists(BindingMode bindingMode |
+      bindingMode.getTwoWay().flowsTo(this.getASetDefaultBindingModeCall().getArgument(0))
     )
     or
-    not exists(MethodCallNode call |
-      this.flowsTo(call.getReceiver()) and
-      call.getMethodName() = "setDefaultBindingMode"
-    )
+    not exists(this.getASetDefaultBindingModeCall())
   }
 
   /**
@@ -644,63 +623,40 @@ class ODataServiceModel extends UI5ExternalModel {
  * Gets the model attached to the control, view, component, or fragment that owns `bindingPath`.
  */
 UI5Model resolveModel(UI5BindingPath bindingPath) {
-  (
-    exists(MethodCallNode controlSetModelCall |
-      controlSetModelCall.getMethodName() = "setModel" and
-      bindingPath.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-      controlSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        bindingPath.getModelName() and
-      result.flowsTo(controlSetModelCall.getArgument(0))
-    )
-    or
-    exists(MethodCallNode controlSetModelCall |
-      controlSetModelCall.getMethodName() = "setModel" and
-      bindingPath.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-      not exists(controlSetModelCall.getArgument(1)) and
-      not exists(bindingPath.getModelName()) and
-      result.flowsTo(controlSetModelCall.getArgument(0))
-    )
-    or
-    exists(MethodCallNode viewSetModelCall |
-      viewSetModelCall.getMethodName() = "setModel" and
-      bindingPath
-          .getView()
-          .getController()
-          .getAViewReference()
-          .flowsTo(viewSetModelCall.getReceiver()) and
-      viewSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        bindingPath.getModelName() and
-      result.flowsTo(viewSetModelCall.getArgument(0))
-    ) and
-    not exists(MethodCallNode controlSetModelCall |
-      controlSetModelCall.getMethodName() = "setModel" and
-      bindingPath.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-      controlSetModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        bindingPath.getModelName()
-    )
-    or
-    exists(MethodCallNode viewSetModelCall |
-      viewSetModelCall.getMethodName() = "setModel" and
-      bindingPath
-          .getView()
-          .getController()
-          .getAViewReference()
-          .flowsTo(viewSetModelCall.getReceiver()) and
-      not exists(viewSetModelCall.getArgument(1)) and
-      not exists(bindingPath.getModelName()) and
-      result.flowsTo(viewSetModelCall.getArgument(0))
-    ) and
-    not exists(MethodCallNode controlSetModelCall |
-      controlSetModelCall.getMethodName() = "setModel" and
-      bindingPath.getControlDeclaration().getAReference().flowsTo(controlSetModelCall.getReceiver()) and
-      not exists(controlSetModelCall.getArgument(1)) and
-      not exists(bindingPath.getModelName())
-    )
-    or
-    result = getDefaultODataModel(bindingPath)
-    or
-    result = getDefaultManifestJsonModel(bindingPath)
-  )
+  result.flowsTo(getNearestSetModelCall(bindingPath).getArgument(0))
+  or
+  result = getDefaultODataModel(bindingPath)
+  or
+  result = getDefaultManifestJsonModel(bindingPath)
+}
+
+private predicate modelNameMatchesBindingPath(
+  MethodCallNode setModelCall, UI5BindingPath bindingPath
+) {
+  if exists(bindingPath.getModelName())
+  then
+    setModelCall.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
+      bindingPath.getModelName()
+  else not exists(setModelCall.getArgument(1))
+}
+
+private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
+  result.getMethodName() = "setModel" and
+  bindingPath.getControlDeclaration().getAReference().flowsTo(result.getReceiver()) and
+  modelNameMatchesBindingPath(result, bindingPath)
+}
+
+private MethodCallNode getViewSetModelCall(UI5BindingPath bindingPath) {
+  result.getMethodName() = "setModel" and
+  bindingPath.getView().getController().getAViewReference().flowsTo(result.getReceiver()) and
+  modelNameMatchesBindingPath(result, bindingPath)
+}
+
+private MethodCallNode getNearestSetModelCall(UI5BindingPath bindingPath) {
+  result = getControlSetModelCall(bindingPath)
+  or
+  result = getViewSetModelCall(bindingPath) and
+  not exists(getControlSetModelCall(bindingPath))
 }
 
 /**
