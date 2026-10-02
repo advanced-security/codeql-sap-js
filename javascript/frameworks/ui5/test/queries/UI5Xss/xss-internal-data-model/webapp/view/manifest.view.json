@@ -1,0 +1,14 @@
+{
+	"Type": "sap.ui.core.mvc.JSONView",
+	"controllerName": "codeql-sap-js.controller.app",
+	"content": [
+		{
+			"Type": "sap.m.Input",
+			"value": "{/manifest}"
+		},
+		{
+			"Type": "sap.ui.core.HTML",
+			"content": "{/manifest}"
+		}
+	]
+}
