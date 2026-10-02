@@ -22,6 +22,10 @@
       "": {
         "type": "sap.ui.model.json.JSONModel",
         "uri": "model/data.json"
+      },
+      "named": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "model/named.json"
       }
     }
   }

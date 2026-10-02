@@ -1,0 +1,11 @@
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | /customer/name |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | /customer/name |
+| webapp/view/app.view.xml:10:7:10:58 | content={named>name} | named>name |
+| webapp/view/app.view.xml:12:9:12:55 | content={name} | /other/name |
+| webapp/view/app.view.xml:14:7:14:34 | items={/otherList} | /otherList |
+| webapp/view/app.view.xml:16:11:16:62 | content={name} | /otherList/name |
+| webapp/view/app.view.xml:21:7:21:53 | content={name} | /customer/name |
+| webapp/view/app.view.xml:24:7:24:53 | content={name} | /customer/name |
+| webapp/view/app.view.xml:27:7:27:58 | content={name} | name |
+| webapp/view/app.view.xml:30:7:30:56 | content={name} | name |
+| webapp/view/app.view.xml:32:5:32:52 | content={name} | name |

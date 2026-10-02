@@ -9,5 +9,7 @@ test("renders input through the bindElement context without sanitization", async
   await input.fill('<span data-xss-marker="true">injected</span>');
   await input.blur();
 
-  await expect(page.locator('[data-xss-marker="true"]')).toHaveText("injected");
+  const markers = page.locator('[data-xss-marker="true"]');
+  await expect(markers).toHaveCount(3);
+  await expect(markers).toHaveText(["injected", "injected", "injected"]);
 });

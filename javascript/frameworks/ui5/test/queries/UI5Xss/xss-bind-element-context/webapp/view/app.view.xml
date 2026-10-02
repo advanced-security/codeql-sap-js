@@ -17,6 +17,18 @@
         </CustomListItem>
       </List>
     </VBox>
+    <VBox id="legacyDetails">
+      <core:HTML id="legacySink" content="{name}" />
+    </VBox>
+    <VBox id="objectDetails">
+      <core:HTML id="objectSink" content="{name}" />
+    </VBox>
+    <VBox id="namedObjectDetails">
+      <core:HTML id="namedObjectSink" content="{name}" />
+    </VBox>
+    <VBox id="namedPathDetails">
+      <core:HTML id="namedPathSink" content="{name}" />
+    </VBox>
     <core:HTML id="siblingSink" content="{name}" />
   </VBox>
 </mvc:View>

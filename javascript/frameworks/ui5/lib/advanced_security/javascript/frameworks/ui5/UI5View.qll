@@ -129,7 +129,7 @@ abstract class UI5BindingPath extends BindingPath {
 }
 
 /**
- * A statically known default-model context assigned through `control.bindElement("/path")`.
+ * A statically known default-model context assigned through `control.bindElement(...)`.
  */
 private class StaticBindElementContext extends MethodCallNode {
   UI5Control control;
@@ -140,9 +140,7 @@ private class StaticBindElementContext extends MethodCallNode {
       reference = control.getAReference() and
       this = reference.getALocalSource().getAMemberCall("bindElement")
     ) and
-    this.getNumArgument() = 1 and
-    path = this.getArgument(0).getALocalSource().getStringValue() and
-    path.matches("/%")
+    path = getStaticDefaultBindElementPath(this)
   }
 
   UI5Control getControl() { result = control }
@@ -154,6 +152,20 @@ private class StaticBindElementContext extends MethodCallNode {
     this.getFile() = bindingPath.getView().getController().getFile() and
     controlContainsBinding(this.getControl(), bindingPath)
   }
+}
+
+private string getStaticDefaultBindElementPath(MethodCallNode bindElementCall) {
+  (
+    bindElementCall.getNumArgument() = [1, 2] and
+    result = bindElementCall.getArgument(0).getALocalSource().getStringValue()
+    or
+    exists(DataFlow::ObjectLiteralNode bindingInfo |
+      bindingInfo = bindElementCall.getArgument(0).getALocalSource() and
+      not exists(bindingInfo.getAPropertyWrite("model")) and
+      result = bindingInfo.getAPropertyWrite("path").getRhs().getALocalSource().getStringValue()
+    )
+  ) and
+  result.matches("/%")
 }
 
 private predicate controlContainsBinding(UI5Control control, UI5BindingPath bindingPath) {
