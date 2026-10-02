@@ -247,6 +247,7 @@ private predicate hasDefaultModelOverride(UI5BindingPath bindingPath) {
       [
         getAControlReferenceInOwningController(bindingPath).getALocalSource(),
         bindingPath.getView().getController().getAViewReference().getALocalSource(),
+        bindingPath.getView().getController().getOwnerComponentRef().getALocalSource(),
         any(Component component |
           inSameUI5Component(bindingPath.getLocation().getFile(), component.getParentManifestJson())
         ).getAThisNode().getALocalSource()
