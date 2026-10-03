@@ -50,9 +50,13 @@ abstract class UI5BindingPath extends BindingPath {
     if this.isAbsolute()
     then result = this.getPath()
     else
-      if exists(this.getNearestEnclosingItemsBinding())
-      then result = this.getNearestEnclosingItemsBinding().getAbsolutePath() + "/" + this.getPath()
-      else result = this.getPath()
+      if exists(getBindElementContextPath(this))
+      then result = appendBindingPath(getBindElementContextPath(this), this.getPath())
+      else
+        if exists(this.getNearestEnclosingItemsBinding())
+        then
+          result = this.getNearestEnclosingItemsBinding().getAbsolutePath() + "/" + this.getPath()
+        else result = this.getPath()
   }
 
   /**
@@ -122,6 +126,101 @@ abstract class UI5BindingPath extends BindingPath {
    * Gets the `DataFlow::Node` that represents this binding path.
    */
   Node getNode() { result = UI5DataModels::getModelNode(this) }
+}
+
+/**
+ * A statically known default-model context assigned through `control.bindElement(...)`.
+ */
+private class StaticBindElementContext extends MethodCallNode {
+  UI5Control control;
+  CustomController controller;
+  string path;
+
+  StaticBindElementContext() {
+    exists(ControlReference reference |
+      reference = control.getAReference() and
+      this = reference.getALocalSource().getAMemberCall("bindElement") and
+      controller = getControlReferenceController(reference)
+    ) and
+    path = getStaticDefaultBindElementPath(this)
+  }
+
+  UI5Control getControl() { result = control }
+
+  string getPath() { result = path }
+
+  predicate appliesTo(UI5BindingPath bindingPath) {
+    not exists(bindingPath.getModelName()) and
+    controller = bindingPath.getView().getController() and
+    controlContainsBinding(this.getControl(), bindingPath)
+  }
+}
+
+private CustomController getControlReferenceController(ControlReference reference) {
+  reference = result.getAViewReference().getAMemberCall("byId")
+  or
+  reference = result.getAThisNode().getAMemberCall("byId")
+}
+
+private string getStaticDefaultBindElementPath(MethodCallNode bindElementCall) {
+  (
+    bindElementCall.getNumArgument() = [1, 2] and
+    result = bindElementCall.getArgument(0).getALocalSource().getStringValue()
+    or
+    exists(DataFlow::ObjectLiteralNode bindingInfo |
+      bindingInfo = bindElementCall.getArgument(0).getALocalSource() and
+      not exists(bindingInfo.getAPropertyWrite("model")) and
+      result = bindingInfo.getAPropertyWrite("path").getRhs().getALocalSource().getStringValue()
+    )
+  ) and
+  result.matches("/%")
+}
+
+private predicate controlContainsBinding(UI5Control control, UI5BindingPath bindingPath) {
+  control.asXmlControl() = bindingPath.getControlDeclaration().asXmlControl().getParent*()
+  or
+  control.asJsonControl() = bindingPath.getControlDeclaration().asJsonControl().getParent*()
+  or
+  control.asJsControl() = bindingPath.getControlDeclaration().asJsControl()
+}
+
+private predicate controlIsStrictDescendant(UI5Control descendant, UI5Control ancestor) {
+  descendant.asXmlControl().getParent+() = ancestor.asXmlControl()
+  or
+  descendant.asJsonControl().getParent+() = ancestor.asJsonControl()
+}
+
+private predicate controlIsDescendantOrSelf(UI5Control descendant, UI5Control ancestor) {
+  descendant.asXmlControl().getParent*() = ancestor.asXmlControl()
+  or
+  descendant.asJsonControl().getParent*() = ancestor.asJsonControl()
+}
+
+private StaticBindElementContext getNearestBindElementContext(UI5BindingPath bindingPath) {
+  result.appliesTo(bindingPath) and
+  not exists(StaticBindElementContext closer |
+    closer.appliesTo(bindingPath) and
+    controlIsStrictDescendant(closer.getControl(), result.getControl())
+  )
+}
+
+private string getBindElementContextPath(UI5BindingPath bindingPath) {
+  exists(StaticBindElementContext context |
+    context = getNearestBindElementContext(bindingPath) and
+    not exists(UI5BindingPath itemsBinding |
+      itemsBinding = bindingPath.getNearestEnclosingItemsBinding() and
+      controlIsDescendantOrSelf(itemsBinding.getControlDeclaration(), context.getControl())
+    )
+  |
+    result = context.getPath()
+  )
+}
+
+bindingset[contextPath, relativePath]
+private string appendBindingPath(string contextPath, string relativePath) {
+  if contextPath = "/"
+  then result = "/" + relativePath
+  else result = contextPath + "/" + relativePath
 }
 
 /**

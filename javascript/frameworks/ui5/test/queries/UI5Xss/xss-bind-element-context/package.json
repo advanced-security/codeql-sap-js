@@ -1,0 +1,13 @@
+{
+  "name": "xss-bind-element-context",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --port 8085",
+    "test:runtime": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@ui5/cli": "^4.0.55"
+  }
+}

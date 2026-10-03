@@ -1,0 +1,13 @@
+{
+  "customer": {
+    "name": "Safe value"
+  },
+  "other": {
+    "name": "Other safe value"
+  },
+  "otherList": [
+    {
+      "name": "List safe value"
+    }
+  ]
+}

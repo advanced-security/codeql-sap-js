@@ -1,0 +1,40 @@
+<mvc:View
+  controllerName="codeql.sap.bindcontext.controller.app"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <VBox>
+    <Input id="payloadInput" value="{/customer/name}" />
+    <VBox id="customerDetails">
+      <core:HTML id="htmlSink" content="{name}" />
+      <core:HTML id="namedSink" content="{named>name}" />
+      <VBox id="otherDetails">
+        <core:HTML id="nestedSink" content="{name}" />
+      </VBox>
+      <List items="{/otherList}">
+        <CustomListItem>
+          <core:HTML id="aggregationSink" content="{name}" />
+        </CustomListItem>
+      </List>
+      <List items="{orders}">
+        <CustomListItem>
+          <core:HTML id="relativeAggregationSink" content="{name}" />
+        </CustomListItem>
+      </List>
+    </VBox>
+    <VBox id="legacyDetails">
+      <core:HTML id="legacySink" content="{name}" />
+    </VBox>
+    <VBox id="objectDetails">
+      <core:HTML id="objectSink" content="{name}" />
+    </VBox>
+    <VBox id="namedObjectDetails">
+      <core:HTML id="namedObjectSink" content="{name}" />
+    </VBox>
+    <VBox id="namedPathDetails">
+      <core:HTML id="namedPathSink" content="{name}" />
+    </VBox>
+    <core:HTML id="globalReferenceSink" content="{name}" />
+    <core:HTML id="siblingSink" content="{name}" />
+  </VBox>
+</mvc:View>
