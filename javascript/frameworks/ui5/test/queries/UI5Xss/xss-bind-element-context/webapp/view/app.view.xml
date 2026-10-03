@@ -16,6 +16,11 @@
           <core:HTML id="aggregationSink" content="{name}" />
         </CustomListItem>
       </List>
+      <List items="{orders}">
+        <CustomListItem>
+          <core:HTML id="relativeAggregationSink" content="{name}" />
+        </CustomListItem>
+      </List>
     </VBox>
     <VBox id="legacyDetails">
       <core:HTML id="legacySink" content="{name}" />
@@ -29,6 +34,7 @@
     <VBox id="namedPathDetails">
       <core:HTML id="namedPathSink" content="{name}" />
     </VBox>
+    <core:HTML id="globalReferenceSink" content="{name}" />
     <core:HTML id="siblingSink" content="{name}" />
   </VBox>
 </mvc:View>

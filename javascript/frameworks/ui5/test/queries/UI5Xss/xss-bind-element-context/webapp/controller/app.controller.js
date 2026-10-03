@@ -1,4 +1,4 @@
-sap.ui.define(["sap/ui/core/mvc/Controller"], function (Controller) {
+sap.ui.define(["sap/ui/core/Fragment", "sap/ui/core/mvc/Controller"], function (Fragment, Controller) {
   "use strict";
 
   return Controller.extend("codeql.sap.bindcontext.controller.app", {
@@ -15,6 +15,10 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (Controller) {
       });
       this.byId("namedPathDetails").bindElement("named>/customer");
       this.byId("otherDetails").bindElement("/other");
+    },
+    testGlobalReferenceLookups: function () {
+      sap.ui.getCore().byId("globalReferenceSink").bindElement("/customer");
+      Fragment.byId("app", "globalReferenceSink").bindElement("/customer");
     }
   });
 });

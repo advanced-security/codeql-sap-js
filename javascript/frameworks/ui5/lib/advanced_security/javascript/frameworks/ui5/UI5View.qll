@@ -133,12 +133,14 @@ abstract class UI5BindingPath extends BindingPath {
  */
 private class StaticBindElementContext extends MethodCallNode {
   UI5Control control;
+  CustomController controller;
   string path;
 
   StaticBindElementContext() {
     exists(ControlReference reference |
       reference = control.getAReference() and
-      this = reference.getALocalSource().getAMemberCall("bindElement")
+      this = reference.getALocalSource().getAMemberCall("bindElement") and
+      controller = getControlReferenceController(reference)
     ) and
     path = getStaticDefaultBindElementPath(this)
   }
@@ -149,9 +151,15 @@ private class StaticBindElementContext extends MethodCallNode {
 
   predicate appliesTo(UI5BindingPath bindingPath) {
     not exists(bindingPath.getModelName()) and
-    this.getFile() = bindingPath.getView().getController().getFile() and
+    controller = bindingPath.getView().getController() and
     controlContainsBinding(this.getControl(), bindingPath)
   }
+}
+
+private CustomController getControlReferenceController(ControlReference reference) {
+  reference = result.getAViewReference().getAMemberCall("byId")
+  or
+  reference = result.getAThisNode().getAMemberCall("byId")
 }
 
 private string getStaticDefaultBindElementPath(MethodCallNode bindElementCall) {
@@ -172,6 +180,8 @@ private predicate controlContainsBinding(UI5Control control, UI5BindingPath bind
   control.asXmlControl() = bindingPath.getControlDeclaration().asXmlControl().getParent*()
   or
   control.asJsonControl() = bindingPath.getControlDeclaration().asJsonControl().getParent*()
+  or
+  control.asJsControl() = bindingPath.getControlDeclaration().asJsControl()
 }
 
 private predicate controlIsStrictDescendant(UI5Control descendant, UI5Control ancestor) {
