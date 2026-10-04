@@ -10,6 +10,11 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - classic string-based API
 - `renderer` property is set to a render function
 
+### [xss-bind-element-context](queries/UI5Xss/xss-bind-element-context)
+- default-model contexts assigned through `bindElement`
+- relative bindings in XML, JSON, and JavaScript views
+- nested contexts, aggregation contexts, model overrides, and sibling controls
+
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
 - custom Control
 - accessing Control properties byId

@@ -694,21 +694,26 @@ private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath, UI5Con
   modelNameMatchesBindingPath(result, bindingPath)
 }
 
-private predicate controlIsStrictDescendant(UI5Control descendant, UI5Control ancestor) {
-  descendant.asXmlControl().getParent+() = ancestor.asXmlControl()
-  or
-  descendant.asJsonControl().getParent+() = ancestor.asJsonControl()
-}
-
 private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
   exists(UI5Control control |
     control = getAControlInBindingHierarchy(bindingPath) and
     result = getControlSetModelCall(bindingPath, control) and
     not exists(UI5Control closer |
       closer = getAControlInBindingHierarchy(bindingPath) and
-      controlIsStrictDescendant(closer, control) and
+      control.strictlyContains(closer) and
       exists(getControlSetModelCall(bindingPath, closer))
     )
+  )
+}
+
+/**
+ * Holds if a descendant of `contextControl` replaces the default model inherited by `bindingPath`.
+ */
+predicate hasCloserDefaultModelOverride(UI5Control contextControl, UI5BindingPath bindingPath) {
+  exists(UI5Control overrideControl |
+    contextControl.strictlyContains(overrideControl) and
+    overrideControl.contains(bindingPath.getControlDeclaration()) and
+    exists(getControlSetModelCall(bindingPath, overrideControl))
   )
 }
 
@@ -835,35 +840,11 @@ class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
 private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
   not exists(bindingPath.getModelName()) and
   inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
-  not hasDefaultModelOverride(bindingPath)
-}
-
-private predicate hasDefaultModelOverride(UI5BindingPath bindingPath) {
-  exists(MethodCallNode setModelCall |
-    setModelCall =
-      [
-        getAControlReferenceInOwningController(bindingPath).getALocalSource(),
-        bindingPath.getView().getController().getAViewReference().getALocalSource(),
-        bindingPath.getView().getController().getOwnerComponentRef().getALocalSource(),
-        any(Component component |
-          inSameUI5Component(bindingPath.getLocation().getFile(), component.getParentManifestJson())
-        ).getAThisNode().getALocalSource()
-      ].getAMemberCall("setModel") and
-    setModelCall.getNumArgument() = 1
-  )
-}
-
-private ControlReference getAControlReferenceInOwningController(UI5BindingPath bindingPath) {
-  result = getAControlInBindingHierarchy(bindingPath).getAReference() and
-  result.getFile() = bindingPath.getView().getController().getFile()
+  not exists(getNearestSetModelCall(bindingPath))
 }
 
 private UI5Control getAControlInBindingHierarchy(UI5BindingPath bindingPath) {
-  result.asXmlControl() = bindingPath.getControlDeclaration().asXmlControl().getParent*()
-  or
-  result.asJsonControl() = bindingPath.getControlDeclaration().asJsonControl().getParent*()
-  or
-  result.asJsControl() = bindingPath.getControlDeclaration().asJsControl()
+  result.contains(bindingPath.getControlDeclaration())
 }
 
 pragma[nomagic]

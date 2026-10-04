@@ -95,6 +95,28 @@ class UI5Control extends TUI5Control {
     result = this.getProperty("id").getValue()
     or
     result = this.asJsControl().getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+    or
+    exists(MethodCallNode createId |
+      createId = this.asJsControl().getArgument(0).getALocalSource() and
+      createId.getMethodName() = "createId" and
+      result = createId.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+    )
+  }
+
+  /** Holds if this control contains `descendant`, including itself. */
+  predicate contains(UI5Control descendant) {
+    this.asXmlControl() = descendant.asXmlControl().getParent*()
+    or
+    this.asJsonControl() = descendant.asJsonControl().getParent*()
+    or
+    this.asJsControl() = descendant.asJsControl()
+  }
+
+  /** Holds if this control strictly contains `descendant`. */
+  predicate strictlyContains(UI5Control descendant) {
+    this.asXmlControl() = descendant.asXmlControl().getParent+()
+    or
+    this.asJsonControl() = descendant.asJsonControl().getParent+()
   }
 
   /**
