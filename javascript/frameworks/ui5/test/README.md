@@ -53,6 +53,15 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 - `sap.ui.core.HTML` Control
 - one-way binding makes the xss fail
 
+### [xss-internal-data-model](queries/UI5Xss/xss-internal-data-model)
+- default `sap.ui.model.json.JSONModel` declared in `manifest.json`
+- relative two-way binding from `sap.m.Input` to `sap.ui.core.HTML`
+- true negative where `setDefaultBindingMode(OneWay)` prevents flow from `sap.m.Input` to the model
+
+### [xss-inferred-json-data-model](queries/UI5Xss/xss-inferred-json-data-model)
+- default `sap.ui.model.json.JSONModel` inferred from a `JSON` data source
+- relative two-way binding from `sap.m.Input` to `sap.ui.core.HTML`
+
 ### [xss-html-external-model](queries/UI5Xss/xss-html-external-model)
 - `sap.ui.core.HTML` Control
 - controller model as external `.json` file

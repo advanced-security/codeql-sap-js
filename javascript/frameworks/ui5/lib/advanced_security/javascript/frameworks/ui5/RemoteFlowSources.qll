@@ -90,16 +90,9 @@ class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSou
   LocalModelContentBoundBidirectionallyToSourceControl() {
     exists(UI5InternalModel internalModel |
       this = bindingPath.getNode() and
-      (
-        this instanceof PropWrite and
-        internalModel.getArgument(0).getALocalSource().asExpr() =
-          this.(PropWrite).getPropertyNameExpr().getParent+()
-        or
-        this.asExpr() instanceof StringLiteral and
-        internalModel.asExpr() = this.asExpr().getParent()
-      ) and
+      this = internalModel.getAContentNode() and
       any(UI5View view).getASource() = bindingPath and
-      internalModel.(JsonModel).isTwoWayBinding() and
+      internalModel.hasTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()
     )
   }
