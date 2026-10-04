@@ -11,6 +11,10 @@ private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensio
 
 abstract private class RemoteControlAPISource extends SourceNode { }
 
+abstract private class UI5ClientSideRemoteFlowSource extends ClientSideRemoteFlowSource {
+  override ClientSideRemoteFlowKind getKind() { result = "browser" }
+}
+
 private class RemoteControlReference extends RemoteControlAPISource, ControlReference {
   RemoteControlReference() {
     exists(UI5Control sourceControl, string typeAlias |
@@ -39,7 +43,7 @@ private class RemoteControlHandlerParameter extends RemoteControlAPISource, Call
  * or from handler parameters, via property reads or getter methods like `getValue()` or
  * `getCurrentValue()`. These represent user input that could potentially be tainted.
  */
-private class UserDataFromRemoteControlAPISource extends RemoteFlowSource {
+private class UserDataFromRemoteControlAPISource extends UI5ClientSideRemoteFlowSource {
   UserDataFromRemoteControlAPISource() {
     exists(RemoteControlAPISource remoteControlAPISource |
       /*
@@ -88,6 +92,20 @@ class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroug
   }
 }
 
+class UI5BindingClientSideSource extends UI5ClientSideRemoteFlowSource {
+  UI5BindingPath bindingPath;
+
+  UI5BindingClientSideSource() {
+    exists(UI5InternalModel internalModel |
+      internalModel.hasContentNodeForBinding(bindingPath, this) and
+      any(UI5View view).getASource() = bindingPath and
+      internalModel.hasTwoWayBinding()
+    )
+  }
+
+  override string getSourceType() { result = "Data from a property bound to a UI5 input control" }
+}
+
 class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSource {
   UI5BindingPath bindingPath;
   UI5Control controlDeclaration;
@@ -110,7 +128,7 @@ class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSou
   UI5Control getControlDeclaration() { result = controlDeclaration }
 }
 
-private class RouteParameterAccess extends RemoteFlowSource instanceof PropRead {
+private class RouteParameterAccess extends UI5ClientSideRemoteFlowSource instanceof PropRead {
   override string getSourceType() { result = "RouteParameterAccess" }
 
   RouteParameterAccess() {
@@ -130,7 +148,8 @@ private class RouteParameterAccess extends RemoteFlowSource instanceof PropRead 
   }
 }
 
-private class DisplayEventHandlerParameterAccess extends RemoteFlowSource instanceof PropRead {
+private class DisplayEventHandlerParameterAccess extends UI5ClientSideRemoteFlowSource instanceof PropRead
+{
   override string getSourceType() { result = "DisplayEventHandlerParameterAccess" }
 
   DisplayEventHandlerParameterAccess() {

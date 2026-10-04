@@ -248,7 +248,9 @@ abstract class UI5View extends File {
 
   abstract UI5BindingPath getASource();
 
-  abstract UI5BindingPath getAnHtmlISink();
+  abstract UI5BindingPath getASink(string sinkKind);
+
+  UI5BindingPath getAnHtmlISink() { result = this.getASink("ui5-html-injection") }
 }
 
 /**
@@ -346,11 +348,11 @@ class JsView extends UI5View {
     )
   }
 
-  override JsViewBindingPath getAnHtmlISink() {
+  override JsViewBindingPath getASink(string sinkKind) {
     exists(DataFlow::ObjectLiteralNode control, string type, string path, string property |
       this = control.getFile() and
       type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getBinding().getBindingTarget().asDataFlowNode() = control.getAPropertyWrite(property)
     )
@@ -397,11 +399,11 @@ class JsonView extends UI5View {
     )
   }
 
-  override JsonBindingPath getAnHtmlISink() {
+  override JsonBindingPath getASink(string sinkKind) {
     exists(JsonObject control, string type, string path, string property |
       root = control.getParent+() and
       type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getPropertyName() = property and
       result.getBindingTarget() = control
@@ -529,11 +531,11 @@ class HtmlView extends UI5View, HTML::HtmlFile {
     )
   }
 
-  override HtmlBindingPath getAnHtmlISink() {
+  override HtmlBindingPath getASink(string sinkKind) {
     exists(HTML::Element control, string type, string path, string property |
       this = control.getFile() and
       type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getBindingTarget() = control.getAttributeByName("data-" + property)
     )
@@ -637,11 +639,11 @@ class XmlView extends UI5View instanceof XmlFile {
     )
   }
 
-  override XmlBindingPath getAnHtmlISink() {
+  override XmlBindingPath getASink(string sinkKind) {
     exists(XmlElement control, string type, string path, string property |
       this = control.getFile() and
       type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getBindingTarget() = control.getAttribute(property)
     )
@@ -695,11 +697,11 @@ class XmlFragment extends UI5View instanceof XmlFile {
     )
   }
 
-  override XmlBindingPath getAnHtmlISink() {
+  override XmlBindingPath getASink(string sinkKind) {
     exists(XmlElement control, string type, string path, string property |
       this = control.getFile() and
       type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, "ui5-html-injection", _) and
+      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
       property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
       result.getBindingTarget() = control.getAttribute(property)
     )

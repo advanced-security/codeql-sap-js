@@ -43,6 +43,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
     exists(UI5InternalModel internalModel |
       internalModel.hasContentNodeForBinding(bindingPath, this) and
       any(UI5View view).getAnHtmlISink() = bindingPath and
+      not bindingPath.getControlDeclaration().isHTMLSanitized() and
       internalModel.hasTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()
     )
@@ -51,15 +52,6 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5BindingPath getBindingPath() { result = bindingPath }
 
   UI5Control getControlDeclaration() { result = controlDeclaration }
-}
-
-/**
- * A local source for cases where the Control implementation is separate from the complete UI5 app.
- */
-class LocalModelStringPropertySource extends DomBasedXss::Source {
-  LocalModelStringPropertySource() {
-    this = any(PropertyMetadata propMeta | propMeta.isUnrestrictedStringType())
-  }
 }
 
 module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {

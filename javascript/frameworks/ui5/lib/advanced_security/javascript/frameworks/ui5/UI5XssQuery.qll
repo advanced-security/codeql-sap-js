@@ -1,169 +1,32 @@
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
+import advanced_security.javascript.frameworks.ui5.HtmlInjections
+import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
+import advanced_security.javascript.frameworks.ui5.Sanitizers
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
-import advanced_security.javascript.frameworks.ui5.UI5View
-private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
+/**
+ * Compatibility configuration for UI5-specific path rendering and local overlay flow.
+ *
+ * The standard `js/xss` query consumes the same sources, sinks, sanitizers, and shared steps
+ * through `advanced_security.javascript_sap_ui5_all.Customizations`.
+ */
 module UI5Xss implements DataFlow::ConfigSig {
-  predicate isSource(DataFlow::Node start) {
-    DomBasedXss::DomBasedXssConfig::isSource(start, _)
+  predicate isSource(DataFlow::Node source) {
+    DomBasedXss::DomBasedXssConfig::isSource(source, _)
     or
-    start instanceof RemoteFlowSource
+    source instanceof RemoteFlowSource
   }
 
   predicate isBarrier(DataFlow::Node node) {
-    /* 1. Already a sanitizer defined in `DomBasedXssQuery::Configuration` */
     DomBasedXss::DomBasedXssConfig::isBarrier(node)
     or
-    /* 2. Value read from a non-string control property */
-    exists(PropertyMetadata m | not m.isUnrestrictedStringType() | node = m)
-    or
-    /* 3-1. Sanitizers provided by `sap.base.security` */
-    exists(SapDefineModule d, DataFlow::ParameterNode par |
-      node = par.getACall() and
-      par =
-        d.getRequiredObject("sap/base/security/" +
-            ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML"])
-            .asSourceNode()
-    )
-    or
-    /* 3-2. Sanitizers provided by `jQuery.sap` */
-    node.(DataFlow::CallNode).getReceiver().asExpr().(PropAccess).getQualifiedName() = "jQuery.sap" and
-    node.(DataFlow::CallNode).getCalleeName() =
-      ["encodeCSS", "encodeJS", "encodeURL", "encodeURLParameters", "encodeXML", "encodeHTML"]
-    or
-    /* Block flow through setContent/getContent of a sanitized UI5Control */
-    exists(UI5Control control, DataFlow::MethodCallNode content |
-      control.asJsControl() = content.getReceiver().getALocalSource() and
-      control.isHTMLSanitized() and
-      content.getMethodName() = ["setContent", "getContent"] and
-      node = [content, content.getArgument(0)]
-    )
+    node instanceof DomBasedXss::Sanitizer
   }
 
-  predicate isSink(DataFlow::Node node) {
-    node instanceof UI5ExtHtmlISink or
-    node instanceof UI5ModelHtmlISink or
-    node instanceof UI5HTMLControlReferenceContentAPI or
-    node instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
-  }
+  predicate isSink(DataFlow::Node sink) { isUI5HtmlInjectionSink(sink) }
 
   predicate isAdditionalFlowStep(DataFlow::Node start, DataFlow::Node end) {
-    inSameWebApp(start.getFile(), end.getFile()) and
-    (
-      /* Already an additional flow step defined in `DomBasedXssQuery::Configuration` */
-      DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
-      or
-      manifestJsonModelBindingStep(start, end)
-      or
-      /* TODO: Legacy code */
-      /* Handler argument node to handler parameter */
-      exists(UI5Handler h |
-        start = h.getBindingPath().getNode() and
-        /*
-         * Ideally we would like to show an intermediate node where
-         * the handler is bound to a control, but there is no sourceNode there
-         * `end = h.getBindingPath() or start = h.getBindingPath()`
-         */
-
-        end = h.getParameter(0)
-      )
-      or
-      /* Flow from `setContent` to `getContent` of a control */
-      exists(
-        UI5Control control, DataFlow::MethodCallNode getContent, DataFlow::MethodCallNode setContent
-      |
-        control.asJsControl() = setContent.getReceiver().getALocalSource() and
-        control.asJsControl() = getContent.getReceiver().getALocalSource() and
-        setContent.getMethodName() = "setContent" and
-        getContent.getMethodName() = "getContent" and
-        start = setContent.getArgument(0) and
-        end = getContent and
-        not control.isHTMLSanitized()
-      )
-    )
-  }
-}
-
-/**
- * An HTML injection sink associated with a `UI5BoundNode`, typically for library controls acting as sinks.
- */
-class UI5ModelHtmlISink extends DataFlow::Node {
-  UI5ModelHtmlISink() { exists(UI5View view | view.getAnHtmlISink().getNode() = this) }
-}
-
-/**
- * An HTML injection sink typically for custom controls whose RenderManager calls acting as sinks.
- */
-private class UI5HTMLControlReferenceContentAPI extends DataFlow::Node {
-  UI5HTMLControlReferenceContentAPI() {
-    exists(UI5Control sinkControl, string typeAlias, ControlReference controlReference |
-      typeModel(typeAlias, sinkControl.getImportPath(), _) and
-      sinkModel(typeAlias, _, "ui5-html-injection", _) and
-      sinkControl.getAReference() = controlReference and
-      (
-        this = controlReference.getAMemberCall("setContent").getArgument(0) or
-        this = controlReference.getAPropertyWrite("content").getRhs()
-      )
-    ) and
-    /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
-    not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
-  }
-}
-
-private class UI5ExtHtmlISink extends DataFlow::Node {
-  UI5ExtHtmlISink() {
-    this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
-    /* Exclude property writes to instantiated HTML controls; they are covered in a separate class below. */
-    not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
-  }
-}
-
-private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
-
-abstract class DynamicallySetElementValueOfHTML extends DataFlow::Node { }
-
-/**
- * The DOM value of a UI5 control that is dynamically generated then placed at
- * a certain position in a DOM.
- */
-class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DynamicallySetElementValueOfHTML
-{
-  DataFlow::Node root;
-  ControlPlaceAtCall placeAtCall;
-
-  DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom() {
-    exists(NewNode new | root = new |
-      new = ModelOutput::getATypeNode("UI5HTMLControl").getAnInstantiation() and
-      (
-        this = new.getAnArgument().(ObjectLiteralNode).getAPropertyWrite("content").getRhs()
-        or
-        this = new.getAPropertyWrite("content").getRhs()
-        or
-        this = new.getAMemberCall("setContent").getAnArgument()
-      )
-    ) and
-    /* Ensure that this is placed somewhere in the DOM. */
-    TrackPlaceAtCallConfigFlow::flow(root, placeAtCall)
-  }
-}
-
-class DynamicallySetElementValueOfHTMLControlReference extends DynamicallySetElementValueOfHTML {
-  DynamicallySetElementValueOfHTMLControlReference() {
-    /* 2. The content is written to the reference of the control. */
-    exists(ControlReference controlReference |
-      controlReference.isLibraryControlReference("sap.m.HTML")
-    |
-      /*
-       * 2-1. The content is written directly to the `content` property of the control
-       * reference.
-       */
-
-      this = controlReference.getAPropertyWrite("content")
-      or
-      /* 2-2. The content is written using the `setContent` setter.  */
-      this = controlReference.getAMemberCall("setContent").getArgument(0)
-    )
+    DomBasedXss::DomBasedXssConfig::isAdditionalFlowStep(start, _, end, _)
   }
 }

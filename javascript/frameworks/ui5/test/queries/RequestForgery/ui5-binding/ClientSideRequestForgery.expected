@@ -1,0 +1,11 @@
+edges
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | provenance |  |
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | provenance |  |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | provenance |  |
+nodes
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | semmle.label | value={/resourceUrl} |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | semmle.label | src={/resourceUrl} |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | semmle.label | src={/resourceUrl} |
+subpaths
+#select
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | The $@ of this request depends on a $@. | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | URL | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | user-provided value |

@@ -1,0 +1,14 @@
+{
+  "sap.app": {
+    "id": "codeql.sap.standard",
+    "type": "application"
+  },
+  "sap.ui5": {
+    "models": {
+      "": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "model/data.json"
+      }
+    }
+  }
+}

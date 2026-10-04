@@ -48,7 +48,6 @@ edges
 | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
-| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |

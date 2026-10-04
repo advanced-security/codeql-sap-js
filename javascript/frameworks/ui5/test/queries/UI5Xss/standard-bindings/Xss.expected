@@ -1,0 +1,8 @@
+nodes
+| view/app.view.xml:2:3:2:28 | value={/html} | semmle.label | value={/html} |
+| view/app.view.xml:3:3:3:34 | content={/html} | semmle.label | content={/html} |
+edges
+| view/app.view.xml:2:3:2:28 | value={/html} | view/app.view.xml:3:3:3:34 | content={/html} | provenance |  |
+subpaths
+#select
+| view/app.view.xml:3:3:3:34 | content={/html} | view/app.view.xml:2:3:2:28 | value={/html} | view/app.view.xml:3:3:3:34 | content={/html} | Cross-site scripting vulnerability due to $@. | view/app.view.xml:2:3:2:28 | value={/html} | user-provided value |

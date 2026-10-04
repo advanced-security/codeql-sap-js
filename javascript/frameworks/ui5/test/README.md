@@ -15,6 +15,11 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - relative bindings in XML, JSON, and JavaScript views
 - nested contexts, aggregation contexts, model overrides, and sibling controls
 
+### [standard-bindings](queries/UI5Xss/standard-bindings)
+- standard `js/xss` detection for manifest-model bindings
+- standard client-side URL redirect detection for `sap.m.Link.href`
+- negative server-side URL redirect coverage
+
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
 - custom Control
 - accessing Control properties byId
@@ -91,6 +96,12 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-webc-control](queries/UI5Xss/xss-webc-control)
 - Uses the `sap.ui.webc.main.MultiInput` control
+
+## Client-side Request Forgery
+
+### [ui5-binding](queries/RequestForgery/ui5-binding)
+- standard client-side request-forgery detection for a model-bound resource URL
+- negative server-side request-forgery coverage
 
 ## UiI5 Log-Injection
 ### [avoid-duplicate-alerts](queries/UI5LogInjection/avoid-duplicate-alerts)

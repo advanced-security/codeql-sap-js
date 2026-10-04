@@ -489,3 +489,35 @@ class ThisNodePropertyWriteToThisNodePropertyRead extends DataFlow::SharedFlowSt
     )
   }
 }
+
+/**
+ * A step from a UI5 event binding to the corresponding handler parameter.
+ */
+class UI5HandlerArgumentStep extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(UI5Handler handler |
+      start = handler.getBindingPath().getNode() and
+      end = handler.getParameter(0)
+    )
+  }
+}
+
+/**
+ * A step between writes and reads of an unsanitized instantiated UI5 HTML control.
+ */
+class UI5HTMLControlContentStep extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    inSameWebApp(start.getFile(), end.getFile()) and
+    exists(
+      UI5Control control, DataFlow::MethodCallNode getContent, DataFlow::MethodCallNode setContent
+    |
+      control.asJsControl() = setContent.getReceiver().getALocalSource() and
+      control.asJsControl() = getContent.getReceiver().getALocalSource() and
+      setContent.getMethodName() = "setContent" and
+      getContent.getMethodName() = "getContent" and
+      start = setContent.getArgument(0) and
+      end = getContent and
+      not control.isHTMLSanitized()
+    )
+  }
+}

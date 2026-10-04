@@ -100,14 +100,12 @@ edges
 | webapp/view/local.view.xml:8:3:8:42 | content={/viewOverride} | webapp/controller/local.controller.js:12:33:12:49 | new JSONModel({}) |
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
-| webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
 | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
 | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
 | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
