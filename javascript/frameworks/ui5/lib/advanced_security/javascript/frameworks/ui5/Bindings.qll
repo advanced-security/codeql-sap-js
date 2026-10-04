@@ -4,6 +4,7 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.BindingStringParser as MakeBindingStringParser
+import advanced_security.javascript.frameworks.ui5.JsonBindingTarget
 import advanced_security.javascript.frameworks.ui5.UI5View
 
 private class ContextBindingAttribute extends XmlAttribute {
@@ -599,6 +600,10 @@ class BindingTarget extends TBindingTarget {
         this = TEarlyJavaScriptPropertyBindingTarget(target, _)
         or
         this = TLateJavaScriptBindingTarget(target.(BindElementMethodCallNode).getReceiver(), _)
+        or
+        this =
+          TJsonPropertyBindingTarget(target.(JsonBindingTargetNode).getBindingTarget(),
+            target.(JsonBindingTargetNode).getPropertyName(), _)
       ) and
       result = target
     )

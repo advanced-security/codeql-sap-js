@@ -1,7 +1,10 @@
 <mvc:View
   controllerName="codeql-sap-js.controller.local"
   xmlns="sap.m"
+  xmlns:core="sap.ui.core"
   xmlns:mvc="sap.ui.core.mvc">
   <Text text="View-local model" />
+  <Input value="{/viewOverride}" />
+  <core:HTML content="{/viewOverride}" />
   <VBox id="sharedControl" />
 </mvc:View>

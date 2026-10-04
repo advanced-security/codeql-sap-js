@@ -9,7 +9,8 @@ private newtype TUI5Control =
         .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
   } or
   TJsonControl(JsonObject control) {
-    exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
+    exists(control.getPropStringValue("Type")) and
+    exists(JsonView view | control.getParent+() = view.getRoot().getPropValue("content"))
   } or
   TJsControl(NewNode control) {
     exists(JsView view |
@@ -90,7 +91,11 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the `id` property of this control.
    */
-  string getId() { result = this.getProperty("id").getValue() }
+  string getId() {
+    result = this.getProperty("id").getValue()
+    or
+    result = this.asJsControl().getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+  }
 
   /**
    * Gets the qualified type name, e.g. `sap/m/SearchField`.
@@ -116,13 +121,11 @@ class UI5Control extends TUI5Control {
     (
       // Standard byId: ID in first argument
       result.getNumArgument() = 1 and
-      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
       or
       // Fragment.byId: ID in second argument
       result.getNumArgument() = 2 and
-      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
     )
   }
 

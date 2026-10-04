@@ -1,0 +1,29 @@
+{
+  "_version": "2.0.0",
+  "sap.app": {
+    "id": "codeql-sap-js-unrelated-models",
+    "type": "application",
+    "title": "UI5 component with unrelated models configuration"
+  },
+  "sap.ui5": {
+    "dependencies": {
+      "minUI5Version": "1.136.0",
+      "libs": {
+        "sap.m": {},
+        "sap.ui.core": {}
+      }
+    },
+    "rootView": {
+      "viewName": "codeql-sap-js-unrelated-models.view.app",
+      "type": "XML",
+      "id": "app"
+    }
+  },
+  "custom": {
+    "models": {
+      "": {
+        "type": "sap.ui.model.json.JSONModel"
+      }
+    }
+  }
+}

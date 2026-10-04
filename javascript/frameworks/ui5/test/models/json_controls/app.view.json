@@ -1,0 +1,16 @@
+{
+  "Type": "sap.ui.core.mvc.JSONView",
+  "content": [
+    {
+      "Type": "sap.m.VBox",
+      "id": "outerControl",
+      "settings": {
+        "id": "plainObject",
+        "nested": {
+          "Type": "sap.m.Input",
+          "id": "nestedControl"
+        }
+      }
+    }
+  ]
+}

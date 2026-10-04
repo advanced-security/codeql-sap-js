@@ -10,10 +10,7 @@ edges
 | webapp/view/app.view.xml:5:3:5:26 | items={/items} | webapp/view/app.view.xml:5:3:5:26 | items={/items} |
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
-| webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
-| webapp/view/app.view.xml:7:7:7:32 | value={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
-| webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:7:7:7:32 | value={value} |
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |
 | webapp/view/app.view.xml:8:7:8:38 | content={value} | webapp/view/app.view.xml:8:7:8:38 | content={value} |

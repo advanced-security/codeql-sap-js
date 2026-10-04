@@ -41,8 +41,7 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
 
   LocalModelContentBoundBidirectionallyToHtmlISinkControl() {
     exists(UI5InternalModel internalModel |
-      this = bindingPath.getNode() and
-      this = internalModel.getAContentNode() and
+      internalModel.hasContentNodeForBinding(bindingPath, this) and
       any(UI5View view).getAnHtmlISink() = bindingPath and
       internalModel.hasTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()

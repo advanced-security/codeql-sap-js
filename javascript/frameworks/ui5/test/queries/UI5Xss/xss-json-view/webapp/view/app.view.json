@@ -16,6 +16,14 @@
 			"Type": "sap.ui.core.HTML",
 			"content": "{/input}",
 			"sanitizeContent": true
+		},
+		{
+			"Type": "sap.m.Input",
+			"tooltip": "{/unrelated}"
+		},
+		{
+			"Type": "sap.ui.core.HTML",
+			"visible": "{/unrelated}"
 		}
 	]
 }
