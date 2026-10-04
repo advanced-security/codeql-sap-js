@@ -69,8 +69,13 @@ abstract class UI5BindingPath extends BindingPath {
    */
   UI5BindingPath getNearestEnclosingItemsBinding() {
     result = this.getAnEnclosingItemsBinding() and
-    not result = this.getAnEnclosingItemsBinding().getAnEnclosingItemsBinding() and
-    not exists(this.getModelName())
+    not exists(this.getModelName()) and
+    not exists(result.getModelName()) and
+    not exists(UI5BindingPath closer |
+      closer = this.getAnEnclosingItemsBinding() and
+      not exists(closer.getModelName()) and
+      result = closer.getAnEnclosingItemsBinding()
+    )
   }
 
   /**
@@ -198,11 +203,37 @@ abstract class UI5BindingPath extends BindingPath {
     result = getNonStaticJsonModelNode(this)
     or
     /* 1-4. Internal model created from the application manifest */
-    result = this.getModel().(DefaultManifestJsonModel)
+    exists(ManifestJsonModelContentNode content |
+      content.getModel() = this.getModel() and
+      content.getAbsolutePath() = this.getAbsolutePath() and
+      result = content
+    )
     or
     /* 2. External (Server-side) model */
     result = getExternalModelNode(this)
   }
+}
+
+private class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
+  DefaultManifestJsonModel model;
+  string absolutePath;
+
+  ManifestJsonModelBindingNode() {
+    exists(UI5BindingPath bindingPath |
+      model = bindingPath.getModel() and
+      absolutePath = bindingPath.getAbsolutePath() and
+      (
+        this.(DataFlow::XmlAttributeNode).getAttribute() =
+          bindingPath.getBinding().getBindingTarget().asXmlAttribute()
+        or
+        this = bindingPath.getBinding().getBindingTarget().asDataFlowNode()
+      )
+    )
+  }
+
+  override DefaultManifestJsonModel getModel() { result = model }
+
+  override string getAbsolutePath() { result = absolutePath }
 }
 
 /**
@@ -210,12 +241,35 @@ abstract class UI5BindingPath extends BindingPath {
  */
 private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
   not exists(bindingPath.getModelName()) and
-  inSameWebApp(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
-  not exists(MethodCallNode setModelCall |
-    setModelCall.getMethodName() = "setModel" and
-    not exists(setModelCall.getArgument(1)) and
-    inSameWebApp(bindingPath.getLocation().getFile(), setModelCall.getFile())
+  inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
+  not hasDefaultModelOverride(bindingPath)
+}
+
+/** Holds if a component, view, control, or ancestor control replaces the inherited default model. */
+private predicate hasDefaultModelOverride(UI5BindingPath bindingPath) {
+  exists(MethodCallNode setModelCall |
+    setModelCall =
+      [
+        getAControlReferenceInOwningController(bindingPath).getALocalSource(),
+        bindingPath.getView().getController().getAViewReference().getALocalSource(),
+        bindingPath.getView().getController().getOwnerComponentRef().getALocalSource(),
+        any(Component component |
+          inSameUI5Component(bindingPath.getLocation().getFile(), component.getParentManifestJson())
+        ).getAThisNode().getALocalSource()
+      ].getAMemberCall("setModel") and
+    setModelCall.getNumArgument() = 1
   )
+}
+
+private ControlReference getAControlReferenceInOwningController(UI5BindingPath bindingPath) {
+  result = getAControlInBindingHierarchy(bindingPath).getAReference() and
+  result.getFile() = bindingPath.getView().getController().getFile()
+}
+
+private UI5Control getAControlInBindingHierarchy(UI5BindingPath bindingPath) {
+  result.asXmlControl() = bindingPath.getControlDeclaration().asXmlControl().getParent*()
+  or
+  result.asJsonControl() = bindingPath.getControlDeclaration().asJsonControl().getParent*()
 }
 
 /**
@@ -505,7 +559,7 @@ class HtmlBindingPath extends UI5BindingPath {
 
   override HtmlBindingPath getAnEnclosingItemsBinding() {
     result != this and
-    result.getPropertyName() = "items" and
+    result.getPropertyName() = "data-items" and
     result.getBindingTarget().getElement() = this.getBindingTarget().getElement().getParent+()
   }
 

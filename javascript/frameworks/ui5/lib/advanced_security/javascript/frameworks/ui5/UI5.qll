@@ -65,7 +65,7 @@ class ResourceRoot extends Container {
 
   WebApp getWebApp() { result = webApp }
 
-  predicate contains(File file) { this.getAChildContainer+().getAFile() = file }
+  predicate contains(File file) { this.getAChildContainer*().getAFile() = file }
 }
 
 class SapUiCoreScriptElement extends HTML::ScriptElement {
@@ -816,6 +816,13 @@ abstract class UI5Model extends InvokeNode {
   MethodCallNode getARead() { result = this.getAMemberCall(["getProperty", "getObject"]) }
 }
 
+/** A path-specific content node of a manifest-created default JSON model. */
+abstract class ManifestJsonModelContentNode extends DataFlow::Node {
+  abstract DefaultManifestJsonModel getModel();
+
+  abstract string getAbsolutePath();
+}
+
 /**
  * Represents models that are loaded from an internal source, i.e. XML Models or JSON models
  * whose contents are hardcoded in a JS file or loaded from a JSON file.
@@ -835,14 +842,14 @@ abstract class UI5InternalModel extends UI5Model {
 
   /**
    * Gets a node representing content stored in this model. For `new JSONModel({ value: "" })`,
-   * this includes the `value` property; for a manifest-created model, it is the component node.
+   * this includes the `value` property; manifest-created models use path-specific binding nodes.
    */
   DataFlow::Node getAContentNode() {
     result = this.(JsonModel).getAProperty()
     or
     result.asExpr().(StringLiteral).getParent() = this.(JsonModel).asExpr()
     or
-    result = this.(DefaultManifestJsonModel)
+    result.(ManifestJsonModelContentNode).getModel() = this.(DefaultManifestJsonModel)
   }
 
   /**
@@ -856,6 +863,22 @@ abstract class UI5InternalModel extends UI5Model {
 }
 
 import ManifestJson
+
+/**
+ * Holds if `file` belongs to the component root declared by `manifest`, that is, if `manifest` is
+ * the nearest enclosing manifest of `file`. Manifests of enclosing components of a nested
+ * application are therefore excluded, even when they declare the same component ID.
+ */
+bindingset[file, manifest]
+predicate inSameUI5Component(File file, ManifestJson manifest) {
+  manifest.getParentContainer().getAChildContainer*().getAFile() = file and
+  manifest.getAbsolutePath().length() =
+    max(ManifestJson enclosingManifest |
+      enclosingManifest.getParentContainer().getAChildContainer*().getAFile() = file
+    |
+      enclosingManifest.getAbsolutePath().length()
+    )
+}
 
 /**
  * A UI5 Component that may contain other controllers or controls.
@@ -874,7 +897,8 @@ class Component extends SapExtendCall {
 
   ManifestJson getParentManifestJson() {
     this.getMetadata().getAPropertySource("manifest").asExpr().(StringLiteral).getValue() = "json" and
-    result.getId() = this.getId()
+    result.getId() = this.getId() and
+    inSameUI5Component(this.getFile(), result)
   }
 
   /** Get a definition of this component's model whose data source is remote. */
@@ -958,15 +982,19 @@ module ManifestJson {
   class RouteManifest extends JsonObject {
     RouteManifest() { this = any(RouterManifest router).getPropValue("routes").getElementValue(_) }
 
+    string getPattern() { result = this.getPropStringValue("pattern") }
+
     /**
      * Holds if, for example, this route has pattern `somePath/{someSuffix}` and `path` is
      * `someSuffix`.
      */
     predicate matchesPathString(string path) {
-      path = this.getPropStringValue("pattern").regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
+      path = this.getPattern().regexpCapture("([a-zA-Z]+/)\\{(.*)\\}.*", 2)
     }
 
     string getName() { result = this.getPropStringValue("name") }
+
+    string getTarget() { result = this.getPropStringValue("target") }
   }
 
   class RoutingTargetManifest extends JsonObject {
@@ -1262,10 +1290,11 @@ module ManifestJson {
 
     private ModelReference getAReference() {
       result.isDefaultModelReference() and
+      not exists(result.getAMatchingSetModelCall()) and
       (
         result = this.(Component).getAThisNode().getAMemberCall("getModel")
         or
-        inSameWebApp(result.getFile(), this.(Component).getParentManifestJson())
+        inSameUI5Component(result.getFile(), this.(Component).getParentManifestJson())
       )
     }
 
