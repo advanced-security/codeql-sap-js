@@ -1,7 +1,8 @@
 sap.ui.define([
+    "sap/ui/core/Fragment",
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel"
-], function (Controller, JSONModel) {
+], function (Fragment, Controller, JSONModel) {
     "use strict";
     return Controller.extend("codeql-sap-js.controller.app", {
         doSomething1: function () {
@@ -25,6 +26,13 @@ sap.ui.define([
 
             var value = oInput.getValue() // User input source sap.m.Input#getValue
             oHtmlOutput.setContent(value) // XSS sink sap.ui.core.HTML#setContent
+        },
+        testUnrelatedLookups: function () {
+            var coreValue = sap.ui.getCore().byId("input").getValue();
+            sap.ui.getCore().byId("htmlOutput").setContent(coreValue);
+
+            var fragmentValue = Fragment.byId("other", "input").getValue();
+            Fragment.byId("other", "htmlOutput").setContent(fragmentValue);
         },
         onInit: function () {
             var oData = {

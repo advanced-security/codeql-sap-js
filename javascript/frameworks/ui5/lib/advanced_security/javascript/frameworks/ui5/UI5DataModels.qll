@@ -708,6 +708,23 @@ predicate hasCloserDefaultModelOverride(UI5Control contextControl, UI5BindingPat
   )
 }
 
+/**
+ * Holds if a control between `ancestor` and `descendant` replaces their inherited default model.
+ */
+predicate hasDefaultModelOverrideBetween(
+  UI5Control ancestor, UI5Control descendant, CustomController controller
+) {
+  exists(UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall |
+    ancestor.strictlyContains(overrideControl) and
+    overrideControl.contains(descendant) and
+    reference = overrideControl.getAReference() and
+    controlReferenceBelongsToController(reference, controller) and
+    reference.flowsTo(setModelCall.getReceiver()) and
+    setModelCall.getMethodName() = "setModel" and
+    setModelCall.getNumArgument() = 1
+  )
+}
+
 private MethodCallNode getViewSetModelCall(UI5BindingPath bindingPath) {
   result.getMethodName() = "setModel" and
   bindingPath.getView().getController().getAViewReference().flowsTo(result.getReceiver()) and

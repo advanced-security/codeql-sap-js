@@ -9,5 +9,12 @@
     {
       "name": "List safe value"
     }
+  ],
+  "groups": [
+    {
+      "details": {
+        "name": "Group detail"
+      }
+    }
   ]
 }

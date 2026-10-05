@@ -11,8 +11,12 @@ predicate controlReferenceBelongsToController(
 ) {
   getControlReferenceController(reference) = controller
   or
-  not exists(getControlReferenceController(reference)) and
-  reference.getFile() = controller.getFile()
+  reference.getNumArgument() = 2 and
+  exists(XmlFragment fragment, UI5Control control |
+    fragment.getController() = controller and
+    control = fragment.getControl() and
+    control.getId() = reference.getId()
+  )
 }
 
 private predicate isJsonViewControl(JsonObject control) {
@@ -23,8 +27,6 @@ private predicate isJsonViewControl(JsonObject control) {
     exists(JsonObject parent |
       isJsonViewControl(parent) and
       (
-        control = parent.getPropValue(_)
-        or
         control.getParent() = parent.getPropValue(_).(JsonArray)
         or
         exists(JsonObject bindingInfo |

@@ -25,16 +25,19 @@ nodes
 | webapp/view/app.view.xml:24:11:24:70 | content={name} |
 | webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} |
 | webapp/view/app.view.xml:29:9:29:59 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:36:7:36:53 | content={name} |
-| webapp/view/app.view.xml:36:7:36:53 | content={name} |
-| webapp/view/app.view.xml:39:7:39:53 | content={name} |
-| webapp/view/app.view.xml:39:7:39:53 | content={name} |
-| webapp/view/app.view.xml:42:7:42:58 | content={name} |
-| webapp/view/app.view.xml:45:7:45:56 | content={name} |
-| webapp/view/app.view.xml:47:5:47:60 | content={name} |
-| webapp/view/app.view.xml:48:5:48:52 | content={name} |
+| webapp/view/app.view.xml:33:11:33:67 | content={name} |
+| webapp/view/app.view.xml:36:7:36:31 | items={/groups} |
+| webapp/view/app.view.xml:39:13:39:66 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} |
+| webapp/view/app.view.xml:54:7:54:58 | content={name} |
+| webapp/view/app.view.xml:57:7:57:56 | content={name} |
+| webapp/view/app.view.xml:59:5:59:60 | content={name} |
+| webapp/view/app.view.xml:60:5:60:52 | content={name} |
 edges
 | js_component/controller/app.controller.js:6:31:10:8 | new JSO ...      }) | js_component/view/app.view.js:14:22:14:29 | name |
 | js_component/controller/app.controller.js:6:31:10:8 | new JSO ...      }) | js_component/view/app.view.js:19:18:19:25 | name |
@@ -65,20 +68,22 @@ edges
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:15:9:15:64 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:19:11:19:62 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:24:11:24:70 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:36:7:36:53 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:39:7:39:53 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:42:7:42:58 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:45:7:45:56 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:47:5:47:60 | content={name} |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:48:5:48:52 | content={name} |
-| webapp/controller/app.controller.js:23:11:27:12 | new JSO ...      }) | webapp/view/app.view.xml:29:9:29:59 | content={name} |
-| webapp/controller/app.controller.js:25:15:25:22 | name: "" | webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:39:13:39:66 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:48:7:48:53 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:51:7:51:53 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:54:7:54:58 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:57:7:57:56 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:59:5:59:60 | content={name} |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:60:5:60:52 | content={name} |
+| webapp/controller/app.controller.js:25:11:29:12 | new JSO ...      }) | webapp/view/app.view.xml:29:9:29:59 | content={name} |
+| webapp/controller/app.controller.js:27:15:27:22 | name: "" | webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} |
+| webapp/controller/app.controller.js:32:11:36:12 | new JSO ...      }) | webapp/view/app.view.xml:33:11:33:67 | content={name} |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
-| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
 | webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/view/app.view.xml:12:9:12:55 | content={name} | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/view/app.view.xml:15:9:15:64 | content={name} | webapp/view/app.view.xml:15:9:15:64 | content={name} |
@@ -91,27 +96,31 @@ edges
 | webapp/view/app.view.xml:22:7:22:30 | items={orders} | webapp/view/app.view.xml:22:7:22:30 | items={orders} |
 | webapp/view/app.view.xml:24:11:24:70 | content={name} | webapp/view/app.view.xml:24:11:24:70 | content={name} |
 | webapp/view/app.view.xml:24:11:24:70 | content={name} | webapp/view/app.view.xml:24:11:24:70 | content={name} |
-| webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} | webapp/controller/app.controller.js:23:11:27:12 | new JSO ...      }) |
-| webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} | webapp/controller/app.controller.js:25:15:25:22 | name: "" |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:36:7:36:53 | content={name} |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:39:7:39:53 | content={name} |
-| webapp/view/app.view.xml:36:7:36:53 | content={name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:36:7:36:53 | content={name} | webapp/view/app.view.xml:36:7:36:53 | content={name} |
-| webapp/view/app.view.xml:39:7:39:53 | content={name} | webapp/view/app.view.xml:33:7:33:60 | content={name} |
-| webapp/view/app.view.xml:39:7:39:53 | content={name} | webapp/view/app.view.xml:39:7:39:53 | content={name} |
-| webapp/view/app.view.xml:42:7:42:58 | content={name} | webapp/view/app.view.xml:42:7:42:58 | content={name} |
-| webapp/view/app.view.xml:42:7:42:58 | content={name} | webapp/view/app.view.xml:42:7:42:58 | content={name} |
-| webapp/view/app.view.xml:45:7:45:56 | content={name} | webapp/view/app.view.xml:45:7:45:56 | content={name} |
-| webapp/view/app.view.xml:47:5:47:60 | content={name} | webapp/view/app.view.xml:47:5:47:60 | content={name} |
-| webapp/view/app.view.xml:48:5:48:52 | content={name} | webapp/view/app.view.xml:48:5:48:52 | content={name} |
+| webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} | webapp/controller/app.controller.js:25:11:29:12 | new JSO ...      }) |
+| webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} | webapp/controller/app.controller.js:27:15:27:22 | name: "" |
+| webapp/view/app.view.xml:36:7:36:31 | items={/groups} | webapp/view/app.view.xml:36:7:36:31 | items={/groups} |
+| webapp/view/app.view.xml:36:7:36:31 | items={/groups} | webapp/view/app.view.xml:36:7:36:31 | items={/groups} |
+| webapp/view/app.view.xml:39:13:39:66 | content={name} | webapp/view/app.view.xml:39:13:39:66 | content={name} |
+| webapp/view/app.view.xml:39:13:39:66 | content={name} | webapp/view/app.view.xml:39:13:39:66 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:9:7:9:51 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:48:7:48:53 | content={name} |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:51:7:51:53 | content={name} |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} | webapp/view/app.view.xml:48:7:48:53 | content={name} |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} | webapp/view/app.view.xml:45:7:45:60 | content={name} |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} | webapp/view/app.view.xml:51:7:51:53 | content={name} |
+| webapp/view/app.view.xml:54:7:54:58 | content={name} | webapp/view/app.view.xml:54:7:54:58 | content={name} |
+| webapp/view/app.view.xml:54:7:54:58 | content={name} | webapp/view/app.view.xml:54:7:54:58 | content={name} |
+| webapp/view/app.view.xml:57:7:57:56 | content={name} | webapp/view/app.view.xml:57:7:57:56 | content={name} |
+| webapp/view/app.view.xml:59:5:59:60 | content={name} | webapp/view/app.view.xml:59:5:59:60 | content={name} |
+| webapp/view/app.view.xml:60:5:60:52 | content={name} | webapp/view/app.view.xml:60:5:60:52 | content={name} |
 #select
 | js_component/view/app.view.js:14:22:14:29 | name | js_component/view/app.view.js:9:16:9:33 | /customer/name | js_component/view/app.view.js:14:22:14:29 | name | XSS vulnerability due to $@. | js_component/view/app.view.js:9:16:9:33 | /customer/name | user-provided value |
 | json_component/view/app.view.json:25:22:25:29 | "content": "{name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:25:22:25:29 | "content": "{name}" | XSS vulnerability due to $@. | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | user-provided value |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:9:7:9:51 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
-| webapp/view/app.view.xml:33:7:33:60 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:33:7:33:60 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
-| webapp/view/app.view.xml:36:7:36:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:36:7:36:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
-| webapp/view/app.view.xml:39:7:39:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:39:7:39:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:45:7:45:60 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:48:7:48:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | webapp/view/app.view.xml:51:7:51:53 | content={name} | XSS vulnerability due to $@. | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | user-provided value |

@@ -28,6 +28,18 @@
         <Input id="localModelInput" value="{/customer/name}" />
         <core:HTML id="localModelSink" content="{name}" />
       </VBox>
+      <VBox id="overrideModelBoundary">
+        <VBox id="overrideRelativeDetails">
+          <core:HTML id="overrideRelativeSink" content="{name}" />
+        </VBox>
+      </VBox>
+      <List items="{/groups}">
+        <CustomListItem>
+          <VBox id="groupRelativeDetails">
+            <core:HTML id="groupRelativeSink" content="{name}" />
+          </VBox>
+        </CustomListItem>
+      </List>
     </VBox>
     <VBox id="trailingSlashDetails">
       <core:HTML id="trailingSlashSink" content="{name}" />

@@ -19,9 +19,18 @@ sap.ui.define(
         });
         this.byId("namedPathDetails").bindElement("named>/customer");
         this.byId("otherDetails").bindElement("/other");
+        this.byId("overrideRelativeDetails").bindElement("other");
+        this.byId("groupRelativeDetails").bindElement("details");
         this.byId("localModelDetails").setModel(
           new JSONModel({
             customer: {
+              name: ""
+            }
+          })
+        );
+        this.byId("overrideModelBoundary").setModel(
+          new JSONModel({
+            other: {
               name: ""
             }
           })

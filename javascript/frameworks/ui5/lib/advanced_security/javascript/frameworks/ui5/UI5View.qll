@@ -185,6 +185,8 @@ private StaticBindElementContext getNearestBindElementContext(UI5BindingPath bin
 private StaticBindElementContext getParentBindElementContext(StaticBindElementContext context) {
   result.getController() = context.getController() and
   result.getControl().strictlyContains(context.getControl()) and
+  not UI5DataModels::hasDefaultModelOverrideBetween(result.getControl(), context.getControl(),
+    context.getController()) and
   not exists(StaticBindElementContext closer |
     closer.getController() = context.getController() and
     result.getControl().strictlyContains(closer.getControl()) and
@@ -192,16 +194,54 @@ private StaticBindElementContext getParentBindElementContext(StaticBindElementCo
   )
 }
 
+private UI5BindingPath getNearestEnclosingItemsBinding(StaticBindElementContext context) {
+  result.getPropertyName() = "items" and
+  not exists(result.getModelName()) and
+  result.getControlDeclaration().strictlyContains(context.getControl()) and
+  not UI5DataModels::hasDefaultModelOverrideBetween(result.getControlDeclaration(),
+    context.getControl(), context.getController()) and
+  not exists(UI5BindingPath closer |
+    closer.getPropertyName() = "items" and
+    not exists(closer.getModelName()) and
+    result.getControlDeclaration().strictlyContains(closer.getControlDeclaration()) and
+    closer.getControlDeclaration().contains(context.getControl())
+  )
+}
+
+private string getResolvedAggregationBindingPath(UI5BindingPath bindingPath) {
+  if bindingPath.isAbsolute()
+  then result = bindingPath.getPath()
+  else
+    if exists(bindingPath.getNearestEnclosingItemsBinding())
+    then
+      result =
+        appendBindingPath(getResolvedAggregationBindingPath(bindingPath
+                .getNearestEnclosingItemsBinding()), bindingPath.getPath())
+    else
+      if exists(getNearestBindElementContext(bindingPath))
+      then
+        result =
+          appendBindingPath(getResolvedBindElementContextPath(getNearestBindElementContext(bindingPath)),
+            bindingPath.getPath())
+      else result = bindingPath.getPath()
+}
+
 private string getResolvedBindElementContextPath(StaticBindElementContext context) {
   if context.getPath().matches("/%")
   then result = context.getPath()
   else
-    if exists(getParentBindElementContext(context))
+    if exists(getNearestEnclosingItemsBinding(context))
     then
       result =
-        appendBindingPath(getResolvedBindElementContextPath(getParentBindElementContext(context)),
+        appendBindingPath(getResolvedAggregationBindingPath(getNearestEnclosingItemsBinding(context)),
           context.getPath())
-    else result = context.getPath()
+    else
+      if exists(getParentBindElementContext(context))
+      then
+        result =
+          appendBindingPath(getResolvedBindElementContextPath(getParentBindElementContext(context)),
+            context.getPath())
+      else result = context.getPath()
 }
 
 private string getBindElementContextPath(UI5BindingPath bindingPath) {
