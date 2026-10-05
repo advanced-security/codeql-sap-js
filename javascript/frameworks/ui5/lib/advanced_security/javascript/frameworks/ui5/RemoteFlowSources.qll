@@ -70,9 +70,34 @@ private class InputControlInstantiation extends ElementInstantiation {
   InputControlInstantiation() { typeModel("UI5InputControl", this.getImportPath(), _) }
 }
 
-private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
+private predicate controlPlacementStep(DataFlow::Node start, DataFlow::Node end) {
+  exists(DataFlow::SourceNode source |
+    start = source and
+    source.flowsTo(end)
+  )
+  or
+  inSameWebApp(start.getFile(), end.getFile()) and
+  (
+    exists(DataFlow::PropWrite propWrite |
+      start = propWrite.getRhs() and
+      end = propWrite.getBase()
+    )
+    or
+    exists(DataFlow::MethodCallNode call |
+      start = call.getAnArgument() and
+      end = call.getReceiver()
+    )
+    or
+    exists(DataFlow::NewNode new |
+      start = new.getAnArgument() and
+      end = new
+    )
+  )
+}
 
-class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source {
+class DataFromInstantiatedAndPlacedAtControl extends UI5ClientSideRemoteFlowSource,
+  XssThroughDom::Source
+{
   InputControlInstantiation controlInstantiation;
   ControlPlaceAtCall placeAtCall;
 
@@ -87,7 +112,7 @@ class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroug
         this = controlReference.getAPropertyRead("value")
       )
     ) and
-    TrackPlaceAtCallConfigFlow::flow(controlInstantiation, placeAtCall)
+    controlPlacementStep+(controlInstantiation, placeAtCall.getReceiver())
   }
 
   override string getSourceType() {

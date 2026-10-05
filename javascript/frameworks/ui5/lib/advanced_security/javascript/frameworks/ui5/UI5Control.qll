@@ -36,6 +36,34 @@ private predicate isJsonViewControl(JsonObject control) {
   )
 }
 
+private predicate isJsViewControl(NewNode control) {
+  exists(JsView view |
+    control.asExpr().getParentExpr() =
+      view.getRoot()
+          .getArgument(1)
+          .getALocalSource()
+          .(ObjectLiteralNode)
+          .getAPropertyWrite("createContent")
+          .getRhs()
+          .(FunctionNode)
+          .getReturnNode()
+          .getALocalSource()
+          .(ArrayLiteralNode)
+          .asExpr()
+  )
+  or
+  exists(NewNode parent |
+    isJsViewControl(parent) and
+    control.asExpr().getParent+() = parent.asExpr()
+  )
+}
+
+private predicate jsControlStrictlyContains(NewNode parent, NewNode child) {
+  isJsViewControl(parent) and
+  isJsViewControl(child) and
+  child.asExpr().getParent+() = parent.asExpr()
+}
+
 private newtype TUI5Control =
   TXmlControl(XmlElement control) {
     control
@@ -46,20 +74,7 @@ private newtype TUI5Control =
   } or
   TJsonControl(JsonObject control) { isJsonViewControl(control) } or
   TJsControl(NewNode control) {
-    exists(JsView view |
-      control.asExpr().getParentExpr() =
-        view.getRoot()
-            .getArgument(1)
-            .getALocalSource()
-            .(ObjectLiteralNode)
-            .getAPropertyWrite("createContent")
-            .getRhs()
-            .(FunctionNode)
-            .getReturnNode()
-            .getALocalSource()
-            .(ArrayLiteralNode)
-            .asExpr()
-    )
+    isJsViewControl(control)
     or
     control = ModelOutput::getATypeNode("Control").getAnInvocation()
   }
@@ -143,6 +158,8 @@ class UI5Control extends TUI5Control {
     this.asJsonControl() = descendant.asJsonControl().getParent*()
     or
     this.asJsControl() = descendant.asJsControl()
+    or
+    jsControlStrictlyContains(this.asJsControl(), descendant.asJsControl())
   }
 
   /** Holds if this control strictly contains `descendant`. */
@@ -150,6 +167,8 @@ class UI5Control extends TUI5Control {
     this.asXmlControl() = descendant.asXmlControl().getParent+()
     or
     this.asJsonControl() = descendant.asJsonControl().getParent+()
+    or
+    jsControlStrictlyContains(this.asJsControl(), descendant.asJsControl())
   }
 
   /**

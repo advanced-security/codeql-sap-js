@@ -19,6 +19,30 @@ sap.ui.jsview("codeql-sap-js.view.app", {
         }),
         new sap.ui.core.HTML({
             content: "{/input}"
+        }),
+        new sap.m.List({
+            items: {
+                path: "/groups",
+                template: new sap.m.CustomListItem({
+                    content: [
+                        new sap.m.List({
+                            items: {
+                                path: "entries",
+                                template: new sap.m.CustomListItem({
+                                    content: [
+                                        new sap.m.Input({
+                                            value: "{value}"
+                                        }),
+                                        new sap.ui.core.HTML({
+                                            content: "{value}"
+                                        })
+                                    ]
+                                })
+                            }
+                        })
+                    ]
+                })
+            }
         })];
     }
 });

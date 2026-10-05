@@ -988,6 +988,8 @@ module ManifestJson {
 
     string getId() {
       result = this.getArgument(0).(SourceNode).getAPropertyWrite("id").getRhs().getStringValue()
+      or
+      result = this.getArgument(0).getStringValue()
     }
 
     string getImportPath() { result = importPath }

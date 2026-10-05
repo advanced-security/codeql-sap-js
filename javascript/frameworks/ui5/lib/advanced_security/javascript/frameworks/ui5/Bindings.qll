@@ -30,6 +30,14 @@ private newtype TBindingString =
     bindingInfo = object.getPropValue(propertyName) and
     exists(bindingInfo.getPropStringValue("path"))
   } or
+  TBindingStringFromJavaScriptBindingInfo(DataFlow::PropWrite pathWrite) {
+    pathWrite.getFile() instanceof JsView and
+    pathWrite.getPropertyName() = "path" and
+    exists(string path |
+      path = pathWrite.getRhs().getALocalSource().getStringValue() and
+      not path.matches("{%}")
+    )
+  } or
   TBindingStringFromBindElementMethodCall(BindElementMethodCallNode bindElement) {
     bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue().matches("{%}")
   } or
@@ -65,6 +73,23 @@ private class BindingStringReader extends TBindingString {
       result = getJsonBindingLiteral(object, propertyName)
     )
     or
+    exists(DataFlow::PropWrite pathWrite, DataFlow::ObjectLiteralNode bindingInfo, string path |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      pathWrite = bindingInfo.getAPropertyWrite("path") and
+      path = pathWrite.getRhs().getALocalSource().getStringValue()
+    |
+      if
+        exists(string model |
+          model = bindingInfo.getAPropertyWrite("model").getRhs().getALocalSource().getStringValue() and
+          model != ""
+        )
+      then
+        result =
+          "{" + bindingInfo.getAPropertyWrite("model").getRhs().getALocalSource().getStringValue() +
+            ">" + path + "}"
+      else result = "{" + path + "}"
+    )
+    or
     exists(BindElementMethodCallNode bindElement |
       this = TBindingStringFromBindElementMethodCall(bindElement) and
       result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
@@ -97,6 +122,11 @@ private class BindingStringReader extends TBindingString {
       result = bindingInfo.getPropValue("path").getLocation()
     )
     or
+    exists(DataFlow::PropWrite pathWrite |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      result = pathWrite.getRhs().asExpr().getLocation()
+    )
+    or
     exists(BindElementMethodCallNode bindElement |
       this = TBindingStringFromBindElementMethodCall(bindElement) and
       result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getLocation()
@@ -120,6 +150,12 @@ private class BindingStringReader extends TBindingString {
     exists(BindPropertyMethodCallNode bindProperty |
       this = TBindingStringFromBindPropertyMethodCall(bindProperty) and
       result = bindProperty.getArgument(1).getALocalSource() and
+      result.asExpr() instanceof StringLiteral
+    )
+    or
+    exists(DataFlow::PropWrite pathWrite |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      result = pathWrite.getRhs().getALocalSource() and
       result.asExpr() instanceof StringLiteral
     )
   }
@@ -219,11 +255,15 @@ private predicate earlyPropertyBinding(
   // Property binding via an object literal binding with property `path`.
   // This assumes the value assigned to `path` is a binding, even if we cannot
   // statically determine it is a binding.
-  exists(DataFlow::SourceNode objectLiteral |
+  exists(
+    DataFlow::SourceNode objectLiteral, DataFlow::ObjectLiteralNode bindingInfo,
+    DataFlow::PropWrite pathWrite
+  |
     newNode.getAnArgument().getALocalSource() = objectLiteral and
     objectLiteral.getAPropertyWrite() = bindingTarget and
-    // Here we can use `writes`, because we known the key is a literal.
-    bindingTarget.writes(_, "path", binding) and
+    bindingTarget.getRhs().getALocalSource() = bindingInfo and
+    pathWrite = bindingInfo.getAPropertyWrite("path") and
+    binding = pathWrite.getRhs() and
     if exists(binding.getALocalSource())
     then binding.getALocalSource() = bindingPath
     else binding = bindingPath // e.g., path: "/" + someVar

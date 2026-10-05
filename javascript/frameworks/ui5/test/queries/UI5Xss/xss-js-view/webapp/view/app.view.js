@@ -24,11 +24,15 @@ sap.ui.jsview("codeql-sap-js.view.app", {
             content: "{/input}",
             sanitizeContent: true
         }),
-        new sap.m.Input("jsOverride", {
-            value: "{/local}"
-        }),
-        new sap.ui.core.HTML({
-            content: "{/local}"
+        new sap.m.VBox("jsOverrideContainer", {
+            items: [
+                new sap.m.Input({
+                    value: "{/local}"
+                }),
+                new sap.ui.core.HTML({
+                    content: "{/local}"
+                })
+            ]
         })];
     }
 });

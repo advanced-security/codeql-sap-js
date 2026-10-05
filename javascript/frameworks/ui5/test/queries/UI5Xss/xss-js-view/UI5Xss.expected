@@ -1,25 +1,27 @@
 nodes
 | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/controller/app.controller.js:14:71:14:79 | local: "" |
 | webapp/view/app.view.js:18:20:18:29 | /input |
 | webapp/view/app.view.js:21:22:21:31 | /input |
 | webapp/view/app.view.js:24:22:24:31 | /input |
-| webapp/view/app.view.js:28:20:28:29 | /local |
-| webapp/view/app.view.js:31:22:31:31 | /local |
+| webapp/view/app.view.js:30:28:30:37 | /local |
+| webapp/view/app.view.js:33:30:33:39 | /local |
 edges
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.js:18:20:18:29 | /input |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.js:21:22:21:31 | /input |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.js:24:22:24:31 | /input |
-| webapp/controller/app.controller.js:10:17:10:27 | local: null | webapp/view/app.view.js:31:22:31:31 | /local |
 | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) | webapp/view/app.view.js:21:22:21:31 | /input |
 | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) | webapp/view/app.view.js:24:22:24:31 | /input |
-| webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) | webapp/view/app.view.js:31:22:31:31 | /local |
-| webapp/controller/app.controller.js:14:62:14:70 | local: "" | webapp/view/app.view.js:28:20:28:29 | /local |
+| webapp/controller/app.controller.js:14:55:14:82 | new JSO ... : "" }) | webapp/view/app.view.js:33:30:33:39 | /local |
+| webapp/controller/app.controller.js:14:71:14:79 | local: "" | webapp/view/app.view.js:30:28:30:37 | /local |
+| webapp/controller/app.controller.js:14:71:14:79 | local: "" | webapp/view/app.view.js:33:30:33:39 | /local |
 | webapp/view/app.view.js:18:20:18:29 | /input | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 | webapp/view/app.view.js:18:20:18:29 | /input | webapp/controller/app.controller.js:12:26:12:45 | new JSONModel(oData) |
 | webapp/view/app.view.js:21:22:21:31 | /input | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 | webapp/view/app.view.js:24:22:24:31 | /input | webapp/controller/app.controller.js:9:17:9:27 | input: null |
-| webapp/view/app.view.js:28:20:28:29 | /local | webapp/controller/app.controller.js:14:46:14:73 | new JSO ... : "" }) |
-| webapp/view/app.view.js:28:20:28:29 | /local | webapp/controller/app.controller.js:14:62:14:70 | local: "" |
-| webapp/view/app.view.js:31:22:31:31 | /local | webapp/controller/app.controller.js:10:17:10:27 | local: null |
+| webapp/view/app.view.js:30:28:30:37 | /local | webapp/controller/app.controller.js:14:55:14:82 | new JSO ... : "" }) |
+| webapp/view/app.view.js:30:28:30:37 | /local | webapp/controller/app.controller.js:14:71:14:79 | local: "" |
+| webapp/view/app.view.js:33:30:33:39 | /local | webapp/controller/app.controller.js:14:71:14:79 | local: "" |
 #select
 | webapp/view/app.view.js:21:22:21:31 | /input | webapp/view/app.view.js:18:20:18:29 | /input | webapp/view/app.view.js:21:22:21:31 | /input | XSS vulnerability due to $@. | webapp/view/app.view.js:18:20:18:29 | /input | user-provided value |
+| webapp/view/app.view.js:33:30:33:39 | /local | webapp/view/app.view.js:30:28:30:37 | /local | webapp/view/app.view.js:33:30:33:39 | /local | XSS vulnerability due to $@. | webapp/view/app.view.js:30:28:30:37 | /local | user-provided value |

@@ -1,12 +1,13 @@
 | js_component/view/app.view.js:9:16:9:33 | /customer/name | /customer/name |
-| js_component/view/app.view.js:12:18:12:25 | name | /customer/name |
-| js_component/view/app.view.js:15:18:15:25 | name | name |
+| js_component/view/app.view.js:14:22:14:29 | name | /customer/name |
+| js_component/view/app.view.js:19:18:19:25 | name | name |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | /customer/name |
-| json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | /customer/name |
-| json_component/view/app.view.json:26:26:26:33 | "content": "{name}" | /other/name |
-| json_component/view/app.view.json:33:21:33:32 | "items": "{/otherList}" | /otherList |
-| json_component/view/app.view.json:40:30:40:37 | "content": "{name}" | /otherList/name |
-| json_component/view/app.view.json:51:18:51:25 | "content": "{name}" | name |
+| json_component/view/app.view.json:14:17:14:32 | "value": "{named>/customer/name}" | named>/customer/name |
+| json_component/view/app.view.json:25:22:25:29 | "content": "{name}" | /customer/name |
+| json_component/view/app.view.json:34:26:34:33 | "content": "{name}" | /other/name |
+| json_component/view/app.view.json:41:21:41:32 | "items": "{/otherList}" | /otherList |
+| json_component/view/app.view.json:48:30:48:37 | "content": "{name}" | /otherList/name |
+| json_component/view/app.view.json:59:18:59:25 | "content": "{name}" | name |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | /customer/name |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} | /customer/name |
 | webapp/view/app.view.xml:10:7:10:58 | content={named>name} | named>name |

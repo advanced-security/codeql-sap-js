@@ -31,11 +31,24 @@ private predicate isUI5JsonBindingTarget(JsonObject bindingTarget, string proper
 string getJsonBindingLiteral(JsonObject bindingTarget, string propertyName) {
   result = bindingTarget.getPropStringValue(propertyName)
   or
-  exists(JsonObject bindingInfo, string path |
+  exists(JsonObject bindingInfo, string path, string effectivePath |
     bindingInfo = bindingTarget.getPropValue(propertyName) and
-    path = bindingInfo.getPropStringValue("path")
+    path = bindingInfo.getPropStringValue("path") and
+    (
+      path.matches("{%}") and
+      effectivePath = path.regexpCapture("\\{(.*)\\}", 1)
+      or
+      not path.matches("{%}") and
+      effectivePath = path
+    )
   |
-    if path.matches("{%}") then result = path else result = "{" + path + "}"
+    if
+      exists(string model |
+        model = bindingInfo.getPropStringValue("model") and
+        model != ""
+      )
+    then result = "{" + bindingInfo.getPropStringValue("model") + ">" + effectivePath + "}"
+    else result = "{" + effectivePath + "}"
   )
 }
 

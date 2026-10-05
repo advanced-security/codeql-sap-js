@@ -8,6 +8,14 @@
       "value": "{/customer/name}"
     },
     {
+      "Type": "sap.m.Input",
+      "id": "jsonNamedObjectInput",
+      "value": {
+        "path": "/customer/name",
+        "model": "named"
+      }
+    },
+    {
       "Type": "sap.m.VBox",
       "id": "jsonCustomerDetails",
       "content": [

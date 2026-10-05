@@ -414,30 +414,32 @@ class JsViewBindingPath extends UI5BindingPath {
 
   override string getLiteralRepr() { result = bindingTarget.getALocalSource().getStringValue() }
 
-  /* `new sap.m.Input({...})` => `"sap.m.Input"` */
-  override string getControlQualifiedType() {
-    result =
-      bindingTarget
-          .getPropertyNameExpr()
-          .getParent+()
-          .(NewExpr)
-          .getAChildExpr()
-          .(DotExpr)
-          .getQualifiedName()
-  }
-
-  override UI5BindingPath getAnEnclosingItemsBinding() { none() }
-
-  override string getPath() { result = this.asString() }
-
-  override string getPropertyName() {
-    exists(DataFlow::ObjectLiteralNode initializer |
-      initializer.getAPropertyWrite(result).getRhs() = bindingTarget
+  private NewExpr getControlExpr() {
+    result = bindingTarget.getPropertyNameExpr().getParent+().(NewExpr) and
+    not exists(NewExpr closer |
+      closer = bindingTarget.getPropertyNameExpr().getParent+().(NewExpr) and
+      closer != result and
+      closer.getParent+() = result
     )
   }
 
+  /* `new sap.m.Input({...})` => `"sap.m.Input"` */
+  override string getControlQualifiedType() {
+    result = this.getControlExpr().getAChildExpr().(DotExpr).getQualifiedName()
+  }
+
+  override JsViewBindingPath getAnEnclosingItemsBinding() {
+    result != this and
+    result.getPropertyName() = "items" and
+    result.getControlDeclaration().strictlyContains(this.getControlDeclaration())
+  }
+
+  override string getPath() { result = this.asString() }
+
+  override string getPropertyName() { result = bindingTarget.getPropertyName() }
+
   override UI5Control getControlDeclaration() {
-    result.asJsControl().asExpr() = bindingTarget.getPropertyNameExpr().getParentExpr+().(NewExpr)
+    result.asJsControl().asExpr() = this.getControlExpr()
   }
 }
 

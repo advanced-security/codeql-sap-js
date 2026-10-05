@@ -2,6 +2,10 @@
 | app.view.html:8:11:8:33 | data-content={/input} | /input |
 | app.view.js:18:20:18:29 | /input | /input |
 | app.view.js:21:22:21:31 | /input | /input |
+| app.view.js:25:23:25:31 | /groups | /groups |
+| app.view.js:30:39:30:47 | entries | /groups/entries |
+| app.view.js:34:52:34:60 | value | /groups/entries/value |
+| app.view.js:37:54:37:62 | value | /groups/entries/value |
 | binding1.json:9:21:9:29 | "items": "{/Base}" | /Base |
 | binding1.json:15:30:15:38 | "value": "{input}" | /Base/input |
 | binding1.json:19:32:19:78 | "content": "{path:'/input', formatter: '.valueFormatter'}" | /input |

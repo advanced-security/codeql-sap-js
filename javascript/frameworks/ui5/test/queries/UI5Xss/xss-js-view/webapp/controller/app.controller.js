@@ -11,7 +11,7 @@ sap.ui.define([
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel);
-            this.byId("jsOverride").setModel(new JSONModel({ local: "" }));
+            this.byId("jsOverrideContainer").setModel(new JSONModel({ local: "" }));
         }
     });
 })

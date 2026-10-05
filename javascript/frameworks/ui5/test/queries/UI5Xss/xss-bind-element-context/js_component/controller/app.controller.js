@@ -8,7 +8,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller", "sap/ui/model/json/JSONModel"], fun
           name: ""
         }
       }));
-      this.byId("jsBoundSink").bindElement("/customer");
+      this.byId("jsBoundContainer").bindElement("/customer");
     }
   });
 });
