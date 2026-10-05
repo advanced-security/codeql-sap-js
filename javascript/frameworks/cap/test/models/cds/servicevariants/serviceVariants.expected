@@ -1,0 +1,10 @@
+| Created | coverage.Catalog.Created |
+| Outside | coverage.Outside |
+| application | 7 |
+| base | 4 |
+| impl-parameter | 15 |
+| implementation | 14 |
+| not-event | coverage.Catalog |
+| not-event | coverage.Catalog.Books |
+| not-event | coverage.Catalog.reset |
+| not-event | coverage.Catalog.total |
