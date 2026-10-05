@@ -13,11 +13,29 @@ private import semmle.javascript.dataflow.internal.AdditionalFlowInternal as Add
 private import semmle.javascript.dataflow.internal.DataFlowPrivate as DataFlowPrivate
 
 private predicate isUI5JsonBindingTarget(JsonObject bindingTarget, string propertyName) {
-  bindingTarget.getPropStringValue(propertyName).matches("{%}") and
+  (
+    bindingTarget.getPropStringValue(propertyName).matches("{%}")
+    or
+    exists(JsonObject bindingInfo |
+      bindingInfo = bindingTarget.getPropValue(propertyName) and
+      exists(bindingInfo.getPropStringValue("path"))
+    )
+  ) and
   exists(JsonObject root |
     root.isTopLevel() and
     root.getPropStringValue("Type") = "sap.ui.core.mvc.JSONView" and
     root = bindingTarget.getParent*()
+  )
+}
+
+string getJsonBindingLiteral(JsonObject bindingTarget, string propertyName) {
+  result = bindingTarget.getPropStringValue(propertyName)
+  or
+  exists(JsonObject bindingInfo, string path |
+    bindingInfo = bindingTarget.getPropValue(propertyName) and
+    path = bindingInfo.getPropStringValue("path")
+  |
+    if path.matches("{%}") then result = path else result = "{" + path + "}"
   )
 }
 
@@ -94,6 +112,7 @@ class JsonBindingTargetNode extends DataFlowPrivate::GenericSynthesizedNode {
   override File getFile() { result = bindingTarget.getJsonFile() }
 
   override string toString() {
-    result = "\"" + propertyName + "\": \"" + bindingTarget.getPropStringValue(propertyName) + "\""
+    result =
+      "\"" + propertyName + "\": \"" + getJsonBindingLiteral(bindingTarget, propertyName) + "\""
   }
 }

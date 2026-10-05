@@ -25,6 +25,11 @@ private newtype TBindingString =
     object.getFile() instanceof UI5View and
     object.getPropStringValue(propertyName).matches("{%}")
   } or
+  TBindingStringFromJsonBindingInfo(JsonObject object, string propertyName, JsonObject bindingInfo) {
+    object.getFile() instanceof UI5View and
+    bindingInfo = object.getPropValue(propertyName) and
+    exists(bindingInfo.getPropStringValue("path"))
+  } or
   TBindingStringFromBindElementMethodCall(BindElementMethodCallNode bindElement) {
     bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue().matches("{%}")
   } or
@@ -55,6 +60,11 @@ private class BindingStringReader extends TBindingString {
       result = object.getPropStringValue(propertyName)
     )
     or
+    exists(JsonObject object, string propertyName, JsonObject bindingInfo |
+      this = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
+      result = getJsonBindingLiteral(object, propertyName)
+    )
+    or
     exists(BindElementMethodCallNode bindElement |
       this = TBindingStringFromBindElementMethodCall(bindElement) and
       result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
@@ -80,6 +90,11 @@ private class BindingStringReader extends TBindingString {
     exists(JsonObject object, string propertyName |
       this = TBindingStringFromJsonProperty(object, propertyName) and
       result = object.getPropValue(propertyName).getLocation()
+    )
+    or
+    exists(JsonObject object, string propertyName, JsonObject bindingInfo |
+      this = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
+      result = bindingInfo.getPropValue("path").getLocation()
     )
     or
     exists(BindElementMethodCallNode bindElement |
@@ -368,6 +383,12 @@ private newtype TBinding =
       value = object.getPropValue(propertyName) and
       value.getStringValue() = reader.getBindingString() and
       value.getLocation() = reader.getLocation() and
+      binding = BindingStringParser::parseBinding(reader)
+    )
+    or
+    exists(JsonObject bindingInfo, BindingStringReader reader |
+      bindingInfo = object.getPropValue(propertyName) and
+      reader = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
       binding = BindingStringParser::parseBinding(reader)
     )
   }

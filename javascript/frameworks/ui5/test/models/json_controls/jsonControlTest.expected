@@ -1,2 +1,2 @@
-| app.view.json:5:4:5:14 | {\\n      ... }\\n    } |
-| app.view.json:19:9:9:12 | {\\n      ...       } |
+| app.view.json:5:4:5:19 | {\\n      ... }\\n    } | sap.m.List | outerControl |
+| app.view.json:21:13:9:17 | {\\n      ...       } | sap.m.StandardListItem | nestedControl |

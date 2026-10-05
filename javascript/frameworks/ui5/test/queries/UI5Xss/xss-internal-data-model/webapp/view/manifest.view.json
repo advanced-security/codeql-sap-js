@@ -11,18 +11,23 @@
 			"content": "{/manifest}"
 		},
 		{
-			"Type": "sap.ui.commons.Carousel",
-			"items": "{/nested}",
-			"content": [
-				{
-					"Type": "sap.m.Input",
-					"value": "{value}"
-				},
-				{
-					"Type": "sap.ui.core.HTML",
-					"content": "{value}"
+			"Type": "sap.m.List",
+			"items": {
+				"path": "/nested",
+				"template": {
+					"Type": "sap.m.CustomListItem",
+					"content": [
+						{
+							"Type": "sap.m.Input",
+							"value": "{value}"
+						},
+						{
+							"Type": "sap.ui.core.HTML",
+							"content": "{value}"
+						}
+					]
 				}
-			]
+			}
 		}
 	]
 }

@@ -28,15 +28,20 @@
           ]
         },
         {
-          "Type": "sap.ui.commons.Carousel",
-          "items": "{/otherList}",
-          "content": [
-            {
-              "Type": "sap.ui.core.HTML",
-              "id": "jsonAggregationSink",
-              "content": "{name}"
+          "Type": "sap.m.List",
+          "items": {
+            "path": "/otherList",
+            "template": {
+              "Type": "sap.m.CustomListItem",
+              "content": [
+                {
+                  "Type": "sap.ui.core.HTML",
+                  "id": "jsonAggregationSink",
+                  "content": "{name}"
+                }
+              ]
             }
-          ]
+          }
         }
       ]
     },

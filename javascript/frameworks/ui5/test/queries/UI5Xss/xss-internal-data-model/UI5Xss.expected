@@ -33,11 +33,11 @@ nodes
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
-| webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp/view/manifest.view.json:16:13:16:21 | "items": "{/nested}" |
+| webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" |
+| webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" |
+| webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
+| webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
 | webapp_component_override/Component.js:13:39:13:47 | value: "" |
 | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} |
 | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
@@ -64,7 +64,7 @@ edges
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:18:3:18:36 | content={/output} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:25:5:25:38 | content={/shared} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
-| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
 | webapp/controller/app.controller.js:8:65:8:83 | controlOverride: "" | webapp/view/app.view.xml:7:5:7:41 | value={/controlOverride} |
 | webapp/controller/app.controller.js:9:52:9:84 | new JSO ... : "" }) | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} |
 | webapp/controller/app.controller.js:9:68:9:81 | overridden: "" | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} |
@@ -103,13 +103,13 @@ edges
 | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" |
-| webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
-| webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:15:23 | "items": "{/nested}" |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" |
-| webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" |
+| webapp/view/manifest.view.json:15:13:30:4 | "items": "{/nested}" | webapp/view/manifest.view.json:16:13:16:21 | "items": "{/nested}" |
+| webapp/view/manifest.view.json:16:13:16:21 | "items": "{/nested}" | webapp/view/manifest.view.json:15:13:30:4 | "items": "{/nested}" |
+| webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
+| webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" | webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" |
+| webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" | webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
+| webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" | webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
+| webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" | webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" |
 | webapp_component_override/Component.js:13:23:13:50 | new JSO ... : "" }) | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
 | webapp_component_override/Component.js:13:39:13:47 | value: "" | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} |
 | webapp_component_override/Component.js:13:39:13:47 | value: "" | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} |
@@ -128,5 +128,5 @@ edges
 | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | webapp/view/app.view.xml:21:5:21:42 | content={/overridden} | XSS vulnerability due to $@. | webapp/view/app.view.xml:20:5:20:36 | value={/overridden} | user-provided value |
 | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | webapp/view/app.view.xml:25:5:25:38 | content={/shared} | XSS vulnerability due to $@. | webapp/view/app.view.xml:24:5:24:32 | value={/shared} | user-provided value |
 | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | webapp/view/manifest.view.json:11:15:11:27 | "content": "{/manifest}" | XSS vulnerability due to $@. | webapp/view/manifest.view.json:7:13:7:25 | "value": "{/manifest}" | user-provided value |
-| webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | webapp/view/manifest.view.json:23:17:23:25 | "content": "{value}" | XSS vulnerability due to $@. | webapp/view/manifest.view.json:19:15:19:23 | "value": "{value}" | user-provided value |
+| webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" | webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" | webapp/view/manifest.view.json:26:19:26:27 | "content": "{value}" | XSS vulnerability due to $@. | webapp/view/manifest.view.json:22:17:22:25 | "value": "{value}" | user-provided value |
 | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | webapp_component_override/view/app.view.xml:6:3:6:35 | content={/value} | XSS vulnerability due to $@. | webapp_component_override/view/app.view.xml:5:3:5:29 | value={/value} | user-provided value |

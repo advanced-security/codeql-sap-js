@@ -9,4 +9,5 @@ import advanced_security.javascript.frameworks.ui5.UI5View
 
 from UI5BindingPath sink
 where sink = any(UI5View view).getASink("url-redirection")
-select sink, sink.getControlTypeName(), sink.getPropertyName()
+select sink,
+  "UI5 URL redirect sink on `" + sink.getControlTypeName() + "." + sink.getPropertyName() + "`."

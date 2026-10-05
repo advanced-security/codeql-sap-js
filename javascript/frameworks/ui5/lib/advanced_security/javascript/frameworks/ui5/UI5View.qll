@@ -1,6 +1,7 @@
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5DataModels as UI5DataModels
+import advanced_security.javascript.frameworks.ui5.JsonBindingTarget
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 import advanced_security.javascript.frameworks.ui5.Bindings
@@ -267,12 +268,12 @@ class JsonBindingPath extends UI5BindingPath {
   }
 
   override string toString() {
-    result =
-      "\"" + boundPropertyName + "\": \"" + bindingTarget.getPropStringValue(boundPropertyName) +
-        "\""
+    result = "\"" + boundPropertyName + "\": \"" + this.getLiteralRepr() + "\""
   }
 
-  override string getLiteralRepr() { result = bindingTarget.getPropStringValue(boundPropertyName) }
+  override string getLiteralRepr() {
+    result = getJsonBindingLiteral(bindingTarget, boundPropertyName)
+  }
 
   override string getPath() { result = this.asString() }
 
@@ -370,18 +371,15 @@ class JsonView extends UI5View {
   JsonObject getRoot() { result = root }
 
   override UI5Control getControl() {
-    exists(JsonObject object |
-      root = result.asJsonControl().getParent+() and
-      /* Use getAChild+ because some controls nest other controls inside them as aggregations */
-      (
-        /* 1. A builtin control provided by UI5 */
-        isBuiltInControl(object.getPropStringValue("Type"))
-        or
-        /* 2. A custom control with implementation code found in the webapp */
-        exists(CustomControl control |
-          control.getName() = object.getPropStringValue("Type") and
-          inSameWebApp(control.getFile(), object.getFile())
-        )
+    root = result.asJsonControl().getParent+() and
+    (
+      /* 1. A builtin control provided by UI5 */
+      isBuiltInControl(result.asJsonControl().getPropStringValue("Type"))
+      or
+      /* 2. A custom control with implementation code found in the webapp */
+      exists(CustomControl control |
+        control.getName() = result.asJsonControl().getPropStringValue("Type") and
+        inSameWebApp(control.getFile(), result.getFile())
       )
     )
   }

@@ -1,5 +1,26 @@
 import advanced_security.javascript.frameworks.ui5.UI5
 
+private predicate isJsonViewControl(JsonObject control) {
+  exists(control.getPropStringValue("Type")) and
+  (
+    exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
+    or
+    exists(JsonObject parent |
+      isJsonViewControl(parent) and
+      (
+        control = parent.getPropValue(_)
+        or
+        control.getParent() = parent.getPropValue(_).(JsonArray)
+        or
+        exists(JsonObject bindingInfo |
+          bindingInfo = parent.getPropValue(_) and
+          control = bindingInfo.getPropValue("template")
+        )
+      )
+    )
+  )
+}
+
 private newtype TUI5Control =
   TXmlControl(XmlElement control) {
     control
@@ -8,10 +29,7 @@ private newtype TUI5Control =
         .getBaseName()
         .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
   } or
-  TJsonControl(JsonObject control) {
-    exists(control.getPropStringValue("Type")) and
-    exists(JsonView view | control.getParent+() = view.getRoot().getPropValue("content"))
-  } or
+  TJsonControl(JsonObject control) { isJsonViewControl(control) } or
   TJsControl(NewNode control) {
     exists(JsView view |
       control.asExpr().getParentExpr() =

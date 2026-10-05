@@ -2,13 +2,18 @@
   "Type": "sap.ui.core.mvc.JSONView",
   "content": [
     {
-      "Type": "sap.m.VBox",
+      "Type": "sap.m.List",
       "id": "outerControl",
-      "settings": {
-        "id": "plainObject",
-        "nested": {
+      "items": {
+        "path": "/items",
+        "parameters": {
           "Type": "sap.m.Input",
-          "id": "nestedControl"
+          "id": "plainObject"
+        },
+        "template": {
+          "Type": "sap.m.StandardListItem",
+          "id": "nestedControl",
+          "title": "{name}"
         }
       }
     }

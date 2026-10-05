@@ -8,9 +8,9 @@ nodes
 | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
-| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
-| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
-| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
+| json_component/view/app.view.json:33:21:33:32 | "items": "{/otherList}" |
+| json_component/view/app.view.json:40:30:40:37 | "content": "{name}" |
+| json_component/view/app.view.json:51:18:51:25 | "content": "{name}" |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
 | webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} |
 | webapp/view/app.view.xml:9:7:9:51 | content={name} |
@@ -44,8 +44,8 @@ edges
 | js_component/view/app.view.js:12:18:12:25 | name | js_component/controller/app.controller.js:8:11:8:18 | name: "" |
 | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
-| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
-| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:40:30:40:37 | "content": "{name}" |
+| json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | json_component/view/app.view.json:51:18:51:25 | "content": "{name}" |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" |
 | json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
@@ -53,12 +53,12 @@ edges
 | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" | json_component/view/app.view.json:17:22:17:29 | "content": "{name}" |
 | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
 | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" | json_component/view/app.view.json:26:26:26:33 | "content": "{name}" |
-| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" | json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
-| json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" | json_component/view/app.view.json:32:20:32:33 | "items": "{/otherList}" |
-| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
-| json_component/view/app.view.json:37:26:37:33 | "content": "{name}" | json_component/view/app.view.json:37:26:37:33 | "content": "{name}" |
-| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
-| json_component/view/app.view.json:46:18:46:25 | "content": "{name}" | json_component/view/app.view.json:46:18:46:25 | "content": "{name}" |
+| json_component/view/app.view.json:32:20:44:11 | "items": "{/otherList}" | json_component/view/app.view.json:33:21:33:32 | "items": "{/otherList}" |
+| json_component/view/app.view.json:33:21:33:32 | "items": "{/otherList}" | json_component/view/app.view.json:32:20:44:11 | "items": "{/otherList}" |
+| json_component/view/app.view.json:40:30:40:37 | "content": "{name}" | json_component/view/app.view.json:40:30:40:37 | "content": "{name}" |
+| json_component/view/app.view.json:40:30:40:37 | "content": "{name}" | json_component/view/app.view.json:40:30:40:37 | "content": "{name}" |
+| json_component/view/app.view.json:51:18:51:25 | "content": "{name}" | json_component/view/app.view.json:51:18:51:25 | "content": "{name}" |
+| json_component/view/app.view.json:51:18:51:25 | "content": "{name}" | json_component/view/app.view.json:51:18:51:25 | "content": "{name}" |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:9:7:9:51 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:12:9:12:55 | content={name} |
 | webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | webapp/view/app.view.xml:15:9:15:64 | content={name} |
