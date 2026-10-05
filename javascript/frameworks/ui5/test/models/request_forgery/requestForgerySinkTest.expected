@@ -1,0 +1,4 @@
+| request.view.xml:5:3:5:26 | src={/url} | UI5 request-forgery sink on `sap/m/Avatar.src`. |
+| request.view.xml:6:3:6:37 | imageSrc={/url} | UI5 request-forgery sink on `sap/m/LightBoxItem.imageSrc`. |
+| request.view.xml:7:3:7:32 | source={/url} | UI5 request-forgery sink on `sap/m/PDFViewer.source`. |
+| request.view.xml:8:3:8:43 | url={/url} | UI5 request-forgery sink on `sap/ui/core/ComponentContainer.url`. |
