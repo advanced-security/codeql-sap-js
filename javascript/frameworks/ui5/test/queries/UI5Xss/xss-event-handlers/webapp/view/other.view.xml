@@ -1,0 +1,7 @@
+<mvc:View
+  controllerName="codeql-sap-js.controller.other"
+  xmlns:custom="codeql-sap-js.control"
+  xmlns:mvc="sap.ui.core.mvc">
+  <custom:SafeControl id="input" />
+  <custom:SafeControl id="htmlOutput" />
+</mvc:View>

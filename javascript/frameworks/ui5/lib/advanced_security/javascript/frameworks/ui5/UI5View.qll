@@ -160,12 +160,6 @@ private class StaticBindElementContext extends MethodCallNode {
   CustomController getController() { result = controller }
 }
 
-private CustomController getControlReferenceController(ControlReference reference) {
-  reference = result.getAViewReference().getAMemberCall("byId")
-  or
-  reference = result.getAThisNode().getAMemberCall("byId")
-}
-
 private string getStaticDefaultBindElementPath(MethodCallNode bindElementCall) {
   (
     bindElementCall.getNumArgument() = [1, 2] and

@@ -101,12 +101,6 @@ private predicate modelControlOwnersMatch(ModelReference getModelCall, MethodCal
   )
 }
 
-private CustomController getControlReferenceController(ControlReference reference) {
-  reference = result.getAViewReference().getAMemberCall("byId")
-  or
-  reference = result.getAThisNode().getAMemberCall("byId")
-}
-
 private predicate controlReferenceScopesMatch(ControlReference left, ControlReference right) {
   exists(CustomController controller |
     controller = getControlReferenceController(left) and
@@ -121,10 +115,7 @@ private predicate controlReferenceScopesMatch(ControlReference left, ControlRefe
 private predicate controlReferenceBelongsToBindingView(
   ControlReference reference, UI5BindingPath bindingPath
 ) {
-  getControlReferenceController(reference) = bindingPath.getView().getController()
-  or
-  not exists(getControlReferenceController(reference)) and
-  reference.getFile() = bindingPath.getView().getController().getFile()
+  controlReferenceBelongsToController(reference, bindingPath.getView().getController())
 }
 
 /**

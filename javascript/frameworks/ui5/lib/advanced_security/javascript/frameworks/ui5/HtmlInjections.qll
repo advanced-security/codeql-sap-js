@@ -1,5 +1,6 @@
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
+import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
@@ -24,10 +25,14 @@ class UI5BindingHtmlInjectionSink extends DomBasedXss::Sink {
  */
 private class UI5HTMLControlReferenceContentAPI extends DomBasedXss::Sink {
   UI5HTMLControlReferenceContentAPI() {
-    exists(UI5Control sinkControl, string typeAlias, ControlReference controlReference |
+    exists(
+      UI5Control sinkControl, UI5View view, string typeAlias, ControlReference controlReference
+    |
       typeModel(typeAlias, sinkControl.getImportPath(), _) and
       sinkModel(typeAlias, _, "ui5-html-injection", _) and
+      sinkControl = view.getControl() and
       sinkControl.getAReference() = controlReference and
+      controlReferenceBelongsToController(controlReference, view.getController()) and
       (
         this = controlReference.getAMemberCall("setContent").getArgument(0) or
         this = controlReference.getAPropertyWrite("content").getRhs()

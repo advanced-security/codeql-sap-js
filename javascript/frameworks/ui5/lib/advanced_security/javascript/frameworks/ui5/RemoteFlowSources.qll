@@ -5,6 +5,7 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
+import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5View
 import semmle.javascript.security.dataflow.XssThroughDomCustomizations
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
@@ -17,10 +18,12 @@ abstract private class UI5ClientSideRemoteFlowSource extends ClientSideRemoteFlo
 
 private class RemoteControlReference extends RemoteControlAPISource, ControlReference {
   RemoteControlReference() {
-    exists(UI5Control sourceControl, string typeAlias |
+    exists(UI5Control sourceControl, UI5View view, string typeAlias |
       typeModel(typeAlias, sourceControl.getImportPath(), _) and
       sourceModel(typeAlias, _, "remote", _) and
-      sourceControl.getAReference() = this
+      sourceControl = view.getControl() and
+      sourceControl.getAReference() = this and
+      controlReferenceBelongsToController(this, view.getController())
     )
   }
 }

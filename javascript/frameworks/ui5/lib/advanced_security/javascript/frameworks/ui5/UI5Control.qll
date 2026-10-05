@@ -1,5 +1,20 @@
 import advanced_security.javascript.frameworks.ui5.UI5
 
+CustomController getControlReferenceController(ControlReference reference) {
+  reference = result.getAViewReference().getAMemberCall("byId")
+  or
+  reference = result.getAThisNode().getAMemberCall("byId")
+}
+
+predicate controlReferenceBelongsToController(
+  ControlReference reference, CustomController controller
+) {
+  getControlReferenceController(reference) = controller
+  or
+  not exists(getControlReferenceController(reference)) and
+  reference.getFile() = controller.getFile()
+}
+
 private predicate isJsonViewControl(JsonObject control) {
   exists(control.getPropStringValue("Type")) and
   (
