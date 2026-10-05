@@ -267,8 +267,7 @@ private predicate earlyPropertyBinding(
     if exists(binding.getALocalSource())
     then binding.getALocalSource() = bindingPath
     else binding = bindingPath // e.g., path: "/" + someVar
-  ) and
-  not bindingPath.getStringValue() instanceof BindingString
+  )
   or
   // Property binding of an arbitrary property for which we can statically determined
   // the value written to the property is a binding path.
