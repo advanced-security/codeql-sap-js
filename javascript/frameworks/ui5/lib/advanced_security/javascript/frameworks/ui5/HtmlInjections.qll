@@ -32,7 +32,7 @@ private class UI5HTMLControlReferenceContentAPI extends DomBasedXss::Sink {
       sinkModel(typeAlias, _, "ui5-html-injection", _) and
       sinkControl = view.getControl() and
       sinkControl.getAReference() = controlReference and
-      controlReferenceBelongsToController(controlReference, view.getController()) and
+      controlReferenceBelongsToView(controlReference, view) and
       (
         this = controlReference.getAMemberCall("setContent").getArgument(0) or
         this = controlReference.getAPropertyWrite("content").getRhs()

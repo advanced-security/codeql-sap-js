@@ -5,6 +5,7 @@ sap.ui.define(["sap/ui/core/mvc/Controller"], function (Controller) {
     copyValue: function () {
       var value = this.byId("input").getValue();
       this.byId("htmlOutput").setContent(value);
+      this.byId("boundHtmlOutput").setSanitizeContent(true);
     }
   });
 });

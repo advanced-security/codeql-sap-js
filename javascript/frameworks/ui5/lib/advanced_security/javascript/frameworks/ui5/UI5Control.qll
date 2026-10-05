@@ -1,4 +1,5 @@
 import advanced_security.javascript.frameworks.ui5.UI5
+import advanced_security.javascript.frameworks.ui5.Fragment
 
 CustomController getControlReferenceController(ControlReference reference) {
   reference = result.getAViewReference().getAMemberCall("byId")
@@ -6,16 +7,35 @@ CustomController getControlReferenceController(ControlReference reference) {
   reference = result.getAThisNode().getAMemberCall("byId")
 }
 
-predicate controlReferenceBelongsToController(
-  ControlReference reference, CustomController controller
+private predicate fragmentIdsMatch(
+  ControlReference reference, FragmentLoad load, CustomController controller
 ) {
-  getControlReferenceController(reference) = controller
+  reference.getArgument(0).getALocalSource() = load.getIdArgument().getALocalSource()
+  or
+  reference.getArgument(0).getStringValue() = load.getIdArgument().getStringValue()
+  or
+  exists(MethodCallNode referenceViewId, MethodCallNode loadViewId |
+    referenceViewId = controller.getAViewReference().getAMemberCall("getId") and
+    loadViewId = controller.getAViewReference().getAMemberCall("getId") and
+    reference.getArgument(0).getALocalSource() = referenceViewId and
+    load.getIdArgument().getALocalSource() = loadViewId
+  )
+}
+
+predicate controlReferenceBelongsToView(ControlReference reference, UI5View view) {
+  reference.getNumArgument() = 1 and
+  getControlReferenceController(reference) = view.getController()
   or
   reference.getNumArgument() = 2 and
-  exists(XmlFragment fragment, UI5Control control |
+  exists(XmlFragment fragment, FragmentLoad load, CustomController controller |
+    view = fragment and
     fragment.getController() = controller and
-    control = fragment.getControl() and
-    control.getId() = reference.getId()
+    controller.getAThisNode().flowsTo(load.getControllerArgument()) and
+    load
+        .getNameArgument()
+        .getStringValue()
+        .matches("%" + fragment.getBaseName().replaceAll(".fragment.xml", "")) and
+    fragmentIdsMatch(reference, load, controller)
   )
 }
 
@@ -286,18 +306,36 @@ class UI5Control extends TUI5Control {
     this.getProperty(propName).toString() = val.toString()
     or
     /* 2. `sanitizeContent` attribute is set programmatically using setProperty(). */
-    exists(CallNode node | node = this.getAReference().getAMemberCall("setProperty") |
+    exists(ControlReference reference, CallNode node |
+      reference = this.getAReference() and
+      this.referenceBelongsToView(reference) and
+      node = reference.getAMemberCall("setProperty")
+    |
       node.getArgument(0).getStringValue() = propName and
       not node.getArgument(1).mayHaveBooleanValue(val.booleanNot())
     )
     or
     /* 3. `sanitizeContent` attribute is set programmatically using a setter. */
+    exists(ControlReference reference, CallNode node, string setterName |
+      setterName = "set" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
+      reference = this.getAReference() and
+      this.referenceBelongsToView(reference)
+    |
+      node = reference.getAMemberCall(setterName) and
+      not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
+    )
+    or
     exists(CallNode node, string setterName |
       setterName = "set" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
+      node = this.asJsControl().getAMemberCall(setterName) and
       not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
-    |
-      node = this.getAReference().getAMemberCall(setterName) or
-      node = this.asJsControl().getAMemberCall(setterName)
+    )
+  }
+
+  private predicate referenceBelongsToView(ControlReference reference) {
+    exists(UI5View view |
+      this = view.getControl() and
+      controlReferenceBelongsToView(reference, view)
     )
   }
 }

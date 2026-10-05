@@ -1,0 +1,6 @@
+<core:FragmentDefinition
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core">
+    <Text id="attackerInput" text="Trusted input" />
+    <Text id="vulnerableOutput" />
+</core:FragmentDefinition>

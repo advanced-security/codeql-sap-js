@@ -6,7 +6,7 @@
         description="Try: &lt;img src=x onerror=alert(&quot;XSS&quot;)&gt; and press a button"
         value="{/input}" />  <!--User input source sap.m.Input.value -->
     <Button text="Press Me XSS1" press=".doSomething1" />
-    <core:HTML content="{/output1}" /> <!--XSS sink sap.ui.core.HTML.content -->
+    <core:HTML id="boundHtmlOutput" content="{/output1}" /> <!--XSS sink sap.ui.core.HTML.content -->
 
     <Button text="Press Me XSS2" press=".doSomething2(${/input})"/> 
     <core:HTML content="{/output2}" /> <!--XSS sink sap.ui.core.HTML.content -->

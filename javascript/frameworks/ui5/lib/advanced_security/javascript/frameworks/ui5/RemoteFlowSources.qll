@@ -23,7 +23,7 @@ private class RemoteControlReference extends RemoteControlAPISource, ControlRefe
       sourceModel(typeAlias, _, "remote", _) and
       sourceControl = view.getControl() and
       sourceControl.getAReference() = this and
-      controlReferenceBelongsToController(this, view.getController())
+      controlReferenceBelongsToView(this, view)
     )
   }
 }

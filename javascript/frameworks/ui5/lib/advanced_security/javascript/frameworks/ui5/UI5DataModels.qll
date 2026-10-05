@@ -115,7 +115,7 @@ private predicate controlReferenceScopesMatch(ControlReference left, ControlRefe
 private predicate controlReferenceBelongsToBindingView(
   ControlReference reference, UI5BindingPath bindingPath
 ) {
-  controlReferenceBelongsToController(reference, bindingPath.getView().getController())
+  controlReferenceBelongsToView(reference, bindingPath.getView())
 }
 
 /**
@@ -714,11 +714,15 @@ predicate hasCloserDefaultModelOverride(UI5Control contextControl, UI5BindingPat
 predicate hasDefaultModelOverrideBetween(
   UI5Control ancestor, UI5Control descendant, CustomController controller
 ) {
-  exists(UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall |
+  exists(
+    UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall, UI5View view
+  |
     ancestor.strictlyContains(overrideControl) and
     overrideControl.contains(descendant) and
+    overrideControl = view.getControl() and
+    view.getController() = controller and
     reference = overrideControl.getAReference() and
-    controlReferenceBelongsToController(reference, controller) and
+    controlReferenceBelongsToView(reference, view) and
     reference.flowsTo(setModelCall.getReceiver()) and
     setModelCall.getMethodName() = "setModel" and
     setModelCall.getNumArgument() = 1
