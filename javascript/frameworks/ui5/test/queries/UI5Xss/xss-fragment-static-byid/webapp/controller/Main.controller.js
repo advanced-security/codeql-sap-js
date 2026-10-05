@@ -8,7 +8,7 @@ sap.ui.define([
             Fragment.load({
                 id: this.getView().getId(),
                 name: "ui5-xss-fragment-static-byid.view.PayloadForm",
-                controller: this
+                // Deliberately omit controller to exercise controller-less Fragment.load.
             }).then(function (oFragment) {
                 this.byId("fragmentArea").addContent(oFragment);
             }.bind(this));

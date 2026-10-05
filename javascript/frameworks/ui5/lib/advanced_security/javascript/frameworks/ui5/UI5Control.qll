@@ -22,6 +22,17 @@ private predicate fragmentIdsMatch(
   )
 }
 
+private predicate fragmentIdsMatch(ControlReference reference, FragmentLoad load) {
+  reference.getArgument(0).getALocalSource() = load.getIdArgument().getALocalSource()
+  or
+  reference.getArgument(0).getStringValue() = load.getIdArgument().getStringValue()
+  or
+  exists(CustomController controller |
+    controller.getFile() = load.getFile() and
+    fragmentIdsMatch(reference, load, controller)
+  )
+}
+
 predicate controlReferenceBelongsToView(ControlReference reference, UI5View view) {
   reference.getNumArgument() = 1 and
   getControlReferenceController(reference) = view.getController()
@@ -31,11 +42,21 @@ predicate controlReferenceBelongsToView(ControlReference reference, UI5View view
     view = fragment and
     fragment.getController() = controller and
     controller.getAThisNode().flowsTo(load.getControllerArgument()) and
-    load
-        .getNameArgument()
+    load.getNameArgument()
         .getStringValue()
         .matches("%" + fragment.getBaseName().replaceAll(".fragment.xml", "")) and
     fragmentIdsMatch(reference, load, controller)
+  )
+  or
+  reference.getNumArgument() = 2 and
+  exists(XmlFragment fragment, FragmentLoad load |
+    view = fragment and
+    not exists(load.getControllerArgument()) and
+    reference.getFile() = load.getFile() and
+    load.getNameArgument()
+        .getStringValue()
+        .matches("%" + fragment.getBaseName().replaceAll(".fragment.xml", "")) and
+    fragmentIdsMatch(reference, load)
   )
 }
 
