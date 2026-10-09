@@ -125,6 +125,8 @@ extensions:
       # Getter overloads return strings, numbers, or objects rather than jQuery.
       - ["UI5ControlJQuery", "UI5ControlJQuery", "Member[html,text,val,cursorPos,scrollLeftRTL,zIndex].WithArity[1..].ReturnValue"]
       - ["UI5ControlJQuery", "UI5ControlJQuery", "Member[attr,prop,css].WithArity[2].ReturnValue"]
+      # One-argument object setters are guarded in UI5ModuleLoader because string arguments are getters.
+      - ["UI5ControlJQueryObjectSetterResult", "UI5ControlJQuery", "Member[attr,prop,css].WithArity[1].ReturnValue"]
       # client-side data model types hierarchy
       - ["UI5ClientDataModel", "UI5ClientDataModel", "Instance"]
       - ["UI5ClientDataModel", "sap/ui/model/ClientModel", ""]

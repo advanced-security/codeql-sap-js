@@ -46,6 +46,16 @@ sap.ui.define([
       checkType("not-dom-element", control.$().get(0));
       checkType("not-control-array", control.$().control());
 
+      control.$().attr({ title: "safe-title" }).html("attr-object-chain");
+      control.$().prop({ hidden: false }).html("prop-object-chain");
+      control.$().css({ color: "red" }).html("css-object-chain");
+      checkType("type-attr-object-setter", control.$().attr({ title: "type-title" }));
+      checkType("type-prop-object-setter", control.$().prop({ hidden: true }));
+      checkType("type-css-object-setter", control.$().css({ color: "blue" }));
+      checkType("not-attr-getter", control.$().attr("title"));
+      checkType("not-prop-getter", control.$().prop("hidden"));
+      checkType("not-css-getter", control.$().css("color"));
+
       var unrelated = {
         $: function () {
           return { html: function (value) { return value; } };

@@ -8,6 +8,7 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - stock XSS sink recognition with models as data and the dependency-aware UI5 loader adapter, without UI5 security customizations
 - full UI5 QL customizations also load the adapter and integrate with native jQuery modeling
 - fluent chains, setter overloads, variadic HTML arguments, and HTML-returning callbacks
+- object-form `attr`, `prop`, and `css` setters remain chainable while their one-argument string getter overloads remain non-jQuery
 - negative cases for plain-text writes, unrelated `$` methods, and getters returning strings, DOM elements, or controls rather than jQuery
 - based on the [UI5 Element API](https://ui5.sap.com/#/api/sap.ui.core.Element), [jQuery HTML callbacks](https://api.jquery.com/html/), and [jQuery variadic content arguments](https://api.jquery.com/append/)
 

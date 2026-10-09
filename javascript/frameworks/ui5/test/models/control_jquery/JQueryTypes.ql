@@ -13,5 +13,9 @@ import javascript
 from DataFlow::CallNode call
 where
   call.getCalleeNode().asExpr().(VarAccess).getName() = "checkType" and
-  call.getArgument(1).getALocalSource() = ModelOutput::getATypeNode("UI5ControlJQuery").asSource()
+  (
+    call.getArgument(1).getALocalSource() = ModelOutput::getATypeNode("UI5ControlJQuery").asSource()
+    or
+    call.getArgument(1).getALocalSource() instanceof JQuery::Object
+  )
 select call.getArgument(0), call.getArgument(0).getStringValue()

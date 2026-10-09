@@ -67,3 +67,14 @@ private class UI5AdditionalArgumentImport extends Import {
     result = DataFlow::parameterNode(loader.getFactoryArgument().(Function).getParameter(index))
   }
 }
+
+/**
+ * The result of a one-argument jQuery object setter.
+ */
+private class UI5JQueryObjectSetterResult extends JQuery::ObjectSource::Range {
+  UI5JQueryObjectSetterResult() {
+    this = ModelOutput::getATypeNode("UI5ControlJQueryObjectSetterResult").asSource() and
+    this.(DataFlow::MethodCallNode).getArgument(0).getALocalSource() instanceof
+      DataFlow::ObjectLiteralNode
+  }
+}

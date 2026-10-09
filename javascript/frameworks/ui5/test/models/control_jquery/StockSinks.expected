@@ -27,6 +27,9 @@
 | webapp/controller/app.controller.js:34:46:34:57 | "text-chain" | text-chain |
 | webapp/controller/app.controller.js:35:52:35:63 | "attr-chain" | attr-chain |
 | webapp/controller/app.controller.js:36:51:36:68 | "ui5-plugin-chain" | ui5-plugin-chain |
+| webapp/controller/app.controller.js:49:54:49:72 | "attr-object-chain" | attr-object-chain |
+| webapp/controller/app.controller.js:50:48:50:66 | "prop-object-chain" | prop-object-chain |
+| webapp/controller/app.controller.js:51:46:51:63 | "css-object-chain" | css-object-chain |
 | webapp/controller/required.controller.js:10:36:10:52 | "require-control" | require-control |
 | webapp/controller/required.controller.js:11:31:11:44 | "require-view" | require-view |
 | webapp/controller/required.controller.js:12:49:12:65 | "require-element" | require-element |
