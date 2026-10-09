@@ -1,8 +1,11 @@
 /**
  * @name Client-side request forgery with UI5 customizations
+ * @description Tests UI5 control values flowing into client-side request URLs.
  * @kind path-problem
  * @problem.severity error
  * @id js/client-side-request-forgery-with-ui5
+ * @tags security
+ *       external/cwe/cwe-918
  */
 
 import javascript
