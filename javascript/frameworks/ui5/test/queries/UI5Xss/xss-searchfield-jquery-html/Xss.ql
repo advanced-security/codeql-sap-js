@@ -1,8 +1,11 @@
 /**
  * @name Client-side cross-site scripting with UI5 customizations
+ * @description Tests SearchField values flowing into UI5 control jQuery HTML sinks.
  * @kind path-problem
  * @problem.severity error
  * @id js/xss-searchfield-jquery-html-with-ui5
+ * @tags security
+ *       external/cwe/cwe-079
  */
 
 import javascript
