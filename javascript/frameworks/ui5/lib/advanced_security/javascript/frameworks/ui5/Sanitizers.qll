@@ -64,7 +64,7 @@ class SanitizedHTMLControlContent extends DomBasedXss::Sanitizer {
     exists(UI5Control control, DataFlow::MethodCallNode content |
       control.asJsControl() = content.getReceiver().getALocalSource() and
       control.isHTMLSanitized() and
-      content.getMethodName() = ["setContent", "getContent"] and
+      content.getMethodName() = "setContent" and
       this = [content, content.getArgument(0)]
     )
   }
