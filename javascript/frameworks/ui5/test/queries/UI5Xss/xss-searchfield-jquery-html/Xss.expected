@@ -1,0 +1,29 @@
+nodes
+| webapp/controller/app.controller.js:8:13:8:16 | [post update] this [sSearchQuery] | semmle.label | [post update] this [sSearchQuery] |
+| webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | semmle.label | oEvent. ... Value() |
+| webapp/controller/app.controller.js:9:13:9:16 | this [sSearchQuery] | semmle.label | this [sSearchQuery] |
+| webapp/controller/app.controller.js:14:47:14:94 | "Found  ... chQuery | semmle.label | "Found  ... chQuery |
+| webapp/controller/app.controller.js:14:78:14:81 | this [sSearchQuery] | semmle.label | this [sSearchQuery] |
+| webapp/controller/app.controller.js:14:78:14:94 | this.sSearchQuery | semmle.label | this.sSearchQuery |
+| webapp/controller/app.controller.js:16:59:16:62 | this [sSearchQuery] | semmle.label | this [sSearchQuery] |
+| webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery | semmle.label | this.sSearchQuery |
+| webapp/controller/app.controller.js:18:60:18:63 | this [sSearchQuery] | semmle.label | this [sSearchQuery] |
+| webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery | semmle.label | this.sSearchQuery |
+edges
+| webapp/controller/app.controller.js:8:13:8:16 | [post update] this [sSearchQuery] | webapp/controller/app.controller.js:9:13:9:16 | this [sSearchQuery] | provenance |  |
+| webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:8:13:8:16 | [post update] this [sSearchQuery] | provenance |  |
+| webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:14:78:14:94 | this.sSearchQuery | provenance |  |
+| webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery | provenance |  |
+| webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery | provenance |  |
+| webapp/controller/app.controller.js:9:13:9:16 | this [sSearchQuery] | webapp/controller/app.controller.js:14:78:14:81 | this [sSearchQuery] | provenance |  |
+| webapp/controller/app.controller.js:9:13:9:16 | this [sSearchQuery] | webapp/controller/app.controller.js:16:59:16:62 | this [sSearchQuery] | provenance |  |
+| webapp/controller/app.controller.js:9:13:9:16 | this [sSearchQuery] | webapp/controller/app.controller.js:18:60:18:63 | this [sSearchQuery] | provenance |  |
+| webapp/controller/app.controller.js:14:78:14:81 | this [sSearchQuery] | webapp/controller/app.controller.js:14:78:14:94 | this.sSearchQuery | provenance |  |
+| webapp/controller/app.controller.js:14:78:14:94 | this.sSearchQuery | webapp/controller/app.controller.js:14:47:14:94 | "Found  ... chQuery | provenance |  |
+| webapp/controller/app.controller.js:16:59:16:62 | this [sSearchQuery] | webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery | provenance |  |
+| webapp/controller/app.controller.js:18:60:18:63 | this [sSearchQuery] | webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery | provenance |  |
+subpaths
+#select
+| webapp/controller/app.controller.js:14:47:14:94 | "Found  ... chQuery | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:14:47:14:94 | "Found  ... chQuery | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | user-provided value |
+| webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | user-provided value |
+| webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:8:33:8:61 | oEvent. ... Value() | user-provided value |

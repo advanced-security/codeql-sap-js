@@ -1,0 +1,8 @@
+| legacy | encodeCSS |
+| legacy | encodeJS |
+| legacy | encodeURL |
+| legacy | encodeURLParameters |
+| module | encodeCSS |
+| module | encodeJS |
+| module | encodeURL |
+| module | encodeURLParameters |

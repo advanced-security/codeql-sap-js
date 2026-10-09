@@ -49,6 +49,16 @@ class FragmentLoad extends InvokeNode, MethodCallNode {
     )
   }
 
+  /**
+   * Gets the optional fragment ID used to prefix controls in this fragment instance.
+   */
+  DataFlow::Node getIdArgument() {
+    exists(DataFlow::ObjectLiteralNode config |
+      config = this.getConfigObject().getALocalSource() and
+      result = config.getAPropertyWrite("id").getRhs()
+    )
+  }
+
   DataFlow::ParameterNode getCallbackObjectReference() {
     //the load invoke node is actually just a part of the chained load.then.bind
     result = this.getAMemberCall(_).getABoundCallbackParameter(_, _)

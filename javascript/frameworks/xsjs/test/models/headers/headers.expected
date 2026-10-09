@@ -1,0 +1,13 @@
+| flow | htmlHeader -> htmlHeader |
+| flow | multipartHeader -> multipartHeader |
+| flow | taintedHeader -> taintedHeader |
+| headers | htmlHeader |
+| headers | multipartHeader |
+| headers | plainHeader |
+| headers | taintedHeader |
+| headers | wrongHeaderName |
+| scriptable | htmlHeader |
+| scriptable | multipartHeader |
+| sink | htmlHeader |
+| sink | multipartHeader |
+| sink | taintedHeader |

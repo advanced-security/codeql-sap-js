@@ -1,0 +1,8 @@
+<mvc:View controllerName="codeql-sap-js.controller.app"
+    xmlns="sap.m"
+    xmlns:mvc="sap.ui.core.mvc">
+    <SearchField id="searchField" liveChange=".onSearch" />
+    <FormattedText id="filterLabel" />
+    <FormattedText id="safeLabel" />
+    <FormattedText id="textLabel" />
+</mvc:View>

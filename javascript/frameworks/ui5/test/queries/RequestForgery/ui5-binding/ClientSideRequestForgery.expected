@@ -1,0 +1,17 @@
+edges
+| placedControl.js:7:7:7:9 | url | placedControl.js:8:9:8:11 | url | provenance |  |
+| placedControl.js:7:13:7:58 | sap.ui. ... Value() | placedControl.js:7:7:7:9 | url | provenance |  |
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | provenance |  |
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | provenance |  |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | provenance |  |
+nodes
+| placedControl.js:7:7:7:9 | url | semmle.label | url |
+| placedControl.js:7:13:7:58 | sap.ui. ... Value() | semmle.label | sap.ui. ... Value() |
+| placedControl.js:8:9:8:11 | url | semmle.label | url |
+| view/app.view.xml:2:3:2:35 | value={/resourceUrl} | semmle.label | value={/resourceUrl} |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | semmle.label | src={/resourceUrl} |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | semmle.label | src={/resourceUrl} |
+subpaths
+#select
+| placedControl.js:8:3:8:12 | fetch(url) | placedControl.js:7:13:7:58 | sap.ui. ... Value() | placedControl.js:8:9:8:11 | url | The $@ of this request depends on a $@. | placedControl.js:8:9:8:11 | url | URL | placedControl.js:7:13:7:58 | sap.ui. ... Value() | user-provided value |
+| view/app.view.xml:3:3:3:33 | src={/resourceUrl} | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | The $@ of this request depends on a $@. | view/app.view.xml:3:3:3:33 | src={/resourceUrl} | URL | view/app.view.xml:2:3:2:35 | value={/resourceUrl} | user-provided value |

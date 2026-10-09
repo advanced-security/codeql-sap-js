@@ -1,0 +1,4 @@
+<mvc:View controllerName="codeql.sap.xmlreadonly.controller.app" xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc">
+  <Input id="readonlyManifestInput" value="{/content}" />
+  <core:HTML id="readonlyManifestHtml" content="{/content}" />
+</mvc:View>

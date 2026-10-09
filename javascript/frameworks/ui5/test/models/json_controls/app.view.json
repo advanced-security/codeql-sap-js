@@ -1,0 +1,21 @@
+{
+  "Type": "sap.ui.core.mvc.JSONView",
+  "content": [
+    {
+      "Type": "sap.m.List",
+      "id": "outerControl",
+      "items": {
+        "path": "/items",
+        "parameters": {
+          "Type": "sap.m.Input",
+          "id": "plainObject"
+        },
+        "template": {
+          "Type": "sap.m.StandardListItem",
+          "id": "nestedControl",
+          "title": "{name}"
+        }
+      }
+    }
+  ]
+}

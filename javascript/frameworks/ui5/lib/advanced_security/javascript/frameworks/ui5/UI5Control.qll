@@ -1,4 +1,111 @@
 import advanced_security.javascript.frameworks.ui5.UI5
+import advanced_security.javascript.frameworks.ui5.Fragment
+
+CustomController getControlReferenceController(ControlReference reference) {
+  reference = result.getAViewReference().getAMemberCall("byId")
+  or
+  reference = result.getAThisNode().getAMemberCall("byId")
+}
+
+private predicate fragmentIdsMatch(
+  ControlReference reference, FragmentLoad load, CustomController controller
+) {
+  reference.getArgument(0).getALocalSource() = load.getIdArgument().getALocalSource()
+  or
+  reference.getArgument(0).getStringValue() = load.getIdArgument().getStringValue()
+  or
+  exists(MethodCallNode referenceViewId, MethodCallNode loadViewId |
+    referenceViewId = controller.getAViewReference().getAMemberCall("getId") and
+    loadViewId = controller.getAViewReference().getAMemberCall("getId") and
+    reference.getArgument(0).getALocalSource() = referenceViewId and
+    load.getIdArgument().getALocalSource() = loadViewId
+  )
+}
+
+private predicate fragmentIdsMatch(ControlReference reference, FragmentLoad load) {
+  reference.getArgument(0).getALocalSource() = load.getIdArgument().getALocalSource()
+  or
+  reference.getArgument(0).getStringValue() = load.getIdArgument().getStringValue()
+  or
+  exists(CustomController controller |
+    controller.getFile() = load.getFile() and
+    fragmentIdsMatch(reference, load, controller)
+  )
+}
+
+predicate controlReferenceBelongsToView(ControlReference reference, UI5View view) {
+  reference.getNumArgument() = 1 and
+  getControlReferenceController(reference) = view.getController()
+  or
+  reference.getNumArgument() = 2 and
+  exists(XmlFragment fragment, FragmentLoad load, CustomController controller |
+    view = fragment and
+    fragment.getController() = controller and
+    controller.getAThisNode().flowsTo(load.getControllerArgument()) and
+    load.getNameArgument()
+        .getStringValue()
+        .matches("%" + fragment.getBaseName().replaceAll(".fragment.xml", "")) and
+    fragmentIdsMatch(reference, load, controller)
+  )
+  or
+  reference.getNumArgument() = 2 and
+  exists(XmlFragment fragment, FragmentLoad load |
+    view = fragment and
+    not exists(load.getControllerArgument()) and
+    reference.getFile() = load.getFile() and
+    load.getNameArgument()
+        .getStringValue()
+        .matches("%" + fragment.getBaseName().replaceAll(".fragment.xml", "")) and
+    fragmentIdsMatch(reference, load)
+  )
+}
+
+private predicate isJsonViewControl(JsonObject control) {
+  exists(control.getPropStringValue("Type")) and
+  (
+    exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
+    or
+    exists(JsonObject parent |
+      isJsonViewControl(parent) and
+      (
+        control.getParent() = parent.getPropValue(_).(JsonArray)
+        or
+        exists(JsonObject bindingInfo |
+          bindingInfo = parent.getPropValue(_) and
+          control = bindingInfo.getPropValue("template")
+        )
+      )
+    )
+  )
+}
+
+private predicate isJsViewControl(NewNode control) {
+  exists(JsView view |
+    control.asExpr().getParentExpr() =
+      view.getRoot()
+          .getArgument(1)
+          .getALocalSource()
+          .(ObjectLiteralNode)
+          .getAPropertyWrite("createContent")
+          .getRhs()
+          .(FunctionNode)
+          .getReturnNode()
+          .getALocalSource()
+          .(ArrayLiteralNode)
+          .asExpr()
+  )
+  or
+  exists(NewNode parent |
+    isJsViewControl(parent) and
+    control.asExpr().getParent+() = parent.asExpr()
+  )
+}
+
+private predicate jsControlStrictlyContains(NewNode parent, NewNode child) {
+  isJsViewControl(parent) and
+  isJsViewControl(child) and
+  child.asExpr().getParent+() = parent.asExpr()
+}
 
 private newtype TUI5Control =
   TXmlControl(XmlElement control) {
@@ -8,24 +115,9 @@ private newtype TUI5Control =
         .getBaseName()
         .matches(["%.view.xml", "%.view.html", "%.fragment.xml"])
   } or
-  TJsonControl(JsonObject control) {
-    exists(JsonView view | control.getParent() = view.getRoot().getPropValue("content"))
-  } or
+  TJsonControl(JsonObject control) { isJsonViewControl(control) } or
   TJsControl(NewNode control) {
-    exists(JsView view |
-      control.asExpr().getParentExpr() =
-        view.getRoot()
-            .getArgument(1)
-            .getALocalSource()
-            .(ObjectLiteralNode)
-            .getAPropertyWrite("createContent")
-            .getRhs()
-            .(FunctionNode)
-            .getReturnNode()
-            .getALocalSource()
-            .(ArrayLiteralNode)
-            .asExpr()
-    )
+    isJsViewControl(control)
     or
     control = ModelOutput::getATypeNode("Control").getAnInvocation()
   }
@@ -90,12 +182,42 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the `id` property of this control.
    */
-  string getId() { result = this.getProperty("id").getValue() }
+  string getId() {
+    result = this.getProperty("id").getValue()
+    or
+    result = this.asJsControl().getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+    or
+    exists(MethodCallNode createId |
+      createId = this.asJsControl().getArgument(0).getALocalSource() and
+      createId.getMethodName() = "createId" and
+      result = createId.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
+    )
+  }
+
+  /** Holds if this control contains `descendant`, including itself. */
+  predicate contains(UI5Control descendant) {
+    this.asXmlControl() = descendant.asXmlControl().getParent*()
+    or
+    this.asJsonControl() = descendant.asJsonControl().getParent*()
+    or
+    this.asJsControl() = descendant.asJsControl()
+    or
+    jsControlStrictlyContains(this.asJsControl(), descendant.asJsControl())
+  }
+
+  /** Holds if this control strictly contains `descendant`. */
+  predicate strictlyContains(UI5Control descendant) {
+    this.asXmlControl() = descendant.asXmlControl().getParent+()
+    or
+    this.asJsonControl() = descendant.asJsonControl().getParent+()
+    or
+    jsControlStrictlyContains(this.asJsControl(), descendant.asJsControl())
+  }
 
   /**
    * Gets the qualified type name, e.g. `sap/m/SearchField`.
    */
-  string getImportPath() { result = this.getQualifiedType().replaceAll(".", "/") }
+  string getImportPath() { result = ui5TypeNameToModulePath(this.getQualifiedType()) }
 
   /**
    * Gets the definition of this control if this is a custom one.
@@ -116,13 +238,11 @@ class UI5Control extends TUI5Control {
     (
       // Standard byId: ID in first argument
       result.getNumArgument() = 1 and
-      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
       or
       // Fragment.byId: ID in second argument
       result.getNumArgument() = 2 and
-      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() =
-        this.getProperty("id").getValue()
+      result.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue() = this.getId()
     )
   }
 
@@ -185,7 +305,7 @@ class UI5Control extends TUI5Control {
   /**
    * Gets the full import path of the associated control.
    */
-  string getControlTypeName() { result = this.getQualifiedType().replaceAll(".", "/") }
+  string getControlTypeName() { result = ui5TypeNameToModulePath(this.getQualifiedType()) }
 
   /**
    * Holds if the control content is sanitized for HTML
@@ -207,18 +327,36 @@ class UI5Control extends TUI5Control {
     this.getProperty(propName).toString() = val.toString()
     or
     /* 2. `sanitizeContent` attribute is set programmatically using setProperty(). */
-    exists(CallNode node | node = this.getAReference().getAMemberCall("setProperty") |
+    exists(ControlReference reference, CallNode node |
+      reference = this.getAReference() and
+      this.referenceBelongsToView(reference) and
+      node = reference.getAMemberCall("setProperty")
+    |
       node.getArgument(0).getStringValue() = propName and
       not node.getArgument(1).mayHaveBooleanValue(val.booleanNot())
     )
     or
     /* 3. `sanitizeContent` attribute is set programmatically using a setter. */
+    exists(ControlReference reference, CallNode node, string setterName |
+      setterName = "set" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
+      reference = this.getAReference() and
+      this.referenceBelongsToView(reference)
+    |
+      node = reference.getAMemberCall(setterName) and
+      not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
+    )
+    or
     exists(CallNode node, string setterName |
       setterName = "set" + propName.prefix(1).toUpperCase() + propName.suffix(1) and
+      node = this.asJsControl().getAMemberCall(setterName) and
       not node.getArgument(0).mayHaveBooleanValue(val.booleanNot())
-    |
-      node = this.getAReference().getAMemberCall(setterName) or
-      node = this.asJsControl().getAMemberCall(setterName)
+    )
+  }
+
+  private predicate referenceBelongsToView(ControlReference reference) {
+    exists(UI5View view |
+      this = view.getControl() and
+      controlReferenceBelongsToView(reference, view)
     )
   }
 }

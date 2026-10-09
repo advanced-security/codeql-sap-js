@@ -1,0 +1,6 @@
+<mvc:View controllerName="codeql.sap.standard.controller.app" xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc">
+  <Input value="{/html}" />
+  <core:HTML id="htmlOutput" content="{/html}" />
+  <Input value="{/url}" />
+  <Link href="{/url}" />
+</mvc:View>

@@ -1,10 +1,7 @@
 nodes
 | webapp/controller/app.controller.js:9:17:9:28 | input0: null |
-| webapp/controller/app.controller.js:10:17:10:28 | input1: null |
-| webapp/controller/app.controller.js:11:17:11:28 | input2: null |
 | webapp/controller/app.controller.js:12:17:12:28 | input3: null |
 | webapp/controller/app.controller.js:13:17:13:28 | input4: null |
-| webapp/controller/app.controller.js:14:17:14:28 | input5: null |
 | webapp/controller/app.controller.js:15:17:15:28 | input6: null |
 | webapp/view/app.view.xml:6:5:8:28 | value={/input} |
 | webapp/view/app.view.xml:9:5:10:28 | value={/input} |

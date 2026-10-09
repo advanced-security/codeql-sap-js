@@ -1,0 +1,11 @@
+{
+  "name": "xss-bind-element-context",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --port 8085"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4.0.55"
+  }
+}

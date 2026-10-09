@@ -1,0 +1,14 @@
+{
+  "sap.app": {
+    "id": "codeql.sap.xmlflow",
+    "type": "application"
+  },
+  "sap.ui5": {
+    "models": {
+      "": {
+        "type": "sap.ui.model.xml.XMLModel",
+        "uri": "model/data.xml"
+      }
+    }
+  }
+}

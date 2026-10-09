@@ -1,7 +1,7 @@
 /**
  * @name UI5 Client-side cross-site scripting
- * @description Writing user input directly to a UI5 View allows for
- *              a cross-site scripting vulnerability.
+ * @description Compatibility query for UI5 cross-site scripting results.
+ *              The standard js/xss query is used for code scanning.
  * @kind path-problem
  * @problem.severity error
  * @security-severity 7.8
@@ -13,8 +13,8 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 import advanced_security.javascript.frameworks.ui5.UI5XssQuery
+import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 
 module UI5XssFlow = TaintTracking::Global<UI5Xss>;
 

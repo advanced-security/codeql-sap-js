@@ -1,0 +1,6 @@
+<mvc:View controllerName="coverage.xml.controller.App"
+  xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+  <Text text="{direct>/root/value}" />
+  <Text text="{aliased>/root/value}" />
+  <Text text="{json>/value}" />
+</mvc:View>
