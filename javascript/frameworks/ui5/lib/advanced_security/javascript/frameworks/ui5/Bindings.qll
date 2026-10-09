@@ -52,11 +52,22 @@ private newtype TBindingString =
 private class BindingStringReader extends TBindingString {
   string toString() { result = this.getBindingString() }
 
-  string getBindingString() {
-    exists(StringLiteral stringLiteral |
-      this = TBindingStringFromLiteral(stringLiteral) and
-      result = stringLiteral.getValue()
+  private StringLiteral getLiteral() {
+    this = TBindingStringFromLiteral(result)
+    or
+    exists(BindElementMethodCallNode bindElement |
+      this = TBindingStringFromBindElementMethodCall(bindElement) and
+      result = bindElement.getArgument(0).getALocalSource().asExpr()
     )
+    or
+    exists(BindPropertyMethodCallNode bindProperty |
+      this = TBindingStringFromBindPropertyMethodCall(bindProperty) and
+      result = bindProperty.getArgument(1).getALocalSource().asExpr()
+    )
+  }
+
+  string getBindingString() {
+    result = this.getLiteral().getValue()
     or
     exists(XmlAttribute attribute |
       this = TBindingStringFromXmlAttribute(attribute) and
@@ -89,23 +100,10 @@ private class BindingStringReader extends TBindingString {
             ">" + path + "}"
       else result = "{" + path + "}"
     )
-    or
-    exists(BindElementMethodCallNode bindElement |
-      this = TBindingStringFromBindElementMethodCall(bindElement) and
-      result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
-    )
-    or
-    exists(BindPropertyMethodCallNode bindProperty |
-      this = TBindingStringFromBindPropertyMethodCall(bindProperty) and
-      result = bindProperty.getArgument(1).getALocalSource().asExpr().(StringLiteral).getValue()
-    )
   }
 
   Location getLocation() {
-    exists(StringLiteral stringLiteral |
-      this = TBindingStringFromLiteral(stringLiteral) and
-      result = stringLiteral.getLocation()
-    )
+    result = this.getLiteral().getLocation()
     or
     exists(XmlAttribute attribute |
       this = TBindingStringFromXmlAttribute(attribute) and
@@ -125,16 +123,6 @@ private class BindingStringReader extends TBindingString {
     exists(DataFlow::PropWrite pathWrite |
       this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
       result = pathWrite.getRhs().asExpr().getLocation()
-    )
-    or
-    exists(BindElementMethodCallNode bindElement |
-      this = TBindingStringFromBindElementMethodCall(bindElement) and
-      result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getLocation()
-    )
-    or
-    exists(BindPropertyMethodCallNode bindProperty |
-      this = TBindingStringFromBindPropertyMethodCall(bindProperty) and
-      result = bindProperty.getArgument(1).getALocalSource().asExpr().(StringLiteral).getLocation()
     )
   }
 
@@ -302,15 +290,7 @@ private predicate earlyPropertyBinding(
   )
 }
 
-/**
- * Holds if the `bindingCall` parameter representing a method call that binds a property or element
- * that receives a binding `binding` with a binding path `bindingPath`.
- */
-private predicate latePropertyBinding(
-  LateJavaScriptPropertyBinding lateJavaScriptPropertyBinding, DataFlow::Node binding,
-  DataFlow::Node bindingPath
-) {
-  binding = lateJavaScriptPropertyBinding.getBinding() and
+private predicate bindingValuePath(DataFlow::Node binding, DataFlow::Node bindingPath) {
   if exists(binding.getStringValue())
   then bindingPath = binding
   else
@@ -334,6 +314,17 @@ private predicate latePropertyBinding(
     )
 }
 
+/**
+ * Holds if a property binding uses `binding` with a binding path `bindingPath`.
+ */
+private predicate latePropertyBinding(
+  LateJavaScriptPropertyBinding lateJavaScriptPropertyBinding, DataFlow::Node binding,
+  DataFlow::Node bindingPath
+) {
+  binding = lateJavaScriptPropertyBinding.getBinding() and
+  bindingValuePath(binding, bindingPath)
+}
+
 private predicate lateContextBinding(
   BindElementMethodCallNode bindElementMethodCall, DataFlow::Node binding,
   DataFlow::Node bindingPath
@@ -344,27 +335,7 @@ private predicate lateContextBinding(
     then binding = possibleBinding.getALocalSource()
     else binding = possibleBinding
   ) and
-  if exists(binding.getStringValue())
-  then bindingPath = binding
-  else
-    exists(DataFlow::ObjectLiteralNode bindingAsObject | binding = bindingAsObject |
-      if exists(bindingAsObject.getAPropertyWrite("path"))
-      then bindingPath = bindingAsObject.getAPropertyWrite("path").getRhs()
-      else
-        // Assume composite binding with parts property
-        exists(
-          DataFlow::PropWrite partsPropertyWrite, DataFlow::ArrayLiteralNode partsArray,
-          DataFlow::ObjectLiteralNode partElement, DataFlow::Node pathValue
-        |
-          partsPropertyWrite = bindingAsObject.getAPropertyWrite("parts") and
-          partsArray = partsPropertyWrite.getRhs().getALocalSource() and
-          partElement = partsArray.getAnElement() and
-          pathValue = partElement.getAPropertyWrite("path").getRhs() and
-          if exists(pathValue.getALocalSource())
-          then pathValue.getALocalSource() = bindingPath
-          else pathValue = bindingPath
-        )
-    )
+  bindingValuePath(binding, bindingPath)
 }
 
 /**
