@@ -1,8 +1,11 @@
 /**
  * @name Client-side URL redirect with UI5 customizations
+ * @description Tests editable UI5 model values flowing into client-side URL sinks.
  * @kind path-problem
  * @problem.severity error
  * @id js/client-side-unvalidated-url-redirection-with-ui5
+ * @tags security
+ *       external/cwe/cwe-601
  */
 
 import javascript
