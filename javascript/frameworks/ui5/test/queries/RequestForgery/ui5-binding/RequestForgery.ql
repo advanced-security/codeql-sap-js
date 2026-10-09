@@ -1,8 +1,11 @@
 /**
  * @name Server-side request forgery with UI5 customizations
+ * @description Verifies UI5 client bindings do not create server-side request-forgery results.
  * @kind path-problem
  * @problem.severity error
  * @id js/request-forgery-with-ui5
+ * @tags security
+ *       external/cwe/cwe-918
  */
 
 import javascript
