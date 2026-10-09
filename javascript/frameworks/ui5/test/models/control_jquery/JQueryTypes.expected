@@ -1,0 +1,4 @@
+| webapp/controller/app.controller.js:39:17:39:27 | "type-view" | type-view |
+| webapp/controller/app.controller.js:40:17:40:29 | "type-suffix" | type-suffix |
+| webapp/controller/app.controller.js:41:17:41:28 | "type-clone" | type-clone |
+| webapp/controller/app.controller.js:42:17:42:29 | "type-setter" | type-setter |

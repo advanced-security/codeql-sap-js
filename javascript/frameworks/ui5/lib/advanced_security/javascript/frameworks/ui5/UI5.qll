@@ -179,7 +179,7 @@ overlay[local?]
 abstract class UserModule extends CallExpr {
   abstract string getADependency();
 
-  abstract string getModuleFileRelativePath();
+  string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
   abstract RequiredObject getRequiredObject(string dependencyType);
 }
@@ -216,8 +216,6 @@ class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserMo
   }
 
   override string getADependency() { result = this.getDependency(_) }
-
-  override string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
   override RequiredObject getRequiredObject(string name) {
     result = this.(AmdModuleDefinition).getDependencyParameter(name)
@@ -289,8 +287,6 @@ class JQueryDefineModule extends UserModule, MethodCallExpr {
   }
 
   override string getADependency() { result = this.getArgument(0).getStringValue() }
-
-  override string getModuleFileRelativePath() { result = this.getFile().getRelativePath() }
 
   /* WARNING: toString() Hack! */
   override RequiredObject getRequiredObject(string dependencyType) {
@@ -370,27 +366,16 @@ class CustomControl extends SapExtendCall {
   }
 }
 
+/** A `placeAt` call on a custom control's `this`, a control instantiation, or a control lookup. */
 class ControlPlaceAtCall extends MethodCallNode {
   ControlPlaceAtCall() {
-    /* 1. `this.placeAt(...)` in a custom control definition. */
-    exists(CustomControl control | this = control.getAThisNode().getAMemberCall("placeAt"))
-    or
-    /*
-     * 2. `new SomeControl(...).placeAt(...)` where `SomeControl` may be UI5
-     * library control or a custom control.
-     */
-
-    exists(ElementInstantiation controlInstantiation |
-      this = controlInstantiation.getAMemberCall("placeAt")
+    exists(DataFlow::SourceNode control |
+      control = any(CustomControl customControl).getAThisNode() or
+      control instanceof ElementInstantiation or
+      control instanceof ControlReference
+    |
+      this = control.getAMemberCall("placeAt")
     )
-    or
-    /*
-     * 3. `oController.getView().byId(...).placeAt(...)` where
-     * `oController.getView().byId(...)` is a reference to a library control
-     * or a custom control.
-     */
-
-    exists(ControlReference controlReference | this = controlReference.getAMemberCall("placeAt"))
   }
 
   string getDomElementId() { result = this.getArgument(0).getStringValue() }
@@ -502,13 +487,17 @@ class ControlReference extends Reference {
 }
 
 /**
- * A call to `sap.ui.core.Element#$` on a control reference, e.g. `this.byId("id").$()`,
- * which returns the control's DOM reference wrapped in a jQuery object.
+ * A call to `sap.ui.core.Element#$`, returning an element's DOM reference wrapped in jQuery.
+ * Includes both modeled element references and control references resolved by the QL library.
  */
-private class ControlJQueryObjectSource extends JQuery::ObjectSource::Range {
-  ControlJQueryObjectSource() {
-    exists(ControlReference controlReference |
-      this = controlReference.getAMemberCall("$") and
+private class ElementJQueryObjectSource extends JQuery::ObjectSource::Range {
+  ElementJQueryObjectSource() {
+    exists(DataFlow::SourceNode element |
+      (
+        element = ModelOutput::getATypeNode("UI5ElementReference").asSource() or
+        element instanceof ControlReference
+      ) and
+      this = element.getAMemberCall("$") and
       this.(MethodCallNode).getNumArgument() <= 1
     )
   }
@@ -1081,78 +1070,61 @@ module ManifestJson {
       not exists(this.getAPropertySource("type"))
     }
 
-    MethodCallNode getAWrite() {
+    /** Gets a generated accessor or a generic `getProperty`/`setProperty` call. */
+    bindingset[prefix, valueArgumentCount]
+    private MethodCallNode getAnAccess(string prefix, int valueArgumentCount) {
       (
-        /*
-         * 1. The receiver is a reference to a custom control whose property
-         * has the same name of the property the setter is writing to.
-         */
-
         exists(ControlReference controlReference |
           result.getReceiver().getALocalSource() = controlReference and
           exists(controlReference.getDefinition().getMetadata().getProperty(name))
         )
         or
-        /*
-         * 2. The receiver is a parameter of the `renderer` method of the custom
-         * control whose property has the same name of the property the setter is
-         * writing to.
-         */
-
         exists(CustomControl control |
           result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
           exists(control.getMetadata().getProperty(name))
         )
       ) and
       (
-        result.getNumArgument() = 1 and
-        result.getMethodName() = "set" + capitalize(name) and
+        result.getNumArgument() = valueArgumentCount and
+        result.getMethodName() = prefix + capitalize(name) and
         name != "property"
         or
-        result.getNumArgument() = 2 and
-        result.getMethodName() = "setProperty" and
+        result.getNumArgument() = valueArgumentCount + 1 and
+        result.getMethodName() = prefix + "Property" and
         result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
       ) and
       inSameWebApp(this.getFile(), result.getFile())
     }
 
-    MethodCallNode getARead() {
-      (
-        /*
-         * 1. The receiver is a reference to a custom control whose property
-         * has the same name of the property the getter is reading from.
-         */
+    MethodCallNode getAWrite() { result = this.getAnAccess("set", 1) }
 
-        exists(ControlReference controlReference |
-          result.getReceiver().getALocalSource() = controlReference and
-          exists(controlReference.getDefinition().getMetadata().getProperty(name))
-        )
-        or
-        /*
-         * 2. The receiver is a parameter of the `renderer` method of the custom
-         * control whose property has the same name of the property the getter is
-         * reading from.
-         */
-
-        exists(CustomControl control |
-          result.getReceiver().getALocalSource() = control.getRenderer().getParameter(1) and
-          exists(control.getMetadata().getProperty(name))
-        )
-      ) and
-      (
-        result.getNumArgument() = 0 and
-        result.getMethodName() = "get" + capitalize(name) and
-        name != "property"
-        or
-        result.getNumArgument() = 1 and
-        result.getMethodName() = "getProperty" and
-        result.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue() = name
-      ) and
-      inSameWebApp(this.getFile(), result.getFile())
-    }
+    MethodCallNode getARead() { result = this.getAnAccess("get", 0) }
   }
 
   module EventBus {
+    private predicate hasSameEvent(EventBusPublishCall publish, EventBusSubscribeCall subscribe) {
+      publish.getChannelName() = subscribe.getChannelName() and
+      publish.getMessageType() = subscribe.getMessageType()
+    }
+
+    private CallNode getAComponentBusCall(string type) {
+      exists(API::Node method |
+        method = ModelOutput::getATypeNode(type) and
+        method = ModelOutput::getATypeNode("CustomController").getASuccessor+()
+      |
+        result = method.getACall()
+      )
+    }
+
+    private DataFlow::Node getModeledData(API::Node method, string type) {
+      exists(API::Node data |
+        data = ModelOutput::getATypeNode(type) and
+        data = method.getASuccessor*()
+      |
+        result = data.getInducingNode()
+      )
+    }
+
     abstract class EventBusPublishCall extends CallNode {
       abstract EventBusSubscribeCall getAMatchingSubscribeCall();
 
@@ -1182,17 +1154,11 @@ module ManifestJson {
       }
 
       override GlobalEventBusSubscribeCall getAMatchingSubscribeCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
+        hasSameEvent(this, result)
       }
 
       override DataFlow::Node getPublishedData() {
-        exists(API::Node publishedData |
-          publishedData = ModelOutput::getATypeNode("UI5EventBusPublishedEventData")
-        |
-          publishMethod.getASuccessor*() = publishedData and
-          result = publishedData.getInducingNode()
-        )
+        result = getModeledData(publishMethod, "UI5EventBusPublishedEventData")
       }
     }
 
@@ -1205,37 +1171,21 @@ module ManifestJson {
       }
 
       override SapUICoreEventBusSubscribeCall getAMatchingSubscribeCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
+        hasSameEvent(this, result)
       }
 
       override DataFlow::Node getPublishedData() {
-        exists(API::Node publishedData |
-          publishedData = ModelOutput::getATypeNode("SapUICoreEventBusPublishedEventData")
-        |
-          publishMethod.getASuccessor*() = publishedData and
-          result = publishedData.getInducingNode()
-        )
+        result = getModeledData(publishMethod, "SapUICoreEventBusPublishedEventData")
       }
     }
 
     class ComponentEventBusPublishCall extends EventBusPublishCall {
-      API::Node customController;
-
       ComponentEventBusPublishCall() {
-        exists(API::Node customControllerGetOwnerComponentEventBusPublish |
-          customControllerGetOwnerComponentEventBusPublish =
-            ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusPublish")
-        |
-          customController = ModelOutput::getATypeNode("CustomController") and
-          customControllerGetOwnerComponentEventBusPublish = customController.getASuccessor+() and
-          this = customControllerGetOwnerComponentEventBusPublish.getACall()
-        )
+        this = getAComponentBusCall("CustomControllerGetOwnerComponentEventBusPublish")
       }
 
       override ComponentEventBusSubscribeCall getAMatchingSubscribeCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
+        hasSameEvent(this, result)
       }
 
       override DataFlow::Node getPublishedData() { result = this.getArgument(2) }
@@ -1249,19 +1199,10 @@ module ManifestJson {
         this = subscribeMethod.getACall()
       }
 
-      override GlobalEventBusPublishCall getMatchingPublishCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
-      }
+      override GlobalEventBusPublishCall getMatchingPublishCall() { hasSameEvent(result, this) }
 
       override DataFlow::Node getSubscriptionData() {
-        exists(API::Node subscribeMethodCallbackDataParameter |
-          subscribeMethodCallbackDataParameter =
-            ModelOutput::getATypeNode("UI5EventSubscriptionHandlerDataParameter")
-        |
-          subscribeMethod.getASuccessor*() = subscribeMethodCallbackDataParameter and
-          result = subscribeMethodCallbackDataParameter.getInducingNode()
-        )
+        result = getModeledData(subscribeMethod, "UI5EventSubscriptionHandlerDataParameter")
       }
     }
 
@@ -1273,40 +1214,21 @@ module ManifestJson {
         this = subscribeMethod.getACall()
       }
 
-      override SapUICoreEventBusPublishCall getMatchingPublishCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
-      }
+      override SapUICoreEventBusPublishCall getMatchingPublishCall() { hasSameEvent(result, this) }
 
       override DataFlow::Node getSubscriptionData() {
-        exists(API::Node subscribeMethodCallbackDataParameter |
-          subscribeMethodCallbackDataParameter =
-            ModelOutput::getATypeNode("SapUICoreEventSubscriptionHandlerDataParameter")
-        |
-          subscribeMethod.getASuccessor+() = subscribeMethodCallbackDataParameter and
-          result = subscribeMethodCallbackDataParameter.getInducingNode()
-        )
+        result =
+          getModeledData(subscribeMethod.getASuccessor(),
+            "SapUICoreEventSubscriptionHandlerDataParameter")
       }
     }
 
     class ComponentEventBusSubscribeCall extends EventBusSubscribeCall {
-      API::Node customController;
-
       ComponentEventBusSubscribeCall() {
-        exists(API::Node customControllerGetOwnerComponentEventBusSubscribe |
-          customControllerGetOwnerComponentEventBusSubscribe =
-            ModelOutput::getATypeNode("CustomControllerGetOwnerComponentEventBusSubscribe")
-        |
-          customController = ModelOutput::getATypeNode("CustomController") and
-          customControllerGetOwnerComponentEventBusSubscribe = customController.getASuccessor+() and
-          this = customControllerGetOwnerComponentEventBusSubscribe.getACall()
-        )
+        this = getAComponentBusCall("CustomControllerGetOwnerComponentEventBusSubscribe")
       }
 
-      override ComponentEventBusPublishCall getMatchingPublishCall() {
-        result.getChannelName() = this.getChannelName() and
-        result.getMessageType() = this.getMessageType()
-      }
+      override ComponentEventBusPublishCall getMatchingPublishCall() { hasSameEvent(result, this) }
 
       override DataFlow::Node getSubscriptionData() {
         result = this.getABoundCallbackParameter(2, 2)

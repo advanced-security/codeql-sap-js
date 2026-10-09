@@ -1,6 +1,15 @@
 # Queries unit tests
 Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling/stable/)
 
+## UI5 jQuery models
+
+### [control_jquery](models/control_jquery)
+- element and view lookups through `sap.ui.define`, `sap.ui.require`, and legacy global APIs
+- stock XSS sink recognition with models as data alone, and integration with native jQuery modeling through the UI5 QL customizations
+- fluent chains, setter overloads, variadic HTML arguments, and HTML-returning callbacks
+- negative cases for plain-text writes, unrelated `$` methods, and getters returning strings, DOM elements, or controls rather than jQuery
+- based on the [UI5 Element API](https://ui5.sap.com/#/api/sap.ui.core.Element), [jQuery HTML callbacks](https://api.jquery.com/html/), and [jQuery variadic content arguments](https://api.jquery.com/append/)
+
 ## UiI5 XSS
 ### [avoid-duplicate-alerts](queries/UI5Xss/avoid-duplicate-alerts)
 - only reportin alerts that are specific to UI5
