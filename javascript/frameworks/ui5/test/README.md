@@ -68,6 +68,11 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 3. function `sap.ui.base.Event#getSource#getValue`
 4. accessing properties byId
 
+### [xss-encoder-contexts](queries/UI5Xss/xss-encoder-contexts)
+- regression test for CSS, JavaScript, URL, and URL-parameter encoders whose results remain tainted in HTML sinks
+- covers imported encoders and legacy `jQuery.sap` encoders
+- negative cases retain XML/HTML encoding and plain-text output as HTML-XSS barriers
+
 ### [xss-searchfield-jquery-html](queries/UI5Xss/xss-searchfield-jquery-html)
 - `sap.m.SearchField` value (`liveChange` handler) stored in a controller field
 - flows to jQuery DOM sinks on a control's jQuery object: `this.byId(..).$().html()`, `this.getView().byId(..).$().append()`, `this.byId(..).$().find(..).html()`
@@ -102,6 +107,11 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 - regression test verifies `OneWay` and `OneTime` model modes block control-to-model writes, while explicit `setProperty` writes still reach the matching HTML binding and `getProperty` read
 - negative cases preserve unrelated paths, distinct named model instances, and a separate readonly manifest model
 - based on the [UI5 XMLModel API](https://ui5.sap.com/#/api/sap.ui.model.xml.XMLModel)
+
+### [xss-xml-property-reads](queries/UI5Xss/xss-xml-property-reads)
+- regression test for XML `getProperty` string reads and `getObject` attribute/explicit `text()` reads reaching HTML sinks
+- excludes DOM element values returned by `getObject` and values read from unrelated XML paths
+- element paths and their explicit `text()` paths share the same bound string value
 
 ### [xss-html-external-model](queries/UI5Xss/xss-html-external-model)
 - `sap.ui.core.HTML` Control

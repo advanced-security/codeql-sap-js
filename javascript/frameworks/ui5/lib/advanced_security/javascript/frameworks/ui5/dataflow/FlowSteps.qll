@@ -29,11 +29,12 @@ class ManifestJsonModelBindingStep extends DataFlow::SharedFlowStep {
 
 /**
  * XML property APIs access the same path-specific content as declarative bindings. A model's
- * binding mode limits control-to-model writes, not explicit `setProperty` calls.
+ * binding mode limits control-to-model writes, not explicit `setProperty` calls. `getObject`
+ * returns strings only for attribute and `text()` paths, not for DOM element paths.
  */
 class XmlModelPropertyAccessStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
-    exists(XmlModelBindingContentNode content, MethodCallNode access |
+    exists(XmlModelBindingContentNode content, MethodCallNode access, string path |
       (
         content.getModel().flowsTo(access.getReceiver())
         or
@@ -42,13 +43,20 @@ class XmlModelPropertyAccessStep extends DataFlow::SharedFlowStep {
           reference.flowsTo(access.getReceiver())
         )
       ) and
-      access.getArgument(0).getALocalSource().getStringValue() = content.getAbsolutePath() and
+      path = access.getArgument(0).getALocalSource().getStringValue() and
       (
         access.getMethodName() = "setProperty" and
+        path = content.getAbsolutePath() and
         start = access.getArgument(1) and
         end = content
         or
-        access.getMethodName() = ["getProperty", "getObject"] and
+        getXmlModelPropertyPath(path) = content.getAbsolutePath() and
+        (
+          access.getMethodName() = "getProperty"
+          or
+          access.getMethodName() = "getObject" and
+          (path.regexpMatch(".*/@[^/]+") or path.matches("%/text()"))
+        ) and
         start = content and
         end = access
       )

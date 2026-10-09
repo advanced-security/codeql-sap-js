@@ -860,7 +860,21 @@ private string getManifestBindingKey(UI5BindingPath bindingPath) {
   else result = "0:" + getManifestBindingLocationKey(bindingPath)
 }
 
-/** Gets the model path, treating an XML element's `text()` as its property value. */
+/** Gets the canonical XML value path, treating an element's `text()` as its property value. */
+bindingset[path]
+string getXmlModelPropertyPath(string path) {
+  path.prefix(1) = "/" and
+  (
+    if path = "/text()"
+    then result = "/"
+    else
+      if path.matches("%/text()")
+      then result = path.substring(0, path.length() - 7)
+      else result = path
+  )
+}
+
+/** Gets the model path without the model name and any XML `text()` suffix. */
 string getModelBindingPath(UI5BindingPath bindingPath) {
   if bindingPath.getModel() instanceof UI5XmlModel
   then
@@ -870,15 +884,9 @@ string getModelBindingPath(UI5BindingPath bindingPath) {
         if exists(bindingPath.getModelName())
         then path = absolutePath.suffix(bindingPath.getModelName().length() + 1)
         else path = absolutePath
-      ) and
-      path.prefix(1) = "/"
+      )
     |
-      if path = "/text()"
-      then result = "/"
-      else
-        if path.matches("%/text()")
-        then result = path.substring(0, path.length() - 7)
-        else result = path
+      result = getXmlModelPropertyPath(path)
     )
   else result = bindingPath.getAbsolutePath()
 }
