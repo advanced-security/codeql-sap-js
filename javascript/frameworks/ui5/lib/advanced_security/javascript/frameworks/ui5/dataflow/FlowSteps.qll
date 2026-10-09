@@ -549,8 +549,7 @@ class UI5HTMLControlContentStep extends DataFlow::SharedFlowStep {
       setContent.getMethodName() = "setContent" and
       getContent.getMethodName() = "getContent" and
       start = setContent.getArgument(0) and
-      end = getContent and
-      not control.isHTMLSanitized()
+      end = getContent
     )
   }
 }
