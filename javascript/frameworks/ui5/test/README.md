@@ -1,6 +1,13 @@
 # Queries unit tests
 Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling/stable/)
 
+## Parser regression tests
+
+### [parser-projections](lib/parser-projections)
+- characterization regression tests preserve binding and JSON parser output during token-projection refactoring
+- cover token spans, kinds, reader identity, locations, whitespace, and overlapping quoted token text
+- preserve existing malformed-input and numeric-prefix acceptance without changing either grammar
+
 ## UI5 jQuery models
 
 ### [control_jquery](models/control_jquery)

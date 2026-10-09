@@ -1,0 +1,8 @@
+| empty-array | [] | array |
+| nested | {a : [true, false, null]} | object |
+| number | 10 | number |
+| prefix-tolerated | 1 | number |
+| string-overlap | "{true:false}" | string |
+| unterminated | <unparsed> | none |
+| whitespace | true | true |
+| zero-number | <unparsed> | none |
