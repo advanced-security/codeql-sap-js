@@ -1,8 +1,11 @@
 /**
  * @name Server-side URL redirect with UI5 customizations
+ * @description Verifies UI5 client bindings do not create server-side redirect results.
  * @kind path-problem
  * @problem.severity warning
  * @id js/server-side-unvalidated-url-redirection-with-ui5
+ * @tags security
+ *       external/cwe/cwe-601
  */
 
 import javascript
