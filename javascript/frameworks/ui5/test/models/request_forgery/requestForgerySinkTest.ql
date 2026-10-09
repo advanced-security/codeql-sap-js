@@ -1,8 +1,10 @@
 /**
  * @name UI5 request-forgery sinks
+ * @description Lists declarative UI5 properties modeled as request-forgery sinks.
  * @kind problem
  * @problem.severity error
  * @id ui5-request-forgery-sinks
+ * @tags test
  */
 
 import advanced_security.javascript.frameworks.ui5.UI5View
