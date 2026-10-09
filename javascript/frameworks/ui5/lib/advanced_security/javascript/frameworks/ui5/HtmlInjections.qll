@@ -83,7 +83,7 @@ class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends Dyn
 class DynamicallySetElementValueOfHTMLControlReference extends DynamicallySetElementValueOfHTML {
   DynamicallySetElementValueOfHTMLControlReference() {
     exists(ControlReference controlReference |
-      controlReference.isLibraryControlReference("sap.m.HTML")
+      controlReference.isLibraryControlReference("sap.ui.core.HTML")
     |
       this = controlReference.getAPropertyWrite("content")
       or
