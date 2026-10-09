@@ -701,9 +701,7 @@ UI5Model resolveModel(UI5BindingPath bindingPath) {
   or
   result = getDefaultODataModel(bindingPath)
   or
-  result = getDefaultManifestJsonModel(bindingPath)
-  or
-  result = getDefaultManifestXmlModel(bindingPath)
+  result = getDefaultManifestClientModel(bindingPath)
 }
 
 private predicate modelNameMatchesBindingPath(
@@ -905,6 +903,11 @@ private string getCanonicalModelBindingKey(UI5InternalModel model, string absolu
     )
 }
 
+private UI5BindingPath getCanonicalModelBinding(UI5InternalModel model, string absolutePath) {
+  result.getModel() = model and
+  getManifestBindingKey(result) = getCanonicalModelBindingKey(model, absolutePath)
+}
+
 /**
  * The canonical binding-backed content node for one path in a manifest-created JSON model.
  */
@@ -914,9 +917,8 @@ class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
 
   ManifestJsonModelBindingNode() {
     exists(UI5BindingPath bindingPath |
-      model = bindingPath.getModel() and
       absolutePath = bindingPath.getAbsolutePath() and
-      getManifestBindingKey(bindingPath) = getCanonicalModelBindingKey(model, absolutePath) and
+      bindingPath = getCanonicalModelBinding(model, absolutePath) and
       this = getManifestBindingTargetNode(bindingPath)
     )
   }
@@ -933,9 +935,8 @@ class XmlModelBindingContentNode extends ModelBindingContentNode {
 
   XmlModelBindingContentNode() {
     exists(UI5BindingPath bindingPath |
-      model = bindingPath.getModel() and
       absolutePath = getModelBindingPath(bindingPath) and
-      getManifestBindingKey(bindingPath) = getCanonicalModelBindingKey(model, absolutePath) and
+      bindingPath = getCanonicalModelBinding(model, absolutePath) and
       this = getManifestBindingTargetNode(bindingPath)
     )
   }
@@ -945,13 +946,8 @@ class XmlModelBindingContentNode extends ModelBindingContentNode {
   override string getAbsolutePath() { result = absolutePath }
 }
 
-private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
-  not exists(bindingPath.getModelName()) and
-  inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
-  not exists(getNearestSetModelCall(bindingPath))
-}
-
-private DefaultManifestXmlModel getDefaultManifestXmlModel(UI5BindingPath bindingPath) {
+private DefaultManifestClientModel getDefaultManifestClientModel(UI5BindingPath bindingPath) {
+  (result instanceof DefaultManifestJsonModel or result instanceof DefaultManifestXmlModel) and
   not exists(bindingPath.getModelName()) and
   inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
   not exists(getNearestSetModelCall(bindingPath))
