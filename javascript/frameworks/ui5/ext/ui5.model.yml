@@ -108,6 +108,17 @@ extensions:
       - ["CustomRenderer", "Renderer", "Member[extend]"]
       - ["ViewReference", "CustomController", "Member[getView].ReturnValue"]
       - ["ControlReference", "ViewReference", "Member[byId].ReturnValue"]
+      # jQuery-wrapped DOM reference of a control, e.g. `this.byId("id").$()`
+      - ["UI5ControlJQuery", "ControlReference", "Member[$].ReturnValue"]
+      - ["UI5ControlJQuery", "CustomControllerContent", "AnyMember.Parameter[this].Member[byId].ReturnValue.Member[$].ReturnValue"]
+      - ["UI5ControlJQuery", "SapUICoreInstance", "Member[byId].ReturnValue.Member[$].ReturnValue"]
+      - ["UI5ControlJQuery", "Fragment", "Member[byId].ReturnValue.Member[$].ReturnValue"]
+      - ["UI5ControlJQuery", "UI5ControlJQuery", "Member[find,children,parent,parents,closest,first,last,eq,filter,siblings,next,prev].ReturnValue"]
+      # Rooted at the global `sap.ui.define`, so these also resolve without the UI5 QL library
+      - ["UI5DefineDependency", "global", "Member[sap].Member[ui].Member[define].Argument[1..].Parameter[0..]"]
+      - ["UI5ExtendContent", "UI5DefineDependency", "Member[extend].Argument[1]"]
+      - ["UI5ControlJQuery", "UI5ExtendContent", "AnyMember.Parameter[this].Member[byId].ReturnValue.Member[$].ReturnValue"]
+      - ["UI5ControlJQuery", "UI5ExtendContent", "AnyMember.Parameter[this].Member[getView].ReturnValue.Member[byId].ReturnValue.Member[$].ReturnValue"]
       # client-side data model types hierarchy
       - ["UI5ClientDataModel", "UI5ClientDataModel", "Instance"]
       - ["UI5ClientDataModel", "sap/ui/model/ClientModel", ""]
@@ -147,6 +158,7 @@ extensions:
       - ["RenderManager", "Member[write,unsafeHtml].Argument[0..]", "ui5-html-injection"]
       - ["RenderManager", "Member[writeAttribute,addStyle].Argument[0..1]", "ui5-html-injection"]
       - ["RenderManager", "Member[addClass].Argument[0]", "ui5-html-injection"]
+      - ["UI5ControlJQuery", "Member[html,append,prepend,before,after,replaceWith,wrap,wrapAll,wrapInner].Argument[0]", "html-injection"]
       # client-side URL redirection
       - ["sap/m/ContentConfig", "Member[href]", "url-redirection"]
       - ["sap/m/GenericTile", "Member[url]", "url-redirection"]

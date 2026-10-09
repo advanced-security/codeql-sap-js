@@ -502,6 +502,19 @@ class ControlReference extends Reference {
 }
 
 /**
+ * A call to `sap.ui.core.Element#$` on a control reference, e.g. `this.byId("id").$()`,
+ * which returns the control's DOM reference wrapped in a jQuery object.
+ */
+private class ControlJQueryObjectSource extends JQuery::ObjectSource::Range {
+  ControlJQueryObjectSource() {
+    exists(ControlReference controlReference |
+      this = controlReference.getAMemberCall("$") and
+      this.(MethodCallNode).getNumArgument() <= 1
+    )
+  }
+}
+
+/**
  * A reference to a `UI5View`, commonly obtained via `Controller.getView()`.
  */
 class ViewReference extends Reference {

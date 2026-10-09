@@ -50,6 +50,12 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 3. function `sap.ui.base.Event#getSource#getValue`
 4. accessing properties byId
 
+### [xss-searchfield-jquery-html](queries/UI5Xss/xss-searchfield-jquery-html)
+- `sap.m.SearchField` value (`liveChange` handler) stored in a controller field
+- flows to jQuery DOM sinks on a control's jQuery object: `this.byId(..).$().html()`, `this.getView().byId(..).$().append()`, `this.byId(..).$().find(..).html()`
+- sanitized with `sap/base/security/encodeXML`, and safe `.text()` usage
+- `StockXssSinks.ql` checks that the same sinks are recognized by the stock `js/xss` sinks via models-as-data
+
 ### [xss-html-control](queries/UI5Xss/xss-html-control)
 - `sap.ui.core.HTML` Control
 - sanitization using the `sanitizeContent` property
@@ -96,6 +102,13 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-webc-control](queries/UI5Xss/xss-webc-control)
 - Uses the `sap.ui.webc.main.MultiInput` control
+
+## Client-side URL Redirection
+
+### [ui5-link-href](queries/UrlRedirect/ui5-link-href)
+- focused V4 regression: a todo URL edited through `sap.m.Input.value` flows via a relative two-way model binding to `sap.m.Link.href` within a list item
+- uses the standard client-side URL redirect query with UI5 customizations
+- negative cases: user input used only as link text with a fixed HTTPS destination, and a link bound to a separate, unedited model property
 
 ## Client-side Request Forgery
 
