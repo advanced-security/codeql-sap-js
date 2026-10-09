@@ -1,8 +1,11 @@
 /**
  * @name Client-side cross-site scripting with UI5 customizations
+ * @description Tests standard XSS detection across UI5 model bindings.
  * @kind path-problem
  * @problem.severity error
  * @id js/xss-with-ui5
+ * @tags security
+ *       external/cwe/cwe-079
  */
 
 import javascript
