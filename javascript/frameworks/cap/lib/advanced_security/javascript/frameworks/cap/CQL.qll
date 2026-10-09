@@ -76,8 +76,6 @@ Expr getRootReceiver(Expr e) {
     e instanceof CallExpr and not exists(e.(CallExpr).getReceiver())
   )
   or
-  result = getRootReceiver(e.(DotExpr).getBase())
-  or
   result = getRootReceiver(e.(MethodCallExpr).getReceiver())
   or
   result = getRootReceiver(e.(PropAccess).getBase())

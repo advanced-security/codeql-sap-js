@@ -72,83 +72,39 @@ module JsonParser {
       }
 
     private class JsonToken extends TJsonToken {
-      int getBegin() {
-        this = MkLeftBracketToken(result, _, _, _)
+      private predicate tokenParts(
+        int begin, int end, string value, MakeJsonReader::JsonReader reader
+      ) {
+        this = MkLeftBracketToken(begin, end, value, reader)
         or
-        this = MkRightBracketToken(result, _, _, _)
+        this = MkRightBracketToken(begin, end, value, reader)
         or
-        this = MkLeftSquareBracketToken(result, _, _, _)
+        this = MkLeftSquareBracketToken(begin, end, value, reader)
         or
-        this = MkRightSquareBracketToken(result, _, _, _)
+        this = MkRightSquareBracketToken(begin, end, value, reader)
         or
-        this = MkWhiteSpaceToken(result, _, _, _)
+        this = MkWhiteSpaceToken(begin, end, value, reader)
         or
-        this = MkCommaToken(result, _, _, _)
+        this = MkCommaToken(begin, end, value, reader)
         or
-        this = MkColonToken(result, _, _, _)
+        this = MkColonToken(begin, end, value, reader)
         or
-        this = MkNumberToken(result, _, _, _)
+        this = MkNumberToken(begin, end, value, reader)
         or
-        this = MkStringToken(result, _, _, _)
+        this = MkStringToken(begin, end, value, reader)
         or
-        this = MkTrueToken(result, _, _, _)
+        this = MkTrueToken(begin, end, value, reader)
         or
-        this = MkFalseToken(result, _, _, _)
+        this = MkFalseToken(begin, end, value, reader)
         or
-        this = MkNullToken(result, _, _, _)
+        this = MkNullToken(begin, end, value, reader)
       }
 
-      int getEnd() {
-        this = MkLeftBracketToken(_, result, _, _)
-        or
-        this = MkRightBracketToken(_, result, _, _)
-        or
-        this = MkLeftSquareBracketToken(_, result, _, _)
-        or
-        this = MkRightSquareBracketToken(_, result, _, _)
-        or
-        this = MkWhiteSpaceToken(_, result, _, _)
-        or
-        this = MkCommaToken(_, result, _, _)
-        or
-        this = MkColonToken(_, result, _, _)
-        or
-        this = MkNumberToken(_, result, _, _)
-        or
-        this = MkStringToken(_, result, _, _)
-        or
-        this = MkTrueToken(_, result, _, _)
-        or
-        this = MkFalseToken(_, result, _, _)
-        or
-        this = MkNullToken(_, result, _, _)
-      }
+      int getBegin() { this.tokenParts(result, _, _, _) }
 
-      string getValue() {
-        this = MkLeftBracketToken(_, _, result, _)
-        or
-        this = MkRightBracketToken(_, _, result, _)
-        or
-        this = MkLeftSquareBracketToken(_, _, result, _)
-        or
-        this = MkRightSquareBracketToken(_, _, result, _)
-        or
-        this = MkWhiteSpaceToken(_, _, result, _)
-        or
-        this = MkCommaToken(_, _, result, _)
-        or
-        this = MkColonToken(_, _, result, _)
-        or
-        this = MkNumberToken(_, _, result, _)
-        or
-        this = MkStringToken(_, _, result, _)
-        or
-        this = MkTrueToken(_, _, result, _)
-        or
-        this = MkFalseToken(_, _, result, _)
-        or
-        this = MkNullToken(_, _, result, _)
-      }
+      int getEnd() { this.tokenParts(_, result, _, _) }
+
+      string getValue() { this.tokenParts(_, _, result, _) }
 
       string toString() {
         this = MkLeftBracketToken(_, _, _, _) and result = "leftbracket"
@@ -176,31 +132,7 @@ module JsonParser {
         this = MkNullToken(_, _, _, _) and result = "null"
       }
 
-      MakeJsonReader::JsonReader getReader() {
-        this = MkLeftBracketToken(_, _, _, result)
-        or
-        this = MkRightBracketToken(_, _, _, result)
-        or
-        this = MkLeftSquareBracketToken(_, _, _, result)
-        or
-        this = MkRightSquareBracketToken(_, _, _, result)
-        or
-        this = MkWhiteSpaceToken(_, _, _, result)
-        or
-        this = MkCommaToken(_, _, _, result)
-        or
-        this = MkColonToken(_, _, _, result)
-        or
-        this = MkNumberToken(_, _, _, result)
-        or
-        this = MkStringToken(_, _, _, result)
-        or
-        this = MkTrueToken(_, _, _, result)
-        or
-        this = MkFalseToken(_, _, _, result)
-        or
-        this = MkNullToken(_, _, _, result)
-      }
+      MakeJsonReader::JsonReader getReader() { this.tokenParts(_, _, _, result) }
 
       JsonToken getNext() {
         result.getBegin() = this.getEnd() + 1 and

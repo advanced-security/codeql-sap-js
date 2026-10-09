@@ -1045,7 +1045,9 @@ class CqlShortcutMethodCall extends CqlQueryRunnerCall {
     this.getMethodName() = ["read", "create", "update", "delete", "insert", "upsert"]
   }
 
-  abstract override DataFlow::Node getAQueryParameter();
+  override DataFlow::Node getAQueryParameter() {
+    result = this.getAChainedMethodCall(_).getAnArgument()
+  }
 
   /**
    * Gets the final method call that is transitively chained on this method call. e.g.
@@ -1066,62 +1068,26 @@ class CqlShortcutMethodCall extends CqlQueryRunnerCall {
 
 class CqlReadMethodCall extends CqlShortcutMethodCall {
   CqlReadMethodCall() { this.getMethodName() = "read" }
-
-  override DataFlow::Node getAQueryParameter() {
-    result = this.getAChainedMethodCall(_).getAnArgument()
-  }
 }
 
 class CqlCreateMethodCall extends CqlShortcutMethodCall {
   CqlCreateMethodCall() { this.getMethodName() = "create" }
-
-  override DataFlow::Node getAQueryParameter() {
-    exists(DataFlow::CallNode chainedMethodCall |
-      chainedMethodCall = this.getAChainedMethodCall(_)
-    |
-      result = chainedMethodCall.getAnArgument()
-    )
-  }
 }
 
 class CqlUpdateMethodCall extends CqlShortcutMethodCall {
   CqlUpdateMethodCall() { this.getMethodName() = "update" }
-
-  override DataFlow::Node getAQueryParameter() {
-    result = this.getAChainedMethodCall(_).getAnArgument()
-  }
 }
 
 class CqlDeleteMethodCall extends CqlShortcutMethodCall {
   CqlDeleteMethodCall() { this.getMethodName() = "delete" }
-
-  override DataFlow::Node getAQueryParameter() {
-    result = this.getAChainedMethodCall(_).getAnArgument()
-  }
 }
 
 class CqlInsertMethodCall extends CqlShortcutMethodCall {
   CqlInsertMethodCall() { this.getMethodName() = "insert" }
-
-  override DataFlow::Node getAQueryParameter() {
-    exists(DataFlow::CallNode chainedMethodCall |
-      chainedMethodCall = this.getAChainedMethodCall(_)
-    |
-      result = chainedMethodCall.getAnArgument()
-    )
-  }
 }
 
 class CqlUpsertMethodCall extends CqlShortcutMethodCall {
   CqlUpsertMethodCall() { this.getMethodName() = "upsert" }
-
-  override DataFlow::Node getAQueryParameter() {
-    exists(DataFlow::CallNode chainedMethodCall |
-      chainedMethodCall = this.getAChainedMethodCall(_)
-    |
-      result = chainedMethodCall.getAnArgument()
-    )
-  }
 }
 
 /**
