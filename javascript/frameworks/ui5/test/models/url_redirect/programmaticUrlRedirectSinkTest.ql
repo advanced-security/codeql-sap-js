@@ -1,8 +1,10 @@
 /**
  * @name UI5 programmatic URL redirect sinks
+ * @description Lists programmatic UI5 URL helper calls modeled as redirect sinks.
  * @kind problem
  * @problem.severity error
  * @id ui5-programmatic-url-redirect-sinks
+ * @tags test
  */
 
 import javascript
