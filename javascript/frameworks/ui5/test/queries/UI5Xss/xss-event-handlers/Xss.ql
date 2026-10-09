@@ -1,8 +1,11 @@
 /**
  * @name Client-side cross-site scripting with UI5 customizations
+ * @description Tests UI5 event-handler values flowing into HTML sinks.
  * @kind path-problem
  * @problem.severity error
  * @id js/xss-event-handlers-with-ui5
+ * @tags security
+ *       external/cwe/cwe-079
  */
 
 import javascript
