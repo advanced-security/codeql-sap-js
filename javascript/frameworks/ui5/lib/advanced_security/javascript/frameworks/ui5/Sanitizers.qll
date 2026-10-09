@@ -32,7 +32,10 @@ class ExcludedSource extends DomBasedXss::Sanitizer {
  */
 class NonStringControlProperty extends DomBasedXss::Sanitizer {
   NonStringControlProperty() {
-    this = any(PropertyMetadata property | not property.isUnrestrictedStringType())
+    this = any(PropertyMetadata property |
+      exists(property.getType()) and
+      not property.isUnrestrictedStringType()
+    )
   }
 }
 
