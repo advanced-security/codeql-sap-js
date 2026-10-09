@@ -6,6 +6,7 @@ import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 import advanced_security.javascript.frameworks.ui5.UI5DataModels
 import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.UI5HTML
+import advanced_security.javascript.frameworks.ui5.UI5ModuleLoader
 import codeql.util.FileSystem
 
 /** Converts a qualified UI5 name such as `sap.m.Input` to `sap/m/Input`. */
@@ -189,22 +190,7 @@ abstract class UserModule extends CallExpr {
  * https://sapui5.hana.ondemand.com/sdk/#/api/sap.ui%23methods/sap.ui.define
  */
 overlay[local?]
-class SapDefineModule extends AmdModuleDefinition::Range, MethodCallExpr, UserModule {
-  SapDefineModule() {
-    /*
-     * NOTE: This only matches a call to the dot expression `sap.ui.define`, and does not
-     * consider a flow among `sap`, `ui`, and `define`.
-     */
-
-    exists(GlobalVarAccess sap, DotExpr sapUi, DotExpr sapUiDefine |
-      sap.getName() = "sap" and
-      sapUi.getBase() = sap and
-      sapUi.getPropertyName() = "ui" and
-      this.getReceiver() = sapUiDefine and
-      this.getMethodName() = ["define", "require"] // TODO: Treat sap.ui.declare in its own class
-    )
-  }
-
+class SapDefineModule extends UI5ModuleDefinition, UserModule {
   SapExtendCall getExtendCall() { result.getDefine() = this }
 
   string getName() { result = this.getExtendCall().getName() }

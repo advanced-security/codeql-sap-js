@@ -1,12 +1,13 @@
 /**
  * @name UI5 jQuery sinks from models as data
- * @description Checks HTML sinks without importing the UI5 QL customizations.
+ * @description Checks modeled HTML sinks with the UI5 loader adapter but no security customizations.
  * @kind problem
  * @id js/ui5-stock-jquery-sinks-test
  * @tags security
  *       external/cwe/cwe-079
  */
 
+import advanced_security.javascript.frameworks.ui5.UI5ModuleLoader
 import javascript
 import semmle.javascript.security.dataflow.DomBasedXssQuery
 

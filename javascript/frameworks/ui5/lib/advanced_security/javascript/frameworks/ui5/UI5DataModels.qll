@@ -69,6 +69,8 @@ class ModelReference extends MethodCallNode {
   UI5Model getResolvedModel() {
     /* TODO: If the argument of the setModelCall is another ModelReference, then we should recursively resolve that */
     result = this.getAMatchingSetModelCall().getArgument(0).getALocalSource()
+    or
+    this = result.(DefaultManifestXmlModel).getAReference()
   }
 }
 
@@ -131,13 +133,21 @@ abstract class UI5Model extends InvokeNode {
 }
 
 /**
- * A path-specific content node of a manifest-created default JSON model.
+ * A path-specific content node represented by a model binding.
  */
-abstract class ManifestJsonModelContentNode extends DataFlow::Node {
-  abstract DefaultManifestJsonModel getModel();
+abstract class ModelBindingContentNode extends DataFlow::Node {
+  abstract UI5InternalModel getModel();
 
   abstract string getAbsolutePath();
 }
+
+/** A path-specific content node of a manifest-created default JSON model. */
+abstract class ManifestJsonModelContentNode extends ModelBindingContentNode {
+  abstract override DefaultManifestJsonModel getModel();
+}
+
+/** A client-side XML model with binding-backed content. */
+abstract class UI5XmlModel extends UI5InternalModel { }
 
 /**
  * Represents models that are loaded from an internal source, i.e. XML Models or JSON models
@@ -165,7 +175,7 @@ abstract class UI5InternalModel extends UI5Model {
     or
     result.asExpr().(StringLiteral).getParent() = this.(JsonModel).asExpr()
     or
-    result.(ManifestJsonModelContentNode).getModel() = this.(DefaultManifestJsonModel)
+    result.(ModelBindingContentNode).getModel() = this
   }
 
   predicate hasContentNodeForBinding(UI5BindingPath bindingPath, DataFlow::Node node) {
@@ -173,7 +183,9 @@ abstract class UI5InternalModel extends UI5Model {
     (
       node = this.getAContentNode()
       or
-      this = bindingPath.getModel().(DefaultManifestJsonModel)
+      this = bindingPath.getModel().(DefaultManifestClientModel)
+      or
+      this = bindingPath.getModel().(UI5XmlModel)
     )
   }
 
@@ -184,6 +196,10 @@ abstract class UI5InternalModel extends UI5Model {
     this.(JsonModel).isTwoWayBinding()
     or
     this.(DefaultManifestJsonModel).isTwoWayBinding()
+    or
+    this.(XmlModel).isTwoWayBinding()
+    or
+    this.(DefaultManifestXmlModel).isTwoWayBinding()
   }
 }
 
@@ -399,20 +415,14 @@ private JsonObject resolveIndirectPath(string path) {
 }
 
 /**
- * The default `JSONModel` automatically created from the application manifest.
- *
- * For example, `{ "models": { "": { "type": "sap.ui.model.json.JSONModel" } } }`.
+ * A default JSON or XML client model automatically created from the application manifest.
  *
  * The MaD-modeled component call serves as this model's data-flow node. UI5 creates and attaches
  * the manifest-declared model during component initialization, so application code has no
  * corresponding `JSONModel` constructor call.
  */
-class DefaultManifestJsonModel extends UI5InternalModel {
-  DefaultManifestJsonModel() {
-    this.(Component).getInternalModelDef("").getType() = "sap/ui/model/json/JSONModel"
-  }
-
-  private ModelReference getAReference() {
+abstract class DefaultManifestClientModel extends UI5InternalModel {
+  ModelReference getAReference() {
     result.isDefaultModelReference() and
     not exists(result.getAMatchingSetModelCall()) and
     (
@@ -440,6 +450,20 @@ class DefaultManifestJsonModel extends UI5InternalModel {
   override string getPathString(Property property) { none() }
 
   override predicate contentIsStaticallyVisible() { none() }
+}
+
+/** The default `JSONModel` automatically created from the application manifest. */
+class DefaultManifestJsonModel extends DefaultManifestClientModel {
+  DefaultManifestJsonModel() {
+    this.(Component).getInternalModelDef("").getType() = "sap/ui/model/json/JSONModel"
+  }
+}
+
+/** The default `XMLModel` automatically created or inferred from the application manifest. */
+class DefaultManifestXmlModel extends DefaultManifestClientModel, UI5XmlModel {
+  DefaultManifestXmlModel() {
+    this.(Component).getInternalModelDef("").getType() = "sap/ui/model/xml/XMLModel"
+  }
 }
 
 /**
@@ -526,22 +550,37 @@ class JsonModel extends UI5InternalModel {
 }
 
 /**
- * A client-side XML model, for example `new XMLModel("<root/>")`.
+ * A client-side XML model constructed through an imported or global constructor.
  */
-class XmlModel extends UI5InternalModel {
+class XmlModel extends UI5XmlModel {
   XmlModel() {
     this instanceof NewNode and
-    exists(RequiredObject xmlModel |
-      xmlModel.asSourceNode().flowsTo(this.getCalleeNode()) and
-      xmlModel.getDependency() = "sap/ui/model/xml/XMLModel"
+    this = ModelOutput::getATypeNode("UI5XMLDataModel").asSource()
+  }
+
+  override string getPathString(Property property) { none() }
+
+  override string getPathString() {
+    exists(UI5BindingPath bindingPath | bindingPath.getModel() = this |
+      result = getModelBindingPath(bindingPath)
     )
   }
 
-  override string getPathString(Property property) { result = property.toString() }
-
-  override string getPathString() { result = "TODO" }
-
   override predicate contentIsStaticallyVisible() { exists(this.getPathString()) }
+
+  private MethodCallNode getASetDefaultBindingModeCall() {
+    this.flowsTo(result.getReceiver()) and result.getMethodName() = "setDefaultBindingMode"
+    or
+    exists(ModelReference reference | reference.getResolvedModel() = this |
+      result = reference.getAMemberCall("setDefaultBindingMode")
+    )
+  }
+
+  predicate isTwoWayBinding() {
+    isTwoWayBindingMode(this.getASetDefaultBindingModeCall().getArgument(0))
+    or
+    not exists(this.getASetDefaultBindingModeCall())
+  }
 }
 
 /**
@@ -663,6 +702,8 @@ UI5Model resolveModel(UI5BindingPath bindingPath) {
   result = getDefaultODataModel(bindingPath)
   or
   result = getDefaultManifestJsonModel(bindingPath)
+  or
+  result = getDefaultManifestXmlModel(bindingPath)
 }
 
 private predicate modelNameMatchesBindingPath(
@@ -715,7 +756,8 @@ predicate hasDefaultModelOverrideBetween(
   UI5Control ancestor, UI5Control descendant, CustomController controller
 ) {
   exists(
-    UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall, UI5View view
+    UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall,
+    UI5View view
   |
     ancestor.strictlyContains(overrideControl) and
     overrideControl.contains(descendant) and
@@ -785,7 +827,11 @@ DataFlow::Node getModelNode(UI5BindingPath bindingPath) {
   or
   result = getNonStaticJsonModelNode(bindingPath)
   or
-  bindingPath.getModel() instanceof DefaultManifestJsonModel and
+  (
+    bindingPath.getModel() instanceof DefaultManifestClientModel or
+    bindingPath.getModel() instanceof UI5XmlModel
+  ) and
+  exists(getModelBindingPath(bindingPath)) and
   result = getManifestBindingTargetNode(bindingPath)
   or
   result = getExternalModelNode(bindingPath)
@@ -814,12 +860,35 @@ private string getManifestBindingKey(UI5BindingPath bindingPath) {
   else result = "0:" + getManifestBindingLocationKey(bindingPath)
 }
 
-private string getCanonicalManifestBindingKey(DefaultManifestJsonModel model, string absolutePath) {
+/** Gets the model path, treating an XML element's `text()` as its property value. */
+string getModelBindingPath(UI5BindingPath bindingPath) {
+  if bindingPath.getModel() instanceof UI5XmlModel
+  then
+    exists(string absolutePath, string path |
+      absolutePath = bindingPath.getAbsolutePath() and
+      (
+        if exists(bindingPath.getModelName())
+        then path = absolutePath.suffix(bindingPath.getModelName().length() + 1)
+        else path = absolutePath
+      ) and
+      path.prefix(1) = "/"
+    |
+      if path = "/text()"
+      then result = "/"
+      else
+        if path.matches("%/text()")
+        then result = path.substring(0, path.length() - 7)
+        else result = path
+    )
+  else result = bindingPath.getAbsolutePath()
+}
+
+private string getCanonicalModelBindingKey(UI5InternalModel model, string absolutePath) {
   result =
     min(string key |
       exists(UI5BindingPath bindingPath |
         bindingPath.getModel() = model and
-        bindingPath.getAbsolutePath() = absolutePath and
+        getModelBindingPath(bindingPath) = absolutePath and
         exists(getManifestBindingTargetNode(bindingPath)) and
         key = getManifestBindingKey(bindingPath)
       )
@@ -839,7 +908,7 @@ class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
     exists(UI5BindingPath bindingPath |
       model = bindingPath.getModel() and
       absolutePath = bindingPath.getAbsolutePath() and
-      getManifestBindingKey(bindingPath) = getCanonicalManifestBindingKey(model, absolutePath) and
+      getManifestBindingKey(bindingPath) = getCanonicalModelBindingKey(model, absolutePath) and
       this = getManifestBindingTargetNode(bindingPath)
     )
   }
@@ -849,7 +918,32 @@ class ManifestJsonModelBindingNode extends ManifestJsonModelContentNode {
   override string getAbsolutePath() { result = absolutePath }
 }
 
+/** The canonical binding-backed content node for one path in an XML model. */
+class XmlModelBindingContentNode extends ModelBindingContentNode {
+  UI5XmlModel model;
+  string absolutePath;
+
+  XmlModelBindingContentNode() {
+    exists(UI5BindingPath bindingPath |
+      model = bindingPath.getModel() and
+      absolutePath = getModelBindingPath(bindingPath) and
+      getManifestBindingKey(bindingPath) = getCanonicalModelBindingKey(model, absolutePath) and
+      this = getManifestBindingTargetNode(bindingPath)
+    )
+  }
+
+  override UI5XmlModel getModel() { result = model }
+
+  override string getAbsolutePath() { result = absolutePath }
+}
+
 private DefaultManifestJsonModel getDefaultManifestJsonModel(UI5BindingPath bindingPath) {
+  not exists(bindingPath.getModelName()) and
+  inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
+  not exists(getNearestSetModelCall(bindingPath))
+}
+
+private DefaultManifestXmlModel getDefaultManifestXmlModel(UI5BindingPath bindingPath) {
   not exists(bindingPath.getModelName()) and
   inSameUI5Component(bindingPath.getLocation().getFile(), result.(Component).getParentManifestJson()) and
   not exists(getNearestSetModelCall(bindingPath))

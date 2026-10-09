@@ -1,0 +1,4 @@
+| attribute | /item/@note |
+| namedAttribute | docs>/item/@note |
+| quotedAttribute | docs>/item/@note |
+| text | /item/text() |

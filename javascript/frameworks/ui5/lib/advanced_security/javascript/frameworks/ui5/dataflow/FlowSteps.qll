@@ -3,12 +3,12 @@ import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5View
 
 /**
- * Connects each manifest-model binding target to one canonical node for its component and path.
+ * Connects each binding-backed model target to one canonical node for its model and path.
  */
 predicate manifestJsonModelBindingStep(DataFlow::Node start, DataFlow::Node end) {
-  exists(UI5BindingPath bindingPath, ManifestJsonModelContentNode content |
+  exists(UI5BindingPath bindingPath, ModelBindingContentNode content |
     content.getModel() = bindingPath.getModel() and
-    content.getAbsolutePath() = bindingPath.getAbsolutePath() and
+    content.getAbsolutePath() = getModelBindingPath(bindingPath) and
     (
       start = content and
       end = getManifestBindingTargetNode(bindingPath)
@@ -24,6 +24,35 @@ predicate manifestJsonModelBindingStep(DataFlow::Node start, DataFlow::Node end)
 class ManifestJsonModelBindingStep extends DataFlow::SharedFlowStep {
   override predicate step(DataFlow::Node start, DataFlow::Node end) {
     manifestJsonModelBindingStep(start, end)
+  }
+}
+
+/**
+ * XML property APIs access the same path-specific content as declarative bindings. A model's
+ * binding mode limits control-to-model writes, not explicit `setProperty` calls.
+ */
+class XmlModelPropertyAccessStep extends DataFlow::SharedFlowStep {
+  override predicate step(DataFlow::Node start, DataFlow::Node end) {
+    exists(XmlModelBindingContentNode content, MethodCallNode access |
+      (
+        content.getModel().flowsTo(access.getReceiver())
+        or
+        exists(ModelReference reference |
+          reference.getResolvedModel() = content.getModel() and
+          reference.flowsTo(access.getReceiver())
+        )
+      ) and
+      access.getArgument(0).getALocalSource().getStringValue() = content.getAbsolutePath() and
+      (
+        access.getMethodName() = "setProperty" and
+        start = access.getArgument(1) and
+        end = content
+        or
+        access.getMethodName() = ["getProperty", "getObject"] and
+        start = content and
+        end = access
+      )
+    )
   }
 }
 
@@ -174,6 +203,7 @@ class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
         modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `modelRef` can be inside a callback argument
         controller.getAModelReference() = modelRef and
         modelRef.isLocalModelReference() and
+        not modelRef.getResolvedModel() instanceof UI5XmlModel and
         modelRef = end
       )
       or
@@ -200,6 +230,7 @@ class LocalModelSetPropertyStep extends DataFlow::SharedFlowStep {
         start = setPropertyCall.getArgument(1) and
         setPropertyCall.getMethodName() = "setProperty" and
         setPropertyCall.getReceiver().getALocalSource() = internalModel and
+        not internalModel instanceof UI5XmlModel and
         internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
         internalModel = end
       )
@@ -255,6 +286,7 @@ class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
         modelRef.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and
         controller.getAModelReference() = modelRef and // apply TC + since `modelRef` can be inside a callback argument
         modelRef.isLocalModelReference() and
+        not modelRef.getResolvedModel() instanceof UI5XmlModel and
         end = getPropertyCall
       )
       or
@@ -281,6 +313,7 @@ class LocalModelGetPropertyStep extends DataFlow::SharedFlowStep {
         internalModel = start and
         getPropertyCall.getMethodName() = "getProperty" and
         getPropertyCall.getReceiver().getALocalSource() = internalModel and
+        not internalModel instanceof UI5XmlModel and
         internalModel.asExpr().getEnclosingFunction+() = controller.getAHandler().getFunction() and // apply TC + since `internalModel` can be inside a callback argument
         end = getPropertyCall
       )

@@ -12,6 +12,7 @@ extensions:
       - ["Control", "global", "Member[sap].Member[ui].Member[core].Member[Control]"]
       - ["Controller", "Controller", "Instance"]
       - ["Controller", "sap/ui/core/mvc/Controller", ""]
+      - ["UI5ElementModule", "sap/ui/core/Element", ""]
       - ["Component", "sap/ui/core/mvc/Component", ""]
       - ["Component", "sap/ui/core/UIComponent", ""]
       - ["Renderer", "Control", "Member[extend].Argument[1].Member[renderer]"]
@@ -106,11 +107,8 @@ extensions:
       - ["CustomControllerGetOwnerComponentEventBusSubscriptionHandlerDataParameter", "CustomControllerGetOwnerComponentEventBusSubscribe", "Argument[2].Parameter[2]"]
       - ["CustomComponent", "Component", "Member[extend]"]
       - ["CustomRenderer", "Renderer", "Member[extend]"]
-      # Global loader roots also work without the UI5 QL library. require's error callback is not a module export.
-      - ["UI5ModuleExport", "global", "Member[sap].Member[ui].Member[define].Argument[1..].Parameter[0..]"]
-      - ["UI5ModuleExport", "global", "Member[sap].Member[ui].Member[require].Argument[1].Parameter[0..]"]
+      # The UI5 loader adapter resolves module types by their dependency paths.
       - ["UI5ControllerReference", "CustomControllerContent", "AnyMember.Parameter[this]"]
-      - ["UI5ControllerReference", "UI5ModuleExport", "Member[extend].Argument[1].AnyMember.Parameter[this]"]
       - ["ViewReference", "UI5ControllerReference", "Member[getView].ReturnValue"]
       # Element#$ is inherited by controls and views; lookups share a single jQuery conversion.
       - ["UI5ElementReference", "ViewReference", ""]
@@ -118,8 +116,7 @@ extensions:
       - ["UI5ElementReference", "ViewReference", "Member[byId].ReturnValue"]
       - ["UI5ElementReference", "SapUICoreInstance", "Member[byId].ReturnValue"]
       - ["UI5ElementReference", "Fragment", "Member[byId].WithArity[2].ReturnValue"]
-      - ["UI5ElementReference", "UI5ModuleExport", "Member[byId].WithArity[2].ReturnValue"]
-      - ["UI5ElementReference", "UI5ModuleExport", "Member[getElementById,closestTo].ReturnValue"]
+      - ["UI5ElementReference", "UI5ElementModule", "Member[getElementById,closestTo].ReturnValue"]
       - ["UI5ElementReference", "global", "Member[sap].Member[ui].Member[core].Member[Element].Member[getElementById,closestTo].ReturnValue"]
       - ["UI5ElementReference", "global", "Member[sap].Member[ui].Member[core].Member[Fragment].Member[byId].WithArity[2].ReturnValue"]
       - ["UI5ControlJQuery", "UI5ElementReference", "Member[$].WithArity[0..1].ReturnValue"]

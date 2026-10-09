@@ -7,6 +7,7 @@
  *       external/cwe/cwe-079
  */
 
+import advanced_security.javascript.frameworks.ui5.UI5ModuleLoader
 import javascript
 
 from DataFlow::CallNode call

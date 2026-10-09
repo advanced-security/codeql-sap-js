@@ -1,0 +1,9 @@
+| aliasInput | constructed | /content | TwoWay |
+| globalAliasInput | constructed | /content | TwoWay |
+| globalInput | constructed | /item/@note | TwoWay |
+| importedInput | constructed | /content | TwoWay |
+| manifestInput | manifest | /profile/content | TwoWay |
+| oneTimeInput | constructed | /content | readonly |
+| oneWayInput | constructed | /content | readonly |
+| readonlyManifestInput | manifest | /content | readonly |
+| twoWayInput | constructed | /content | TwoWay |

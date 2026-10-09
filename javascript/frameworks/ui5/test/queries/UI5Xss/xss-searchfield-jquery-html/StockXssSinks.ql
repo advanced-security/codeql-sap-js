@@ -1,8 +1,9 @@
 /**
- * Lists the standard `js/xss` sinks found WITHOUT importing the UI5 QL customizations,
- * i.e. the sinks contributed by the models-as-data rows in `ui5.model.yml` alone.
+ * Lists the standard `js/xss` sinks contributed by models as data, with only the UI5
+ * loader adapter to resolve dependency paths and no UI5 security customizations.
  */
 
+import advanced_security.javascript.frameworks.ui5.UI5ModuleLoader
 import javascript
 import semmle.javascript.security.dataflow.DomBasedXssQuery
 
