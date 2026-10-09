@@ -1,8 +1,10 @@
 /**
  * @name UI5 URL redirect sinks
+ * @description Lists declarative UI5 properties modeled as client-side URL redirect sinks.
  * @kind problem
  * @problem.severity error
  * @id ui5-url-redirect-sinks
+ * @tags test
  */
 
 import advanced_security.javascript.frameworks.ui5.UI5View
