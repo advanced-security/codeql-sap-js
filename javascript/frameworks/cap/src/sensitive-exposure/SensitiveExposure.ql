@@ -71,14 +71,27 @@ private string getAProjectedStringAlias(string projection) {
   result = getAProjectionItem(projection).splitAt(" as ", 1).trim()
 }
 
-private DataFlow::ObjectLiteralNode getAProjectionObject(Expr argument) {
-  result = argument.flow().(DataFlow::ObjectLiteralNode)
+private DataFlow::Node getProjectionSource(Expr argument) {
+  result = argument.flow()
   or
-  result = argument.flow().(DataFlow::ArrayLiteralNode).getAnElement().(DataFlow::ObjectLiteralNode)
+  result = argument.flow().getALocalSource()
+}
+
+private DataFlow::ObjectLiteralNode getAProjectionObject(Expr argument) {
+  result = getProjectionSource(argument).(DataFlow::ObjectLiteralNode)
+  or
+  result =
+    getProjectionSource(argument)
+        .(DataFlow::ArrayLiteralNode)
+        .getAnElement()
+        .(DataFlow::ObjectLiteralNode)
 }
 
 private string getAProjectedColumn(Expr argument) {
   result = getAProjectedStringColumn(argument.getStringValue())
+  or
+  result =
+    getProjectionSource(argument).(DataFlow::ArrayLiteralNode).getAnElement().getStringValue()
   or
   result =
     getAProjectionObject(argument)
@@ -87,6 +100,13 @@ private string getAProjectedColumn(Expr argument) {
         .(DataFlow::ArrayLiteralNode)
         .getAnElement()
         .getStringValue()
+  or
+  result =
+    getProjectionSource(argument)
+        .(DataFlow::FunctionNode)
+        .getParameter(0)
+        .getAPropertyRead()
+        .getPropertyName()
 }
 
 private string getAProjectedAlias(Expr argument) {
@@ -102,7 +122,7 @@ private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotat
     columns = getAClause(query, "columns") and
     argument = columns.getArgument() and
     (
-      not exists(argument.getStringValue())
+      not exists(getAProjectedColumn(argument))
       or
       getAProjectedColumn(argument) = "*"
       or

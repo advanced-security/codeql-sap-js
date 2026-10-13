@@ -19,6 +19,9 @@ class SampleVulnService extends cds.ApplicationService {
             const runAuthor = await cds.run(SELECT.one.from(Authors))
             const projectedWildcard = await SELECT.one.from(Authors).columns('ID, *')
             const projectedObject = await SELECT.one.from(Authors).columns([{ ref: ['email'], as: 'objectEmail' }])
+            const projectedArraySafe = await SELECT.one.from(Authors).columns(['ID'])
+            const projectedObjectSafe = await SELECT.one.from(Authors).columns({ ref: ['ID'] })
+            const projectedCallbackSafe = await SELECT.one.from(Authors).columns(a => { a.ID })
             const authors = await SELECT.from(Authors)
 
             LOG.info('author:', author)
@@ -31,6 +34,7 @@ class SampleVulnService extends cds.ApplicationService {
             LOG.info('run author:', runAuthor)
             LOG.info('projected wildcard:', projectedWildcard)
             LOG.info('projected object:', projectedObject.objectEmail)
+            LOG.info('projected safe forms:', projectedArraySafe, projectedObjectSafe, projectedCallbackSafe)
             console.log(authors[0].email)
             console.log(authors[0].ID)
         })
