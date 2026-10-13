@@ -6,6 +6,7 @@ extensions:
       - ["~CapCqlSelect", "global", "Member[SELECT]"]
       - ["~CapCqlSelect", "@sap/cds", "Member[ql].Member[SELECT]"]
       - ["~CapCqlSelect", "~CapCqlSelect", "Member[one,distinct]"]
+      - ["~CapCqlSelect", "~CapCqlSelect", "ReturnValue"]
       - ["~CapCqlSelectQuery", "~CapCqlSelect", "Member[from].ReturnValue"]
       - ["~CapCqlSelectQuery", "~CapCqlSelectQuery", "Member[columns,forShareLock,forUpdate,groupBy,having,limit,orderBy,where].ReturnValue"]
 
@@ -13,6 +14,7 @@ extensions:
       pack: codeql/javascript-all
       extensible: sinkModel
     data:
+      - ["~CapCqlSelect", "Argument[0..]", "cap-cql-structure"]
       - ["~CapCqlSelect", "Member[from].Argument[0]", "cap-cql-structure"]
       - ["~CapCqlSelectQuery", "Member[columns,groupBy,orderBy].Argument[0..]", "cap-cql-structure"]
       - ["~CapCqlSelectQuery", "Member[where].Argument[0]", "cap-cql-structure"]

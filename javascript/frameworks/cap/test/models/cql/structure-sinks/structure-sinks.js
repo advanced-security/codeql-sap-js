@@ -5,7 +5,10 @@ const grouping = 'name'
 const ordering = 'name asc'
 const oneEntity = 'Authors'
 const distinctEntity = 'Authors'
+const shortcutColumns = 'ID, name'
+const shortcutEntity = 'Authors'
 
 SELECT.from(entity).columns(columns).where(condition).groupBy(grouping).orderBy(ordering)
 SELECT.one.from(oneEntity)
 SELECT.distinct.from(distinctEntity)
+SELECT(shortcutColumns).from(shortcutEntity)

@@ -2,13 +2,17 @@ edges
 | srv/structure-service.js:6:13:6:19 | orderBy | srv/structure-service.js:9:43:9:49 | orderBy | provenance |  |
 | srv/structure-service.js:6:23:6:30 | req.data | srv/structure-service.js:6:13:6:19 | orderBy | provenance |  |
 | srv/structure-service.js:13:51:13:58 | req.data | srv/structure-service.js:13:26:13:65 | 'sap.ca ... .entity | provenance |  |
+| srv/structure-service.js:19:49:19:56 | req.data | srv/structure-service.js:19:49:19:64 | req.data.columns | provenance |  |
 nodes
 | srv/structure-service.js:6:13:6:19 | orderBy | semmle.label | orderBy |
 | srv/structure-service.js:6:23:6:30 | req.data | semmle.label | req.data |
 | srv/structure-service.js:9:43:9:49 | orderBy | semmle.label | orderBy |
 | srv/structure-service.js:13:26:13:65 | 'sap.ca ... .entity | semmle.label | 'sap.ca ... .entity |
 | srv/structure-service.js:13:51:13:58 | req.data | semmle.label | req.data |
+| srv/structure-service.js:19:49:19:56 | req.data | semmle.label | req.data |
+| srv/structure-service.js:19:49:19:64 | req.data.columns | semmle.label | req.data.columns |
 subpaths
 #select
 | srv/structure-service.js:9:14:9:50 | SELECT. ... rderBy) | srv/structure-service.js:6:23:6:30 | req.data | srv/structure-service.js:9:43:9:49 | orderBy | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:6:23:6:30 | req.data | user-provided value |
 | srv/structure-service.js:13:14:13:66 | SELECT. ... entity) | srv/structure-service.js:13:51:13:58 | req.data | srv/structure-service.js:13:26:13:65 | 'sap.ca ... .entity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:13:51:13:58 | req.data | user-provided value |
+| srv/structure-service.js:19:20:19:83 | SELECT. ... 'Name') | srv/structure-service.js:19:49:19:56 | req.data | srv/structure-service.js:19:49:19:64 | req.data.columns | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:19:49:19:56 | req.data | user-provided value |

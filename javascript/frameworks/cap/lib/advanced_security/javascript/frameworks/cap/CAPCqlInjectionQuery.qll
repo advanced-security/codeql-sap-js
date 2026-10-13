@@ -30,9 +30,10 @@ class CqlClauseWithStringConcatParameter instanceof CqlClause {
   string toString() { result = super.toString() }
 }
 
-/** Holds if existing sinks cover `await SELECT.from("A" + input)` or `cds.run(query)`. */
-private predicate hasExistingStringConcatSink(CqlClause cqlClause) {
-  cqlClause instanceof CqlClauseWithStringConcatParameter and
+/** Holds if existing sinks cover the concatenated argument in `await SELECT.from("A" + input)`. */
+private predicate hasExistingStringConcatSink(CqlClause cqlClause, DataFlow::Node queryParameter) {
+  queryParameter = cqlClause.getArgument().flow() and
+  exists(StringConcatenation::getAnOperand(queryParameter)) and
   (
     exists(AwaitExpr await | await.getOperand() = cqlClause.getFinalClause().asExpr())
     or
@@ -49,7 +50,7 @@ class ModeledCqlStructureParameter extends CqlInjectionSink {
   ModeledCqlStructureParameter() {
     this = ModelOutput::getASinkNode("cap-cql-structure").asSink() and
     this = cqlClause.getArgument().flow() and
-    not hasExistingStringConcatSink(cqlClause)
+    not hasExistingStringConcatSink(cqlClause, this)
   }
 
   override DataFlow::Node getQuery() { result = cqlClause.getFinalClause().flow() }

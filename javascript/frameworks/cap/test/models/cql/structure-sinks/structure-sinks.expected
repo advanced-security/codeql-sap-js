@@ -1,7 +1,9 @@
-| structure-sinks.js:9:13:9:18 | entity | entity |
-| structure-sinks.js:9:29:9:35 | columns | columns |
-| structure-sinks.js:9:44:9:52 | condition | condition |
-| structure-sinks.js:9:63:9:70 | grouping | grouping |
-| structure-sinks.js:9:81:9:88 | ordering | ordering |
-| structure-sinks.js:10:17:10:25 | oneEntity | oneEntity |
-| structure-sinks.js:11:22:11:35 | distinctEntity | distinctEntity |
+| structure-sinks.js:11:13:11:18 | entity | entity |
+| structure-sinks.js:11:29:11:35 | columns | columns |
+| structure-sinks.js:11:44:11:52 | condition | condition |
+| structure-sinks.js:11:63:11:70 | grouping | grouping |
+| structure-sinks.js:11:81:11:88 | ordering | ordering |
+| structure-sinks.js:12:17:12:25 | oneEntity | oneEntity |
+| structure-sinks.js:13:22:13:35 | distinctEntity | distinctEntity |
+| structure-sinks.js:14:8:14:22 | shortcutColumns | shortcutColumns |
+| structure-sinks.js:14:30:14:43 | shortcutEntity | shortcutEntity |
