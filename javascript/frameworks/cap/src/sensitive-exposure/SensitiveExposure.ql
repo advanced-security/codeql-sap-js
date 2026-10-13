@@ -58,10 +58,19 @@ private string getAProjectionItem(string projection) {
   result = projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim()
 }
 
+/** Matches `email`, `Authors.email`, and `*`, but not `lower(email)`. */
+bindingset[column]
+private predicate isSimpleColumnReference(string column) {
+  column = "*"
+  or
+  column.regexpMatch("^[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)*$")
+}
+
 bindingset[projection]
 private string getAProjectedStringColumn(string projection) {
   exists(string column |
     column = getAProjectionItem(projection).splitAt(" ", 0).trim() and
+    isSimpleColumnReference(column) and
     result = column.splitAt(".", count(column.indexOf(".")))
   )
 }
@@ -71,27 +80,14 @@ private string getAProjectedStringAlias(string projection) {
   result = getAProjectionItem(projection).splitAt(" as ", 1).trim()
 }
 
-private DataFlow::Node getProjectionSource(Expr argument) {
-  result = argument.flow()
-  or
-  result = argument.flow().getALocalSource()
-}
-
 private DataFlow::ObjectLiteralNode getAProjectionObject(Expr argument) {
-  result = getProjectionSource(argument).(DataFlow::ObjectLiteralNode)
+  result = argument.flow().(DataFlow::ObjectLiteralNode)
   or
-  result =
-    getProjectionSource(argument)
-        .(DataFlow::ArrayLiteralNode)
-        .getAnElement()
-        .(DataFlow::ObjectLiteralNode)
+  result = argument.flow().(DataFlow::ArrayLiteralNode).getAnElement().(DataFlow::ObjectLiteralNode)
 }
 
 private string getAProjectedColumn(Expr argument) {
   result = getAProjectedStringColumn(argument.getStringValue())
-  or
-  result =
-    getProjectionSource(argument).(DataFlow::ArrayLiteralNode).getAnElement().getStringValue()
   or
   result =
     getAProjectionObject(argument)
@@ -100,13 +96,6 @@ private string getAProjectedColumn(Expr argument) {
         .(DataFlow::ArrayLiteralNode)
         .getAnElement()
         .getStringValue()
-  or
-  result =
-    getProjectionSource(argument)
-        .(DataFlow::FunctionNode)
-        .getParameter(0)
-        .getAPropertyRead()
-        .getPropertyName()
 }
 
 private string getAProjectedAlias(Expr argument) {
@@ -115,23 +104,9 @@ private string getAProjectedAlias(Expr argument) {
   result = getAProjectionObject(argument).getAPropertyWrite("as").getRhs().getStringValue()
 }
 
-private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotatedEntity entity) {
-  not exists(getAClause(query, "columns"))
-  or
-  exists(CqlClause columns, Expr argument |
-    columns = getAClause(query, "columns") and
-    argument = columns.getArgument() and
-    (
-      not exists(getAProjectedColumn(argument))
-      or
-      getAProjectedColumn(argument) = "*"
-      or
-      exists(SensitiveAnnotatedAttribute attribute |
-        attribute = entity.(CdlEntity).getAttribute(attribute.getName()) and
-        getAProjectedColumn(argument) = attribute.getName()
-      )
-    )
-  )
+bindingset[argument]
+private predicate isComplexStringProjection(Expr argument) {
+  argument.getStringValue().regexpMatch(".*[^A-Za-z0-9_$., *].*")
 }
 
 /** Holds for `await query` and `await cds.run(query)`. */
@@ -156,7 +131,6 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
       exists(SensitiveAnnotatedAttribute attribute |
         attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName())
       ) and
-      maySelectSensitiveData(cqlClause, cdlEntity) and
       awaitsQuery(await, cqlClause) and
       this = await.flow()
     )
@@ -191,6 +165,7 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
     exists(CqlClause columns, Expr argument, string source |
       columns = getAClause(cqlClause, "columns") and
       argument = columns.getArgument() and
+      not isComplexStringProjection(argument) and
       source = getAProjectedColumn(argument) and
       propertyName = getAProjectedAlias(argument)
     )

@@ -15,6 +15,9 @@ module.exports = class CqlStructureFixture extends cds.ApplicationService {
       UPDATE(req.data.updateEntity).set(req.data.updateSet).where(req.data.updateWhere)
       DELETE.from(req.data.deleteEntity).where(req.data.deleteWhere)
       SELECT.from(Authors).where({ ID: req.data.ID }).having({ count: req.data.count })
+      SELECT.from(Authors).where({ [req.data.field]: 1 })
+      SELECT.from(Authors).where({ ...req.data.filter })
+      UPDATE(Authors).set({ name: req.data.name })
       return SELECT.from('sap.capire.bookshop.' + req.data.entity)
     })
 

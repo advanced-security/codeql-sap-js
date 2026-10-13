@@ -43,9 +43,17 @@ private predicate hasExistingStringConcatSink(CqlClause cqlClause, DataFlow::Nod
   )
 }
 
-private predicate isQbeClause(CqlClause cqlClause) {
-  cqlClause.asMethodCall().getMethodName() = ["having", "where"] and
-  cqlClause.getArgument().flow().getALocalSource() instanceof DataFlow::ObjectLiteralNode
+private predicate isSimpleObjectClause(CqlClause cqlClause) {
+  exists(DataFlow::ObjectLiteralNode object |
+    cqlClause.asMethodCall().getMethodName() = ["having", "set", "where", "with"] and
+    cqlClause.getArgument().flow().getALocalSource() = object and
+    not exists(object.getAComputedPropertyName()) and
+    not exists(object.getASpreadProperty()) and
+    not exists(DataFlow::PropWrite write |
+      write = object.getAPropertyWrite() and
+      write.getRhs().getALocalSource() instanceof DataFlow::ObjectLiteralNode
+    )
+  )
 }
 
 /** A modeled structural argument, such as `SELECT.from(entity).orderBy(ordering)`. */
@@ -55,7 +63,7 @@ class ModeledCqlStructureParameter extends CqlInjectionSink {
   ModeledCqlStructureParameter() {
     this = ModelOutput::getASinkNode("cap-cql-structure").asSink() and
     this = cqlClause.getArgument().flow() and
-    not isQbeClause(cqlClause) and
+    not isSimpleObjectClause(cqlClause) and
     not hasExistingStringConcatSink(cqlClause, this)
   }
 
