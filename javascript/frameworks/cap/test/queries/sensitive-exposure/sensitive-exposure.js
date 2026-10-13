@@ -35,6 +35,10 @@ class SampleVulnService extends cds.ApplicationService {
             LOG.info('projected complex:', projectedComplex.lowerEmail)
             console.log(authors[0].email)
             console.log(authors[0].ID)
+            const projectedSensitiveOverSafe = await SELECT.one.from(Authors).columns('lower(email) as ID')
+            LOG.info('projected sensitive over safe:', projectedSensitiveOverSafe.ID)
+            const projectedSafeOverSensitive = await SELECT.one.from(Authors).columns('emailVerified as email')
+            LOG.info('projected safe over sensitive:', projectedSafeOverSensitive.email)
         })
     }
 

@@ -143,11 +143,20 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
       "Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive."
   }
 
+  private predicate hasProjectedAlias(string propertyName) {
+    exists(CqlClause columns, Expr argument |
+      columns = getAClause(cqlClause, "columns") and
+      argument = columns.getArgument() and
+      propertyName = getAProjectedAlias(argument)
+    )
+  }
+
   predicate isSensitiveProperty(string propertyName) {
     exists(SensitiveAnnotatedAttribute attribute |
       attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName()) and
       (
-        propertyName = attribute.getName()
+        propertyName = attribute.getName() and
+        not hasProjectedAlias(propertyName)
         or
         exists(CqlClause columns, Expr argument |
           columns = getAClause(cqlClause, "columns") and
@@ -160,7 +169,8 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
   }
 
   predicate isKnownProperty(string propertyName) {
-    exists(cdlEntity.(CdlEntity).getAttribute(propertyName))
+    exists(cdlEntity.(CdlEntity).getAttribute(propertyName)) and
+    not hasProjectedAlias(propertyName)
     or
     exists(CqlClause columns, Expr argument, string source |
       columns = getAClause(cqlClause, "columns") and

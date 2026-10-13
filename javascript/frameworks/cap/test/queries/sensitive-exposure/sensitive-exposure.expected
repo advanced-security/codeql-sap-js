@@ -23,6 +23,9 @@ edges
 | sensitive-exposure.js:34:43:34:57 | projectedObject | sensitive-exposure.js:34:43:34:69 | project ... ctEmail | provenance |  |
 | sensitive-exposure.js:35:44:35:59 | projectedComplex | sensitive-exposure.js:35:44:35:70 | project ... erEmail | provenance |  |
 | sensitive-exposure.js:36:25:36:31 | authors | sensitive-exposure.js:36:25:36:40 | authors[0].email | provenance |  |
+| sensitive-exposure.js:38:19:38:44 | projectedSensitiveOverSafe | sensitive-exposure.js:39:56:39:81 | project ... verSafe | provenance |  |
+| sensitive-exposure.js:38:48:38:107 | await S ... as ID') | sensitive-exposure.js:38:19:38:44 | projectedSensitiveOverSafe | provenance |  |
+| sensitive-exposure.js:39:56:39:81 | project ... verSafe | sensitive-exposure.js:39:56:39:84 | project ... Safe.ID | provenance |  |
 nodes
 | sensitive-exposure.js:9:32:9:42 | Sample.name | semmle.label | Sample.name |
 | sensitive-exposure.js:13:19:13:24 | author | semmle.label | author |
@@ -58,6 +61,10 @@ nodes
 | sensitive-exposure.js:35:44:35:70 | project ... erEmail | semmle.label | project ... erEmail |
 | sensitive-exposure.js:36:25:36:31 | authors | semmle.label | authors |
 | sensitive-exposure.js:36:25:36:40 | authors[0].email | semmle.label | authors[0].email |
+| sensitive-exposure.js:38:19:38:44 | projectedSensitiveOverSafe | semmle.label | projectedSensitiveOverSafe |
+| sensitive-exposure.js:38:48:38:107 | await S ... as ID') | semmle.label | await S ... as ID') |
+| sensitive-exposure.js:39:56:39:81 | project ... verSafe | semmle.label | project ... verSafe |
+| sensitive-exposure.js:39:56:39:84 | project ... Safe.ID | semmle.label | project ... Safe.ID |
 subpaths
 #select
 | sensitive-exposure.js:9:32:9:42 | Sample.name | sensitive-exposure.js:9:32:9:42 | Sample.name | sensitive-exposure.js:9:32:9:42 | Sample.name | Log entry depends on the $@ field which is annotated as potentially sensitive. | sensitive-exposure.cds:4:5:4:8 | {\\n      ...       } | name |
@@ -71,3 +78,4 @@ subpaths
 | sensitive-exposure.js:34:43:34:69 | project ... ctEmail | sensitive-exposure.js:21:37:21:115 | await S ... il' }]) | sensitive-exposure.js:34:43:34:69 | project ... ctEmail | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | sensitive-exposure.cds:8:8:8:14 | {\\n      ... }\\n    } | advanced_security.log_exposure.sample_entities.Authors |
 | sensitive-exposure.js:35:44:35:70 | project ... erEmail | sensitive-exposure.js:22:38:22:105 | await S ... Email') | sensitive-exposure.js:35:44:35:70 | project ... erEmail | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | sensitive-exposure.cds:8:8:8:14 | {\\n      ... }\\n    } | advanced_security.log_exposure.sample_entities.Authors |
 | sensitive-exposure.js:36:25:36:40 | authors[0].email | sensitive-exposure.js:23:29:23:54 | await S ... uthors) | sensitive-exposure.js:36:25:36:40 | authors[0].email | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | sensitive-exposure.cds:8:8:8:14 | {\\n      ... }\\n    } | advanced_security.log_exposure.sample_entities.Authors |
+| sensitive-exposure.js:39:56:39:84 | project ... Safe.ID | sensitive-exposure.js:38:48:38:107 | await S ... as ID') | sensitive-exposure.js:39:56:39:84 | project ... Safe.ID | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | sensitive-exposure.cds:8:8:8:14 | {\\n      ... }\\n    } | advanced_security.log_exposure.sample_entities.Authors |
