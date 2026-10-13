@@ -15,7 +15,7 @@ abstract class CqlInjectionSink extends DataFlow::Node {
 }
 
 /**
- * A CQL clause parameterized with a string concatentation expression.
+ * A CQL clause parameterized with a string concatenation expression.
  */
 class CqlClauseWithStringConcatParameter instanceof CqlClause {
   CqlClauseWithStringConcatParameter() {
@@ -188,7 +188,7 @@ class CqlClauseParserCallWithStringConcat instanceof CqlClauseParserCall {
  *
  * It can also happen if a fluent API builder (`SELECT`, `INSERT`, ...) or a
  * shortcut method call (`srv.read`, `srv.create`, ...) is called with a string
- * concatentation as one of its arguments, which in practice can take one of the
+ * concatenation as one of its arguments, which in practice can take one of the
  * following forms:
  *
  * 1. Concatentation with a string value with the `+` operator:

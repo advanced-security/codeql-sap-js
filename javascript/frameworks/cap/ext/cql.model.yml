@@ -17,4 +17,4 @@ extensions:
       - ["~CapCqlSelect", "Argument[0..]", "cap-cql-structure"]
       - ["~CapCqlSelect", "Member[from].Argument[0]", "cap-cql-structure"]
       - ["~CapCqlSelectQuery", "Member[columns,groupBy,orderBy].Argument[0..]", "cap-cql-structure"]
-      - ["~CapCqlSelectQuery", "Member[where].Argument[0]", "cap-cql-structure"]
+      - ["~CapCqlSelectQuery", "Member[having,where].Argument[0]", "cap-cql-structure"]

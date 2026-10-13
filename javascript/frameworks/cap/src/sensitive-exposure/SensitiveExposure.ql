@@ -53,6 +53,15 @@ private CqlClause getAClause(CqlClause query, string name) {
   result.asDotExpr().getPropertyName() = name
 }
 
+/** Gets `email` from a projection such as `ID, Authors.email as contactEmail`. */
+bindingset[projection]
+private string getAProjectedColumn(string projection) {
+  exists(string column |
+    column = projection.splitAt(",").trim().splitAt(" ", 0).trim() and
+    result = column.splitAt(".", count(column.indexOf(".")))
+  )
+}
+
 private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotatedEntity entity) {
   not exists(getAClause(query, "columns"))
   or
@@ -66,7 +75,7 @@ private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotat
       or
       exists(SensitiveAnnotatedAttribute attribute |
         attribute = entity.(CdlEntity).getAttribute(attribute.getName()) and
-        argument.getStringValue().matches("%" + attribute.getName() + "%")
+        getAProjectedColumn(argument.getStringValue()) = attribute.getName()
       )
     )
   )

@@ -16,8 +16,8 @@ module.exports = class AdminService extends cds.ApplicationService {
 
     this.on('lookupProjectedAuthors', async () => {
       const { Authors } = cds.entities('sap.capire.bookshop')
-      const projectedSensitive = await SELECT.one.from(Authors).columns('email')
-      const projectedSafe = await SELECT.one.from(Authors).columns('ID')
+      const projectedSensitive = await SELECT.one.from(Authors).columns('ID, email as contactEmail')
+      const projectedSafe = await SELECT.one.from(Authors).columns('ID, emailVerified')
 
       LOG.info('projected sensitive:', projectedSensitive)
       LOG.info('projected safe:', projectedSafe)

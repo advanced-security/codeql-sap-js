@@ -23,6 +23,14 @@
             "line": 5,
             "col": 3
           }
+        },
+        "emailVerified": {
+          "type": "cds.Boolean",
+          "$location": {
+            "file": "schema.cds",
+            "line": 6,
+            "col": 3
+          }
         }
       },
       "$location": {

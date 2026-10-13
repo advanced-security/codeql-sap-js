@@ -19,6 +19,12 @@ module.exports = class CqlStructureFixture extends cds.ApplicationService {
       return await SELECT.from(Authors).columns(req.data.columns, 'first' + 'Name')
     })
 
+    this.on('listHavingVulnerable', async req => {
+      const { Authors } = cds.entities('sap.capire.bookshop')
+
+      return SELECT.from(Authors).groupBy('name').having(req.data.having, 1)
+    })
+
     this.on('listAuthorsSafe', async () => {
       const { Authors } = cds.entities('sap.capire.bookshop')
 
