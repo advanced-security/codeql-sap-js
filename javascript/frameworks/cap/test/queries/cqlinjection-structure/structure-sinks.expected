@@ -19,3 +19,5 @@
 | structure-sinks.js:7:40:7:47 | 'ID = 1' | 'ID = 1' |
 | structure-sinks.js:8:13:8:19 | 'Books' | 'Books' |
 | structure-sinks.js:8:28:8:35 | 'ID = 1' | 'ID = 1' |
+| structure-sinks.js:9:23:9:31 | 'Authors' | 'Authors' |
+| structure-sinks.js:10:11:10:16 | 'name' | 'name' |

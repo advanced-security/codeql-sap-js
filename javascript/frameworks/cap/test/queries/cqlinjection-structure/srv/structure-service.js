@@ -18,6 +18,8 @@ module.exports = class CqlStructureFixture extends cds.ApplicationService {
       SELECT.from(Authors).where({ [req.data.field]: 1 })
       SELECT.from(Authors).where({ ...req.data.filter })
       UPDATE(Authors).set({ name: req.data.name })
+      const q = SELECT.from(Authors)
+      q.orderBy(req.data.aliasedOrderBy)
       return SELECT.from('sap.capire.bookshop.' + req.data.entity)
     })
 

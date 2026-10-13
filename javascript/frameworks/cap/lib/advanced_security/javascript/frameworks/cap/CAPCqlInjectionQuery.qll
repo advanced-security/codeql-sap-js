@@ -31,22 +31,25 @@ class CqlClauseWithStringConcatParameter instanceof CqlClause {
 }
 
 /** Holds if existing sinks cover the concatenated argument in `await SELECT.from("A" + input)`. */
-private predicate hasExistingStringConcatSink(CqlClause cqlClause, DataFlow::Node queryParameter) {
-  queryParameter = cqlClause.getArgument().flow() and
-  exists(StringConcatenation::getAnOperand(queryParameter)) and
-  (
-    exists(AwaitExpr await | await.getOperand() = cqlClause.getFinalClause().asExpr())
-    or
-    exists(CqlRunMethodCall run |
-      run.getArgument(0).getALocalSource() = cqlClause.getFinalClause().flow()
+private predicate hasExistingStringConcatSink(DataFlow::Node queryParameter) {
+  exists(CqlClause cqlClause |
+    queryParameter = cqlClause.getArgument().flow() and
+    exists(StringConcatenation::getAnOperand(queryParameter)) and
+    (
+      exists(AwaitExpr await | await.getOperand() = cqlClause.getFinalClause().asExpr())
+      or
+      exists(CqlRunMethodCall run |
+        run.getArgument(0).getALocalSource() = cqlClause.getFinalClause().flow()
+      )
     )
   )
 }
 
-private predicate isSimpleObjectClause(CqlClause cqlClause) {
-  exists(DataFlow::ObjectLiteralNode object |
-    cqlClause.asMethodCall().getMethodName() = ["having", "set", "where", "with"] and
-    cqlClause.getArgument().flow().getALocalSource() = object and
+private predicate isSimpleObjectClause(DataFlow::Node queryParameter) {
+  exists(MethodCallExpr call, DataFlow::ObjectLiteralNode object |
+    queryParameter = call.getAnArgument().flow() and
+    call.getMethodName() = ["having", "set", "where", "with"] and
+    queryParameter.getALocalSource() = object and
     not exists(object.getAComputedPropertyName()) and
     not exists(object.getASpreadProperty()) and
     not exists(DataFlow::PropWrite write |
@@ -56,18 +59,31 @@ private predicate isSimpleObjectClause(CqlClause cqlClause) {
   )
 }
 
+private DataFlow::Node getModeledCqlQuery(DataFlow::Node queryParameter) {
+  exists(CqlClause cqlClause |
+    queryParameter = cqlClause.getArgument().flow() and
+    result = cqlClause.getFinalClause().flow()
+  )
+  or
+  exists(CallExpr call |
+    not exists(CqlClause cqlClause | queryParameter = cqlClause.getArgument().flow()) and
+    queryParameter = call.getAnArgument().flow() and
+    result = call.flow()
+  )
+}
+
 /** A modeled structural argument, such as `SELECT.from(entity).orderBy(ordering)`. */
 class ModeledCqlStructureParameter extends CqlInjectionSink {
-  CqlClause cqlClause;
+  DataFlow::Node query;
 
   ModeledCqlStructureParameter() {
     this = ModelOutput::getASinkNode("cap-cql-structure").asSink() and
-    this = cqlClause.getArgument().flow() and
-    not isSimpleObjectClause(cqlClause) and
-    not hasExistingStringConcatSink(cqlClause, this)
+    query = getModeledCqlQuery(this) and
+    not isSimpleObjectClause(this) and
+    not hasExistingStringConcatSink(this)
   }
 
-  override DataFlow::Node getQuery() { result = cqlClause.getFinalClause().flow() }
+  override DataFlow::Node getQuery() { result = query }
 
   override string getMessage() {
     result =
