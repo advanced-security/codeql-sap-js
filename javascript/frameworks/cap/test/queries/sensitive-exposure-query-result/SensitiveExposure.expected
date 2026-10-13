@@ -1,0 +1,15 @@
+edges
+| srv/admin-service.js:8:13:8:18 | author | srv/admin-service.js:10:27:10:32 | author | provenance |  |
+| srv/admin-service.js:8:13:8:18 | author | srv/admin-service.js:11:28:11:33 | author | provenance |  |
+| srv/admin-service.js:8:22:8:78 | await S ... a.ID }) | srv/admin-service.js:8:13:8:18 | author | provenance |  |
+| srv/admin-service.js:11:28:11:33 | author | srv/admin-service.js:11:19:11:41 | `email= ... email}` | provenance |  |
+nodes
+| srv/admin-service.js:8:13:8:18 | author | semmle.label | author |
+| srv/admin-service.js:8:22:8:78 | await S ... a.ID }) | semmle.label | await S ... a.ID }) |
+| srv/admin-service.js:10:27:10:32 | author | semmle.label | author |
+| srv/admin-service.js:11:19:11:41 | `email= ... email}` | semmle.label | `email= ... email}` |
+| srv/admin-service.js:11:28:11:33 | author | semmle.label | author |
+subpaths
+#select
+| srv/admin-service.js:10:27:10:32 | author | srv/admin-service.js:8:22:8:78 | await S ... a.ID }) | srv/admin-service.js:10:27:10:32 | author | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds:3:8:3:14 | {\\n      ... }\\n    } | sap.capire.bookshop.Authors |
+| srv/admin-service.js:11:19:11:41 | `email= ... email}` | srv/admin-service.js:8:22:8:78 | await S ... a.ID }) | srv/admin-service.js:11:19:11:41 | `email= ... email}` | Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive. | javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds:3:8:3:14 | {\\n      ... }\\n    } | sap.capire.bookshop.Authors |

@@ -10,6 +10,8 @@ abstract class CqlInjectionSink extends DataFlow::Node {
    * accurate reporting.
    */
   abstract DataFlow::Node getQuery();
+
+  string getMessage() { result = "This CQL query contains a string concatenation with a $@." }
 }
 
 /**
@@ -26,6 +28,24 @@ class CqlClauseWithStringConcatParameter instanceof CqlClause {
   Location getLocation() { result = super.getLocation() }
 
   string toString() { result = super.toString() }
+}
+
+/** A modeled structural argument, such as `SELECT.from(entity).orderBy(ordering)`. */
+class ModeledCqlStructureParameter extends CqlInjectionSink {
+  CqlClause cqlClause;
+
+  ModeledCqlStructureParameter() {
+    this = ModelOutput::getASinkNode("cap-cql-structure").asSink() and
+    this = cqlClause.getArgument().flow() and
+    not cqlClause instanceof CqlClauseWithStringConcatParameter
+  }
+
+  override DataFlow::Node getQuery() { result = cqlClause.getFinalClause().flow() }
+
+  override string getMessage() {
+    result =
+      "This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions."
+  }
 }
 
 /**
@@ -150,9 +170,12 @@ class CqlClauseParserCallWithStringConcat instanceof CqlClauseParserCall {
  * A data flow configuration from a remote flow source to a handful of sinks that run a CQL
  * query, either directly or indirectly by assembling one under the hood.
  *
- * The CQL injection happens if a fluent API builder (`SELECT`, `INSERT`, ...) or a
- * shortcut method call (`srv.read`, `srv.create`, ...) are called with a string
- * concatentation as one of its argument, which in practice can take one of its
+ * CQL injection can happen when a caller-controlled value is passed to a modeled
+ * structural clause such as `columns`, `groupBy`, or `orderBy`.
+ *
+ * It can also happen if a fluent API builder (`SELECT`, `INSERT`, ...) or a
+ * shortcut method call (`srv.read`, `srv.create`, ...) is called with a string
+ * concatentation as one of its arguments, which in practice can take one of the
  * following forms:
  *
  * 1. Concatentation with a string value with the `+` operator:

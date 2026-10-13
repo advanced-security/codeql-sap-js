@@ -10,7 +10,8 @@ CAP applications should not log sensitive information. Check CDS declarations fo
 
 ## Examples
 
-This CAP service directly logs the sensitive information.
+This CAP service directly logs a record containing sensitive information and
+one of its annotated fields.
 
 ```cds
 namespace advanced_security.log_exposure.sample_entities;
@@ -35,7 +36,11 @@ const { Sample } = cds.entities('advanced_security.log_exposure.sample_entities'
 
 class SampleVulnService extends cds.ApplicationService {
     init() {
-        LOG.info("Received: ", Sample.name); // CAP log exposure alert
+        this.on("lookup", async () => {
+            const sample = await SELECT.one.from(Sample)
+            LOG.info("Received: ", sample)
+            console.log(sample.name)
+        })
     }
 }
 ```

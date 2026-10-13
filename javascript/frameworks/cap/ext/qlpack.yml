@@ -4,3 +4,5 @@ name: advanced-security/javascript-sap-cap-models
 version: 2.27.2
 extensionTargets:
   codeql/javascript-all: "^2.6.24"
+dataExtensions:
+  - "*.model.yml"

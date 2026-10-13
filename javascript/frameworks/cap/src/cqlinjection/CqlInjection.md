@@ -9,13 +9,19 @@ Injections are still possible even via CQL when the query structure (e.g. target
 
 ## Examples
 
-This CAP application uses user submitted input as entity and column in a CQL query without any validation.
+This CAP application uses user submitted input as structural parts of a CQL
+query without any validation.
 
 ``` javascript
 const entity = <from user input>
-const column = <from user input>
-SELECT.from(entity).columns(column)
+const columns = <from user input>
+const condition = <from user input>
+const groupBy = <from user input>
+const orderBy = <from user input>
+SELECT.from(entity).columns(columns).where(condition).groupBy(groupBy).orderBy(orderBy)
 ```
+
+Validate structural query inputs against fixed allow-lists.
 
 ## References
 
