@@ -1,7 +1,7 @@
 /**
  * @name UI5 Client-side cross-site scripting
- * @description Compatibility query for UI5 cross-site scripting results.
- *              The standard js/xss query is used for code scanning.
+ * @description Writing user input directly to a UI5 View allows for
+ *              a cross-site scripting vulnerability.
  * @kind path-problem
  * @problem.severity error
  * @security-severity 7.8
