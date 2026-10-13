@@ -40,17 +40,23 @@ class NonStringControlProperty extends DomBasedXss::Sanitizer {
 }
 
 /**
- * A value encoded for HTML/XML output. Encoders for other contexts are not HTML sanitizers.
+ * A value encoded by a UI5 encoder whose output never contains HTML metacharacters.
+ * `encodeURLParameters` is excluded because it leaves non-string values unencoded.
  */
 class UI5SecurityEncoder extends DomBasedXss::Sanitizer {
   UI5SecurityEncoder() {
     exists(SapDefineModule definition, DataFlow::ParameterNode encoder |
       this = encoder.getACall() and
-      encoder = definition.getRequiredObject("sap/base/security/encodeXML").asSourceNode()
+      encoder =
+        definition
+            .getRequiredObject("sap/base/security/" +
+                ["encodeXML", "encodeCSS", "encodeJS", "encodeURL"])
+            .asSourceNode()
     )
     or
     this.(DataFlow::CallNode).getReceiver().asExpr().(PropAccess).getQualifiedName() = "jQuery.sap" and
-    this.(DataFlow::CallNode).getCalleeName() = ["encodeXML", "encodeHTML"]
+    this.(DataFlow::CallNode).getCalleeName() =
+      ["encodeXML", "encodeHTML", "encodeCSS", "encodeJS", "encodeURL"]
   }
 }
 
