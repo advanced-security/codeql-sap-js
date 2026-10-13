@@ -10,7 +10,7 @@
           "key": true,
           "type": "cds.Integer",
           "$location": {
-            "file": "javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds",
+            "file": "schema.cds",
             "line": 4,
             "col": 7
           }
@@ -19,21 +19,21 @@
           "@PersonalData.IsPotentiallySensitive": true,
           "type": "cds.String",
           "$location": {
-            "file": "javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds",
+            "file": "schema.cds",
             "line": 5,
             "col": 3
           }
         }
       },
       "$location": {
-        "file": "javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds",
+        "file": "schema.cds",
         "line": 3,
         "col": 8
       }
     }
   },
   "$location": {
-    "file": "javascript/frameworks/cap/test/queries/sensitive-exposure-query-result/schema.cds"
+    "file": "schema.cds"
   },
   "meta": {
     "creator": "CDS Compiler v6.7.2",
