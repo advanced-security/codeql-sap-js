@@ -9,6 +9,10 @@ module.exports = class CqlStructureFixture extends cds.ApplicationService {
       return SELECT.from(Authors).orderBy(orderBy)
     })
 
+    this.on('listEntityVulnerable', async req => {
+      return SELECT.from('sap.capire.bookshop.' + req.data.entity)
+    })
+
     this.on('listAuthorsSafe', async () => {
       const { Authors } = cds.entities('sap.capire.bookshop')
 

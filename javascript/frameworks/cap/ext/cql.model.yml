@@ -5,6 +5,7 @@ extensions:
     data:
       - ["~CapCqlSelect", "global", "Member[SELECT]"]
       - ["~CapCqlSelect", "@sap/cds", "Member[ql].Member[SELECT]"]
+      - ["~CapCqlSelect", "~CapCqlSelect", "Member[one,distinct]"]
       - ["~CapCqlSelectQuery", "~CapCqlSelect", "Member[from].ReturnValue"]
       - ["~CapCqlSelectQuery", "~CapCqlSelectQuery", "Member[columns,forShareLock,forUpdate,groupBy,having,limit,orderBy,where].ReturnValue"]
 

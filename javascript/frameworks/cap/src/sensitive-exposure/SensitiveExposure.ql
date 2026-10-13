@@ -47,6 +47,31 @@ class SensitiveExposureFieldSource extends SensitiveExposureSource instanceof Pr
   }
 }
 
+/** Gets a clause such as `columns('ID')` from a fluent query. */
+private CqlClause getAClause(CqlClause query, string name) {
+  (result = query or result = query.getADescendantCqlClause()) and
+  result.asDotExpr().getPropertyName() = name
+}
+
+private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotatedEntity entity) {
+  not exists(getAClause(query, "columns"))
+  or
+  exists(CqlClause columns, Expr argument |
+    columns = getAClause(query, "columns") and
+    argument = columns.getArgument() and
+    (
+      not exists(argument.getStringValue())
+      or
+      argument.getStringValue() = "*"
+      or
+      exists(SensitiveAnnotatedAttribute attribute |
+        attribute = entity.(CdlEntity).getAttribute(attribute.getName()) and
+        argument.getStringValue().matches("%" + attribute.getName() + "%")
+      )
+    )
+  )
+}
+
 /** An awaited sensitive entity result, such as `await SELECT.one.from(Authors)`. */
 class SensitiveQueryResultSource extends SensitiveExposureSource {
   SensitiveAnnotatedEntity cdlEntity;
@@ -58,6 +83,7 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
       exists(SensitiveAnnotatedAttribute attribute |
         attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName())
       ) and
+      maySelectSensitiveData(cqlClause, cdlEntity) and
       await.getOperand() = cqlClause.asExpr() and
       this = await.flow()
     )
