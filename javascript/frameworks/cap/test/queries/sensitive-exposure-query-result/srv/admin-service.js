@@ -23,6 +23,13 @@ module.exports = class AdminService extends cds.ApplicationService {
       LOG.info('projected safe:', projectedSafe)
     })
 
+    this.on('lookupTaggedAuthors', async () => {
+      const { Authors } = cds.entities('sap.capire.bookshop')
+      const projectedTagged = await SELECT.one.from(Authors).columns`{ email, ID }`
+
+      LOG.info('projected tagged:', projectedTagged)
+    })
+
     return super.init()
   }
 }

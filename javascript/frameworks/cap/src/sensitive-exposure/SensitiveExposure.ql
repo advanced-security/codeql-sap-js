@@ -57,7 +57,8 @@ private CqlClause getAClause(CqlClause query, string name) {
 bindingset[projection]
 private string getAProjectedColumn(string projection) {
   exists(string column |
-    column = projection.splitAt(",").trim().splitAt(" ", 0).trim() and
+    column =
+      projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim().splitAt(" ", 0).trim() and
     result = column.splitAt(".", count(column.indexOf(".")))
   )
 }
