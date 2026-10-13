@@ -1,18 +1,8 @@
-const entity = 'Authors'
-const columns = ['ID', 'name']
-const condition = 'ID > 0'
-const grouping = 'name'
-const ordering = 'name asc'
-const oneEntity = 'Authors'
-const distinctEntity = 'Authors'
-const shortcutColumns = 'ID, name'
-const shortcutEntity = 'Authors'
-const having = 'count(*) > 0'
-const multiHaving = 'count(*) >'
-
-SELECT.from(entity).columns(columns).where(condition).groupBy(grouping).orderBy(ordering)
-SELECT.one.from(oneEntity)
-SELECT.distinct.from(distinctEntity)
-SELECT(shortcutColumns).from(shortcutEntity)
-SELECT.from(entity).having(having)
-SELECT.from(entity).having(multiHaving, 1)
+SELECT.from('Authors', 1, 'ID').alias('a').columns('name').where('ID > 0').groupBy('ID').having('count(*) > 0').orderBy('ID').hints('IGNORE_PLAN_CACHE')
+SELECT.one.from('Authors')
+SELECT.distinct.from('Authors')
+SELECT('ID').from('Authors')
+INSERT.into('Books').columns('ID')
+UPSERT.into('Books')
+UPDATE('Books').set('stock = 0').where('ID = 1')
+DELETE.from('Books').where('ID = 1')

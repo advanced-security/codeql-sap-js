@@ -16,9 +16,11 @@ query without any validation.
 const entity = <from user input>
 const columns = <from user input>
 const condition = <from user input>
+const assignments = <from user input>
 const groupBy = <from user input>
 const orderBy = <from user input>
 SELECT.from(entity).columns(columns).where(condition).groupBy(groupBy).orderBy(orderBy)
+UPDATE(entity).set(assignments).where(condition)
 ```
 
 Validate structural query inputs against fixed allow-lists.

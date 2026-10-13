@@ -53,25 +53,46 @@ private CqlClause getAClause(CqlClause query, string name) {
   result.asDotExpr().getPropertyName() = name
 }
 
-/** Gets an item such as `Authors.email as contactEmail` from a column projection. */
 bindingset[projection]
 private string getAProjectionItem(string projection) {
   result = projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim()
 }
 
-/** Gets `email` from a projection such as `Authors.email as contactEmail`. */
 bindingset[projection]
-private string getAProjectedColumn(string projection) {
+private string getAProjectedStringColumn(string projection) {
   exists(string column |
     column = getAProjectionItem(projection).splitAt(" ", 0).trim() and
     result = column.splitAt(".", count(column.indexOf(".")))
   )
 }
 
-/** Gets `contactEmail` from `email as contactEmail`. */
 bindingset[projection]
-private string getAProjectedAlias(string projection) {
+private string getAProjectedStringAlias(string projection) {
   result = getAProjectionItem(projection).splitAt(" as ", 1).trim()
+}
+
+private DataFlow::ObjectLiteralNode getAProjectionObject(Expr argument) {
+  result = argument.flow().(DataFlow::ObjectLiteralNode)
+  or
+  result = argument.flow().(DataFlow::ArrayLiteralNode).getAnElement().(DataFlow::ObjectLiteralNode)
+}
+
+private string getAProjectedColumn(Expr argument) {
+  result = getAProjectedStringColumn(argument.getStringValue())
+  or
+  result =
+    getAProjectionObject(argument)
+        .getAPropertyWrite("ref")
+        .getRhs()
+        .(DataFlow::ArrayLiteralNode)
+        .getAnElement()
+        .getStringValue()
+}
+
+private string getAProjectedAlias(Expr argument) {
+  result = getAProjectedStringAlias(argument.getStringValue())
+  or
+  result = getAProjectionObject(argument).getAPropertyWrite("as").getRhs().getStringValue()
 }
 
 private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotatedEntity entity) {
@@ -83,11 +104,11 @@ private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotat
     (
       not exists(argument.getStringValue())
       or
-      argument.getStringValue() = "*"
+      getAProjectedColumn(argument) = "*"
       or
       exists(SensitiveAnnotatedAttribute attribute |
         attribute = entity.(CdlEntity).getAttribute(attribute.getName()) and
-        getAProjectedColumn(argument.getStringValue()) = attribute.getName()
+        getAProjectedColumn(argument) = attribute.getName()
       )
     )
   )
@@ -137,10 +158,21 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
         exists(CqlClause columns, Expr argument |
           columns = getAClause(cqlClause, "columns") and
           argument = columns.getArgument() and
-          getAProjectedColumn(argument.getStringValue()) = attribute.getName() and
-          propertyName = getAProjectedAlias(argument.getStringValue())
+          getAProjectedColumn(argument) = attribute.getName() and
+          propertyName = getAProjectedAlias(argument)
         )
       )
+    )
+  }
+
+  predicate isKnownProperty(string propertyName) {
+    exists(cdlEntity.(CdlEntity).getAttribute(propertyName))
+    or
+    exists(CqlClause columns, Expr argument, string source |
+      columns = getAClause(cqlClause, "columns") and
+      argument = columns.getArgument() and
+      source = getAProjectedColumn(argument) and
+      propertyName = getAProjectedAlias(argument)
     )
   }
 }
@@ -151,11 +183,20 @@ class PropertyReadOfSensitiveQueryResult extends DataFlow::Node instanceof PropR
 
   PropertyReadOfSensitiveQueryResult() {
     this.(DataFlow::PropRead).getBase().getALocalSource() = queryResult
+    or
+    exists(PropertyReadOfSensitiveQueryResult baseRead |
+      this.(DataFlow::PropRead).getBase().getALocalSource() = baseRead and
+      queryResult = baseRead.getQueryResult()
+    )
   }
+
+  SensitiveQueryResultSource getQueryResult() { result = queryResult }
 
   predicate isSensitive() {
     queryResult.isSensitiveProperty(this.(DataFlow::PropRead).getPropertyName())
   }
+
+  predicate isKnown() { queryResult.isKnownProperty(this.(DataFlow::PropRead).getPropertyName()) }
 }
 
 module SensitiveLogExposureConfig implements DataFlow::ConfigSig {
@@ -169,6 +210,7 @@ module SensitiveLogExposureConfig implements DataFlow::ConfigSig {
 
   predicate isBarrier(DataFlow::Node node) {
     node instanceof PropertyReadOfSensitiveQueryResult and
+    node.(PropertyReadOfSensitiveQueryResult).isKnown() and
     not node.(PropertyReadOfSensitiveQueryResult).isSensitive()
   }
 }

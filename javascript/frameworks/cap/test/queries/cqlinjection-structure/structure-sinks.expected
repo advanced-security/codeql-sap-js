@@ -1,13 +1,21 @@
-| structure-sinks.js:13:13:13:18 | entity | entity |
-| structure-sinks.js:13:29:13:35 | columns | columns |
-| structure-sinks.js:13:44:13:52 | condition | condition |
-| structure-sinks.js:13:63:13:70 | grouping | grouping |
-| structure-sinks.js:13:81:13:88 | ordering | ordering |
-| structure-sinks.js:14:17:14:25 | oneEntity | oneEntity |
-| structure-sinks.js:15:22:15:35 | distinctEntity | distinctEntity |
-| structure-sinks.js:16:8:16:22 | shortcutColumns | shortcutColumns |
-| structure-sinks.js:16:30:16:43 | shortcutEntity | shortcutEntity |
-| structure-sinks.js:17:13:17:18 | entity | entity |
-| structure-sinks.js:17:28:17:33 | having | having |
-| structure-sinks.js:18:13:18:18 | entity | entity |
-| structure-sinks.js:18:28:18:38 | multiHaving | multiHaving |
+| structure-sinks.js:1:13:1:21 | 'Authors' | 'Authors' |
+| structure-sinks.js:1:27:1:30 | 'ID' | 'ID' |
+| structure-sinks.js:1:39:1:41 | 'a' | 'a' |
+| structure-sinks.js:1:52:1:57 | 'name' | 'name' |
+| structure-sinks.js:1:66:1:73 | 'ID > 0' | 'ID > 0' |
+| structure-sinks.js:1:84:1:87 | 'ID' | 'ID' |
+| structure-sinks.js:1:97:1:110 | 'count(*) > 0' | 'count(*) > 0' |
+| structure-sinks.js:1:121:1:124 | 'ID' | 'ID' |
+| structure-sinks.js:1:133:1:151 | 'IGNORE_PLAN_CACHE' | 'IGNORE_PLAN_CACHE' |
+| structure-sinks.js:2:17:2:25 | 'Authors' | 'Authors' |
+| structure-sinks.js:3:22:3:30 | 'Authors' | 'Authors' |
+| structure-sinks.js:4:8:4:11 | 'ID' | 'ID' |
+| structure-sinks.js:4:19:4:27 | 'Authors' | 'Authors' |
+| structure-sinks.js:5:13:5:19 | 'Books' | 'Books' |
+| structure-sinks.js:5:30:5:33 | 'ID' | 'ID' |
+| structure-sinks.js:6:13:6:19 | 'Books' | 'Books' |
+| structure-sinks.js:7:8:7:14 | 'Books' | 'Books' |
+| structure-sinks.js:7:21:7:31 | 'stock = 0' | 'stock = 0' |
+| structure-sinks.js:7:40:7:47 | 'ID = 1' | 'ID = 1' |
+| structure-sinks.js:8:13:8:19 | 'Books' | 'Books' |
+| structure-sinks.js:8:28:8:35 | 'ID = 1' | 'ID = 1' |
