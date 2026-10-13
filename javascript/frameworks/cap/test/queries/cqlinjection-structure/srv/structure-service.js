@@ -31,6 +31,10 @@ module.exports = class CqlStructureFixture extends cds.ApplicationService {
       return SELECT.from(Authors).orderBy('name asc')
     })
 
+    this.on('listFacadeEntityVulnerable', async req => {
+      return cds.ql.SELECT.from(req.data.entity)
+    })
+
     return super.init()
   }
 }

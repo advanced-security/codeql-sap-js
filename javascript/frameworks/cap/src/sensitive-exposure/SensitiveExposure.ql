@@ -53,14 +53,25 @@ private CqlClause getAClause(CqlClause query, string name) {
   result.asDotExpr().getPropertyName() = name
 }
 
-/** Gets `email` from a projection such as `ID, Authors.email as contactEmail`. */
+/** Gets an item such as `Authors.email as contactEmail` from a column projection. */
+bindingset[projection]
+private string getAProjectionItem(string projection) {
+  result = projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim()
+}
+
+/** Gets `email` from a projection such as `Authors.email as contactEmail`. */
 bindingset[projection]
 private string getAProjectedColumn(string projection) {
   exists(string column |
-    column =
-      projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim().splitAt(" ", 0).trim() and
+    column = getAProjectionItem(projection).splitAt(" ", 0).trim() and
     result = column.splitAt(".", count(column.indexOf(".")))
   )
+}
+
+/** Gets `contactEmail` from `email as contactEmail`. */
+bindingset[projection]
+private string getAProjectedAlias(string projection) {
+  result = getAProjectionItem(projection).splitAt(" as ", 1).trim()
 }
 
 private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotatedEntity entity) {
@@ -82,19 +93,30 @@ private predicate maySelectSensitiveData(CqlSelectClause query, SensitiveAnnotat
   )
 }
 
+/** Holds for `await query` and `await cds.run(query)`. */
+private predicate awaitsQuery(AwaitExpr await, CqlSelectClause query) {
+  query.flow().getALocalSource() = await.getOperand().flow().getALocalSource()
+  or
+  exists(CqlRunMethodCall run |
+    await.getOperand() = run.asExpr() and
+    query.flow().getALocalSource() = run.getArgument(0).getALocalSource()
+  )
+}
+
 /** An awaited sensitive entity result, such as `await SELECT.one.from(Authors)`. */
 class SensitiveQueryResultSource extends SensitiveExposureSource {
   SensitiveAnnotatedEntity cdlEntity;
+  CqlSelectClause cqlClause;
 
   SensitiveQueryResultSource() {
-    exists(CqlSelectClause cqlClause, AwaitExpr await |
+    exists(AwaitExpr await |
       cqlClause.isFinal() and
       cdlEntity = cqlClause.getAccessingEntityDefinition() and
       exists(SensitiveAnnotatedAttribute attribute |
         attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName())
       ) and
       maySelectSensitiveData(cqlClause, cdlEntity) and
-      await.getOperand() = cqlClause.asExpr() and
+      awaitsQuery(await, cqlClause) and
       this = await.flow()
     )
   }
@@ -104,6 +126,22 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
   override string getMessage() {
     result =
       "Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive."
+  }
+
+  predicate isSensitiveProperty(string propertyName) {
+    exists(SensitiveAnnotatedAttribute attribute |
+      attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName()) and
+      (
+        propertyName = attribute.getName()
+        or
+        exists(CqlClause columns, Expr argument |
+          columns = getAClause(cqlClause, "columns") and
+          argument = columns.getArgument() and
+          getAProjectedColumn(argument.getStringValue()) = attribute.getName() and
+          propertyName = getAProjectedAlias(argument.getStringValue())
+        )
+      )
+    )
   }
 }
 
@@ -116,13 +154,7 @@ class PropertyReadOfSensitiveQueryResult extends DataFlow::Node instanceof PropR
   }
 
   predicate isSensitive() {
-    exists(SensitiveAnnotatedAttribute attribute |
-      attribute =
-        queryResult
-            .getCdsElement()
-            .(CdlEntity)
-            .getAttribute(this.(DataFlow::PropRead).getPropertyName())
-    )
+    queryResult.isSensitiveProperty(this.(DataFlow::PropRead).getPropertyName())
   }
 }
 
