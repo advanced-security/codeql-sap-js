@@ -1,0 +1,5 @@
+| structure-sinks.js:7:13:7:18 | entity | entity |
+| structure-sinks.js:7:29:7:35 | columns | columns |
+| structure-sinks.js:7:44:7:52 | condition | condition |
+| structure-sinks.js:7:63:7:70 | grouping | grouping |
+| structure-sinks.js:7:81:7:88 | ordering | ordering |
