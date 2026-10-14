@@ -10,10 +10,12 @@ abstract class CqlInjectionSink extends DataFlow::Node {
    * accurate reporting.
    */
   abstract DataFlow::Node getQuery();
+
+  string getMessage() { result = "This CQL query contains a string concatenation with a $@." }
 }
 
 /**
- * A CQL clause parameterized with a string concatentation expression.
+ * A CQL clause parameterized with a string concatenation expression.
  */
 class CqlClauseWithStringConcatParameter instanceof CqlClause {
   CqlClauseWithStringConcatParameter() {
@@ -26,6 +28,67 @@ class CqlClauseWithStringConcatParameter instanceof CqlClause {
   Location getLocation() { result = super.getLocation() }
 
   string toString() { result = super.toString() }
+}
+
+/** Holds if existing sinks cover the concatenated argument in `await SELECT.from("A" + input)`. */
+private predicate hasExistingStringConcatSink(DataFlow::Node queryParameter) {
+  exists(CqlClause cqlClause |
+    queryParameter = cqlClause.getArgument().flow() and
+    exists(StringConcatenation::getAnOperand(queryParameter)) and
+    (
+      exists(AwaitExpr await | await.getOperand() = cqlClause.getFinalClause().asExpr())
+      or
+      exists(CqlRunMethodCall run |
+        run.getArgument(0).getALocalSource() = cqlClause.getFinalClause().flow()
+      )
+    )
+  )
+}
+
+private predicate isSimpleObjectClause(DataFlow::Node queryParameter) {
+  exists(MethodCallExpr call, DataFlow::ObjectLiteralNode object |
+    queryParameter = call.getAnArgument().flow() and
+    call.getMethodName() = ["having", "set", "where", "with"] and
+    queryParameter.getALocalSource() = object and
+    not exists(object.getAComputedPropertyName()) and
+    not exists(object.getASpreadProperty()) and
+    not exists(DataFlow::PropWrite write |
+      write = object.getAPropertyWrite() and
+      write.getRhs().getALocalSource() instanceof DataFlow::ObjectLiteralNode
+    )
+  )
+}
+
+private DataFlow::Node getModeledCqlQuery(DataFlow::Node queryParameter) {
+  exists(CqlClause cqlClause |
+    queryParameter = cqlClause.getArgument().flow() and
+    result = cqlClause.getFinalClause().flow()
+  )
+  or
+  exists(CallExpr call |
+    not exists(CqlClause cqlClause | queryParameter = cqlClause.getArgument().flow()) and
+    queryParameter = call.getAnArgument().flow() and
+    result = call.flow()
+  )
+}
+
+/** A modeled structural argument, such as `SELECT.from(entity).orderBy(ordering)`. */
+class ModeledCqlStructureParameter extends CqlInjectionSink {
+  DataFlow::Node query;
+
+  ModeledCqlStructureParameter() {
+    this = ModelOutput::getASinkNode("cap-cql-structure").asSink() and
+    query = getModeledCqlQuery(this) and
+    not isSimpleObjectClause(this) and
+    not hasExistingStringConcatSink(this)
+  }
+
+  override DataFlow::Node getQuery() { result = query }
+
+  override string getMessage() {
+    result =
+      "This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions."
+  }
 }
 
 /**
@@ -150,9 +213,12 @@ class CqlClauseParserCallWithStringConcat instanceof CqlClauseParserCall {
  * A data flow configuration from a remote flow source to a handful of sinks that run a CQL
  * query, either directly or indirectly by assembling one under the hood.
  *
- * The CQL injection happens if a fluent API builder (`SELECT`, `INSERT`, ...) or a
- * shortcut method call (`srv.read`, `srv.create`, ...) are called with a string
- * concatentation as one of its argument, which in practice can take one of its
+ * CQL injection can happen when a caller-controlled value is passed to a modeled
+ * structural clause such as `columns`, `groupBy`, or `orderBy`.
+ *
+ * It can also happen if a fluent API builder (`SELECT`, `INSERT`, ...) or a
+ * shortcut method call (`srv.read`, `srv.create`, ...) is called with a string
+ * concatenation as one of its arguments, which in practice can take one of the
  * following forms:
  *
  * 1. Concatentation with a string value with the `+` operator:
