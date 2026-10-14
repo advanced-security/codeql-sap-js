@@ -7,7 +7,7 @@ sap.ui.define(
         let inputReference = this.getView().byId("unit-test-target1");
         let htmlControl = this.getView().byId("htmlControl");
 
-        /* ========== 1. UNSAFE: Input value piped into a reference to a static HTML, via a reference ========== */
+        /* ========== 1. UNSAFE: Input value piped into a reference to a static HTML control ========== */
         /* 1-1. Value directly set to `HTML.content` */
         htmlControl.content = inputReference.getValue(); // UNSAFE: property `content` set with an input value of a reference to a static value
 

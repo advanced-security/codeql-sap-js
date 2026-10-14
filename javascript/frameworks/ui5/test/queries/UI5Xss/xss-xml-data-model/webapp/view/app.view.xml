@@ -1,0 +1,28 @@
+<mvc:View controllerName="codeql.sap.xmlflow.controller.app" xmlns="sap.m" xmlns:core="sap.ui.core" xmlns:mvc="sap.ui.core.mvc">
+  <Input id="manifestInput" value="{/profile/content}" />
+  <core:HTML id="manifestHtml" content="{/profile/content}" />
+  <core:HTML id="manifestTextHtml" content="{/profile/content/text()}" />
+  <core:HTML id="manifestOtherHtml" content="{/profile/other}" />
+  <VBox id="context">
+    <core:HTML id="contextHtml" content="{content}" />
+  </VBox>
+  <Input id="importedInput" value="{imported>/content}" />
+  <core:HTML id="importedHtml" content="{imported>/content}" />
+  <core:HTML id="importedOtherHtml" content="{imported>/other}" />
+  <Input id="aliasInput" value="{aliased>/content}" />
+  <core:HTML id="aliasHtml" content="{aliased>/content}" />
+  <Input id="globalInput" value="{global>/item/@note}" />
+  <core:HTML id="globalHtml" content="{global>/item/@note}" />
+  <Input id="globalAliasInput" value="{globalAliased>/content}" />
+  <core:HTML id="globalAliasHtml" content="{globalAliased>/content}" />
+  <Input id="oneWayInput" value="{oneWay>/content}" />
+  <core:HTML id="oneWayHtml" content="{oneWay>/content}" />
+  <Input id="oneTimeInput" value="{oneTime>/content}" />
+  <core:HTML id="oneTimeHtml" content="{oneTime>/content}" />
+  <Input id="twoWayInput" value="{twoWay>/content}" />
+  <core:HTML id="twoWayHtml" content="{twoWay>/content}" />
+  <Input id="editInput" liveChange=".onEdit" />
+  <core:HTML id="writeHtml" content="{write>/written}" />
+  <core:HTML id="writeOtherHtml" content="{write>/other}" />
+  <FormattedText id="apiOutput" />
+</mvc:View>

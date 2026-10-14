@@ -1,0 +1,11 @@
+{
+  "name": "xss-inferred-json-data-model",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --port 8080"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4.0.55"
+  }
+}

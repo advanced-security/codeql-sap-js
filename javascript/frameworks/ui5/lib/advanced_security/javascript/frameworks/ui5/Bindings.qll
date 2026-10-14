@@ -4,6 +4,7 @@
 
 import javascript
 import advanced_security.javascript.frameworks.ui5.BindingStringParser as MakeBindingStringParser
+import advanced_security.javascript.frameworks.ui5.JsonBindingTarget
 import advanced_security.javascript.frameworks.ui5.UI5View
 
 private class ContextBindingAttribute extends XmlAttribute {
@@ -23,6 +24,19 @@ private newtype TBindingString =
   TBindingStringFromJsonProperty(JsonObject object, string propertyName) {
     object.getFile() instanceof UI5View and
     object.getPropStringValue(propertyName).matches("{%}")
+  } or
+  TBindingStringFromJsonBindingInfo(JsonObject object, string propertyName, JsonObject bindingInfo) {
+    object.getFile() instanceof UI5View and
+    bindingInfo = object.getPropValue(propertyName) and
+    exists(bindingInfo.getPropStringValue("path"))
+  } or
+  TBindingStringFromJavaScriptBindingInfo(DataFlow::PropWrite pathWrite) {
+    pathWrite.getFile() instanceof JsView and
+    pathWrite.getPropertyName() = "path" and
+    exists(string path |
+      path = pathWrite.getRhs().getALocalSource().getStringValue() and
+      not path.matches("{%}")
+    )
   } or
   TBindingStringFromBindElementMethodCall(BindElementMethodCallNode bindElement) {
     bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue().matches("{%}")
@@ -54,6 +68,28 @@ private class BindingStringReader extends TBindingString {
       result = object.getPropStringValue(propertyName)
     )
     or
+    exists(JsonObject object, string propertyName, JsonObject bindingInfo |
+      this = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
+      result = getJsonBindingLiteral(object, propertyName)
+    )
+    or
+    exists(DataFlow::PropWrite pathWrite, DataFlow::ObjectLiteralNode bindingInfo, string path |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      pathWrite = bindingInfo.getAPropertyWrite("path") and
+      path = pathWrite.getRhs().getALocalSource().getStringValue()
+    |
+      if
+        exists(string model |
+          model = bindingInfo.getAPropertyWrite("model").getRhs().getALocalSource().getStringValue() and
+          model != ""
+        )
+      then
+        result =
+          "{" + bindingInfo.getAPropertyWrite("model").getRhs().getALocalSource().getStringValue() +
+            ">" + path + "}"
+      else result = "{" + path + "}"
+    )
+    or
     exists(BindElementMethodCallNode bindElement |
       this = TBindingStringFromBindElementMethodCall(bindElement) and
       result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue()
@@ -81,6 +117,16 @@ private class BindingStringReader extends TBindingString {
       result = object.getPropValue(propertyName).getLocation()
     )
     or
+    exists(JsonObject object, string propertyName, JsonObject bindingInfo |
+      this = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
+      result = bindingInfo.getPropValue("path").getLocation()
+    )
+    or
+    exists(DataFlow::PropWrite pathWrite |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      result = pathWrite.getRhs().asExpr().getLocation()
+    )
+    or
     exists(BindElementMethodCallNode bindElement |
       this = TBindingStringFromBindElementMethodCall(bindElement) and
       result = bindElement.getArgument(0).getALocalSource().asExpr().(StringLiteral).getLocation()
@@ -104,6 +150,12 @@ private class BindingStringReader extends TBindingString {
     exists(BindPropertyMethodCallNode bindProperty |
       this = TBindingStringFromBindPropertyMethodCall(bindProperty) and
       result = bindProperty.getArgument(1).getALocalSource() and
+      result.asExpr() instanceof StringLiteral
+    )
+    or
+    exists(DataFlow::PropWrite pathWrite |
+      this = TBindingStringFromJavaScriptBindingInfo(pathWrite) and
+      result = pathWrite.getRhs().getALocalSource() and
       result.asExpr() instanceof StringLiteral
     )
   }
@@ -203,16 +255,19 @@ private predicate earlyPropertyBinding(
   // Property binding via an object literal binding with property `path`.
   // This assumes the value assigned to `path` is a binding, even if we cannot
   // statically determine it is a binding.
-  exists(DataFlow::SourceNode objectLiteral |
+  exists(
+    DataFlow::SourceNode objectLiteral, DataFlow::ObjectLiteralNode bindingInfo,
+    DataFlow::PropWrite pathWrite
+  |
     newNode.getAnArgument().getALocalSource() = objectLiteral and
     objectLiteral.getAPropertyWrite() = bindingTarget and
-    // Here we can use `writes`, because we known the key is a literal.
-    bindingTarget.writes(_, "path", binding) and
+    bindingTarget.getRhs().getALocalSource() = bindingInfo and
+    pathWrite = bindingInfo.getAPropertyWrite("path") and
+    binding = pathWrite.getRhs() and
     if exists(binding.getALocalSource())
     then binding.getALocalSource() = bindingPath
     else binding = bindingPath // e.g., path: "/" + someVar
-  ) and
-  not bindingPath.getStringValue() instanceof BindingString
+  )
   or
   // Property binding of an arbitrary property for which we can statically determined
   // the value written to the property is a binding path.
@@ -367,6 +422,12 @@ private newtype TBinding =
       value = object.getPropValue(propertyName) and
       value.getStringValue() = reader.getBindingString() and
       value.getLocation() = reader.getLocation() and
+      binding = BindingStringParser::parseBinding(reader)
+    )
+    or
+    exists(JsonObject bindingInfo, BindingStringReader reader |
+      bindingInfo = object.getPropValue(propertyName) and
+      reader = TBindingStringFromJsonBindingInfo(object, propertyName, bindingInfo) and
       binding = BindingStringParser::parseBinding(reader)
     )
   }
@@ -599,6 +660,10 @@ class BindingTarget extends TBindingTarget {
         this = TEarlyJavaScriptPropertyBindingTarget(target, _)
         or
         this = TLateJavaScriptBindingTarget(target.(BindElementMethodCallNode).getReceiver(), _)
+        or
+        this =
+          TJsonPropertyBindingTarget(target.(JsonBindingTargetNode).getBindingTarget(),
+            target.(JsonBindingTargetNode).getPropertyName(), _)
       ) and
       result = target
     )

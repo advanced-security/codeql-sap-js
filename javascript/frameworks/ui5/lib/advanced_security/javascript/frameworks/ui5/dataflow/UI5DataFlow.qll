@@ -41,17 +41,10 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
 
   LocalModelContentBoundBidirectionallyToHtmlISinkControl() {
     exists(UI5InternalModel internalModel |
-      this = bindingPath.getNode() and
-      (
-        this instanceof PropWrite and
-        internalModel.getArgument(0).getALocalSource().asExpr() =
-          this.(PropWrite).getPropertyNameExpr().getParent+()
-        or
-        this.asExpr() instanceof StringLiteral and
-        internalModel.asExpr() = this.asExpr().getParent()
-      ) and
+      internalModel.hasContentNodeForBinding(bindingPath, this) and
       any(UI5View view).getAnHtmlISink() = bindingPath and
-      internalModel.(JsonModel).isTwoWayBinding() and
+      not bindingPath.getControlDeclaration().isHTMLSanitized() and
+      internalModel.hasTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()
     )
   }
@@ -59,15 +52,6 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5BindingPath getBindingPath() { result = bindingPath }
 
   UI5Control getControlDeclaration() { result = controlDeclaration }
-}
-
-/**
- * A local source for cases where the Control implementation is separate from the complete UI5 app.
- */
-class LocalModelStringPropertySource extends DomBasedXss::Source {
-  LocalModelStringPropertySource() {
-    this = any(PropertyMetadata propMeta | propMeta.isUnrestrictedStringType())
-  }
 }
 
 module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {
@@ -178,18 +162,11 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     predicate internalModelContentToBindingPath(
       UI5PathNode ui5PathNodePred, UI5PathNode ui5PathNodeSucc
     ) {
-      exists(UI5BindingPath bindingPath, UI5InternalModel internalModel, Node boundNode |
+      exists(UI5BindingPath bindingPath, UI5InternalModel internalModel |
         bindingPath = ui5PathNodeSucc.asUI5BindingPathNode() and
-        boundNode = bindingPath.getNode() and
-        (
-          boundNode instanceof PropWrite and
-          internalModel.(JsonModel).getAProperty() = boundNode // TODO: Generalize to UI5InternalModel
-          or
-          boundNode.asExpr() instanceof StringLiteral and
-          ui5PathNodePred.asDataFlowNode() = boundNode
-        ) and
-        ui5PathNodePred.asDataFlowNode() = boundNode and
-        internalModel.(JsonModel).isTwoWayBinding()
+        ui5PathNodePred.asDataFlowNode() = bindingPath.getNode() and
+        bindingPath.getNode() = internalModel.getAContentNode() and
+        internalModel.hasTwoWayBinding()
       )
     }
   }

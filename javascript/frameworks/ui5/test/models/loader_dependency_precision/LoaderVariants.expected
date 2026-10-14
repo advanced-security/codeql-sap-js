@@ -1,0 +1,3 @@
+| webapp/loader.variants.js:2:45:2:61 | "require-success" | require-success |
+| webapp/loader.variants.js:9:44:9:66 | "anonym ... t-flag" | anonymous-export-flag |
+| webapp/loader.variants.js:14:41:14:59 | "named-export-flag" | named-export-flag |

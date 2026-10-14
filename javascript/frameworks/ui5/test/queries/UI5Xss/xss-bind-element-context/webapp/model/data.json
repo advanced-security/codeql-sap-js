@@ -1,0 +1,20 @@
+{
+  "customer": {
+    "name": "Safe value"
+  },
+  "other": {
+    "name": "Other safe value"
+  },
+  "otherList": [
+    {
+      "name": "List safe value"
+    }
+  ],
+  "groups": [
+    {
+      "details": {
+        "name": "Group detail"
+      }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+nodes
+| webapp/controller/app.controller.js:9:26:9:50 | this.ge ... Model() | semmle.label | this.ge ... Model() |
+| webapp/controller/app.controller.js:10:17:10:21 | input | semmle.label | input |
+| webapp/controller/app.controller.js:10:25:10:52 | oModel. ... input') | semmle.label | oModel. ... input') |
+| webapp/controller/app.controller.js:11:44:11:48 | input | semmle.label | input |
+| webapp/controller/app.controller.js:19:17:19:27 | sInputValue | semmle.label | sInputValue |
+| webapp/controller/app.controller.js:19:31:19:59 | oEvent. ... Value() | semmle.label | oEvent. ... Value() |
+| webapp/controller/app.controller.js:20:44:20:54 | sInputValue | semmle.label | sInputValue |
+| webapp/controller/app.controller.js:27:17:27:21 | value | semmle.label | value |
+| webapp/controller/app.controller.js:27:25:27:41 | oInput.getValue() | semmle.label | oInput.getValue() |
+| webapp/controller/app.controller.js:28:36:28:40 | value | semmle.label | value |
+| webapp/controller/app.controller.js:39:17:39:27 | input: null | semmle.label | input: null |
+| webapp/controller/app.controller.js:40:17:40:29 | output1: null | semmle.label | output1: null |
+| webapp/controller/app.controller.js:42:17:42:29 | output3: null | semmle.label | output3: null |
+edges
+| webapp/controller/app.controller.js:9:26:9:50 | this.ge ... Model() | webapp/controller/app.controller.js:10:25:10:52 | oModel. ... input') | provenance |  |
+| webapp/controller/app.controller.js:10:17:10:21 | input | webapp/controller/app.controller.js:11:44:11:48 | input | provenance |  |
+| webapp/controller/app.controller.js:10:25:10:52 | oModel. ... input') | webapp/controller/app.controller.js:10:17:10:21 | input | provenance |  |
+| webapp/controller/app.controller.js:11:44:11:48 | input | webapp/controller/app.controller.js:9:26:9:50 | this.ge ... Model() | provenance |  |
+| webapp/controller/app.controller.js:11:44:11:48 | input | webapp/controller/app.controller.js:40:17:40:29 | output1: null | provenance |  |
+| webapp/controller/app.controller.js:19:17:19:27 | sInputValue | webapp/controller/app.controller.js:20:44:20:54 | sInputValue | provenance |  |
+| webapp/controller/app.controller.js:19:31:19:59 | oEvent. ... Value() | webapp/controller/app.controller.js:19:17:19:27 | sInputValue | provenance |  |
+| webapp/controller/app.controller.js:20:44:20:54 | sInputValue | webapp/controller/app.controller.js:42:17:42:29 | output3: null | provenance |  |
+| webapp/controller/app.controller.js:27:17:27:21 | value | webapp/controller/app.controller.js:28:36:28:40 | value | provenance |  |
+| webapp/controller/app.controller.js:27:25:27:41 | oInput.getValue() | webapp/controller/app.controller.js:27:17:27:21 | value | provenance |  |
+| webapp/controller/app.controller.js:39:17:39:27 | input: null | webapp/controller/app.controller.js:10:25:10:52 | oModel. ... input') | provenance |  |
+subpaths
+#select
+| webapp/controller/app.controller.js:28:36:28:40 | value | webapp/controller/app.controller.js:27:25:27:41 | oInput.getValue() | webapp/controller/app.controller.js:28:36:28:40 | value | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:27:25:27:41 | oInput.getValue() | user-provided value |
+| webapp/controller/app.controller.js:40:17:40:29 | output1: null | webapp/controller/app.controller.js:39:17:39:27 | input: null | webapp/controller/app.controller.js:40:17:40:29 | output1: null | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:39:17:39:27 | input: null | user-provided value |
+| webapp/controller/app.controller.js:42:17:42:29 | output3: null | webapp/controller/app.controller.js:19:31:19:59 | oEvent. ... Value() | webapp/controller/app.controller.js:42:17:42:29 | output3: null | Cross-site scripting vulnerability due to $@. | webapp/controller/app.controller.js:19:31:19:59 | oEvent. ... Value() | user-provided value |

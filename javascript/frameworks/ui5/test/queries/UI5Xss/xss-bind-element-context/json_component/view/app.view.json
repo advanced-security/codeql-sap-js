@@ -1,0 +1,62 @@
+{
+  "Type": "sap.ui.core.mvc.JSONView",
+  "controllerName": "codeql.sap.bindcontext.json.controller.app",
+  "content": [
+    {
+      "Type": "sap.m.Input",
+      "id": "jsonPayloadInput",
+      "value": "{/customer/name}"
+    },
+    {
+      "Type": "sap.m.Input",
+      "id": "jsonNamedObjectInput",
+      "value": {
+        "path": "/customer/name",
+        "model": "named"
+      }
+    },
+    {
+      "Type": "sap.m.VBox",
+      "id": "jsonCustomerDetails",
+      "content": [
+        {
+          "Type": "sap.ui.core.HTML",
+          "id": "jsonHtmlSink",
+          "content": "{name}"
+        },
+        {
+          "Type": "sap.m.VBox",
+          "id": "jsonOtherDetails",
+          "content": [
+            {
+              "Type": "sap.ui.core.HTML",
+              "id": "jsonNestedSink",
+              "content": "{name}"
+            }
+          ]
+        },
+        {
+          "Type": "sap.m.List",
+          "items": {
+            "path": "/otherList",
+            "template": {
+              "Type": "sap.m.CustomListItem",
+              "content": [
+                {
+                  "Type": "sap.ui.core.HTML",
+                  "id": "jsonAggregationSink",
+                  "content": "{name}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Type": "sap.ui.core.HTML",
+      "id": "jsonSiblingSink",
+      "content": "{name}"
+    }
+  ]
+}

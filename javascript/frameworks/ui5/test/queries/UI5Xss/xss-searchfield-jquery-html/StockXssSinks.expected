@@ -1,0 +1,4 @@
+| webapp/controller/app.controller.js:14:47:14:94 | "Found  ... chQuery |
+| webapp/controller/app.controller.js:16:59:16:75 | this.sSearchQuery |
+| webapp/controller/app.controller.js:18:60:18:76 | this.sSearchQuery |
+| webapp/controller/app.controller.js:20:45:20:103 | "Found  ... hQuery) |

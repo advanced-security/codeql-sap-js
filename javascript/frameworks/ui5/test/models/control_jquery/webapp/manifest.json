@@ -1,0 +1,6 @@
+{
+  "sap.app": {
+    "id": "codeql.sap.jquery",
+    "type": "application"
+  }
+}

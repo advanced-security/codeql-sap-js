@@ -2,6 +2,8 @@
 
 Receiving text from the user, most notably through a control, and rendering it as HTML in another control can lead to a cross-site scripting vulnerability.
 
+UI5 sources, sinks, sanitizers, and flow steps are exposed to the standard `js/xss` query through the custom CodeQL bundle. The `js/ui5-xss` query remains in the default suite as a compatibility query until a bundle containing these standard-query customizations is released.
+
 ## Recommendation
 
 ### Preventing XSS Involving User Defined Control

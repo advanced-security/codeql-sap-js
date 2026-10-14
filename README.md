@@ -142,6 +142,14 @@ NOTES:
 - Running the above command multiple times with the same database directory will result in an error. The `--overwrite` command-line option can be used to avoid this error.
 - See `codeql database create -h -v` for verbose command help.
 
+## Model regression tests
+
+Focused positive/negative fixtures cover [CAP service variants and events](javascript/frameworks/cap/test/models/cds/servicevariants),
+[UI5 XML model constructors](javascript/frameworks/ui5/test/models/xml_model), and
+[XSJS response headers and XSS flow](javascript/frameworks/xsjs/test/models/headers).
+Prepare CDS fixtures with `extractors/cds/tools/workflow/cds-compilation-for-actions.sh`,
+then use `codeql test run` with the XML/JSON extraction settings above.
+
 ## License
 
 This project is licensed under the terms of the MIT open source license. Please refer to [MIT](LICENSE.txt) for the full terms.

@@ -1,0 +1,31 @@
+| js_component/view/app.view.js:9:16:9:33 | /customer/name | /customer/name |
+| js_component/view/app.view.js:14:22:14:29 | name | /customer/name |
+| js_component/view/app.view.js:19:18:19:25 | name | name |
+| json_component/view/app.view.json:8:16:8:33 | "value": "{/customer/name}" | /customer/name |
+| json_component/view/app.view.json:14:17:14:32 | "value": "{named>/customer/name}" | named>/customer/name |
+| json_component/view/app.view.json:25:22:25:29 | "content": "{name}" | /customer/name |
+| json_component/view/app.view.json:34:26:34:33 | "content": "{name}" | /other/name |
+| json_component/view/app.view.json:41:21:41:32 | "items": "{/otherList}" | /otherList |
+| json_component/view/app.view.json:48:30:48:37 | "content": "{name}" | /otherList/name |
+| json_component/view/app.view.json:59:18:59:25 | "content": "{name}" | name |
+| webapp/view/app.view.xml:7:5:7:57 | value={/customer/name} | /customer/name |
+| webapp/view/app.view.xml:9:7:9:51 | content={name} | /customer/name |
+| webapp/view/app.view.xml:10:7:10:58 | content={named>name} | named>name |
+| webapp/view/app.view.xml:12:9:12:55 | content={name} | /other/name |
+| webapp/view/app.view.xml:15:9:15:64 | content={name} | /customer/other/name |
+| webapp/view/app.view.xml:17:7:17:34 | items={/otherList} | /otherList |
+| webapp/view/app.view.xml:19:11:19:62 | content={name} | /otherList/name |
+| webapp/view/app.view.xml:22:7:22:30 | items={orders} | /customer/orders |
+| webapp/view/app.view.xml:24:11:24:70 | content={name} | /customer/orders/name |
+| webapp/view/app.view.xml:28:9:28:64 | value={/customer/name} | /customer/name |
+| webapp/view/app.view.xml:29:9:29:59 | content={name} | name |
+| webapp/view/app.view.xml:33:11:33:67 | content={name} | other/name |
+| webapp/view/app.view.xml:36:7:36:31 | items={/groups} | /groups |
+| webapp/view/app.view.xml:39:13:39:66 | content={name} | /groups/details/name |
+| webapp/view/app.view.xml:45:7:45:60 | content={name} | /customer/name |
+| webapp/view/app.view.xml:48:7:48:53 | content={name} | /customer/name |
+| webapp/view/app.view.xml:51:7:51:53 | content={name} | /customer/name |
+| webapp/view/app.view.xml:54:7:54:58 | content={name} | name |
+| webapp/view/app.view.xml:57:7:57:56 | content={name} | name |
+| webapp/view/app.view.xml:59:5:59:60 | content={name} | name |
+| webapp/view/app.view.xml:60:5:60:52 | content={name} | name |

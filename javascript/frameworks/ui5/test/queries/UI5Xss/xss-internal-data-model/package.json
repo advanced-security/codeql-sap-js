@@ -1,0 +1,12 @@
+{
+  "name": "xss-internal-data-model",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "ui5 serve --port 8080",
+    "start:oneway": "ui5 serve --config ui5-oneway.yaml --port 8081"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4.0.55"
+  }
+}
