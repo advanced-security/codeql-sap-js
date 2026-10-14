@@ -1,0 +1,80 @@
+edges
+| srv/structure-service.js:8:36:8:43 | req.data | srv/structure-service.js:8:36:8:51 | req.data.orderBy | provenance |  |
+| srv/structure-service.js:9:42:9:49 | req.data | srv/structure-service.js:9:42:9:57 | req.data.columns | provenance |  |
+| srv/structure-service.js:10:51:10:58 | req.data | srv/structure-service.js:10:51:10:65 | req.data.having | provenance |  |
+| srv/structure-service.js:11:26:11:33 | req.data | srv/structure-service.js:11:26:11:46 | req.dat ... eEntity | provenance |  |
+| srv/structure-service.js:12:31:12:38 | req.data | srv/structure-service.js:12:31:12:50 | req.data.fromColumns | provenance |  |
+| srv/structure-service.js:12:59:12:66 | req.data | srv/structure-service.js:12:59:12:72 | req.data.alias | provenance |  |
+| srv/structure-service.js:12:81:12:88 | req.data | srv/structure-service.js:12:81:12:93 | req.data.hint | provenance |  |
+| srv/structure-service.js:13:19:13:26 | req.data | srv/structure-service.js:13:19:13:39 | req.dat ... tEntity | provenance |  |
+| srv/structure-service.js:13:50:13:57 | req.data | srv/structure-service.js:13:50:13:71 | req.dat ... Columns | provenance |  |
+| srv/structure-service.js:14:19:14:26 | req.data | srv/structure-service.js:14:19:14:39 | req.dat ... tEntity | provenance |  |
+| srv/structure-service.js:15:14:15:21 | req.data | srv/structure-service.js:15:14:15:34 | req.dat ... eEntity | provenance |  |
+| srv/structure-service.js:15:41:15:48 | req.data | srv/structure-service.js:15:41:15:58 | req.data.updateSet | provenance |  |
+| srv/structure-service.js:15:67:15:74 | req.data | srv/structure-service.js:15:67:15:86 | req.data.updateWhere | provenance |  |
+| srv/structure-service.js:16:19:16:26 | req.data | srv/structure-service.js:16:19:16:39 | req.dat ... eEntity | provenance |  |
+| srv/structure-service.js:16:48:16:55 | req.data | srv/structure-service.js:16:48:16:67 | req.data.deleteWhere | provenance |  |
+| srv/structure-service.js:18:37:18:44 | req.data | srv/structure-service.js:18:34:18:56 | { [req. ... d]: 1 } | provenance |  |
+| srv/structure-service.js:19:39:19:46 | req.data | srv/structure-service.js:19:34:19:55 | { ...re ... ilter } | provenance |  |
+| srv/structure-service.js:22:17:22:24 | req.data | srv/structure-service.js:22:17:22:39 | req.dat ... OrderBy | provenance |  |
+| srv/structure-service.js:23:51:23:58 | req.data | srv/structure-service.js:23:26:23:65 | 'sap.ca ... .entity | provenance |  |
+nodes
+| srv/structure-service.js:8:36:8:43 | req.data | semmle.label | req.data |
+| srv/structure-service.js:8:36:8:51 | req.data.orderBy | semmle.label | req.data.orderBy |
+| srv/structure-service.js:9:42:9:49 | req.data | semmle.label | req.data |
+| srv/structure-service.js:9:42:9:57 | req.data.columns | semmle.label | req.data.columns |
+| srv/structure-service.js:10:51:10:58 | req.data | semmle.label | req.data |
+| srv/structure-service.js:10:51:10:65 | req.data.having | semmle.label | req.data.having |
+| srv/structure-service.js:11:26:11:33 | req.data | semmle.label | req.data |
+| srv/structure-service.js:11:26:11:46 | req.dat ... eEntity | semmle.label | req.dat ... eEntity |
+| srv/structure-service.js:12:31:12:38 | req.data | semmle.label | req.data |
+| srv/structure-service.js:12:31:12:50 | req.data.fromColumns | semmle.label | req.data.fromColumns |
+| srv/structure-service.js:12:59:12:66 | req.data | semmle.label | req.data |
+| srv/structure-service.js:12:59:12:72 | req.data.alias | semmle.label | req.data.alias |
+| srv/structure-service.js:12:81:12:88 | req.data | semmle.label | req.data |
+| srv/structure-service.js:12:81:12:93 | req.data.hint | semmle.label | req.data.hint |
+| srv/structure-service.js:13:19:13:26 | req.data | semmle.label | req.data |
+| srv/structure-service.js:13:19:13:39 | req.dat ... tEntity | semmle.label | req.dat ... tEntity |
+| srv/structure-service.js:13:50:13:57 | req.data | semmle.label | req.data |
+| srv/structure-service.js:13:50:13:71 | req.dat ... Columns | semmle.label | req.dat ... Columns |
+| srv/structure-service.js:14:19:14:26 | req.data | semmle.label | req.data |
+| srv/structure-service.js:14:19:14:39 | req.dat ... tEntity | semmle.label | req.dat ... tEntity |
+| srv/structure-service.js:15:14:15:21 | req.data | semmle.label | req.data |
+| srv/structure-service.js:15:14:15:34 | req.dat ... eEntity | semmle.label | req.dat ... eEntity |
+| srv/structure-service.js:15:41:15:48 | req.data | semmle.label | req.data |
+| srv/structure-service.js:15:41:15:58 | req.data.updateSet | semmle.label | req.data.updateSet |
+| srv/structure-service.js:15:67:15:74 | req.data | semmle.label | req.data |
+| srv/structure-service.js:15:67:15:86 | req.data.updateWhere | semmle.label | req.data.updateWhere |
+| srv/structure-service.js:16:19:16:26 | req.data | semmle.label | req.data |
+| srv/structure-service.js:16:19:16:39 | req.dat ... eEntity | semmle.label | req.dat ... eEntity |
+| srv/structure-service.js:16:48:16:55 | req.data | semmle.label | req.data |
+| srv/structure-service.js:16:48:16:67 | req.data.deleteWhere | semmle.label | req.data.deleteWhere |
+| srv/structure-service.js:18:34:18:56 | { [req. ... d]: 1 } | semmle.label | { [req. ... d]: 1 } |
+| srv/structure-service.js:18:37:18:44 | req.data | semmle.label | req.data |
+| srv/structure-service.js:19:34:19:55 | { ...re ... ilter } | semmle.label | { ...re ... ilter } |
+| srv/structure-service.js:19:39:19:46 | req.data | semmle.label | req.data |
+| srv/structure-service.js:22:17:22:24 | req.data | semmle.label | req.data |
+| srv/structure-service.js:22:17:22:39 | req.dat ... OrderBy | semmle.label | req.dat ... OrderBy |
+| srv/structure-service.js:23:26:23:65 | 'sap.ca ... .entity | semmle.label | 'sap.ca ... .entity |
+| srv/structure-service.js:23:51:23:58 | req.data | semmle.label | req.data |
+subpaths
+#select
+| srv/structure-service.js:8:7:8:52 | SELECT. ... rderBy) | srv/structure-service.js:8:36:8:43 | req.data | srv/structure-service.js:8:36:8:51 | req.data.orderBy | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:8:36:8:43 | req.data | user-provided value |
+| srv/structure-service.js:9:13:9:76 | SELECT. ... 'Name') | srv/structure-service.js:9:42:9:49 | req.data | srv/structure-service.js:9:42:9:57 | req.data.columns | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:9:42:9:49 | req.data | user-provided value |
+| srv/structure-service.js:10:7:10:69 | SELECT. ... ing, 1) | srv/structure-service.js:10:51:10:58 | req.data | srv/structure-service.js:10:51:10:65 | req.data.having | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:10:51:10:58 | req.data | user-provided value |
+| srv/structure-service.js:11:7:11:47 | cds.ql. ... Entity) | srv/structure-service.js:11:26:11:33 | req.data | srv/structure-service.js:11:26:11:46 | req.dat ... eEntity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:11:26:11:33 | req.data | user-provided value |
+| srv/structure-service.js:12:7:12:94 | SELECT. ... a.hint) | srv/structure-service.js:12:31:12:38 | req.data | srv/structure-service.js:12:31:12:50 | req.data.fromColumns | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:12:31:12:38 | req.data | user-provided value |
+| srv/structure-service.js:12:7:12:94 | SELECT. ... a.hint) | srv/structure-service.js:12:59:12:66 | req.data | srv/structure-service.js:12:59:12:72 | req.data.alias | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:12:59:12:66 | req.data | user-provided value |
+| srv/structure-service.js:12:7:12:94 | SELECT. ... a.hint) | srv/structure-service.js:12:81:12:88 | req.data | srv/structure-service.js:12:81:12:93 | req.data.hint | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:12:81:12:88 | req.data | user-provided value |
+| srv/structure-service.js:13:7:13:72 | INSERT. ... olumns) | srv/structure-service.js:13:19:13:26 | req.data | srv/structure-service.js:13:19:13:39 | req.dat ... tEntity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:13:19:13:26 | req.data | user-provided value |
+| srv/structure-service.js:13:7:13:72 | INSERT. ... olumns) | srv/structure-service.js:13:50:13:57 | req.data | srv/structure-service.js:13:50:13:71 | req.dat ... Columns | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:13:50:13:57 | req.data | user-provided value |
+| srv/structure-service.js:14:7:14:40 | UPSERT. ... Entity) | srv/structure-service.js:14:19:14:26 | req.data | srv/structure-service.js:14:19:14:39 | req.dat ... tEntity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:14:19:14:26 | req.data | user-provided value |
+| srv/structure-service.js:15:7:15:87 | UPDATE( ... eWhere) | srv/structure-service.js:15:14:15:21 | req.data | srv/structure-service.js:15:14:15:34 | req.dat ... eEntity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:15:14:15:21 | req.data | user-provided value |
+| srv/structure-service.js:15:7:15:87 | UPDATE( ... eWhere) | srv/structure-service.js:15:41:15:48 | req.data | srv/structure-service.js:15:41:15:58 | req.data.updateSet | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:15:41:15:48 | req.data | user-provided value |
+| srv/structure-service.js:15:7:15:87 | UPDATE( ... eWhere) | srv/structure-service.js:15:67:15:74 | req.data | srv/structure-service.js:15:67:15:86 | req.data.updateWhere | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:15:67:15:74 | req.data | user-provided value |
+| srv/structure-service.js:16:7:16:68 | DELETE. ... eWhere) | srv/structure-service.js:16:19:16:26 | req.data | srv/structure-service.js:16:19:16:39 | req.dat ... eEntity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:16:19:16:26 | req.data | user-provided value |
+| srv/structure-service.js:16:7:16:68 | DELETE. ... eWhere) | srv/structure-service.js:16:48:16:55 | req.data | srv/structure-service.js:16:48:16:67 | req.data.deleteWhere | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:16:48:16:55 | req.data | user-provided value |
+| srv/structure-service.js:18:7:18:57 | SELECT. ... ]: 1 }) | srv/structure-service.js:18:37:18:44 | req.data | srv/structure-service.js:18:34:18:56 | { [req. ... d]: 1 } | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:18:37:18:44 | req.data | user-provided value |
+| srv/structure-service.js:19:7:19:56 | SELECT. ... lter }) | srv/structure-service.js:19:39:19:46 | req.data | srv/structure-service.js:19:34:19:55 | { ...re ... ilter } | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:19:39:19:46 | req.data | user-provided value |
+| srv/structure-service.js:22:7:22:40 | q.order ... rderBy) | srv/structure-service.js:22:17:22:24 | req.data | srv/structure-service.js:22:17:22:39 | req.dat ... OrderBy | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:22:17:22:24 | req.data | user-provided value |
+| srv/structure-service.js:23:14:23:66 | SELECT. ... entity) | srv/structure-service.js:23:51:23:58 | req.data | srv/structure-service.js:23:26:23:65 | 'sap.ca ... .entity | This CQL query uses a $@ as query structure, which may allow injection of identifiers or expressions. | srv/structure-service.js:23:51:23:58 | req.data | user-provided value |
