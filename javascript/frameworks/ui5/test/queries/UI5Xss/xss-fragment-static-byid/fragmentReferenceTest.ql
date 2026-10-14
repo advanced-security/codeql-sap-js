@@ -1,3 +1,11 @@
+/**
+ * @name UI5 fragment reference resolution test
+ * @description Verifies that fragment references resolve to the matching UI5 controls.
+ * @kind table
+ * @id test/ui5-fragment-reference-resolution
+ * @tags test
+ */
+
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5Control
 

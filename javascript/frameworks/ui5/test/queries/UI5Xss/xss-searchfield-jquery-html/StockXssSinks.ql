@@ -1,6 +1,10 @@
 /**
- * Lists the standard `js/xss` sinks contributed by models as data, with only the UI5
- * loader adapter to resolve dependency paths and no UI5 security customizations.
+ * @name UI5 XSS sinks from models as data
+ * @description Lists standard HTML sinks using the UI5 loader adapter without UI5 security customizations.
+ * @kind problem
+ * @id js/ui5-stock-xss-sinks-test
+ * @tags security
+ *       external/cwe/cwe-079
  */
 
 import advanced_security.javascript.frameworks.ui5.UI5ModuleLoader
