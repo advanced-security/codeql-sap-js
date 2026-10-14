@@ -1,0 +1,7 @@
+| absolute | {/foo/bar} | / | 1 | 1 |
+| attribute | {docs>/item/@label} | name | 1 | 4 |
+| missing-close | <unparsed> | none | -1 | -1 |
+| plain | <unparsed> | none | -1 | -1 |
+| quoted | {path : /foo, type : "false"} | { | 0 | 0 |
+| relative | {foo/bar} | name | 1 | 3 |
+| whitespace | {/foo} | / | 4 | 4 |

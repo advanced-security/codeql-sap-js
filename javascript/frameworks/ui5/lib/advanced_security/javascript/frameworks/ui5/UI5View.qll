@@ -37,7 +37,7 @@ abstract class UI5BindingPath extends BindingPath {
   /**
    * Gets the string value of this path, without the surrounding curly braces.
    */
-  abstract string getPath();
+  string getPath() { result = this.asString() }
 
   /**
    * Gets the string value of this path with the surrounding curly braces.
@@ -288,6 +288,52 @@ abstract class UI5View extends File {
   UI5BindingPath getAnHtmlISink() { result = this.getASink("ui5-html-injection") }
 }
 
+private string getSourceProperty(UI5BindingPath binding) {
+  exists(string path |
+    ApiGraphModelsExtensions::sourceModel(getASuperType(binding.getControlTypeName()), path,
+      "remote", _)
+  |
+    result = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1)
+  )
+}
+
+private string getSinkProperty(UI5BindingPath binding, string sinkKind) {
+  exists(string path |
+    ApiGraphModelsExtensions::sinkModel(getASuperType(binding.getControlTypeName()), path, sinkKind,
+      _)
+  |
+    result = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1)
+  )
+}
+
+private UI5BindingPath getBindingForProperty(UI5View view, string property) {
+  exists(DataFlow::ObjectLiteralNode control |
+    view instanceof JsView and
+    view = control.getFile() and
+    result.(JsViewBindingPath).getBinding().getBindingTarget().asDataFlowNode() =
+      control.getAPropertyWrite(property)
+  )
+  or
+  exists(JsonView jsonView, JsonObject control |
+    view = jsonView and
+    jsonView.getRoot() = control.getParent+() and
+    result.(JsonBindingPath).getPropertyName() = property and
+    result.(JsonBindingPath).getBindingTarget() = control
+  )
+  or
+  exists(HTML::Element control |
+    view instanceof HtmlView and
+    view = control.getFile() and
+    result.(HtmlBindingPath).getBindingTarget() = control.getAttributeByName("data-" + property)
+  )
+  or
+  exists(XmlElement control |
+    (view instanceof XmlView or view instanceof XmlFragment) and
+    view = control.getFile() and
+    result.(XmlBindingPath).getBindingTarget() = control.getAttribute(property)
+  )
+}
+
 /**
  * A UI5BindingPath found in a JSON View.
  */
@@ -308,8 +354,6 @@ class JsonBindingPath extends UI5BindingPath {
   override string getLiteralRepr() {
     result = getJsonBindingLiteral(bindingTarget, boundPropertyName)
   }
-
-  override string getPath() { result = this.asString() }
 
   override JsonBindingPath getAnEnclosingItemsBinding() {
     result != this and
@@ -374,23 +418,11 @@ class JsView extends UI5View {
   }
 
   override JsViewBindingPath getASource() {
-    exists(DataFlow::ObjectLiteralNode control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBinding().getBindingTarget().asDataFlowNode() = control.getAPropertyWrite(property)
-    )
+    result = getBindingForProperty(this, getSourceProperty(result))
   }
 
   override JsViewBindingPath getASink(string sinkKind) {
-    exists(DataFlow::ObjectLiteralNode control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBinding().getBindingTarget().asDataFlowNode() = control.getAPropertyWrite(property)
-    )
+    result = getBindingForProperty(this, getSinkProperty(result, sinkKind))
   }
 }
 
@@ -421,25 +453,11 @@ class JsonView extends UI5View {
   override string getControllerName() { result = root.getPropStringValue("controllerName") }
 
   override JsonBindingPath getASource() {
-    exists(JsonObject control, string type, string path, string property |
-      root = control.getParent+() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getPropertyName() = property and
-      result.getBindingTarget() = control
-    )
+    result = getBindingForProperty(this, getSourceProperty(result))
   }
 
   override JsonBindingPath getASink(string sinkKind) {
-    exists(JsonObject control, string type, string path, string property |
-      root = control.getParent+() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getPropertyName() = property and
-      result.getBindingTarget() = control
-    )
+    result = getBindingForProperty(this, getSinkProperty(result, sinkKind))
   }
 }
 
@@ -474,8 +492,6 @@ class JsViewBindingPath extends UI5BindingPath {
     result.getControlDeclaration().strictlyContains(this.getControlDeclaration())
   }
 
-  override string getPath() { result = this.asString() }
-
   override string getPropertyName() { result = bindingTarget.getPropertyName() }
 
   override UI5Control getControlDeclaration() {
@@ -494,8 +510,6 @@ class HtmlBindingPath extends UI5BindingPath {
     bindingTarget = binding.getBindingTarget().asXmlAttribute() and
     binding.getBindingPath() = this
   }
-
-  override string getPath() { result = this.asString() }
 
   override string getLiteralRepr() { result = bindingTarget.getValue() }
 
@@ -556,23 +570,11 @@ class HtmlView extends UI5View, HTML::HtmlFile {
   }
 
   override HtmlBindingPath getASource() {
-    exists(HTML::Element control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttributeByName("data-" + property)
-    )
+    result = getBindingForProperty(this, getSourceProperty(result))
   }
 
   override HtmlBindingPath getASink(string sinkKind) {
-    exists(HTML::Element control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttributeByName("data-" + property)
-    )
+    result = getBindingForProperty(this, getSinkProperty(result, sinkKind))
   }
 }
 
@@ -590,8 +592,6 @@ class XmlBindingPath extends UI5BindingPath {
 
   /* corresponds to BindingPath.asString() */
   override string getLiteralRepr() { result = bindingTarget.getValue() }
-
-  override string getPath() { result = this.asString() }
 
   override XmlBindingPath getAnEnclosingItemsBinding() {
     result != this and
@@ -664,23 +664,11 @@ class XmlView extends UI5View instanceof XmlFile {
   override string getControllerName() { result = root.getAttributeValue("controllerName") }
 
   override XmlBindingPath getASource() {
-    exists(XmlElement control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property)
-    )
+    result = getBindingForProperty(this, getSourceProperty(result))
   }
 
   override XmlBindingPath getASink(string sinkKind) {
-    exists(XmlElement control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property)
-    )
+    result = getBindingForProperty(this, getSinkProperty(result, sinkKind))
   }
 
   /**
@@ -722,23 +710,11 @@ class XmlFragment extends UI5View instanceof XmlFile {
   }
 
   override XmlBindingPath getASource() {
-    exists(XmlElement control, string type, string path, string property |
-      type = result.getControlTypeName() and
-      this = control.getFile() and
-      ApiGraphModelsExtensions::sourceModel(getASuperType(type), path, "remote", _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property)
-    )
+    result = getBindingForProperty(this, getSourceProperty(result))
   }
 
   override XmlBindingPath getASink(string sinkKind) {
-    exists(XmlElement control, string type, string path, string property |
-      this = control.getFile() and
-      type = result.getControlTypeName() and
-      ApiGraphModelsExtensions::sinkModel(getASuperType(type), path, sinkKind, _) and
-      property = path.replaceAll(" ", "").regexpCapture("Member\\[([^\\]]+)\\]", 1) and
-      result.getBindingTarget() = control.getAttribute(property)
-    )
+    result = getBindingForProperty(this, getSinkProperty(result, sinkKind))
   }
 
   override UI5Control getControl() {

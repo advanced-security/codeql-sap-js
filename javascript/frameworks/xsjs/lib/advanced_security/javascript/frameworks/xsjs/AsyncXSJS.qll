@@ -96,6 +96,16 @@ class XSJSRequestOrResponse extends SourceNode instanceof PropRef {
   }
 }
 
+private predicate cfgAdjacent(XSJSRequestOrResponse reference, XSJSRequestOrResponse adjacent) {
+  exists(ControlFlowNode cfgNode |
+    (
+      cfgNode = reference.asExpr().getFirstControlFlowNode().getAPredecessor+() or
+      cfgNode = reference.asExpr().getFirstControlFlowNode().getASuccessor+()
+    ) and
+    adjacent.asExpr().getFirstControlFlowNode() = cfgNode
+  )
+}
+
 /**
  * A reference to a request. A single-part request is accessed through `$.request`,
  * but a multi-part one is accessed through `$.request.entities[n]`.
@@ -106,15 +116,7 @@ class XSJSRequest extends XSJSRequestOrResponse {
   /**
    * Gets an intraprocedural predecessor or a successor of this request, control-flow wise.
    */
-  XSJSRequest getAPredOrSuccRequest() {
-    exists(ControlFlowNode cfgNode |
-      (
-        cfgNode = this.asExpr().getFirstControlFlowNode().getAPredecessor+() or
-        cfgNode = this.asExpr().getFirstControlFlowNode().getASuccessor+()
-      ) and
-      result.asExpr().getFirstControlFlowNode() = cfgNode
-    )
-  }
+  XSJSRequest getAPredOrSuccRequest() { cfgAdjacent(this, result) }
 }
 
 /**
@@ -127,15 +129,7 @@ class XSJSResponse extends XSJSRequestOrResponse {
   /**
    * Gets an intraprocedural predecessor or a successor of this response, control-flow wise.
    */
-  XSJSResponse getAPredOrSuccResponse() {
-    exists(ControlFlowNode cfgNode |
-      (
-        cfgNode = this.asExpr().getFirstControlFlowNode().getAPredecessor+() or
-        cfgNode = this.asExpr().getFirstControlFlowNode().getASuccessor+()
-      ) and
-      result.asExpr().getFirstControlFlowNode() = cfgNode
-    )
-  }
+  XSJSResponse getAPredOrSuccResponse() { cfgAdjacent(this, result) }
 }
 
 /**

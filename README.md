@@ -150,6 +150,11 @@ Focused positive/negative fixtures cover [CAP service variants and events](javas
 Prepare CDS fixtures with `extractors/cds/tools/workflow/cds-compilation-for-actions.sh`,
 then use `codeql test run` with the XML/JSON extraction settings above.
 
+Characterization regression tests preserve [UI5 parser projections](javascript/frameworks/ui5/test/lib/parser-projections),
+[CAP shortcut query parameters](javascript/frameworks/cap/test/models/cql/shortcut-parameters), and
+[XSJS request/response CFG traversal](javascript/frameworks/xsjs/test/models/cfg-traversal) during behavior-preserving refactoring.
+The [UI5 regression test guide](javascript/frameworks/ui5/test/README.md#parser-regression-tests) describes the parser coverage.
+
 ## License
 
 This project is licensed under the terms of the MIT open source license. Please refer to [MIT](LICENSE.txt) for the full terms.

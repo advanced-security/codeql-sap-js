@@ -1,0 +1,7 @@
+| create | create-data |
+| delete | delete-clause |
+| insert | insert-data |
+| read | read-clause |
+| update | update-clause |
+| update | update-data |
+| upsert | upsert-data |
