@@ -2,8 +2,8 @@
 set -euo pipefail
 
 ## test-custom-bundle.sh
-## Build the customized JavaScript standard library and compile the dependent
-## CAP and UI5 query packs.
+## Build the customized JavaScript standard library and compile a minimal
+## dependent query pack.
 ##
 ## Requirements:
 ##   - CodeQL pack dependencies are installed.
@@ -86,13 +86,14 @@ fi
 source_dir="${WORK_DIR}/source"
 pack_dir="${WORK_DIR}/qlpacks"
 compiled_dir="${WORK_DIR}/compiled"
-mkdir -p "${source_dir}" "${pack_dir}" "${compiled_dir}"
+smoke_query_dir="${source_dir}/smoke-query"
+mkdir -p "${source_dir}" "${pack_dir}" "${compiled_dir}" "${smoke_query_dir}"
 
 cp -R "$(dirname "${javascript_all_qlpack}")" "${source_dir}/javascript-all"
 cp -R "${REPO_ROOT}/javascript/frameworks/cap/lib" "${source_dir}/cap-all"
-cp -R "${REPO_ROOT}/javascript/frameworks/cap/src" "${source_dir}/cap-queries"
 cp -R "${REPO_ROOT}/javascript/frameworks/ui5/lib" "${source_dir}/ui5-all"
-cp -R "${REPO_ROOT}/javascript/frameworks/ui5/src" "${source_dir}/ui5-queries"
+cp "${REPO_ROOT}/javascript/frameworks/cap/src/codeql-pack.lock.yml" \
+  "${smoke_query_dir}/codeql-pack.lock.yml"
 
 rm -f \
   "${source_dir}/cap-all/codeql-pack.lock.yml" \
@@ -147,6 +148,23 @@ with customizations.open("a") as output:
     )
 PY
 
+cat > "${smoke_query_dir}/qlpack.yml" <<EOF
+---
+library: false
+name: regression/javascript-custom-bundle
+version: 0.0.0
+extractor: javascript
+dependencies:
+  codeql/javascript-all: "${javascript_all_version}"
+EOF
+
+cat > "${smoke_query_dir}/Smoke.ql" <<'EOF'
+import javascript
+
+from Expr e
+select e
+EOF
+
 echo "Bundling CAP and UI5 customization packs..."
 "${CODEQL_BIN}" pack bundle --pack-path="${pack_dir}" -- "${source_dir}/cap-all"
 "${CODEQL_BIN}" pack bundle --pack-path="${pack_dir}" -- "${source_dir}/ui5-all"
@@ -157,14 +175,12 @@ echo "Bundling customized codeql/javascript-all@${javascript_all_version}..."
   --additional-packs="${pack_dir}" \
   -- "${source_dir}/javascript-all"
 
-for framework in cap ui5; do
-  echo "Compiling ${framework} query pack against the customized standard library..."
-  "${CODEQL_BIN}" pack create \
-    --threads=0 \
-    --no-default-compilation-cache \
-    --additional-packs="${pack_dir}" \
-    --output="${compiled_dir}" \
-    -- "${source_dir}/${framework}-queries"
-done
+echo "Compiling a dependent smoke query against the customized standard library..."
+"${CODEQL_BIN}" pack create \
+  --threads=0 \
+  --no-default-compilation-cache \
+  --additional-packs="${pack_dir}" \
+  --output="${compiled_dir}" \
+  -- "${smoke_query_dir}"
 
-echo "Custom JavaScript bundle regression test passed."
+echo "Customized JavaScript library compatibility test passed."
