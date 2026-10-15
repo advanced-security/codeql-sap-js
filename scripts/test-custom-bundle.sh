@@ -65,16 +65,18 @@ if [[ -z "${javascript_all_version}" ]]; then
   exit 1
 fi
 
-pack_resolution_file="${WORK_DIR}/resolved-packs.json"
-"${CODEQL_BIN}" resolve packs --kind=library --format=json > "${pack_resolution_file}"
-
-javascript_all_qlpack="$(
-  jq -r --arg version "${javascript_all_version}" '
-    .steps[]
-    | select(.type == "by-name-and-version")
-    | ((.found? // {})["codeql/javascript-all"]?[$version]?.path // empty)
-  ' "${pack_resolution_file}" | head -n 1
-)"
+javascript_all_qlpack="${HOME}/.codeql/packages/codeql/javascript-all/${javascript_all_version}/qlpack.yml"
+if [[ ! -f "${javascript_all_qlpack}" ]]; then
+  pack_resolution_file="${WORK_DIR}/resolved-packs.json"
+  "${CODEQL_BIN}" resolve packs --kind=library --format=json > "${pack_resolution_file}"
+  javascript_all_qlpack="$(
+    jq -r --arg version "${javascript_all_version}" '
+      .steps[]
+      | select(.type == "by-name-and-version")
+      | ((.found? // {})["codeql/javascript-all"]?[$version]?.path // empty)
+    ' "${pack_resolution_file}" | head -n 1
+  )"
+fi
 
 if [[ -z "${javascript_all_qlpack}" || ! -f "${javascript_all_qlpack}" ]]; then
   echo "codeql/javascript-all@${javascript_all_version} is not installed." >&2
