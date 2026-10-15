@@ -17,12 +17,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CODEQL_BIN="${CODEQL_BIN:-codeql}"
 TEMP_ROOT="${TMPDIR:-/tmp}"
-WORK_DIR="$(mktemp -d "${TEMP_ROOT%/}/codeql-sap-custom-bundle.XXXXXX")"
+WORK_DIR="$(mktemp -d "${TEMP_ROOT%/}/codeql-javascript-custom-bundle.XXXXXX")"
 
 cleanup() {
   local exit_code=$?
   case "${WORK_DIR}" in
-    "${TEMP_ROOT%/}"/codeql-sap-custom-bundle.*)
+    "${TEMP_ROOT%/}"/codeql-javascript-custom-bundle.*)
       rm -rf -- "${WORK_DIR}"
       ;;
     *)
