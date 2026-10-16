@@ -3,6 +3,7 @@ import semmle.javascript.dataflow.DataFlow as StdLibDataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
+private import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 
 /**
  * A statically visible part of a local model's content that has a binding path referring to it in a
@@ -34,7 +35,7 @@ import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
  * ```
  * The content `y: null` of `oModel` is recognized as an instance of this class.
  */
-class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXss::Sink {
+class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DataFlow::Node {
   UI5BindingPath bindingPath;
   UI5Control controlDeclaration;
 
@@ -51,6 +52,29 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
   UI5BindingPath getBindingPath() { result = bindingPath }
 
   UI5Control getControlDeclaration() { result = controlDeclaration }
+}
+
+/**
+ * The local JSON-model sinks historically shared with standard XSS queries.
+ */
+private class SharedLocalJsonModelHtmlInjectionSink extends LocalModelContentBoundBidirectionallyToHtmlISinkControl,
+  DomBasedXss::Sink
+{
+  SharedLocalJsonModelHtmlInjectionSink() {
+    exists(JsonModel model |
+      model.hasContentNodeForBinding(this.getBindingPath(), this) and
+      model.isTwoWayBinding()
+    )
+  }
+}
+
+/**
+ * An unrestricted string property of a locally implemented UI5 control.
+ */
+class LocalModelStringPropertySource extends DomBasedXss::Source {
+  LocalModelStringPropertySource() {
+    this = any(PropertyMetadata property | property.isUnrestrictedStringType())
+  }
 }
 
 module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> ConfigPathGraph> {

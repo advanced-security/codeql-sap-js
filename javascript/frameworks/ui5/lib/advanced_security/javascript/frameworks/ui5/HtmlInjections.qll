@@ -5,12 +5,11 @@ import advanced_security.javascript.frameworks.ui5.UI5View
 import advanced_security.javascript.frameworks.ui5.dataflow.UI5DataFlow
 private import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
-private import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 
 /**
  * A declarative UI5 control property that interprets its bound value as HTML.
  */
-class UI5BindingHtmlInjectionSink extends DomBasedXss::Sink {
+class UI5BindingHtmlInjectionSink extends DataFlow::Node {
   UI5BindingHtmlInjectionSink() {
     exists(UI5View view, UI5BindingPath bindingPath |
       bindingPath = view.getAnHtmlISink() and
@@ -23,7 +22,7 @@ class UI5BindingHtmlInjectionSink extends DomBasedXss::Sink {
 /**
  * An HTML injection sink on a reference to a library control.
  */
-private class UI5HTMLControlReferenceContentAPI extends DomBasedXss::Sink {
+private class UI5HTMLControlReferenceContentAPI extends DataFlow::Node {
   UI5HTMLControlReferenceContentAPI() {
     exists(
       UI5Control sinkControl, UI5View view, string typeAlias, ControlReference controlReference
@@ -45,7 +44,7 @@ private class UI5HTMLControlReferenceContentAPI extends DomBasedXss::Sink {
 /**
  * An HTML injection sink defined by a Model-as-Data entry.
  */
-private class UI5ExtHtmlISink extends DomBasedXss::Sink {
+private class UI5ExtHtmlISink extends DataFlow::Node {
   UI5ExtHtmlISink() {
     this = ModelOutput::getASinkNode("ui5-html-injection").asSink() and
     not this instanceof DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom
@@ -59,8 +58,7 @@ abstract class DynamicallySetElementValueOfHTML extends DataFlow::Node { }
 /**
  * HTML assigned to a dynamically instantiated UI5 HTML control that is placed in the DOM.
  */
-class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DynamicallySetElementValueOfHTML,
-  DomBasedXss::Sink
+class DynamicallySetElementValueOfInstantiatedHTMLControlPlacedAtDom extends DynamicallySetElementValueOfHTML
 {
   DataFlow::Node root;
   ControlPlaceAtCall placeAtCall;
@@ -89,15 +87,6 @@ class DynamicallySetElementValueOfHTMLControlReference extends DynamicallySetEle
       or
       this = controlReference.getAMemberCall("setContent").getArgument(0)
     )
-  }
-}
-
-/**
- * An unrestricted string property of a locally implemented UI5 control.
- */
-class LocalModelStringPropertySource extends DomBasedXss::Source {
-  LocalModelStringPropertySource() {
-    this = any(PropertyMetadata property | property.isUnrestrictedStringType())
   }
 }
 

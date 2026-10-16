@@ -6,10 +6,10 @@ import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 private import semmle.javascript.security.dataflow.DomBasedXssQuery as DomBasedXss
 
 /**
- * Compatibility configuration for UI5-specific path rendering and local overlay flow.
+ * Taint tracking for UI5-specific HTML sinks and path rendering.
  *
- * The standard `js/xss` query consumes the same sources, sinks, sanitizers, and shared steps
- * through `advanced_security.javascript_sap_ui5_all.Customizations`.
+ * Standard queries share source and sanitizer customizations and legacy local JSON-model sinks.
+ * The UI5-specific HTML sink adapters are not imported by the shared customization entry point.
  */
 module UI5Xss implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node source) {

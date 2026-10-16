@@ -2,7 +2,7 @@
 
 Receiving text from the user, most notably through a control, and rendering it as HTML in another control can lead to a cross-site scripting vulnerability.
 
-UI5 sources, sinks, sanitizers, and flow steps are exposed to the standard `js/xss` query through the custom CodeQL bundle. The `js/ui5-xss` query remains in the default suite as a compatibility query until a bundle containing these standard-query customizations is released.
+The custom CodeQL bundle shares UI5 remote-flow sources and sanitizers with standard queries, together with the legacy local JSON-model binding XSS sinks. Newer manifest/XML-model binding sinks and dedicated UI5 HTML sink adapters remain specific to `js/ui5-xss`. Standard queries continue to analyze native DOM and jQuery sinks.
 
 ## Recommendation
 

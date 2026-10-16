@@ -7,10 +7,8 @@
 /*
  * Keep these imports private because this module is injected into `javascript.qll`.
  * Re-exporting them from there breaks recursive standard-library module resolution.
+ * Keep query-specific sink adapters out of this shared entry point.
  */
 
-private import advanced_security.javascript.frameworks.ui5.HtmlInjections
 private import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
-private import advanced_security.javascript.frameworks.ui5.RequestForgeries
 private import advanced_security.javascript.frameworks.ui5.Sanitizers
-private import advanced_security.javascript.frameworks.ui5.UrlRedirects

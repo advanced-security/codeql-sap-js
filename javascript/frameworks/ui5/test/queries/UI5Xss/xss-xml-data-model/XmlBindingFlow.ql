@@ -6,9 +6,12 @@
  * @tags test
  */
 
-import advanced_security.javascript_sap_ui5_all.Customizations as UI5Customizations
 import javascript
-import semmle.javascript.security.dataflow.DomBasedXssQuery
+import advanced_security.javascript.frameworks.ui5.UI5XssQuery
+import advanced_security.javascript_sap_ui5_all.Customizations as UI5Customizations
+import semmle.javascript.security.dataflow.DomBasedXssQuery as StandardXss
+
+module UI5XssFlow = TaintTracking::Global<UI5Xss>;
 
 string nodeLabel(DataFlow::Node node) {
   result = node.(DataFlow::XmlAttributeNode).getAttribute().getElement().getAttributeValue("id")
@@ -22,6 +25,9 @@ string nodeLabel(DataFlow::Node node) {
   )
 }
 
-from DomBasedXssFlow::PathNode source, DomBasedXssFlow::PathNode sink
-where DomBasedXssFlow::flowPath(source, sink)
-select nodeLabel(source.getNode()), nodeLabel(sink.getNode())
+from DataFlow::Node source, DataFlow::Node sink
+where
+  StandardXss::DomBasedXssFlow::flow(source, sink)
+  or
+  UI5XssFlow::flow(source, sink)
+select nodeLabel(source), nodeLabel(sink)

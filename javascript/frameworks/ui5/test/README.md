@@ -35,8 +35,8 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - nested contexts, aggregation contexts, model overrides, and sibling controls
 
 ### [standard-bindings](queries/UI5Xss/standard-bindings)
-- standard `js/xss` detection for manifest-model bindings
-- standard client-side URL redirect detection for `sap.m.Link.href`
+- manifest-model HTML binding sinks are excluded from the standard `js/xss` query
+- declarative UI5 URL-redirect sink adapters are not registered by the shared customizations
 - negative server-side URL redirect coverage
 
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
@@ -104,6 +104,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-xml-data-model](queries/UI5Xss/xss-xml-data-model)
 - end-to-end regression test for imported, aliased, and global XML constructors, plus explicit and inferred default manifest XML models
+- binding flow assertions cover dedicated UI5 sinks and standard native DOM sinks
 - path-specific flow from input controls to HTML sinks, including XML attributes, equivalent `text()` paths, and static `bindElement` contexts
 - regression test verifies `OneWay` and `OneTime` model modes block control-to-model writes, while explicit `setProperty` writes still reach the matching HTML binding and `getProperty` read
 - negative cases preserve unrelated paths, distinct named model instances, and a separate readonly manifest model
@@ -142,14 +143,15 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ## Client-side URL Redirection
 
 ### [ui5-link-href](queries/UrlRedirect/ui5-link-href)
-- focused V4 regression: a todo URL edited through `sap.m.Input.value` flows via a relative two-way model binding to `sap.m.Link.href` within a list item
-- uses the standard client-side URL redirect query with UI5 customizations
+- negative regression: the shared customizations do not register declarative UI5 URL-redirect sinks
+- covers a todo URL edited through `sap.m.Input.value` and bound to `sap.m.Link.href` within a list item
 - negative cases: user input used only as link text with a fixed HTTPS destination, and a link bound to a separate, unedited model property
 
 ## Client-side Request Forgery
 
 ### [ui5-binding](queries/RequestForgery/ui5-binding)
-- standard client-side request-forgery detection for a model-bound resource URL
+- declarative UI5 request-forgery sink adapters are not registered by the shared customizations
+- UI5 input sources flowing to native `fetch` calls remain reported by the standard query
 - negative server-side request-forgery coverage
 
 ## UiI5 Log-Injection
