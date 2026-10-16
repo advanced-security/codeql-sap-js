@@ -4,9 +4,5 @@
  * be included in the out-of-the-box security queries.
  */
 
-/*
- * Keep this import private because this module is injected into `javascript.qll`.
- * Re-exporting it from there breaks recursive standard-library module resolution.
- */
-
-private import advanced_security.javascript.frameworks.cap.RemoteFlowSources
+/* We import under alias to avoid any potential naming conflicts */
+import advanced_security.javascript.frameworks.cap.RemoteFlowSources as CAPRemoteFlowSources

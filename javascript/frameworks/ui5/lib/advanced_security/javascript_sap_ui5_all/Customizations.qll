@@ -4,13 +4,9 @@
  * be included in the out-of-the-box security queries.
  */
 
-/*
- * Keep these imports private because this module is injected into `javascript.qll`.
- * Re-exporting them from there breaks recursive standard-library module resolution.
- */
-
-private import advanced_security.javascript.frameworks.ui5.HtmlInjections
-private import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
-private import advanced_security.javascript.frameworks.ui5.RequestForgeries
-private import advanced_security.javascript.frameworks.ui5.Sanitizers
-private import advanced_security.javascript.frameworks.ui5.UrlRedirects
+/* We import under alias to avoid any potential naming conflicts */
+import advanced_security.javascript.frameworks.ui5.HtmlInjections
+import advanced_security.javascript.frameworks.ui5.RemoteFlowSources as UI5RemoteFlowSources
+import advanced_security.javascript.frameworks.ui5.RequestForgeries
+import advanced_security.javascript.frameworks.ui5.Sanitizers
+import advanced_security.javascript.frameworks.ui5.UrlRedirects
