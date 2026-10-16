@@ -21,7 +21,7 @@
 import javascript
 import semmle.javascript.security.dataflow.XssThroughDomQuery
 import XssThroughDomFlow::PathGraph
-import advanced_security.javascript_sap_ui5_all.Customizations
+import advanced_security.javascript_sap_ui5_all.Customizations as UI5Customizations
 
 from XssThroughDomFlow::PathNode source, XssThroughDomFlow::PathNode sink
 where

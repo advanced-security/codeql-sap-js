@@ -1,0 +1,15 @@
+<mvc:View
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <List items="{/groups}">
+    <CustomListItem>
+      <List items="{entries}">
+        <CustomListItem>
+          <Input value="{value}" />
+          <core:HTML content="{value}" />
+        </CustomListItem>
+      </List>
+    </CustomListItem>
+  </List>
+</mvc:View>

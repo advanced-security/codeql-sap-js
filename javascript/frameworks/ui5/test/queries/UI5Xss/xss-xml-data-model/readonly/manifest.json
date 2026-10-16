@@ -1,0 +1,19 @@
+{
+  "sap.app": {
+    "id": "codeql.sap.xmlreadonly",
+    "type": "application",
+    "dataSources": {
+      "xml": {
+        "type": "XML",
+        "uri": "model/data.xml"
+      }
+    }
+  },
+  "sap.ui5": {
+    "models": {
+      "": {
+        "dataSource": "xml"
+      }
+    }
+  }
+}

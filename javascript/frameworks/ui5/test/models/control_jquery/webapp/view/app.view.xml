@@ -1,0 +1,5 @@
+<mvc:View controllerName="codeql.sap.jquery.controller.app" xmlns="sap.m" xmlns:mvc="sap.ui.core.mvc">
+  <VBox id="target">
+    <Label id="label" text="Target" />
+  </VBox>
+</mvc:View>

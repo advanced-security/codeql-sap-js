@@ -95,7 +95,7 @@ module BindingStringParser<BindingStringReaderSig BindingStringReader> {
       value =
         reader
             .getBindingString()
-            .regexpFind("(?:#|#@)?(?:[a-zA-Z][a-zA-Z0-9_]*|[a-zA-Z0-9][a-zA-Z0-9_]:[a-zA-Z0-9_]+)(?:\\([^\\)]*\\))?",
+            .regexpFind("(?:#|#@|@)?(?:[a-zA-Z][a-zA-Z0-9_]*|[a-zA-Z0-9][a-zA-Z0-9_]:[a-zA-Z0-9_]+)(?:\\([^\\)]*\\))?",
               _, begin) and
       begin + value.length() - 1 = end and
       // exclude keyword

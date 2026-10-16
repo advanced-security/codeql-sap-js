@@ -1,0 +1,10 @@
+| aliasInput | aliasHtml |
+| edit-handler | writeHtml |
+| edit-handler | written-api |
+| globalAliasInput | globalAliasHtml |
+| globalInput | globalHtml |
+| importedInput | importedHtml |
+| manifestInput | contextHtml |
+| manifestInput | manifestHtml |
+| manifestInput | manifestTextHtml |
+| twoWayInput | twoWayHtml |
