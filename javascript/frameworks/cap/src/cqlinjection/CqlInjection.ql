@@ -20,4 +20,5 @@ import CqlInjectionConfigurationFlow::PathGraph
 from CqlInjectionConfigurationFlow::PathNode source, CqlInjectionConfigurationFlow::PathNode sink
 where CqlInjectionConfigurationFlow::flowPath(source, sink)
 select sink.getNode().(CqlInjectionSink).getQuery(), source, sink,
-  sink.getNode().(CqlInjectionSink).getMessage(), source.getNode(), "user-provided value"
+  "This CQL query contains a string concatenation with a $@.", source.getNode(),
+  "user-provided value"
