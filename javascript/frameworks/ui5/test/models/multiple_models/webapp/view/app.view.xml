@@ -39,5 +39,4 @@
         description="{controlRef2Model1>/description}"
         selectedKey="{controlRef2Model2>/selectedKey}"
         showSuggestion="{viewModel2>/showSuggestion}" />
-    <Input id="sharedAcrossViews" />
 </mvc:View>

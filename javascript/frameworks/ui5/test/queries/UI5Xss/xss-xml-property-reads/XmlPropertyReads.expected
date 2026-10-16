@@ -1,5 +1,0 @@
-| getObject | /element/text() |
-| getObject | /item/@note |
-| getProperty | /element |
-| getProperty | /element/text() |
-| getProperty | /item/@note |

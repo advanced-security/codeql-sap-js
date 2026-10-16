@@ -1,6 +1,0 @@
-{
-  "sap.app": {
-    "id": "codeql.sap.bindcontext.js",
-    "type": "application"
-  }
-}

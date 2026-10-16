@@ -1,29 +1,17 @@
-/**
- * Provides remote-flow sources for UI5 controls, bidirectional model bindings, route parameters,
- * and event data.
- */
-
 import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
-import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5View
 import semmle.javascript.security.dataflow.XssThroughDomCustomizations
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 
 abstract private class RemoteControlAPISource extends SourceNode { }
 
-abstract private class UI5ClientSideRemoteFlowSource extends ClientSideRemoteFlowSource {
-  override ClientSideRemoteFlowKind getKind() { result = "browser" }
-}
-
 private class RemoteControlReference extends RemoteControlAPISource, ControlReference {
   RemoteControlReference() {
-    exists(UI5Control sourceControl, UI5View view, string typeAlias |
+    exists(UI5Control sourceControl, string typeAlias |
       typeModel(typeAlias, sourceControl.getImportPath(), _) and
       sourceModel(typeAlias, _, "remote", _) and
-      sourceControl = view.getControl() and
-      sourceControl.getAReference() = this and
-      controlReferenceBelongsToView(this, view)
+      sourceControl.getAReference() = this
     )
   }
 }
@@ -46,7 +34,7 @@ private class RemoteControlHandlerParameter extends RemoteControlAPISource, Call
  * or from handler parameters, via property reads or getter methods like `getValue()` or
  * `getCurrentValue()`. These represent user input that could potentially be tainted.
  */
-private class UserDataFromRemoteControlAPISource extends UI5ClientSideRemoteFlowSource {
+private class UserDataFromRemoteControlAPISource extends RemoteFlowSource {
   UserDataFromRemoteControlAPISource() {
     exists(RemoteControlAPISource remoteControlAPISource |
       /*
@@ -70,34 +58,9 @@ private class InputControlInstantiation extends ElementInstantiation {
   InputControlInstantiation() { typeModel("UI5InputControl", this.getImportPath(), _) }
 }
 
-private predicate controlPlacementStep(DataFlow::Node start, DataFlow::Node end) {
-  exists(DataFlow::SourceNode source |
-    start = source and
-    source.flowsTo(end)
-  )
-  or
-  inSameWebApp(start.getFile(), end.getFile()) and
-  (
-    exists(DataFlow::PropWrite propWrite |
-      start = propWrite.getRhs() and
-      end = propWrite.getBase()
-    )
-    or
-    exists(DataFlow::MethodCallNode call |
-      start = call.getAnArgument() and
-      end = call.getReceiver()
-    )
-    or
-    exists(DataFlow::NewNode new |
-      start = new.getAnArgument() and
-      end = new
-    )
-  )
-}
+private module TrackPlaceAtCallConfigFlow = TaintTracking::Global<TrackPlaceAtCallConfig>;
 
-class DataFromInstantiatedAndPlacedAtControl extends UI5ClientSideRemoteFlowSource,
-  XssThroughDom::Source
-{
+class DataFromInstantiatedAndPlacedAtControl extends RemoteFlowSource, XssThroughDom::Source {
   InputControlInstantiation controlInstantiation;
   ControlPlaceAtCall placeAtCall;
 
@@ -112,26 +75,12 @@ class DataFromInstantiatedAndPlacedAtControl extends UI5ClientSideRemoteFlowSour
         this = controlReference.getAPropertyRead("value")
       )
     ) and
-    controlPlacementStep+(controlInstantiation, placeAtCall.getReceiver())
+    TrackPlaceAtCallConfigFlow::flow(controlInstantiation, placeAtCall)
   }
 
   override string getSourceType() {
     result = "Data from an instantiated control placed in a DOM tree"
   }
-}
-
-class UI5BindingClientSideSource extends UI5ClientSideRemoteFlowSource {
-  UI5BindingPath bindingPath;
-
-  UI5BindingClientSideSource() {
-    exists(UI5InternalModel internalModel |
-      internalModel.hasContentNodeForBinding(bindingPath, this) and
-      any(UI5View view).getASource() = bindingPath and
-      internalModel.hasTwoWayBinding()
-    )
-  }
-
-  override string getSourceType() { result = "Data from a property bound to a UI5 input control" }
 }
 
 class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSource {
@@ -140,9 +89,17 @@ class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSou
 
   LocalModelContentBoundBidirectionallyToSourceControl() {
     exists(UI5InternalModel internalModel |
-      internalModel.hasContentNodeForBinding(bindingPath, this) and
+      this = bindingPath.getNode() and
+      (
+        this instanceof PropWrite and
+        internalModel.getArgument(0).getALocalSource().asExpr() =
+          this.(PropWrite).getPropertyNameExpr().getParent+()
+        or
+        this.asExpr() instanceof StringLiteral and
+        internalModel.asExpr() = this.asExpr().getParent()
+      ) and
       any(UI5View view).getASource() = bindingPath and
-      internalModel.hasTwoWayBinding() and
+      internalModel.(JsonModel).isTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()
     )
   }
@@ -156,7 +113,68 @@ class LocalModelContentBoundBidirectionallyToSourceControl extends RemoteFlowSou
   UI5Control getControlDeclaration() { result = controlDeclaration }
 }
 
-private class RouteParameterAccess extends UI5ClientSideRemoteFlowSource instanceof PropRead {
+abstract class UI5ExternalModel extends UI5Model, RemoteFlowSource {
+  abstract string getName();
+}
+
+/** Default model which gains content from an SAP OData service (ie no model name is explicitly specified). */
+class DefaultODataServiceModel extends UI5ExternalModel {
+  DefaultODataServiceModel() {
+    exists(ExternalModelManifest model |
+      // An OData default model exists.
+      model.getName() = "" and
+      model.getDataSource() instanceof ODataDataSourceManifest and
+      // A bindElement call bound to the default OData model represents a source of data.
+      this.getCalleeName() = "bindElement" and
+      // The bindElement call must be in the same webapp as the manifest that declares the default model.
+      inSameWebApp(this.getFile(), model.getJsonFile())
+    )
+  }
+
+  override string getSourceType() { result = "DefaultODataServiceModel" }
+
+  override string getName() { result = "" }
+
+  /**
+   * Gets bindings associated with this default OData model source.
+   * Since `DefaultODataServiceModel` represents a `bindElement` call,
+   * we match context bindings whose `bindElement` call is this node.
+   */
+  Binding asBinding() { result.getBindElementCall() = this }
+}
+
+/** Model which gains content from an SAP OData service. */
+class ODataServiceModel extends UI5ExternalModel {
+  string modelName;
+
+  override string getSourceType() { result = "ODataServiceModel" }
+
+  ODataServiceModel() {
+    exists(CustomController controller |
+      this.getCalleeName() = "getModel" and
+      modelName = this.getArgument(0).getALocalSource().getStringValue() and
+      controller.getOwnerComponent().getExternalModelDef(modelName).getDataSource() instanceof
+        ODataDataSourceManifest // A component's `manifest.json` declares the data source as being of OData type.
+    )
+    or
+    /*
+     * A constructor call to `sap.ui.model.odata.v2.ODataModel` or `sap.ui.model.odata.v4.ODataModel`.
+     */
+
+    this instanceof NewNode and
+    exists(RequiredObject oDataModel |
+      oDataModel.asSourceNode().flowsTo(this.getCalleeNode()) and
+      oDataModel.getDependency() in [
+          "sap/ui/model/odata/v2/ODataModel", "sap/ui/model/odata/v4/ODataModel"
+        ]
+    ) and
+    modelName = "<no name>"
+  }
+
+  override string getName() { result = modelName }
+}
+
+private class RouteParameterAccess extends RemoteFlowSource instanceof PropRead {
   override string getSourceType() { result = "RouteParameterAccess" }
 
   RouteParameterAccess() {
@@ -176,8 +194,7 @@ private class RouteParameterAccess extends UI5ClientSideRemoteFlowSource instanc
   }
 }
 
-private class DisplayEventHandlerParameterAccess extends UI5ClientSideRemoteFlowSource instanceof PropRead
-{
+private class DisplayEventHandlerParameterAccess extends RemoteFlowSource instanceof PropRead {
   override string getSourceType() { result = "DisplayEventHandlerParameterAccess" }
 
   DisplayEventHandlerParameterAccess() {

@@ -1,5 +1,5 @@
 <mvc:View
-	controllerName="ghas.sample.demo.book.controller.App"
+	controllerName="ghas.sample.webapp.App"
 	xmlns="sap.m"
 	xmlns:mvc="sap.ui.core.mvc"
 	xmlns:ghas="ghas.sample.controls">

@@ -1,7 +1,7 @@
 sap.ui.define(["sap/ui/core/mvc/Controller"], function (Controller) {
   "use strict";
 
-  return Controller.extend("ghas.sample.demo.book.controller.App", {
+  return Controller.extend("ghas.sample.Controller", {
     onInit: function () {
       var oBook = this.byId("myBook");
       oBook.addEventDelegate({

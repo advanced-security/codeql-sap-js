@@ -6,12 +6,10 @@ sap.ui.define([
     return Controller.extend("codeql-sap-js.controller.app", {
         onInit: function () {
             var oData = {
-                input: null,
-                local: null
+                input: null
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel);
-            this.byId("jsOverrideContainer").setModel(new JSONModel({ local: "" }));
         }
     });
 })

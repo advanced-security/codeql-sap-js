@@ -3,8 +3,8 @@
  */
 
 import javascript
-import advanced_security.javascript.frameworks.ui5.UI5DataModels
+import advanced_security.javascript.frameworks.ui5.UI5
 
-from ExternalModelManifest model
+from ManifestJson::ExternalModelManifest model
 select model,
   "External model '" + model.getName() + "' with data source '" + model.getDataSourceName() + "'"
