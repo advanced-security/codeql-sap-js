@@ -24,6 +24,16 @@ class CqlQueryBase extends VarRef {
   }
 }
 
+private predicate cqlQueryBaseName(Expr expression, string name) {
+  expression = any(CqlQueryBase base) and
+  name = expression.(CqlQueryBase).getName()
+  or
+  name in ["SELECT", "INSERT", "DELETE", "UPDATE", "UPSERT"] and
+  exists(CdsFacade cds |
+    cds.getMember("ql").getMember(name).getAValueReachableFromSource().asExpr() = expression
+  )
+}
+
 class CqlSelectBase extends CqlQueryBase {
   CqlSelectBase() { this.getName() = "SELECT" }
 }
@@ -71,6 +81,8 @@ class CqlUpsertBaseCall extends CqlQueryBaseCall {
 Expr getRootReceiver(Expr e) {
   result = e and
   (
+    exists(string name | cqlQueryBaseName(e, name))
+    or
     e instanceof VarRef
     or
     e instanceof CallExpr and not exists(e.(CallExpr).getReceiver())
@@ -91,11 +103,11 @@ Expr getRootReceiver(Expr e) {
  */
 private newtype TCqlClause =
   TTaggedTemplate(TaggedTemplateExpr taggedTemplateExpr) {
-    exists(CqlQueryBase base | base = getRootReceiver(taggedTemplateExpr)) or
+    exists(string name | cqlQueryBaseName(getRootReceiver(taggedTemplateExpr), name)) or
     exists(CqlQueryBaseCall call | call = getRootReceiver(taggedTemplateExpr))
   } or
   TMethodCall(MethodCallExpr callExpr) {
-    exists(CqlQueryBase base | base = getRootReceiver(callExpr)) or
+    exists(string name | cqlQueryBaseName(getRootReceiver(callExpr), name)) or
     exists(CqlQueryBaseCall call | call = getRootReceiver(callExpr))
   } or
   TShortcutCall(CqlQueryBaseCall callExpr)
@@ -158,9 +170,9 @@ class CqlClause extends TCqlClause {
   }
 
   string getTypeString() {
-    result = getRootReceiver(this.asTaggedTemplate()).(VarRef).getName() or
+    cqlQueryBaseName(getRootReceiver(this.asTaggedTemplate()), result) or
     result = getRootReceiver(this.asTaggedTemplate()).(CallExpr).getCalleeName() or
-    result = getRootReceiver(this.asMethodCall()).(VarRef).getName() or
+    cqlQueryBaseName(getRootReceiver(this.asMethodCall()), result) or
     result = getRootReceiver(this.asMethodCall()).(CallExpr).getCalleeName()
   }
 
@@ -324,7 +336,7 @@ class CqlSelectClause extends CqlClause {
   CqlSelectClause() { this.isSelect() }
 
   override CqlSelectClause getEntityAccessingClause() {
-    result = this.getADescendantCqlClause() and
+    (result = this or result = this.getADescendantCqlClause()) and
     result.asDotExpr().getPropertyName() = "from"
   }
 }

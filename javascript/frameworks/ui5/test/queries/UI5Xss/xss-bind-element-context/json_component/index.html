@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>UI5 JSON bindElement context XSS</title>
+  <script
+    id="sap-ui-bootstrap"
+    src="resources/sap-ui-core.js"
+    data-sap-ui-resource-roots='{"codeql.sap.bindcontext.json": "./"}'
+    data-sap-ui-on-init="module:sap/ui/core/ComponentSupport"
+    data-sap-ui-compat-version="edge"
+    data-sap-ui-async="true">
+  </script>
+</head>
+<body class="sapUiBody">
+  <div data-sap-ui-component data-name="codeql.sap.bindcontext.json" data-id="container"></div>
+</body>
+</html>

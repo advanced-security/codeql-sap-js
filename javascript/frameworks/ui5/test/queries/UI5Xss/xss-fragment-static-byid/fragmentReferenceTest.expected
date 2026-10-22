@@ -1,0 +1,4 @@
+| webapp/controller/Main.controller.js:26:33:26:86 | Fragmen ... Input") | this.ge ... getId() | PayloadForm.fragment.xml | sap.m.Input#attackerInput |
+| webapp/controller/Main.controller.js:27:29:27:85 | Fragmen ... utput") | this.ge ... getId() | PayloadForm.fragment.xml | sap.ui.core.HTML#vulnerableOutput |
+| webapp/controller/Main.controller.js:33:25:33:69 | Fragmen ... Input") | "displayForm" | DisplayForm.fragment.xml | sap.m.Text#attackerInput |
+| webapp/controller/Main.controller.js:34:13:34:60 | Fragmen ... utput") | "displayForm" | DisplayForm.fragment.xml | sap.m.Text#vulnerableOutput |

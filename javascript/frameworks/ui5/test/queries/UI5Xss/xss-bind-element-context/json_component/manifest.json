@@ -1,0 +1,21 @@
+{
+  "_version": "2.0.0",
+  "sap.app": {
+    "id": "codeql.sap.bindcontext.json",
+    "type": "application",
+    "title": "UI5 JSON bindElement context XSS"
+  },
+  "sap.ui5": {
+    "rootView": {
+      "viewName": "codeql.sap.bindcontext.json.view.app",
+      "type": "JSON",
+      "id": "app"
+    },
+    "models": {
+      "": {
+        "type": "sap.ui.model.json.JSONModel",
+        "uri": "model/data.json"
+      }
+    }
+  }
+}

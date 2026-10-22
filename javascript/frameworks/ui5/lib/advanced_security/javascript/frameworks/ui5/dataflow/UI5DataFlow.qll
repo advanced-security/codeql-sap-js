@@ -3,7 +3,7 @@ import semmle.javascript.dataflow.DataFlow as StdLibDataFlow
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
 import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
-private import PatchDataFlow
+private import semmle.javascript.security.dataflow.DomBasedXssCustomizations
 
 /**
  * A statically visible part of a local model's content that has a binding path referring to it in a
@@ -35,23 +35,16 @@ private import PatchDataFlow
  * ```
  * The content `y: null` of `oModel` is recognized as an instance of this class.
  */
-class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXss::Sink {
+class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DataFlow::Node {
   UI5BindingPath bindingPath;
   UI5Control controlDeclaration;
 
   LocalModelContentBoundBidirectionallyToHtmlISinkControl() {
     exists(UI5InternalModel internalModel |
-      this = bindingPath.getNode() and
-      (
-        this instanceof PropWrite and
-        internalModel.getArgument(0).getALocalSource().asExpr() =
-          this.(PropWrite).getPropertyNameExpr().getParent+()
-        or
-        this.asExpr() instanceof StringLiteral and
-        internalModel.asExpr() = this.asExpr().getParent()
-      ) and
+      internalModel.hasContentNodeForBinding(bindingPath, this) and
       any(UI5View view).getAnHtmlISink() = bindingPath and
-      internalModel.(JsonModel).isTwoWayBinding() and
+      not bindingPath.getControlDeclaration().isHTMLSanitized() and
+      internalModel.hasTwoWayBinding() and
       controlDeclaration = bindingPath.getControlDeclaration()
     )
   }
@@ -62,11 +55,25 @@ class LocalModelContentBoundBidirectionallyToHtmlISinkControl extends DomBasedXs
 }
 
 /**
- * A local source for cases where the Control implementation is separate from the complete UI5 app.
+ * The local JSON-model sinks historically shared with standard XSS queries.
+ */
+private class SharedLocalJsonModelHtmlInjectionSink extends LocalModelContentBoundBidirectionallyToHtmlISinkControl,
+  DomBasedXss::Sink
+{
+  SharedLocalJsonModelHtmlInjectionSink() {
+    exists(JsonModel model |
+      model.hasContentNodeForBinding(this.getBindingPath(), this) and
+      model.isTwoWayBinding()
+    )
+  }
+}
+
+/**
+ * An unrestricted string property of a locally implemented UI5 control.
  */
 class LocalModelStringPropertySource extends DomBasedXss::Source {
   LocalModelStringPropertySource() {
-    this = any(PropertyMetadata propMeta | propMeta.isUnrestrictedStringType())
+    this = any(PropertyMetadata property | property.isUnrestrictedStringType())
   }
 }
 
@@ -178,18 +185,11 @@ module UI5PathGraph<PathNodeSig ConfigPathNode, PathGraphSig<ConfigPathNode> Con
     predicate internalModelContentToBindingPath(
       UI5PathNode ui5PathNodePred, UI5PathNode ui5PathNodeSucc
     ) {
-      exists(UI5BindingPath bindingPath, UI5InternalModel internalModel, Node boundNode |
+      exists(UI5BindingPath bindingPath, UI5InternalModel internalModel |
         bindingPath = ui5PathNodeSucc.asUI5BindingPathNode() and
-        boundNode = bindingPath.getNode() and
-        (
-          boundNode instanceof PropWrite and
-          internalModel.(JsonModel).getAProperty() = boundNode // TODO: Generalize to UI5InternalModel
-          or
-          boundNode.asExpr() instanceof StringLiteral and
-          ui5PathNodePred.asDataFlowNode() = boundNode
-        ) and
-        ui5PathNodePred.asDataFlowNode() = boundNode and
-        internalModel.(JsonModel).isTwoWayBinding()
+        ui5PathNodePred.asDataFlowNode() = bindingPath.getNode() and
+        bindingPath.getNode() = internalModel.getAContentNode() and
+        internalModel.hasTwoWayBinding()
       )
     }
   }
