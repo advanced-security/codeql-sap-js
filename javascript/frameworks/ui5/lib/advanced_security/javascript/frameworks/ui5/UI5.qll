@@ -41,6 +41,14 @@ private predicate isAnUnResolvedResourceRoot(WebApp webApp, string name, string 
     name = configEntry.getKey() and
     path = configEntry.getValue().asString()
   )
+  or
+  exists(MethodCallNode localResources |
+    localResources =
+      DataFlow::globalVarRef("sap").getAPropertyRead("ui").getAMemberCall("localResources") and
+    localResources.getFile() = webApp and
+    name = localResources.getArgument(0).getALocalSource().getStringValue() and
+    path = ui5TypeNameToModulePath(name)
+  )
 }
 
 private module UI5WebAppResolverConfig implements Folder::ResolveSig {

@@ -7,6 +7,7 @@ import javascript
 import advanced_security.javascript.frameworks.ui5.UI5
 import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5View
+import semmle.javascript.security.dataflow.RegExpInjectionCustomizations
 import semmle.javascript.security.dataflow.XssThroughDomCustomizations
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions
 
@@ -14,6 +15,15 @@ abstract private class RemoteControlAPISource extends SourceNode { }
 
 abstract private class UI5ClientSideRemoteFlowSource extends ClientSideRemoteFlowSource {
   override ClientSideRemoteFlowKind getKind() { result = "browser" }
+}
+
+/**
+ * UI5 browser input can control regular expressions, although the standard query's default
+ * sources exclude client-side data.
+ */
+private class UI5RegExpInjectionSource extends RegExpInjection::Source instanceof UI5ClientSideRemoteFlowSource
+{
+  UI5RegExpInjectionSource() { this instanceof ActiveThreatModelSource }
 }
 
 private class RemoteControlReference extends RemoteControlAPISource, ControlReference {

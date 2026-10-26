@@ -1,0 +1,7 @@
+<mvc:View controllerName="controllers.products.ProductDetails"
+    xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:core="sap.ui.core">
+    <TextArea id="descText" />
+    <core:HTML id="htmlDesc" />
+    <core:HTML id="encodedHtml" />
+    <Text id="plainText" />
+</mvc:View>

@@ -20,6 +20,13 @@ sap.ui.define([
             this.byId("safeLabel").$().html("Found " + iCount + " for: " + encodeXML(this.sSearchQuery));
             /* NEGATIVE: search query written as text */
             this.byId("textLabel").$().text("Found " + iCount + " for: " + this.sSearchQuery);
+            new RegExp(this.sSearchQuery, "g");
+            new RegExp(encodeXML(this.sSearchQuery), "g");
+            new RegExp(escapeRegExp(this.sSearchQuery), "g");
         }
     });
 });
+
+function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

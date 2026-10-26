@@ -36,7 +36,7 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 
 ### [standard-bindings](queries/UI5Xss/standard-bindings)
 - manifest-model HTML binding sinks are excluded from the standard `js/xss` query
-- declarative UI5 URL-redirect sink adapters are not registered by the shared customizations
+- declarative UI5 URL-redirect sink adapters are registered for client-side URL redirection
 - negative server-side URL redirect coverage
 
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
@@ -143,7 +143,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ## Client-side URL Redirection
 
 ### [ui5-link-href](queries/UrlRedirect/ui5-link-href)
-- negative regression: the shared customizations do not register declarative UI5 URL-redirect sinks
+- the shared customizations register declarative UI5 client-side URL-redirect sinks
 - covers a todo URL edited through `sap.m.Input.value` and bound to `sap.m.Link.href` within a list item
 - negative cases: user input used only as link text with a fixed HTTPS destination, and a link bound to a separate, unedited model property
 
