@@ -24,7 +24,7 @@ sap.ui.jsview("codeql-sap-js.view.app", {
             content: "{/input}",
             sanitizeContent: true
         }),
-        new sap.m.VBox("jsOverrideContainer", {
+        new sap.m.VBox(this.createId("jsOverrideContainer"), {
             items: [
                 new sap.m.Input({
                     value: "{/local}"

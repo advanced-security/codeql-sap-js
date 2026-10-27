@@ -16,6 +16,7 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - unrelated `sap.ui.define` and `sap.ui.require` dependencies are not treated as UI5 controllers, fragments, or elements because of similarly named methods
 - checks both stock security queries with the UI5 loader adapter and queries with the full UI5 customizations
 - named and anonymous definitions with export flags and `sap.ui.require` success/error callbacks keep dependency paths aligned with the correct factory parameters
+- separately declared factories and callback aliases resolve through local value flow, including same-file script-global bindings
 
 ### [xml_binding_paths](models/xml_binding_paths)
 - separate regression test for XML attribute and `text()` paths in default and named model bindings
@@ -42,6 +43,8 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
 - custom Control
 - accessing Control properties byId
+- input passed through generated setters/getters and generic `setProperty`/`getProperty` calls remains tainted for `any` properties rendered with `RenderManager.write`
+- only `boolean`, `int`, and `float` properties are XSS barriers; `any`, `object`, arrays, and other metadata types are not assumed safe
 
 ### [xss-custom-control-api2](queries/UI5Xss/xss-custom-control-api2)
 - custom Control
@@ -128,6 +131,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ### [xss-js-view](queries/UI5Xss/xss-js-view)
 - `sap.ui.core.mvc.JSView` View
 - sanitization using the `sanitizeContent` property
+- view-prefixed control IDs allow the controller to install a local model without changing the root model
 
 ### [xss-json-view](queries/UI5Xss/xss-json-view)
 - `sap.ui.core.mvc.JSONView` View
@@ -152,7 +156,9 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ### [ui5-binding](queries/RequestForgery/ui5-binding)
 - declarative UI5 request-forgery sink adapters are not registered by the shared customizations
 - UI5 input sources flowing to native `fetch` calls remain reported by the standard query
-- negative server-side request-forgery coverage
+- explicit opt-in additionally reports input bound to an image's request URL
+- client-side and server-side queries use the same request-forgery sink extension point; UI5 browser-source classification keeps these findings client-side
+- negative server-side request-forgery coverage with and without explicit opt-in
 
 ## UiI5 Log-Injection
 ### [avoid-duplicate-alerts](queries/UI5LogInjection/avoid-duplicate-alerts)

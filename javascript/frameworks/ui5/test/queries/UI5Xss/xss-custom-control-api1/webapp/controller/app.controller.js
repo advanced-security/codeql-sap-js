@@ -10,6 +10,12 @@ sap.ui.define([
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel);
+        },
+        onPayloadChanged: function (oEvent) {
+            var value = oEvent.getSource().getValue();
+            var control = this.byId("xssControl");
+            control.setRaw(value);
+            control.setProperty("rawGeneric", value);
         }
     });
 })

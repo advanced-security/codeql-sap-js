@@ -28,14 +28,11 @@ class ExcludedSource extends DomBasedXss::Sanitizer {
 }
 
 /**
- * A UI5 control property whose declared type cannot contain unrestricted text.
+ * A UI5 control property restricted to a primitive type that cannot contain unrestricted text.
  */
 class NonStringControlProperty extends DomBasedXss::Sanitizer {
   NonStringControlProperty() {
-    this = any(PropertyMetadata property |
-      exists(property.getType()) and
-      not property.isUnrestrictedStringType()
-    )
+    this = any(PropertyMetadata property | property.getType() in ["boolean", "int", "float"])
   }
 }
 

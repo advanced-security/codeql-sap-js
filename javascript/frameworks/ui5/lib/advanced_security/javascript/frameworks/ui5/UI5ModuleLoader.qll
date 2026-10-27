@@ -45,6 +45,26 @@ class UI5ModuleDefinition extends UI5ModuleLoaderCall, AmdModuleDefinition::Rang
   UI5ModuleDefinition() { this.getFactoryArgument() = this.getLastArgument() }
 }
 
+overlay[local?]
+private DataFlow::FunctionNode getFactoryFunction(Expr factory) {
+  result = DataFlow::valueNode(factory).getALocalSource().(DataFlow::FunctionNode)
+  or
+  // Script-global bindings are not local-flow steps; keep their definitions in the same file.
+  exists(GlobalVarAccess access |
+    access = DataFlow::valueNode(factory).getALocalSource().asExpr() and
+    (
+      result.getFunction().getVariable() = access.getVariable() and
+      result.getFunction().getTopLevel() = factory.getTopLevel()
+      or
+      exists(Expr assigned |
+        assigned = access.getVariable().getAnAssignedExpr() and
+        assigned.getTopLevel() = factory.getTopLevel() and
+        result = getFactoryFunction(assigned)
+      )
+    )
+  )
+}
+
 /**
  * UI5 permits an error callback or export flag after the factory, whereas the standard AMD model
  * uses the final argument as its factory.
@@ -64,7 +84,7 @@ private class UI5AdditionalArgumentImport extends Import {
   override Expr getImportedPathExpr() { result = this }
 
   override DataFlow::Node getImportedModuleNode() {
-    result = DataFlow::parameterNode(loader.getFactoryArgument().(Function).getParameter(index))
+    result = getFactoryFunction(loader.getFactoryArgument()).getParameter(index)
   }
 }
 

@@ -18,7 +18,7 @@
     {
       "Type": "sap.m.VBox",
       "id": "jsonCustomerDetails",
-      "content": [
+      "items": [
         {
           "Type": "sap.ui.core.HTML",
           "id": "jsonHtmlSink",
@@ -27,7 +27,7 @@
         {
           "Type": "sap.m.VBox",
           "id": "jsonOtherDetails",
-          "content": [
+          "items": [
             {
               "Type": "sap.ui.core.HTML",
               "id": "jsonNestedSink",

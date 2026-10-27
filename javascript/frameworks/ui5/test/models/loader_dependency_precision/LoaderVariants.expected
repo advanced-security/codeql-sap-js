@@ -1,3 +1,6 @@
+| webapp/loader.callbacks.js:2:57:2:79 | "requir ... uccess" | require-named-success |
+| webapp/loader.callbacks.js:12:57:12:81 | "requir ... uccess" | require-aliased-success |
+| webapp/loader.callbacks.js:19:56:19:79 | "define ... uccess" | define-aliased-success |
 | webapp/loader.variants.js:2:45:2:61 | "require-success" | require-success |
 | webapp/loader.variants.js:9:44:9:66 | "anonym ... t-flag" | anonymous-export-flag |
 | webapp/loader.variants.js:14:41:14:59 | "named-export-flag" | named-export-flag |

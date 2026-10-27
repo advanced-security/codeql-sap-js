@@ -1,4 +1,4 @@
-import advanced_security.javascript.frameworks.ui5.UI5View
+private import advanced_security.javascript.frameworks.ui5.UI5View
 private import advanced_security.javascript.frameworks.ui5.dataflow.FlowSteps
 import semmle.javascript.security.dataflow.RequestForgeryCustomizations
 

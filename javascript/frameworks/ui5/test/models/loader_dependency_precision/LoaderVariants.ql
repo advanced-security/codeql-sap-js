@@ -11,5 +11,5 @@ import javascript
 import semmle.javascript.security.dataflow.DomBasedXssQuery
 
 from Sink sink
-where sink.getFile().getBaseName() = "loader.variants.js"
+where sink.getFile().getBaseName() in ["loader.callbacks.js", "loader.variants.js"]
 select sink, sink.asExpr().(StringLiteral).getValue()
