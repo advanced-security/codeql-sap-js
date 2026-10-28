@@ -1,0 +1,10 @@
+edges
+| placedControl.js:7:7:7:9 | url | placedControl.js:8:9:8:11 | url | provenance |  |
+| placedControl.js:7:13:7:58 | sap.ui. ... Value() | placedControl.js:7:7:7:9 | url | provenance |  |
+nodes
+| placedControl.js:7:7:7:9 | url | semmle.label | url |
+| placedControl.js:7:13:7:58 | sap.ui. ... Value() | semmle.label | sap.ui. ... Value() |
+| placedControl.js:8:9:8:11 | url | semmle.label | url |
+subpaths
+#select
+| placedControl.js:8:3:8:12 | fetch(url) | placedControl.js:7:13:7:58 | sap.ui. ... Value() | placedControl.js:8:9:8:11 | url | The $@ of this request depends on a $@. | placedControl.js:8:9:8:11 | url | URL | placedControl.js:7:13:7:58 | sap.ui. ... Value() | user-provided value |

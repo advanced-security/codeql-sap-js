@@ -34,6 +34,33 @@ jobs:
         run: |
           qlt test run get-matrix --os-version ubuntu-latest
 
+  custom-bundle-regression:
+    name: Validate JavaScript custom bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install QLT
+        uses: advanced-security/codeql-development-toolkit/.github/actions/install-qlt@177984f7fc369b131c844b3a50d8d1e9a8e5223b # main
+        with:
+          qlt-version: "latest"
+          add-to-path: true
+
+      - name: Install CodeQL
+        shell: bash
+        run: qlt codeql run install
+
+      - name: Install JavaScript pack dependencies
+        shell: bash
+        run: |
+          "$QLT_CODEQL_PATH" pack install javascript/frameworks/cap/lib
+
+      - name: Validate JavaScript custom bundle
+        shell: bash
+        run: CODEQL_BIN="$QLT_CODEQL_PATH" ./scripts/test-custom-bundle.sh
+
   run-test-suites:
     name: Run Unit Tests
     needs: create-unit-test-matrix

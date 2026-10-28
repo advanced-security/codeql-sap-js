@@ -4,6 +4,13 @@
  * be included in the out-of-the-box security queries.
  */
 
-/* We import under alias to avoid any potential naming conflicts */
-import advanced_security.javascript.frameworks.ui5.RemoteFlowSources as UI5RemoteFlowSources
-import advanced_security.javascript.frameworks.ui5.Sanitizers
+/*
+ * Keep these imports private because this module is injected into `javascript.qll`.
+ * Re-exporting them from there breaks recursive standard-library module resolution.
+ * Keep UI5 HTML and request-forgery sink adapters out of this shared entry point.
+ * URL-redirect sinks are shared because there is no dedicated UI5 redirect query.
+ */
+
+private import advanced_security.javascript.frameworks.ui5.RemoteFlowSources
+private import advanced_security.javascript.frameworks.ui5.Sanitizers
+private import advanced_security.javascript.frameworks.ui5.UrlRedirects

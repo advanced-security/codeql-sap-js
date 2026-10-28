@@ -1,6 +1,26 @@
 # Queries unit tests
 Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling/stable/)
 
+## UI5 jQuery models
+
+### [control_jquery](models/control_jquery)
+- element and view lookups through `sap.ui.define`, `sap.ui.require`, and legacy global APIs
+- stock XSS sink recognition with models as data and the dependency-aware UI5 loader adapter, without UI5 security customizations
+- full UI5 QL customizations also load the adapter and integrate with native jQuery modeling
+- fluent chains, setter overloads, variadic HTML arguments, and HTML-returning callbacks
+- object-form `attr`, `prop`, and `css` setters remain chainable while their one-argument string getter overloads remain non-jQuery
+- negative cases for plain-text writes, unrelated `$` methods, and getters returning strings, DOM elements, or controls rather than jQuery
+- based on the [UI5 Element API](https://ui5.sap.com/#/api/sap.ui.core.Element), [jQuery HTML callbacks](https://api.jquery.com/html/), and [jQuery variadic content arguments](https://api.jquery.com/append/)
+
+### [loader_dependency_precision](models/loader_dependency_precision)
+- unrelated `sap.ui.define` and `sap.ui.require` dependencies are not treated as UI5 controllers, fragments, or elements because of similarly named methods
+- checks both stock security queries with the UI5 loader adapter and queries with the full UI5 customizations
+- named and anonymous definitions with export flags and `sap.ui.require` success/error callbacks keep dependency paths aligned with the correct factory parameters
+- separately declared factories and callback aliases resolve through local value flow, including same-file script-global bindings
+
+### [xml_binding_paths](models/xml_binding_paths)
+- separate regression test for XML attribute and `text()` paths in default and named model bindings
+
 ## UiI5 XSS
 ### [avoid-duplicate-alerts](queries/UI5Xss/avoid-duplicate-alerts)
 - only reportin alerts that are specific to UI5
@@ -10,9 +30,21 @@ Eamples can be run locally using [UI5 tooling](https://sap.github.io/ui5-tooling
 - classic string-based API
 - `renderer` property is set to a render function
 
+### [xss-bind-element-context](queries/UI5Xss/xss-bind-element-context)
+- default-model contexts assigned through `bindElement`
+- relative bindings in XML, JSON, and JavaScript views
+- nested contexts, aggregation contexts, model overrides, and sibling controls
+
+### [standard-bindings](queries/UI5Xss/standard-bindings)
+- manifest-model HTML binding sinks are excluded from the standard `js/xss` query
+- declarative UI5 URL-redirect sink adapters are registered for client-side URL redirection
+- negative server-side URL redirect coverage
+
 ### [xss-custom-control-api1](queries/UI5Xss/xss-custom-control-api1)
 - custom Control
 - accessing Control properties byId
+- input passed through generated setters/getters and generic `setProperty`/`getProperty` calls remains tainted for `any` properties rendered with `RenderManager.write`
+- only `boolean`, `int`, and `float` properties are XSS barriers; `any`, `object`, arrays, and other metadata types are not assumed safe
 
 ### [xss-custom-control-api2](queries/UI5Xss/xss-custom-control-api2)
 - custom Control
@@ -40,6 +72,17 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 3. function `sap.ui.base.Event#getSource#getValue`
 4. accessing properties byId
 
+### [xss-encoder-contexts](queries/UI5Xss/xss-encoder-contexts)
+- regression test for CSS, JavaScript, URL, and URL-parameter encoders whose results remain tainted in HTML sinks
+- covers imported encoders and legacy `jQuery.sap` encoders
+- negative cases retain XML/HTML encoding and plain-text output as HTML-XSS barriers
+
+### [xss-searchfield-jquery-html](queries/UI5Xss/xss-searchfield-jquery-html)
+- `sap.m.SearchField` value (`liveChange` handler) stored in a controller field
+- flows to jQuery DOM sinks on a control's jQuery object: `this.byId(..).$().html()`, `this.getView().byId(..).$().append()`, `this.byId(..).$().find(..).html()`
+- sanitized with `sap/base/security/encodeXML`, and safe `.text()` usage
+- `StockXssSinks.ql` checks that the same sinks are recognized by stock `js/xss` via models as data and the UI5 loader adapter, without UI5 security customizations
+
 ### [xss-html-control](queries/UI5Xss/xss-html-control)
 - `sap.ui.core.HTML` Control
 - sanitization using the `sanitizeContent` property
@@ -52,6 +95,28 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ### [xss-html-control-oneway](queries/UI5Xss/xss-html-control-oneway)
 - `sap.ui.core.HTML` Control
 - one-way binding makes the xss fail
+
+### [xss-internal-data-model](queries/UI5Xss/xss-internal-data-model)
+- default `sap.ui.model.json.JSONModel` declared in `manifest.json`
+- relative two-way binding from `sap.m.Input` to `sap.ui.core.HTML`
+- true negative where `setDefaultBindingMode(OneWay)` prevents flow from `sap.m.Input` to the model
+
+### [xss-inferred-json-data-model](queries/UI5Xss/xss-inferred-json-data-model)
+- default `sap.ui.model.json.JSONModel` inferred from a `JSON` data source
+- relative two-way binding from `sap.m.Input` to `sap.ui.core.HTML`
+
+### [xss-xml-data-model](queries/UI5Xss/xss-xml-data-model)
+- end-to-end regression test for imported, aliased, and global XML constructors, plus explicit and inferred default manifest XML models
+- binding flow assertions cover dedicated UI5 sinks and standard native DOM sinks
+- path-specific flow from input controls to HTML sinks, including XML attributes, equivalent `text()` paths, and static `bindElement` contexts
+- regression test verifies `OneWay` and `OneTime` model modes block control-to-model writes, while explicit `setProperty` writes still reach the matching HTML binding and `getProperty` read
+- negative cases preserve unrelated paths, distinct named model instances, and a separate readonly manifest model
+- based on the [UI5 XMLModel API](https://ui5.sap.com/#/api/sap.ui.model.xml.XMLModel)
+
+### [xss-xml-property-reads](queries/UI5Xss/xss-xml-property-reads)
+- regression test for XML `getProperty` string reads and `getObject` attribute/explicit `text()` reads reaching HTML sinks
+- excludes DOM element values returned by `getObject` and values read from unrelated XML paths
+- element paths and their explicit `text()` paths share the same bound string value
 
 ### [xss-html-external-model](queries/UI5Xss/xss-html-external-model)
 - `sap.ui.core.HTML` Control
@@ -66,6 +131,7 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 ### [xss-js-view](queries/UI5Xss/xss-js-view)
 - `sap.ui.core.mvc.JSView` View
 - sanitization using the `sanitizeContent` property
+- view-prefixed control IDs allow the controller to install a local model without changing the root model
 
 ### [xss-json-view](queries/UI5Xss/xss-json-view)
 - `sap.ui.core.mvc.JSONView` View
@@ -77,6 +143,22 @@ User input flows to XSS sinks via event handlers in 4 different ways:
 
 ### [xss-webc-control](queries/UI5Xss/xss-webc-control)
 - Uses the `sap.ui.webc.main.MultiInput` control
+
+## Client-side URL Redirection
+
+### [ui5-link-href](queries/UrlRedirect/ui5-link-href)
+- the shared customizations register declarative UI5 client-side URL-redirect sinks
+- covers a todo URL edited through `sap.m.Input.value` and bound to `sap.m.Link.href` within a list item
+- negative cases: user input used only as link text with a fixed HTTPS destination, and a link bound to a separate, unedited model property
+
+## Client-side Request Forgery
+
+### [ui5-binding](queries/RequestForgery/ui5-binding)
+- declarative UI5 request-forgery sink adapters are not registered by the shared customizations
+- UI5 input sources flowing to native `fetch` calls remain reported by the standard query
+- explicit opt-in additionally reports input bound to an image's request URL
+- client-side and server-side queries use the same request-forgery sink extension point; UI5 browser-source classification keeps these findings client-side
+- negative server-side request-forgery coverage with and without explicit opt-in
 
 ## UiI5 Log-Injection
 ### [avoid-duplicate-alerts](queries/UI5LogInjection/avoid-duplicate-alerts)

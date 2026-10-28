@@ -1,0 +1,9 @@
+nodes
+| controllers/products/ProductDetails.controller.js:9:17:9:21 | value |
+| controllers/products/ProductDetails.controller.js:9:25:9:66 | this.ge ... Value() |
+| controllers/products/ProductDetails.controller.js:10:56:10:60 | value |
+edges
+| controllers/products/ProductDetails.controller.js:9:17:9:21 | value | controllers/products/ProductDetails.controller.js:10:56:10:60 | value |
+| controllers/products/ProductDetails.controller.js:9:25:9:66 | this.ge ... Value() | controllers/products/ProductDetails.controller.js:9:17:9:21 | value |
+#select
+| controllers/products/ProductDetails.controller.js:10:56:10:60 | value | controllers/products/ProductDetails.controller.js:9:25:9:66 | this.ge ... Value() | controllers/products/ProductDetails.controller.js:10:56:10:60 | value | XSS vulnerability due to $@. | controllers/products/ProductDetails.controller.js:9:25:9:66 | this.ge ... Value() | user-provided value |

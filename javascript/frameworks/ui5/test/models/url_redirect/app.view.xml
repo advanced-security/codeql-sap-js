@@ -1,0 +1,22 @@
+<mvc:View
+  xmlns="sap.m"
+  xmlns:cards="sap.f.cards"
+  xmlns:commons="sap.ui.commons"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns:tnt="sap.tnt"
+  xmlns:ux3="sap.ui.ux3">
+  <Link href="{/url}" />
+  <ContentConfig href="{/url}" />
+  <GenericTile url="{/url}" />
+  <LinkTileContent linkHref="{/url}" />
+  <ObjectHeader introHref="{/url}" />
+  <ObjectHeader titleHref="{/url}" />
+  <P13nItem href="{/url}" />
+  <QuickViewGroupElement url="{/url}" />
+  <QuickViewPage titleUrl="{/url}" />
+  <cards:BaseHeader href="{/url}" />
+  <tnt:NavigationListItem href="{/url}" />
+  <commons:Area href="{/url}" />
+  <commons:Link href="{/url}" />
+  <ux3:NavigationItem href="{/url}" />
+</mvc:View>

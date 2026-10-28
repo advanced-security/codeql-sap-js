@@ -1,0 +1,13 @@
+| nested_component/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /value |
+| standalone_component/Component.js:4:10:13:4 | UICompo ...  }\\n  }) | /value |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /controlOverride |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /input |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /items |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /items/value |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /manifest |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /nested |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /nested/value |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /output |
+| webapp/Component.js:4:10:8:4 | UICompo ...  }\\n  }) | /shared |
+| webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) | /items |
+| webapp_oneway/Component.js:6:12:16:6 | UICompo ... \\n    }) | /items/value |

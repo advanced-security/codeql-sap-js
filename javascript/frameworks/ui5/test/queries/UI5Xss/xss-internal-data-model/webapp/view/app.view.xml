@@ -1,0 +1,27 @@
+<mvc:View
+  controllerName="codeql-sap-js.controller.app"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  xmlns:mvc="sap.ui.core.mvc">
+  <VBox id="localModelControl">
+    <Input value="{/controlOverride}" />
+  </VBox>
+  <core:HTML content="{/controlOverride}" />
+  <List items="{/items}">
+    <CustomListItem>
+      <Input value="{value}" />
+      <core:HTML content="{value}" />
+    </CustomListItem>
+  </List>
+  <mvc:XMLView viewName="codeql-sap-js.view.local" />
+  <Input value="{/input}" />
+  <core:HTML content="{/output}" />
+  <VBox id="ancestorModelControl">
+    <Input value="{/overridden}" />
+    <core:HTML content="{/overridden}" />
+  </VBox>
+  <VBox id="sharedControl">
+    <Input value="{/shared}" />
+    <core:HTML content="{/shared}" />
+  </VBox>
+</mvc:View>

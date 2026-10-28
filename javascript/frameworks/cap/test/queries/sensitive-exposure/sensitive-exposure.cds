@@ -5,6 +5,12 @@ entity Sample {
     dateOfBirth  : Date;
 }
 
+entity Authors {
+  key ID        : Integer;
+  email         : String @PersonalData.IsPotentiallySensitive;
+  emailVerified : Boolean;
+}
+
 // annotations for Data Privacy
 annotate Sample with
 @PersonalData : { DataSubjectRole : 'Sample', EntitySemantics : 'DataSubject' }
@@ -12,3 +18,6 @@ annotate Sample with
   name  @PersonalData.IsPotentiallySensitive;
   dateOfBirth     @PersonalData.IsPotentiallyPersonal; 
 }
+
+annotate Authors with
+@PersonalData : { DataSubjectRole : 'Author', EntitySemantics : 'DataSubject' };

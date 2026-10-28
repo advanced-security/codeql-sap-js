@@ -1,0 +1,8 @@
+nodes
+| view/app.view.xml:4:3:4:27 | value={/url} | semmle.label | value={/url} |
+| view/app.view.xml:5:3:5:25 | href={/url} | semmle.label | href={/url} |
+edges
+| view/app.view.xml:4:3:4:27 | value={/url} | view/app.view.xml:5:3:5:25 | href={/url} | provenance |  |
+subpaths
+#select
+| view/app.view.xml:5:3:5:25 | href={/url} | view/app.view.xml:4:3:4:27 | value={/url} | view/app.view.xml:5:3:5:25 | href={/url} | Untrusted URL redirection depends on a $@. | view/app.view.xml:4:3:4:27 | value={/url} | user-provided value |

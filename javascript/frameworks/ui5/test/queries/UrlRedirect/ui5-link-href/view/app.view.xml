@@ -1,0 +1,12 @@
+<mvc:View controllerName="codeql.sap.linkhref.controller.app" xmlns="sap.m" xmlns:mvc="sap.ui.core.mvc">
+  <List items="{/todos}">
+    <CustomListItem>
+      <VBox>
+        <Input value="{url}" />
+        <Link href="{url}" text="Open" />
+        <Link href="https://example.com/" text="{url}" />
+        <Link href="{trustedUrl}" text="Trusted" />
+      </VBox>
+    </CustomListItem>
+  </List>
+</mvc:View>

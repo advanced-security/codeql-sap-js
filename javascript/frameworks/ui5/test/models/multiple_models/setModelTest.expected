@@ -2,7 +2,7 @@
 | webapp/view/app.view.xml:17:5:22:57 | selectedKey={controlRefModel2>/selectedKey} | webapp/controller/app.controller.js:31:28:31:42 | new JSONModel() |
 | webapp/view/app.view.xml:17:5:22:57 | showSuggestion={viewModel1>/showSuggestion} | webapp/controller/app.controller.js:12:28:12:42 | new JSONModel() |
 | webapp/view/app.view.xml:17:5:22:57 | value={/input} | webapp/controller/app.controller.js:29:34:29:49 | new ODataModel() |
-| webapp/view/app.view.xml:36:5:41:57 | description={controlRef2Model1>/description} | webapp/controller/app.controller.js:37:28:37:42 | new JSONModel() |
-| webapp/view/app.view.xml:36:5:41:57 | selectedKey={controlRef2Model2>/selectedKey} | webapp/controller/app.controller.js:38:28:38:42 | new JSONModel() |
-| webapp/view/app.view.xml:36:5:41:57 | showSuggestion={viewModel2>/showSuggestion} | webapp/controller/app.controller.js:42:28:42:42 | new JSONModel() |
+| webapp/view/app.view.xml:36:5:41:57 | description={controlRef2Model1>/description} | webapp/controller/app.controller.js:40:28:40:42 | new JSONModel() |
+| webapp/view/app.view.xml:36:5:41:57 | selectedKey={controlRef2Model2>/selectedKey} | webapp/controller/app.controller.js:41:28:41:42 | new JSONModel() |
+| webapp/view/app.view.xml:36:5:41:57 | showSuggestion={viewModel2>/showSuggestion} | webapp/controller/app.controller.js:45:28:45:42 | new JSONModel() |
 | webapp/view/app.view.xml:36:5:41:57 | value={/input} | webapp/controller/app.controller.js:11:34:11:49 | new ODataModel() |

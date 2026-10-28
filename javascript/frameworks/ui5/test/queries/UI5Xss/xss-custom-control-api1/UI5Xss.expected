@@ -1,18 +1,36 @@
 nodes
 | webapp/control/xss.js:7:23:7:40 | { type: "string" } |
-| webapp/control/xss.js:14:23:14:40 | oControl.getText() |
+| webapp/control/xss.js:8:22:8:54 | { type: ... e: "" } |
+| webapp/control/xss.js:9:29:9:61 | { type: ... e: "" } |
+| webapp/control/xss.js:22:23:22:40 | oControl.getText() |
+| webapp/control/xss.js:23:23:23:39 | oControl.getRaw() |
+| webapp/control/xss.js:24:23:24:56 | oContro ... neric") |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/controller/app.controller.js:15:17:15:21 | value |
+| webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() |
+| webapp/controller/app.controller.js:17:28:17:32 | value |
+| webapp/controller/app.controller.js:18:47:18:51 | value |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
-| webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| webapp/view/app.view.xml:8:5:8:54 | text={/input} |
 edges
-| webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:14:23:14:40 | oControl.getText() |
+| webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:22:23:22:40 | oControl.getText() |
 | webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/control/xss.js:8:22:8:54 | { type: ... e: "" } | webapp/control/xss.js:23:23:23:39 | oControl.getRaw() |
+| webapp/control/xss.js:9:29:9:61 | { type: ... e: "" } | webapp/control/xss.js:24:23:24:56 | oContro ... neric") |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/control/xss.js:7:23:7:40 | { type: "string" } |
 | webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:5:5:7:28 | value={/input} |
-| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:8:5:8:38 | text={/input} |
+| webapp/controller/app.controller.js:9:17:9:27 | input: null | webapp/view/app.view.xml:8:5:8:54 | text={/input} |
+| webapp/controller/app.controller.js:15:17:15:21 | value | webapp/controller/app.controller.js:17:28:17:32 | value |
+| webapp/controller/app.controller.js:15:17:15:21 | value | webapp/controller/app.controller.js:18:47:18:51 | value |
+| webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() | webapp/controller/app.controller.js:15:17:15:21 | value |
+| webapp/controller/app.controller.js:17:28:17:32 | value | webapp/control/xss.js:8:22:8:54 | { type: ... e: "" } |
+| webapp/controller/app.controller.js:18:47:18:51 | value | webapp/control/xss.js:9:29:9:61 | { type: ... e: "" } |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:11:26:11:45 | new JSONModel(oData) |
-| webapp/view/app.view.xml:8:5:8:38 | text={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
+| webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/controller/app.controller.js:14:37:14:42 | oEvent |
+| webapp/view/app.view.xml:8:5:8:54 | text={/input} | webapp/controller/app.controller.js:9:17:9:27 | input: null |
 #select
-| webapp/control/xss.js:14:23:14:40 | oControl.getText() | webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:14:23:14:40 | oControl.getText() | XSS vulnerability due to $@. | webapp/control/xss.js:7:23:7:40 | { type: "string" } | user-provided value |
-| webapp/control/xss.js:14:23:14:40 | oControl.getText() | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/control/xss.js:14:23:14:40 | oControl.getText() | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
+| webapp/control/xss.js:22:23:22:40 | oControl.getText() | webapp/control/xss.js:7:23:7:40 | { type: "string" } | webapp/control/xss.js:22:23:22:40 | oControl.getText() | XSS vulnerability due to $@. | webapp/control/xss.js:7:23:7:40 | { type: "string" } | user-provided value |
+| webapp/control/xss.js:22:23:22:40 | oControl.getText() | webapp/view/app.view.xml:5:5:7:28 | value={/input} | webapp/control/xss.js:22:23:22:40 | oControl.getText() | XSS vulnerability due to $@. | webapp/view/app.view.xml:5:5:7:28 | value={/input} | user-provided value |
+| webapp/control/xss.js:23:23:23:39 | oControl.getRaw() | webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() | webapp/control/xss.js:23:23:23:39 | oControl.getRaw() | XSS vulnerability due to $@. | webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() | user-provided value |
+| webapp/control/xss.js:24:23:24:56 | oContro ... neric") | webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() | webapp/control/xss.js:24:23:24:56 | oContro ... neric") | XSS vulnerability due to $@. | webapp/controller/app.controller.js:15:25:15:53 | oEvent. ... Value() | user-provided value |
