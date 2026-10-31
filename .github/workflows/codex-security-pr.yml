@@ -1,0 +1,52 @@
+name: Codex Security PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-security-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    name: Codex Security
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Set up sandbox
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes bubblewrap apparmor-profiles
+          sudo apparmor_parser -r /usr/share/apparmor/extra-profiles/bwrap-userns-restrict
+
+      - name: Checkout PR
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Codex Security diff scan
+        id: security
+        uses: openai/codex-security@400aab4fa5c3376df00bf0d79b65222953170f0d # action-v0.8.2
+        with:
+          scope: diff
+          model: gpt-5.6-sol
+          effort: high
+          fail-on-severity: none
+          max-cost: "20"
+          verbose: "false"
+          upload-artifacts: "true"
+          retention-days: "7"
+          dry-run: "true"
+        # For a real scan, set dry-run to "false"
+        # and uncomment the following:
+        # env:
+        #   OPENAI_API_KEY: ${{ secrets.CODEX_SECURITY_API_KEY }}
+
