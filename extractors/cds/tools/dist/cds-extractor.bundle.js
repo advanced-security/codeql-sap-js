@@ -10612,7 +10612,7 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
           const parentPackageJsonPath = (0, import_path14.join)(existingAbsPath, "package.json");
           const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
           const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
-          if (isParentMonorepo && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
+          if (isParentMonorepo && (0, import_fs9.existsSync)((0, import_path14.join)(dir, "package.json")) && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
             shouldAdd = true;
           } else {
             shouldAdd = false;
@@ -10623,7 +10623,7 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
           const currentPackageJsonPath = (0, import_path14.join)(dir, "package.json");
           const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
           const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
-          if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
+          if (!(isCurrentMonorepo && (0, import_fs9.existsSync)((0, import_path14.join)(existingAbsPath, "package.json")) && isLikelyCdsProject(existingAbsPath))) {
             foundProjects.delete(existingProject);
           }
         }

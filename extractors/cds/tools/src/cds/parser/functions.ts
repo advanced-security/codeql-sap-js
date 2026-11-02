@@ -144,9 +144,11 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
             Array.isArray(parentPackageJson.workspaces) &&
             parentPackageJson.workspaces.length > 0;
 
-          // If parent is a monorepo with CDS content, allow both parent and child
+          // If parent is a monorepo with CDS content, allow both parent and child,
+          // but only when the child is a package of its own.
           if (
             isParentMonorepo &&
+            existsSync(join(dir, 'package.json')) &&
             (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))
           ) {
             // Both parent and child can coexist as separate CDS projects
@@ -168,8 +170,12 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
             Array.isArray(currentPackageJson.workspaces) &&
             currentPackageJson.workspaces.length > 0;
 
-          // If current is a monorepo and the existing project is a legitimate CDS project, keep both
-          if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
+          // If current is a monorepo and the existing project is a legitimate CDS package, keep both
+          if (!(
+            isCurrentMonorepo &&
+            existsSync(join(existingAbsPath, 'package.json')) &&
+            isLikelyCdsProject(existingAbsPath)
+          )) {
             foundProjects.delete(existingProject);
           }
         }
