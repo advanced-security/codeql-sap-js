@@ -7,6 +7,10 @@
  * CDS extractor itself (version resolution, compilation targets, path normalization).
  */
 
+export { sync as spawnSync } from 'cross-spawn';
+
+export { withCdsCompilationTargets } from './src/cds/compiler/targets';
+
 export { normalizeCdsJsonLocations, normalizeLocationPathsInFile } from './src/filesystem';
 
 export { determineCdsFilesToCompile, readPackageJsonFile } from './src/cds/parser/functions';

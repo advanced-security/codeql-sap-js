@@ -12,7 +12,7 @@ const buildOptions = {
   conditions: ['node'],
   entryPoints: ['cds-extractor.ts'],
   external: [
-    // Node.js built-in modules
+    // Let platform=node handle path so unused path imports can be removed.
     'assert',
     'buffer',
     'child_process',
@@ -24,7 +24,6 @@ const buildOptions = {
     'module',
     'net',
     'os',
-    'path',
     'process',
     'readline',
     'stream',

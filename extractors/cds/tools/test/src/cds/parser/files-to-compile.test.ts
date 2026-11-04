@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync } from 'fs';
-import { resolve, relative } from 'path';
+import { dirname, resolve, relative } from 'path';
 
 import * as tmp from 'tmp';
 
@@ -23,11 +23,13 @@ function validateSafePath(basePath: string, ...pathSegments: string[]): string {
 }
 
 describe('determineCdsFilesToCompile', () => {
+  const savedFilters = process.env.LGTM_INDEX_FILTERS;
   let tempDir: string;
   let sourceRoot: string;
   let tmpCleanup: (() => void) | undefined;
 
   beforeEach(() => {
+    delete process.env.LGTM_INDEX_FILTERS;
     // Create a secure temporary directory for each test
     const tmpObj = tmp.dirSync({ unsafeCleanup: true });
     tempDir = tmpObj.name;
@@ -36,11 +38,40 @@ describe('determineCdsFilesToCompile', () => {
   });
 
   afterEach(() => {
+    if (savedFilters === undefined) delete process.env.LGTM_INDEX_FILTERS;
+    else process.env.LGTM_INDEX_FILTERS = savedFilters;
     // Clean up temporary directory using tmp library's cleanup function
     if (tmpCleanup) {
       tmpCleanup();
     }
   });
+
+  it('applies source filters to workflow compilation inputs', () => {
+    process.env.LGTM_INDEX_FILTERS = 'exclude:ignored';
+    const result = determineCdsFilesToCompile(sourceRoot, {
+      projectDir: '.',
+      cdsFiles: ['service.cds', 'ignored/feature.cds'],
+    });
+    expect(result.compilationTargets).toEqual(['service.cds']);
+  });
+
+  it.each(['srv/allowed.cds', 'srv/nested/allowed.cds'])(
+    'does not compile excluded siblings of %s',
+    selected => {
+      const excluded = selected.replace('allowed.cds', 'excluded.cds');
+      mkdirSync(validateSafePath(sourceRoot, dirname(selected)), { recursive: true });
+      writeFileSync(validateSafePath(sourceRoot, selected), 'service Allowed {}');
+      writeFileSync(validateSafePath(sourceRoot, excluded), 'this is not valid CDS;');
+      process.env.LGTM_INDEX_FILTERS = `include:${selected}`;
+
+      const result = determineCdsFilesToCompile(sourceRoot, {
+        projectDir: '.',
+        cdsFiles: [selected, excluded],
+      });
+
+      expect(result.compilationTargets.map(file => file.replace(/\\/g, '/'))).toEqual([selected]);
+    },
+  );
 
   it('should return all files when there is only one CDS file', () => {
     const project = {

@@ -35,17 +35,25 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir: string): Map<string,
   const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
 
   const projectMap = new Map<string, BasicCdsProject>();
+  const projectDirSet = new Set(projectDirs);
 
   // First pass: create CdsProject objects for each project directory
   for (const projectDir of projectDirs) {
     // Skip projects whose directory matches a paths-ignore pattern
-    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns)) {
+    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns, true)) {
       cdsExtractorLog('info', `Skipping project '${projectDir}' — matches paths-ignore pattern`);
       continue;
     }
 
     const absoluteProjectDir = join(sourceRootDir, projectDir);
-    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
+    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir).filter(
+      file => {
+        for (let dir = dirname(file); ; dir = dirname(dir)) {
+          if (projectDirSet.has(dir)) return dir === projectDir;
+          if (dir === '.' || dirname(dir) === dir) return false;
+        }
+      },
+    );
 
     // Skip projects with no CDS files remaining after paths-ignore filtering
     if (cdsFiles.length === 0) {

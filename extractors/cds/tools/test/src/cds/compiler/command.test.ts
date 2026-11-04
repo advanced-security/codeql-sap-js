@@ -24,6 +24,10 @@ jest.mock('fs', () => ({
   readdirSync: jest.fn(),
 }));
 
+jest.mock('glob', () => ({
+  sync: jest.fn().mockReturnValue([]),
+}));
+
 jest.mock('path', () => {
   const original = jest.requireActual('path');
   return {

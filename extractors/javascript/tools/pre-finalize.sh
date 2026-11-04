@@ -22,16 +22,7 @@ fi
 
 echo "Running database index-files for UI5 (.view.xml and .fragment.xml) files ..."
 
-# Index UI5 *.view.xml and *.fragment.xml files.
-"${CODEQL_DIST}/codeql" database index-files \
-    --include-extension=".view.xml" \
-    --include-extension=".fragment.xml" \
-    --language="xml" \
-    --prune="**/node_modules/**/*" \
-    --prune="**/.eslint/**/*" \
-    --total-size-limit="10m" \
-    -- \
-    "$CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE"
+node "$(dirname "$0")/index-ui5.js"
 
 echo "Finished running database index-files for UI5 (.view.xml and .fragment.xml) files."
 

@@ -63,7 +63,7 @@ node dist/cds-extractor.js /path/to/source/root
 
 ## Development
 
-> **⚠️ IMPORTANT NOTE**: Any changes to the CDS extractor's compilation task behavior (including how and where `cds compile` commands are executed, project detection logic, or output file generation patterns) **MUST** be reflected in the `extractors/cds/tools/test/cds-compilation-for-actions.test.sh` script. The `.github/workflows/run-codeql-unit-tests-javascript.yml` workflow executes this script during the "Compile CAP CDS files" step to simulate the CDS extractor's compilation process for unit tests. If the script and extractor implementations diverge, the `CodeQL - Run Unit Tests (javascript)` workflow will fail on PRs, causing status check failures. Always review and update the test script when modifying compilation behavior to maintain consistency between local testing and CI/CD environments.
+> **⚠️ IMPORTANT NOTE**: Any changes to the CDS extractor's compilation task behavior (including how and where `cds compile` commands are executed, project detection logic, or output file generation patterns) **MUST** be reflected in the `extractors/cds/tools/workflow/compile-test-cds.mjs` script. The `.github/workflows/run-codeql-unit-tests-javascript.yml` workflow executes this script through the platform-specific `cds-compilation-for-actions` launcher during the "Compile CAP CDS files" step to simulate the CDS extractor's compilation process for unit tests. If the script and extractor implementations diverge, the `CodeQL - Run Unit Tests (javascript)` workflow will fail on PRs, causing status check failures. Always review and update the test script when modifying compilation behavior to maintain consistency between local testing and CI/CD environments.
 
 ### Project Structure
 
@@ -135,6 +135,23 @@ The extractor respects several CodeQL environment variables:
 - `CODEQL_EXTRACTOR_CDS_WIP_DATABASE`: Target database path
 - `LGTM_INDEX_FILTERS`: File filtering configuration
 
+Source filters are ordered; file-type opt-ins such as `include:**/*.json` do not
+restrict CDS paths. Re-included sources retain their generated JSON unless a later
+filter excludes it. Project directories use ancestor glob matching; files use full
+matches. Compiler versions prefer workspace/ancestor lockfile entries over root
+entries and package.json ranges.
+
+Large filtered scans cap filter batches at 4 KiB on Windows and 16 KiB elsewhere.
+Concrete filter paths containing asterisks or line breaks are skipped with a warning
+because the filter syntax cannot represent them literally.
+Nested workspace lockfiles are checked nearest-first; Maven `pom.xml` files also
+preserve independent CDS project boundaries.
+Absorbed feature files outside the standard CAP directories are compiled with their
+parent, while independently marked child projects retain their own sources.
+Lockfiles and project version tuples are read once per dependency-installation run.
+Partially selected CAP directories compile only their selected entry points in one
+project compilation; normal dependency imports still resolve.
+
 ### CDS Project Detection
 
 Projects are detected based on:
@@ -151,6 +168,14 @@ The extractor uses a sophisticated compilation approach:
 2. **Smart Caching**: Reuses compiled outputs and dependency installations
 3. **Error Recovery**: Handles compilation failures gracefully
 4. **Performance Tracking**: Monitors compilation times and resource usage
+
+Compiler targets are passed as literal arguments using `cross-spawn`, both in the
+extractor and the unit-test compilation workflow. Unix commands run without a shell;
+Windows commands use escaped `.cmd` shims only when required.
+Large target lists use a shared temporary CDS entry point in the project directory
+to keep commands bounded. Directory and index selection, project-wide compilation,
+and original source locations are preserved; the temporary file is removed after
+the compiler returns or fails.
 
 ## Performance Features
 

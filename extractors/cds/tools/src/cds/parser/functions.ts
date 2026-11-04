@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, statSync } from 'fs';
-import { basename, dirname, join, relative, sep } from 'path';
+import { basename, dirname, join, relative, resolve, sep } from 'path';
 
 import { sync } from 'glob';
 
@@ -88,8 +88,8 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
 
   const foundProjects = new Set<string>();
 
-  // Find all potential project directories by looking for package.json files and CDS files
-  const packageJsonFiles = sync(join(sourceRootDir, '**/package.json'), {
+  // Discover explicit project markers before applying the directory heuristics.
+  const projectFiles = sync(join(sourceRootDir, '**/{package.json,pom.xml}'), {
     nodir: true,
     ignore: ['**/node_modules/**', '**/*.testproj/**'],
     windowsPathsNoEscape: true,
@@ -104,9 +104,9 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
   // Collect all potential project directories
   const candidateDirectories = new Set<string>();
 
-  // Add directories with package.json files
-  for (const packageJsonFile of packageJsonFiles) {
-    candidateDirectories.add(dirname(packageJsonFile));
+  // Add directories with project markers
+  for (const projectFile of projectFiles) {
+    candidateDirectories.add(dirname(projectFile));
   }
 
   // Add directories with CDS files and try to find their project roots
@@ -144,9 +144,11 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
             Array.isArray(parentPackageJson.workspaces) &&
             parentPackageJson.workspaces.length > 0;
 
-          // If parent is a monorepo with CDS content, allow both parent and child
+          // If parent is a monorepo with CDS content, allow both parent and child,
+          // but only when the child has its own project marker.
           if (
             isParentMonorepo &&
+            (existsSync(join(dir, 'package.json')) || existsSync(join(dir, 'pom.xml'))) &&
             (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))
           ) {
             // Both parent and child can coexist as separate CDS projects
@@ -169,7 +171,12 @@ export function determineCdsProjectsUnderSourceDir(sourceRootDir: string): strin
             currentPackageJson.workspaces.length > 0;
 
           // If current is a monorepo and the existing project is a legitimate CDS project, keep both
-          if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
+          if (!(
+            isCurrentMonorepo &&
+            (existsSync(join(existingAbsPath, 'package.json')) ||
+              existsSync(join(existingAbsPath, 'pom.xml'))) &&
+            isLikelyCdsProject(existingAbsPath)
+          )) {
             foundProjects.delete(existingProject);
           }
         }
@@ -442,17 +449,31 @@ export function determineCdsFilesToCompile(
       expectedOutputFile: join(project.projectDir, modelCdsJsonFile),
     };
   }
+  project = {
+    ...project,
+    cdsFiles: filterIgnoredPaths(project.cdsFiles, getPathsIgnorePatterns(sourceRootDir)),
+  };
 
   const absoluteProjectDir = join(sourceRootDir, project.projectDir);
 
   // Check for standard CAP directories
   const capDirectories = ['db', 'srv', 'app'];
+  const extraFiles = project.cdsFiles
+    .map(file => relative(absoluteProjectDir, join(sourceRootDir, file)))
+    .filter(file => file.includes(sep) && !capDirectories.some(dir => file.startsWith(dir + sep)));
+  const rootCdsFiles = project.cdsFiles
+    .filter(file => dirname(join(sourceRootDir, file)) === absoluteProjectDir)
+    .map(file => basename(file));
+  if (rootCdsFiles.includes('index.cds')) {
+    return {
+      compilationTargets: ['index.cds', ...extraFiles],
+      expectedOutputFile: join(project.projectDir, modelCdsJsonFile),
+    };
+  }
   let existingCapDirs = capDirectories.filter(dir => existsSync(join(absoluteProjectDir, dir)));
 
-  // Drop any CAP directory whose .cds files are entirely covered by paths-ignore.
-  // project.cdsFiles is already filtered upstream by determineCdsFilesForProjectDir,
-  // so a directory with no surviving files here is "fully ignored" (or empty of .cds).
-  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
+  // Parent projects must not compile directories owned entirely by child projects.
+  if (existingCapDirs.length > 0) {
     const norm = (p: string): string => p.replace(/\\/g, '/');
     const before = existingCapDirs.length;
     existingCapDirs = existingCapDirs.filter(dir => {
@@ -463,28 +484,43 @@ export function determineCdsFilesToCompile(
     if (skipped > 0) {
       cdsExtractorLog(
         'info',
-        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || '.'}`,
+        `Skipped ${skipped} CAP directory(ies) without selected CDS sources in project ${project.projectDir || '.'}`,
       );
     }
   }
 
   if (existingCapDirs.length > 0) {
+    const selected = new Set(project.cdsFiles.map(file => resolve(sourceRootDir, file)));
+    const capTargets = existingCapDirs.flatMap(dir => {
+      const allFiles = sync(join(absoluteProjectDir, dir, '**/*.cds'), {
+        nodir: true,
+        ignore: ['**/node_modules/**', '**/*.testproj/**'],
+        windowsPathsNoEscape: true,
+      });
+      return allFiles.some(file => !selected.has(resolve(file)))
+        ? project.cdsFiles
+            .map(file => relative(absoluteProjectDir, join(sourceRootDir, file)))
+            .filter(file => dirname(file) === dir)
+        : [dir];
+    });
+    const nestedFiles = project.cdsFiles
+      .map(file => relative(absoluteProjectDir, join(sourceRootDir, file)))
+      .filter(
+        file =>
+          file.split(sep).length > 2 && existingCapDirs.some(dir => file.startsWith(dir + sep)),
+      );
     // Use standard CAP directories
     return {
-      compilationTargets: existingCapDirs,
+      compilationTargets: [...capTargets, ...extraFiles, ...nestedFiles],
       expectedOutputFile: join(project.projectDir, modelCdsJsonFile),
     };
   }
 
   // Check for root-level CDS files
-  const rootCdsFiles = project.cdsFiles
-    .filter(file => dirname(join(sourceRootDir, file)) === absoluteProjectDir)
-    .map(file => basename(file));
-
   if (rootCdsFiles.length > 0) {
     // Use root-level files
     return {
-      compilationTargets: rootCdsFiles,
+      compilationTargets: [...rootCdsFiles, ...extraFiles],
       expectedOutputFile: join(project.projectDir, modelCdsJsonFile),
     };
   }

@@ -14,7 +14,6 @@
  * project root (auto-detected from this script's location).
  */
 
-import { spawnSync } from 'child_process';
 import { createRequire } from 'module';
 import {
   existsSync,
@@ -37,6 +36,8 @@ const {
   readPackageJsonFile,
   modelCdsJsonFile, // "model.cds.json"
   setSourceRootDirectory,
+  spawnSync,
+  withCdsCompilationTargets,
 } = lib;
 
 // Project root is 4 levels up from extractors/cds/tools/workflow/
@@ -143,24 +144,26 @@ function getCdsFilesForProject(projectDir) {
 }
 
 function compileProject(projectDir, targets, cdsDkVersion) {
-  const args = [
-    '--yes', '--package', `@sap/cds-dk@${cdsDkVersion}`,
-    'cds', 'compile', ...targets,
-    '--locations', '--to', 'json', '--dest', modelCdsJsonFile, '--log-level', 'warn',
-  ];
+  return withCdsCompilationTargets(projectDir, targets, compileTargets => {
+    const args = [
+      '--yes', '--package', `@sap/cds-dk@${cdsDkVersion}`,
+      'cds', 'compile', ...compileTargets,
+      '--locations', '--to', 'json', '--dest', modelCdsJsonFile, '--log-level', 'warn',
+    ];
 
-  const result = spawnSync('npx', args, {
-    cwd: projectDir,
-    shell: true,
-    stdio: 'pipe',
-    timeout: 300_000,
+    const result = spawnSync('npx', args, {
+      cwd: projectDir,
+      shell: false,
+      stdio: 'pipe',
+      timeout: 300_000,
+    });
+
+    return {
+      success: result.status === 0,
+      stderr: result.stderr?.toString() || '',
+      exitCode: result.status,
+    };
   });
-
-  return {
-    success: result.status === 0,
-    stderr: result.stderr?.toString() || '',
-    exitCode: result.status,
-  };
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -212,7 +215,7 @@ for (const testDir of testDirs) {
   const cdsDkVersion = resolvePreferredCdsDkVersion(testDir);
   console.log(`  CDS-DK version: ${cdsDkVersion}`);
 
-  // Determine targets using extractor's determineCdsFilesToCompile
+  // Share production's index, CAP directory, and absorbed feature-file targets.
   const cdsFiles = getCdsFilesForProject(testDir);
   const { compilationTargets } = determineCdsFilesToCompile(testDir, {
     cdsFiles,

@@ -1,4 +1,5 @@
 import * as childProcess from 'child_process';
+import { existsSync } from 'fs';
 import * as path from 'path';
 
 import { globSync } from 'glob';
@@ -12,6 +13,13 @@ import * as filesystem from '../../../../src/filesystem';
 jest.mock('child_process', () => ({
   execFileSync: jest.fn(),
   spawnSync: jest.fn(),
+}));
+jest.mock('cross-spawn', () => ({
+  sync: jest.requireMock<typeof import('child_process')>('child_process').spawnSync,
+}));
+jest.mock('fs', () => ({
+  ...jest.requireActual('fs'),
+  existsSync: jest.fn(),
 }));
 
 jest.mock('path', () => {
@@ -38,6 +46,7 @@ jest.mock('../../../../src/cds/compiler/version', () => ({
 
 jest.mock('glob', () => ({
   globSync: jest.fn(),
+  sync: jest.fn().mockReturnValue([]),
 }));
 
 describe('compile .cds to .cds.json', () => {
@@ -55,6 +64,7 @@ describe('compile .cds to .cds.json', () => {
       // Default mocks for filesystem functions
       (filesystem.fileExists as jest.Mock).mockReturnValue(true);
       (filesystem.dirExists as jest.Mock).mockReturnValue(false);
+      jest.mocked(existsSync).mockImplementation(file => filesystem.dirExists(file.toString()));
 
       // Mock getCdsVersion to return a version
       (getCdsVersion as jest.Mock).mockReturnValue('7.0.0');
@@ -145,6 +155,98 @@ describe('compile .cds to .cds.json', () => {
         }),
       );
     });
+
+    it.each([
+      {
+        command: 'cds',
+        executable: 'cds',
+        baseArgs: [],
+      },
+      {
+        command: 'npx --yes --package @sap/cds-dk cds',
+        executable: 'npx',
+        baseArgs: ['--yes', '--package', '@sap/cds-dk', 'cds'],
+      },
+      {
+        command: '/cache with spaces/node_modules/.bin/cds',
+        executable: '/cache with spaces/node_modules/.bin/cds',
+        baseArgs: [],
+      },
+      {
+        command: 'C:\\cache with spaces\\node_modules\\.bin\\cds.cmd',
+        executable: 'C:\\cache with spaces\\node_modules\\.bin\\cds.cmd',
+        baseArgs: [],
+      },
+    ])(
+      'should preserve literal compilation targets for $command',
+      ({ command, executable, baseArgs }) => {
+        const sourceRoot = '/source/root';
+        const projectDir = 'test-project';
+        const targets = [
+          'fts/feature one.cds',
+          'fts/feature.cds; printf __INJECTED__; #.cds',
+          'fts/feature$(echo marker).cds',
+          "fts/feature'quoted.cds",
+          'fts/feature%PATH%!name&value^.cds',
+        ];
+        const project: BasicCdsProject = {
+          cdsFiles: [
+            `${projectDir}/srv/service.cds`,
+            ...targets.map(target => `${projectDir}/${target}`),
+          ],
+          compilationTargets: ['srv', ...targets],
+          expectedOutputFile: 'model.cds.json',
+          projectDir,
+        };
+        const projectMap = new Map([[projectDir, project]]);
+        jest
+          .mocked(path.relative)
+          .mockImplementation(jest.requireActual<typeof path>('path').relative);
+        jest
+          .mocked(filesystem.dirExists)
+          .mockImplementation(directory => directory === `${sourceRoot}/${projectDir}/srv`);
+        jest.mocked(globSync).mockReturnValue([]);
+        jest.mocked(childProcess.spawnSync).mockReturnValue({
+          output: [],
+          pid: 1,
+          signal: null,
+          status: 0,
+          stderr: Buffer.from(''),
+          stdout: Buffer.from(''),
+        });
+
+        const result = compileCdsToJson(
+          'test.cds',
+          sourceRoot,
+          command,
+          undefined,
+          projectMap,
+          projectDir,
+        );
+
+        expect(result.success).toBe(true);
+        expect(childProcess.spawnSync).toHaveBeenCalledWith(
+          executable,
+          [
+            ...baseArgs,
+            'compile',
+            'srv',
+            ...targets,
+            '--to',
+            'json',
+            '--dest',
+            'model.cds.json',
+            '--locations',
+            '--log-level',
+            'warn',
+          ],
+          expect.objectContaining({
+            cwd: `${sourceRoot}/${projectDir}`,
+            shell: false,
+          }),
+        );
+      },
+    );
 
     it('should ensure cwd is always project base directory for spawned processes', () => {
       // Setup
@@ -944,6 +1046,7 @@ describe('compile .cds to .cds.json', () => {
       const sourceRoot = '/source/root';
       const projectDir = 'bookshop';
       const expectedOutputPath = `${sourceRoot}/${projectDir}/model.cds.json`;
+      (path.relative as jest.Mock).mockImplementation(jest.requireActual('path').relative);
 
       // Create project dependency map with index.cds and CAP directories
       const projectMap = new Map();
@@ -1027,6 +1130,7 @@ describe('compile .cds to .cds.json', () => {
       const sourceRoot = '/source/root';
       const projectDir = 'standard-cap';
       const expectedOutputPath = `${sourceRoot}/${projectDir}/model.cds.json`;
+      (path.relative as jest.Mock).mockImplementation(jest.requireActual('path').relative);
 
       // Create project dependency map without index.cds but with CAP directories
       const projectMap = new Map();
@@ -1036,6 +1140,7 @@ describe('compile .cds to .cds.json', () => {
           'standard-cap/db/schema.cds', // CAP directory files
           'standard-cap/srv/service.cds', // CAP directory files
           'standard-cap/app/app.cds', // CAP directory files
+          'standard-cap/fts/feature-a/flag.cds',
         ],
         compilationTargets: ['db', 'srv', 'app'], // Should contain CAP directories
         expectedOutputFile: 'model.cds.json',
@@ -1101,6 +1206,9 @@ describe('compile .cds to .cds.json', () => {
       const spawnCall = (childProcess.spawnSync as jest.Mock).mock.calls[0];
       const args = spawnCall[1];
       expect(args).not.toContain('index.cds');
+      expect(args.map((arg: string) => arg.replace(/\\/g, '/'))).toContain(
+        'fts/feature-a/flag.cds',
+      );
     });
   });
 

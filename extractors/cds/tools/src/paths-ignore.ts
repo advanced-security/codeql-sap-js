@@ -76,11 +76,11 @@ export function findCodeqlConfigFile(sourceRoot: string): string | undefined {
 }
 
 /**
- * Reads the CodeQL configuration file and extracts the `paths-ignore`
- * patterns list.
+ * Reads ordered CLI include/exclude filters, or `paths-ignore` from the CodeQL
+ * configuration file. Include patterns use a `!` prefix.
  *
  * @param sourceRoot - The source root directory
- * @returns Array of paths-ignore glob patterns, or empty array if none
+ * @returns Array of path filter patterns, or empty array if none
  */
 export function getPathsIgnorePatterns(sourceRoot: string): string[] {
   const cached = patternsCache.get(sourceRoot);
@@ -88,9 +88,33 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
     return cached;
   }
 
+  if (process.env.LGTM_INDEX_FILTERS) {
+    const envPatterns = process.env.LGTM_INDEX_FILTERS.split(/\r?\n/).flatMap(line => {
+      const filter = /^(include|exclude):\s*(.*?)\s*$/.exec(line);
+      return filter?.[2] ? [filter[1] === 'include' ? `!${filter[2]}` : filter[2]] : [];
+    });
+    // Extension-only opt-ins (e.g. `include:**/*.json`) must not bypass the
+    // configuration's paths-ignore; config patterns come last so they win.
+    const onlyExtensionOptIns =
+      envPatterns.length > 0 &&
+      envPatterns.every(p => p.startsWith('!') && /^(?:\*\*\/)?\*\.[^/]+$/.test(p.slice(1)));
+    if (!onlyExtensionOptIns) {
+      patternsCache.set(sourceRoot, envPatterns);
+      return envPatterns;
+    }
+    const patterns = [...envPatterns, ...readConfigPatterns(sourceRoot)];
+    patternsCache.set(sourceRoot, patterns);
+    return patterns;
+  }
+
+  const patterns = readConfigPatterns(sourceRoot);
+  patternsCache.set(sourceRoot, patterns);
+  return patterns;
+}
+
+function readConfigPatterns(sourceRoot: string): string[] {
   const configPath = findCodeqlConfigFile(sourceRoot);
   if (!configPath) {
-    patternsCache.set(sourceRoot, []);
     return [];
   }
 
@@ -99,7 +123,6 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
     const config = yamlLoad(content) as CodeqlConfig | null;
 
     if (!config || !Array.isArray(config['paths-ignore'])) {
-      patternsCache.set(sourceRoot, []);
       return [];
     }
 
@@ -114,11 +137,9 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
       );
     }
 
-    patternsCache.set(sourceRoot, patterns);
     return patterns;
   } catch (error) {
     cdsExtractorLog('warn', `Failed to read CodeQL config file at ${configPath}: ${String(error)}`);
-    patternsCache.set(sourceRoot, []);
     return [];
   }
 }
@@ -132,29 +153,57 @@ export function getPathsIgnorePatterns(sourceRoot: string): string[] {
  *  - `**` matches across directory boundaries
  *  - `*` matches within a single path segment
  *
+ * Source-path includes restrict the search scope; extension-only opt-ins do
+ * not. Within that scope, the last matching directive wins.
+ * Directories may partially match includes so their descendants can be checked.
+ *
  * @param relativePath - File path relative to the source root
  * @param patterns     - Array of paths-ignore glob patterns
+ * @param isDirectory - Whether to retain ancestors of included paths
+ * @param includedSourcePaths - Sources whose re-inclusion also retains this generated file
  * @returns true if the path should be ignored
  */
-export function shouldIgnorePath(relativePath: string, patterns: string[]): boolean {
+export function shouldIgnorePath(
+  relativePath: string,
+  patterns: string[],
+  isDirectory = false,
+  includedSourcePaths: readonly string[] = [],
+): boolean {
   const matchOptions = { dot: true, windowsPathsNoEscape: true };
-
-  for (const raw of patterns) {
+  const normalizedPath = relativePath.replace(/\\/g, '/');
+  const includePaths = [
+    normalizedPath,
+    ...includedSourcePaths.map(source => source.replace(/\\/g, '/')),
+  ];
+  const matches = (raw: string, include = false): boolean => {
     // Strip trailing slashes so `vendor/` is treated the same as `vendor`
     const pattern = raw.replace(/\/+$/, '');
+    return (
+      (include && isDirectory && normalizedPath === '.') ||
+      (include ? includePaths : [normalizedPath]).some(
+        candidate =>
+          minimatch(candidate, pattern, { ...matchOptions, partial: include && isDirectory }) ||
+          minimatch(candidate, `${pattern}/**`, matchOptions),
+      )
+    );
+  };
 
-    // Direct minimatch check
-    if (minimatch(relativePath, pattern, matchOptions)) {
-      return true;
-    }
+  const sourceIncludes = patterns
+    .filter(p => p.startsWith('!'))
+    .map(p => p.slice(1))
+    .filter(p => !/^(?:\*\*\/)?\*\.[^/]+$/.test(p));
+  if (sourceIncludes.length > 0 && !sourceIncludes.some(p => matches(p, true))) {
+    return true;
+  }
 
-    // Also match as a directory prefix: pattern `vendor` should
-    // match `vendor/lib/foo.cds` (i.e. anything nested underneath).
-    if (minimatch(relativePath, `${pattern}/**`, matchOptions)) {
-      return true;
+  let ignored = false;
+  for (const raw of patterns) {
+    const include = raw.startsWith('!');
+    if (matches(include ? raw.slice(1) : raw, include)) {
+      ignored = !include;
     }
   }
-  return false;
+  return ignored;
 }
 
 /**

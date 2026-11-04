@@ -21,8 +21,7 @@ jest.mock('child_process', () => ({
 }));
 
 jest.mock('../../src/environment', () => ({
-  applyPathsIgnoreToLgtmFilters: jest.fn(),
-  configureLgtmIndexFilters: jest.fn(),
+  configureLgtmIndexFilters: jest.fn().mockReturnValue(['']),
   getPlatformInfo: jest.fn(),
 }));
 
@@ -43,6 +42,11 @@ jest.mock('../../src/logging', () => ({
 }));
 
 describe('codeql', () => {
+  const originalEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
 
@@ -145,6 +149,32 @@ describe('codeql', () => {
       (filesystem.removeMarkerFile as jest.Mock).mockReturnValue(undefined);
     });
 
+    it.each([false, true])('should process batches and stop on failure: %s', fail => {
+      const batches = ['first', 'second', 'third'];
+      jest.mocked(environment.configureLgtmIndexFilters).mockImplementationOnce(() => {
+        process.env.LGTM_INDEX_FILTERS = batches[0];
+        return batches;
+      });
+      const processed: string[] = [];
+      jest.mocked(childProcess.spawnSync).mockImplementation(() => {
+        processed.push(process.env.LGTM_INDEX_FILTERS ?? '');
+        return {
+          output: [],
+          pid: 1,
+          signal: null,
+          status: fail && processed.length === 2 ? 1 : 0,
+          stderr: Buffer.alloc(0),
+          stdout: Buffer.alloc(0),
+        };
+      });
+
+      const success = runJavaScriptExtractionWithMarker('/source', '/autobuild.sh', '/codeql');
+
+      expect(success).toBe(!fail);
+      expect(processed).toEqual(fail ? batches.slice(0, 2) : batches);
+      expect(filesystem.removeMarkerFile).toHaveBeenCalledTimes(1);
+    });
+
     it('should create and remove marker file during extraction', () => {
       (childProcess.spawnSync as jest.Mock).mockReturnValue({
         status: 0,
@@ -220,6 +250,28 @@ describe('codeql', () => {
       expect(addJavaScriptExtractorDiagnostic).toHaveBeenCalledWith(
         '/path/to/source',
         'Error running JavaScript extractor: Extraction failed',
+        '/path/to/codeql',
+        '/path/to/source',
+      );
+    });
+
+    it('should diagnose filter configuration failures without starting extraction', () => {
+      jest.mocked(environment.configureLgtmIndexFilters).mockImplementationOnce(() => {
+        throw new Error('Cannot read generated files');
+      });
+
+      const result = runJavaScriptExtractionWithMarker(
+        '/path/to/source',
+        '/path/to/autobuild.sh',
+        '/path/to/codeql',
+      );
+
+      expect(result).toBe(false);
+      expect(childProcess.spawnSync).not.toHaveBeenCalled();
+      expect(filesystem.createMarkerFile).not.toHaveBeenCalled();
+      expect(addJavaScriptExtractorDiagnostic).toHaveBeenCalledWith(
+        '/path/to/source',
+        'Failed to configure JavaScript extraction filters: Error: Cannot read generated files',
         '/path/to/codeql',
         '/path/to/source',
       );

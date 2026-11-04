@@ -19,11 +19,13 @@ jest.mock('js-yaml');
 
 describe('paths-ignore', () => {
   const savedCodeqlConfigPath = process.env.CODEQL_CONFIG_PATH;
+  const savedFilters = process.env.LGTM_INDEX_FILTERS;
 
   beforeEach(() => {
     jest.resetAllMocks();
     clearPathsIgnoreCache();
     delete process.env.CODEQL_CONFIG_PATH;
+    delete process.env.LGTM_INDEX_FILTERS;
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -35,6 +37,11 @@ describe('paths-ignore', () => {
       process.env.CODEQL_CONFIG_PATH = savedCodeqlConfigPath;
     } else {
       delete process.env.CODEQL_CONFIG_PATH;
+    }
+    if (savedFilters === undefined) {
+      delete process.env.LGTM_INDEX_FILTERS;
+    } else {
+      process.env.LGTM_INDEX_FILTERS = savedFilters;
     }
   });
 
@@ -128,6 +135,37 @@ describe('paths-ignore', () => {
   });
 
   describe('getPathsIgnorePatterns', () => {
+    it.each([
+      ['include:**/*.json', false],
+      ['include:*.json', false],
+      ['exclude:**/*.*\ninclude:**/*.cds', false],
+      ['include:**/*.cds\nexclude:app-a', true],
+      ['exclude:app-a\ninclude:**', false],
+      ['exclude:app-a\ninclude:**/*', false],
+      ['include:app-b\ninclude:**', false],
+      ['include:app-b\ninclude:**/*', false],
+      ['include:app-b\ninclude:**/*.cds', true],
+    ])('should preserve ordered source filtering for %s', (filters, ignored) => {
+      process.env.LGTM_INDEX_FILTERS = filters;
+      expect(shouldIgnorePath('app-a/srv/service.cds', getPathsIgnorePatterns('/source'))).toBe(
+        ignored,
+      );
+    });
+
+    it('should apply config paths-ignore when LGTM_INDEX_FILTERS only opts in extensions', () => {
+      process.env.LGTM_INDEX_FILTERS = 'include:**/*.json';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/.github/codeql/codeql-config.yml',
+      );
+      (readFileSync as jest.Mock).mockReturnValue('yaml-content');
+      (yamlLoad as jest.Mock).mockReturnValue({ 'paths-ignore': ['vendor'] });
+
+      const patterns = getPathsIgnorePatterns('/source');
+      expect(shouldIgnorePath('vendor/srv/model.cds.json', patterns)).toBe(true);
+      expect(shouldIgnorePath('vendor/srv/service.cds', patterns)).toBe(true);
+      expect(shouldIgnorePath('app/srv/model.cds.json', patterns)).toBe(false);
+    });
+
     it('should return patterns from a config file with paths-ignore list', () => {
       (existsSync as jest.Mock).mockImplementation(
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
@@ -302,6 +340,36 @@ describe('paths-ignore', () => {
 
     it('should return false when no patterns are given', () => {
       expect(shouldIgnorePath('anything.cds', [])).toBe(false);
+    });
+
+    it('should keep only paths inside, or ancestors of, `!`-prefixed `paths` entries', () => {
+      const patterns = ['!srv/cds', 'srv/cds/test'];
+      expect(shouldIgnorePath('srv/cds/api/service.cds', patterns)).toBe(false);
+      expect(shouldIgnorePath('.', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('srv', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('db/schema.cds', patterns)).toBe(true);
+      expect(shouldIgnorePath('srv/cds/test/data.cds', patterns)).toBe(true);
+    });
+
+    it('should match glob ancestors, but require full matches for files on both platforms', () => {
+      const patterns = ['!app-*/srv/*.cds'];
+
+      expect(shouldIgnorePath('app-a', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('app-a\\srv', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('app-a/db', patterns, true)).toBe(true);
+      expect(shouldIgnorePath('app-a/srv/service.json', patterns)).toBe(true);
+      expect(shouldIgnorePath('app-a\\srv\\service.cds', patterns)).toBe(false);
+    });
+
+    it('should retain generated files when their sources are re-included', () => {
+      const patterns = ['app-a', '!app-a/srv/*.cds'];
+      const sources = ['app-a/srv/service.cds'];
+
+      expect(shouldIgnorePath('app-a/model.cds.json', patterns, false, sources)).toBe(false);
+      expect(shouldIgnorePath('app-b/model.cds.json', patterns)).toBe(true);
+      expect(
+        shouldIgnorePath('app-a/model.cds.json', [...patterns, '**/*.cds.json'], false, sources),
+      ).toBe(true);
     });
 
     it('should match multiple patterns (any match returns true)', () => {
