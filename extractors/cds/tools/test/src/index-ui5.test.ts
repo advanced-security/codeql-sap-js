@@ -31,37 +31,89 @@ describe('UI5 XML include patterns', () => {
 
   it.each([
     {
+      separator: '/',
       filters: 'include:*.json',
       scope: [],
       ordered: ['*.json'],
     },
     {
+      separator: '/',
       filters:
         'include:**/*.json\r\ninclude:app-*/webapp/**\r\nexclude:**/*.*\r\ninclude:**/*.view.xml\r\n',
       scope: ['app-*/webapp/**'],
       ordered: ['**/*.json', 'app-*/webapp/**', '!**/*.*', '**/*.view.xml'],
     },
     {
+      separator: '/',
       filters: 'include:!Main.view.xml',
       scope: ['\\!Main.view.xml'],
       ordered: ['\\!Main.view.xml'],
     },
     {
+      separator: '/',
       filters: 'include:!!Main.fragment.xml',
       scope: ['\\!!Main.fragment.xml'],
       ordered: ['\\!!Main.fragment.xml'],
     },
     {
+      separator: '/',
       filters: 'exclude:!Main.view.xml',
       scope: [],
       ordered: ['!\\!Main.view.xml'],
     },
     {
+      separator: '/',
       filters: 'include:!app/**\nexclude:!app/private/**',
       scope: ['\\!app/**'],
       ordered: ['\\!app/**', '!\\!app/private/**'],
     },
-  ])('should preserve filter intent and order in both CodeQL calls: $filters', test => {
+    {
+      separator: '/',
+      filters: String.raw`include:webapp/Main\Panel.view.xml`,
+      scope: [String.raw`webapp/Main\\Panel.view.xml`],
+      ordered: [String.raw`webapp/Main\\Panel.view.xml`],
+    },
+    {
+      separator: '/',
+      filters: String.raw`exclude:webapp/Main\Panel.view.xml`,
+      scope: [],
+      ordered: [String.raw`!webapp/Main\\Panel.view.xml`],
+    },
+    {
+      separator: '/',
+      filters: String.raw`include:!webapp/Main\Panel.view.xml`,
+      scope: [String.raw`\!webapp/Main\\Panel.view.xml`],
+      ordered: [String.raw`\!webapp/Main\\Panel.view.xml`],
+    },
+    {
+      separator: '/',
+      filters: String.raw`exclude:!webapp/Main\Panel.fragment.xml`,
+      scope: [],
+      ordered: [String.raw`!\!webapp/Main\\Panel.fragment.xml`],
+    },
+    {
+      separator: '\\',
+      filters: String.raw`include:webapp\Main.view.xml`,
+      scope: ['webapp/Main.view.xml'],
+      ordered: ['webapp/Main.view.xml'],
+    },
+    {
+      separator: '\\',
+      filters: String.raw`exclude:webapp\Main.fragment.xml`,
+      scope: [],
+      ordered: ['!webapp/Main.fragment.xml'],
+    },
+    {
+      separator: '\\',
+      filters: String.raw`include:!webapp\Main.view.xml`,
+      scope: [String.raw`\!webapp/Main.view.xml`],
+      ordered: [String.raw`\!webapp/Main.view.xml`],
+    },
+  ])('should preserve filters with separator $separator in both CodeQL calls: $filters', test => {
+    jest.doMock('path', () => ({
+      ...jest.requireActual<typeof import('path')>('path'),
+      sep: test.separator,
+    }));
     process.env.LGTM_INDEX_FILTERS = test.filters;
     jest
       .mocked(readFileSync)

@@ -563,7 +563,7 @@ describe('environment', () => {
         `include:${cdsExtractorMarkerFileName}`,
       ]);
       expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
-      expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
+      expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON\n.csn:JSON');
     });
 
     it.each(['db/csn.json', 'db/schema.csn', 'flat.csn'])(

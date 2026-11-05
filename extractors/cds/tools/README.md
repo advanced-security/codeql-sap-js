@@ -163,7 +163,8 @@ Model selection uses one owned-model inventory per project:
 - Owned CSN inputs remain eligible even without selected CDS sources, including in flat
   projects. They retain compilation targets and extraction metadata. Selected CSN source
   paths are included with or without source filters, subject to literal-filename safeguards;
-  generated file and directory outputs respect explicit output exclusions.
+  `.csn` inputs are registered with the JavaScript extractor's JSON parser. Generated file
+  and directory outputs respect explicit output exclusions.
 - Initial compilation, retries, and the test workflow share target-selection and bounded
   compiler invocation logic. Native Windows separators are normalized; literal Unix
   backslashes in source and output paths are preserved.

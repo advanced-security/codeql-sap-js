@@ -324,8 +324,8 @@ export function configureLgtmIndexFilters(
 
   process.env.LGTM_INDEX_FILTERS = filters[0];
   process.env.LGTM_INDEX_TYPESCRIPT = 'NONE';
-  // Configure to copy over the .cds files as well, by pretending they are JSON.
-  process.env.LGTM_INDEX_FILETYPES = '.cds:JSON';
+  // Copy CDS sources and extract CSN inputs using the JSON file type.
+  process.env.LGTM_INDEX_FILETYPES = '.cds:JSON\n.csn:JSON';
   cdsExtractorLog(
     'info',
     `Configured JavaScript extraction with ${patterns.length} source filter(s).`,

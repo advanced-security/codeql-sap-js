@@ -6,7 +6,8 @@ during the `codeql database create` process.
 
 Both platform launchers require `index-ui5.js` alongside them and Node.js on PATH.
 
-UI5 XML indexing escapes selected filenames as literal glob patterns, preserving Unix
-backslashes while normalizing Windows path separators.
+UI5 XML indexing normalizes native separators and escapes literal Unix backslashes in
+include/exclude filters before applying them to file selection and indexing. Selected
+filenames are also escaped as literal glob patterns.
 
 The script requires that the `cds` extractor is available when `codeql database init` is called. This can either be through providing the extractors parent directory using the `--search-path` bundle, or by including the extractor (and this pre-finalize script) in a custom bundle created by the [CodeQL Development Toolkit (qlt)](https://github.com/advanced-security/codeql-development-toolkit).

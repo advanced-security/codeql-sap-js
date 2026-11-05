@@ -22,7 +22,13 @@ const filters = (process.env.LGTM_INDEX_FILTERS || '')
   .split(/\r?\n/)
   .flatMap((line) => {
     const match = /^(include|exclude):\s*(.*?)\s*$/.exec(line);
-    return match?.[2] ? [[match[1], match[2].replace(/^!/, '\\!')]] : [];
+    if (!match?.[2]) return [];
+    const pattern = match[2]
+      .split(sep)
+      .join('/')
+      .replace(/\\/g, '\\\\')
+      .replace(/^!/, '\\!');
+    return [[match[1], pattern]];
   });
 const scope = filters.filter(
   ([kind, pattern]) =>

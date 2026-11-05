@@ -251,6 +251,7 @@ fs.writeFileSync('model.cds.json', '{}');
 
         expect(success).toBe(true);
         expect(graph.projects.get('.')?.csnFiles).toContain(model);
+        expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON\n.csn:JSON');
         expect(process.env.LGTM_INDEX_FILTERS?.split('\n')).toEqual([
           'exclude:**/*.*',
           'include:**/*.cds',

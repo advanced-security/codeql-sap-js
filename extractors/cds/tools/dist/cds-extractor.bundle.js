@@ -9033,7 +9033,7 @@ include:${pattern}`;
   const filters = batches.map((batch) => batch + suffix);
   process.env.LGTM_INDEX_FILTERS = filters[0];
   process.env.LGTM_INDEX_TYPESCRIPT = "NONE";
-  process.env.LGTM_INDEX_FILETYPES = ".cds:JSON";
+  process.env.LGTM_INDEX_FILETYPES = ".cds:JSON\n.csn:JSON";
   cdsExtractorLog(
     "info",
     `Configured JavaScript extraction with ${patterns.length} source filter(s).`
