@@ -7,6 +7,8 @@
  * CDS extractor itself (version resolution, compilation targets, path normalization).
  */
 
+export { runCdsCompiler } from './src/cds/compiler/compile';
+
 export { normalizeCdsJsonLocations, normalizeLocationPathsInFile } from './src/filesystem';
 
 export { determineCdsFilesToCompile, readPackageJsonFile } from './src/cds/parser/functions';

@@ -59,6 +59,7 @@ describe('CDS Extractor Exit Code Safety', () => {
       expect(extractorContent).toMatch(/addDependencyGraphDiagnostic/);
       expect(extractorContent).toMatch(/addNoCdsProjectsDiagnostic/);
       expect(extractorContent).toMatch(/addCompilationDiagnostic/);
+      expect(extractorContent).not.toContain('addDependencyInstallationDiagnostic(');
     });
   });
 

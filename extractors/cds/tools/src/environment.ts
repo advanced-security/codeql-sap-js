@@ -3,10 +3,13 @@ import { existsSync } from 'fs';
 import { arch, platform } from 'os';
 import { join, resolve } from 'path';
 
+import { sync as globSync } from 'glob';
+
+import type { CdsDependencyGraph } from './cds/parser/types';
 import { cdsExtractorMarkerFileName } from './constants';
 import { dirExists } from './filesystem';
 import { cdsExtractorLog } from './logging';
-import { getPathsIgnorePatterns } from './paths-ignore';
+import { getPathsIgnorePatterns, normalizePathSeparators, shouldIgnorePath } from './paths-ignore';
 
 /**
  * Interface for platform information
@@ -240,73 +243,86 @@ export function getAutobuildScriptPath(jsExtractorRoot: string): string {
 /**
  * Configure LGTM index filters for CDS files
  */
-export function configureLgtmIndexFilters(): void {
-  let excludeFilters = '';
+export function configureLgtmIndexFilters(
+  sourceRoot: string,
+  dependencyGraph?: CdsDependencyGraph,
+): string[] {
+  const patterns = getPathsIgnorePatterns(sourceRoot);
+  const projects = [...(dependencyGraph?.projects.values() ?? [])];
+  const outputSources = new Map(
+    projects.map(project => [
+      normalizePathSeparators(project.expectedOutputFile),
+      [...project.cdsFiles, ...(project.csnFiles ?? [])].map(normalizePathSeparators),
+    ]),
+  );
+  const includes = new Set(
+    patterns.length === 0 ? ['**/*.cds.json', '**/*.cds'] : [...outputSources.values()].flat(),
+  );
 
-  if (process.env.LGTM_INDEX_FILTERS) {
-    cdsExtractorLog(
-      'info',
-      `Found $LGTM_INDEX_FILTERS already set to:
-${process.env.LGTM_INDEX_FILTERS}`,
-    );
-    // Use forward slashes explicitly — join() uses backslashes on Windows
-    // which causes 'Illegal use of **' errors in the JS extractor.
-    const allowedExcludePatterns = ['exclude:**/*', 'exclude:**/*.*'];
-
-    excludeFilters =
-      '\n' +
-      process.env.LGTM_INDEX_FILTERS.split('\n')
-        .filter(
-          line =>
-            line.startsWith('exclude') &&
-            !allowedExcludePatterns.some(pattern => line.includes(pattern)),
-        )
-        .join('\n');
+  if (patterns.length > 0) {
+    const filePatterns = dependencyGraph ? '**/*.cds.json' : ['**/*.cds', '**/*.cds.json'];
+    for (const candidate of globSync(filePatterns, {
+      cwd: sourceRoot,
+      dot: true,
+      ignore: ['**/node_modules/**'],
+      nodir: true,
+      windowsPathsNoEscape: true,
+    })) {
+      const file = normalizePathSeparators(candidate);
+      let ancestor = file;
+      while (!outputSources.has(ancestor) && ancestor.includes('/')) {
+        ancestor = ancestor.slice(0, ancestor.lastIndexOf('/'));
+      }
+      if (!shouldIgnorePath(file, patterns, false, outputSources.get(ancestor))) {
+        includes.add(file);
+      }
+    }
   }
 
-  // Enable extraction of the .cds.json files only.
-  //
-  // The cdsExtractorMarkerFileName file is auto-created by the CDS extractor in order
-  // to force the underlying JS extractor to see at least one .js file, which became a
-  // requirement starting with v2.23.5 of the CodeQL CLI.
-  // Use forward slashes explicitly — join() uses backslashes on Windows
-  // which causes 'Illegal use of **' errors in the JS extractor.
-  const lgtmIndexFiltersPatterns = [
-    'exclude:**/*.*',
-    'include:**/*.cds.json',
-    'include:**/*.cds',
-    `include:**/${cdsExtractorMarkerFileName}`,
-    'exclude:**/node_modules/**/*.*',
-  ].join('\n');
+  // Replay neither source-wide includes nor exclusions after resolving their order.
+  // The marker must survive user filters so the JavaScript extractor can run.
+  const suffix =
+    '\n' + ['exclude:**/node_modules/**/*.*', `include:${cdsExtractorMarkerFileName}`].join('\n');
+  // Leave room for other environment variables on all supported platforms.
+  const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
+  const batches = ['exclude:**/*.*'];
+  for (const pattern of [...includes].sort()) {
+    if (/[\r\n]/.test(pattern)) {
+      cdsExtractorLog(
+        'warn',
+        `Skipping ${JSON.stringify(pattern)} from extraction filters: line breaks cannot be matched literally.`,
+      );
+      continue;
+    }
+    // The JavaScript extractor's filter syntax has no escape for `*`, so a concrete
+    // path containing it would also match unselected siblings; skip it instead.
+    if (patterns.length > 0 && pattern.includes('*')) {
+      cdsExtractorLog(
+        'warn',
+        `Skipping '${pattern}' from extraction filters: '*' cannot be matched literally.`,
+      );
+      continue;
+    }
+    const line = `\ninclude:${pattern}`;
+    if (Buffer.byteLength(`exclude:**/*.*${line}${suffix}`) > maxFilterBytes) {
+      throw new Error(`Extraction filter exceeds ${maxFilterBytes} bytes: ${pattern}`);
+    }
+    if (Buffer.byteLength(batches[batches.length - 1] + line + suffix) > maxFilterBytes) {
+      batches.push('exclude:**/*.*');
+    }
+    batches[batches.length - 1] += line;
+  }
+  const filters = batches.map(batch => batch + suffix);
 
-  process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
+  process.env.LGTM_INDEX_FILTERS = filters[0];
   process.env.LGTM_INDEX_TYPESCRIPT = 'NONE';
   // Configure to copy over the .cds files as well, by pretending they are JSON.
   process.env.LGTM_INDEX_FILETYPES = '.cds:JSON';
-}
-
-/**
- * Applies paths-ignore patterns from the CodeQL configuration to the
- * LGTM_INDEX_FILTERS environment variable. This ensures the JavaScript
- * extractor also respects the user's paths-ignore configuration for
- * compiled .cds.json output files.
- *
- * @param sourceRoot - The source root directory used to locate the config file
- */
-export function applyPathsIgnoreToLgtmFilters(sourceRoot: string): void {
-  const patterns = getPathsIgnorePatterns(sourceRoot);
-  if (patterns.length === 0) {
-    return;
-  }
-
-  const excludeLines = patterns.map(p => `exclude:${p}`).join('\n');
-  const current = process.env.LGTM_INDEX_FILTERS ?? '';
-  process.env.LGTM_INDEX_FILTERS = current + '\n' + excludeLines;
-
   cdsExtractorLog(
     'info',
-    `Applied ${patterns.length} paths-ignore pattern(s) to LGTM_INDEX_FILTERS`,
+    `Configured JavaScript extraction with ${patterns.length} source filter(s).`,
   );
+  return filters;
 }
 
 /**

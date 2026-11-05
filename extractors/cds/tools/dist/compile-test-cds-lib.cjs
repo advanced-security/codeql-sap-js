@@ -5,6 +5,13 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJS = (cb, mod) => function __require() {
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -27,6 +34,503 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// node_modules/isexe/windows.js
+var require_windows = __commonJS({
+  "node_modules/isexe/windows.js"(exports2, module2) {
+    module2.exports = isexe;
+    isexe.sync = sync;
+    var fs2 = require("fs");
+    function checkPathExt(path2, options) {
+      var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
+      if (!pathext) {
+        return true;
+      }
+      pathext = pathext.split(";");
+      if (pathext.indexOf("") !== -1) {
+        return true;
+      }
+      for (var i = 0; i < pathext.length; i++) {
+        var p = pathext[i].toLowerCase();
+        if (p && path2.substr(-p.length).toLowerCase() === p) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function checkStat(stat, path2, options) {
+      if (!stat.isSymbolicLink() && !stat.isFile()) {
+        return false;
+      }
+      return checkPathExt(path2, options);
+    }
+    function isexe(path2, options, cb) {
+      fs2.stat(path2, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path2, options));
+      });
+    }
+    function sync(path2, options) {
+      return checkStat(fs2.statSync(path2), path2, options);
+    }
+  }
+});
+
+// node_modules/isexe/mode.js
+var require_mode = __commonJS({
+  "node_modules/isexe/mode.js"(exports2, module2) {
+    module2.exports = isexe;
+    isexe.sync = sync;
+    var fs2 = require("fs");
+    function isexe(path2, options, cb) {
+      fs2.stat(path2, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, options));
+      });
+    }
+    function sync(path2, options) {
+      return checkStat(fs2.statSync(path2), options);
+    }
+    function checkStat(stat, options) {
+      return stat.isFile() && checkMode(stat, options);
+    }
+    function checkMode(stat, options) {
+      var mod = stat.mode;
+      var uid = stat.uid;
+      var gid = stat.gid;
+      var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
+      var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
+      var u = parseInt("100", 8);
+      var g = parseInt("010", 8);
+      var o = parseInt("001", 8);
+      var ug = u | g;
+      var ret = mod & o || mod & g && gid === myGid || mod & u && uid === myUid || mod & ug && myUid === 0;
+      return ret;
+    }
+  }
+});
+
+// node_modules/isexe/index.js
+var require_isexe = __commonJS({
+  "node_modules/isexe/index.js"(exports2, module2) {
+    var fs2 = require("fs");
+    var core2;
+    if (process.platform === "win32" || global.TESTING_WINDOWS) {
+      core2 = require_windows();
+    } else {
+      core2 = require_mode();
+    }
+    module2.exports = isexe;
+    isexe.sync = sync;
+    function isexe(path2, options, cb) {
+      if (typeof options === "function") {
+        cb = options;
+        options = {};
+      }
+      if (!cb) {
+        if (typeof Promise !== "function") {
+          throw new TypeError("callback not provided");
+        }
+        return new Promise(function(resolve4, reject) {
+          isexe(path2, options || {}, function(er, is2) {
+            if (er) {
+              reject(er);
+            } else {
+              resolve4(is2);
+            }
+          });
+        });
+      }
+      core2(path2, options || {}, function(er, is2) {
+        if (er) {
+          if (er.code === "EACCES" || options && options.ignoreErrors) {
+            er = null;
+            is2 = false;
+          }
+        }
+        cb(er, is2);
+      });
+    }
+    function sync(path2, options) {
+      try {
+        return core2.sync(path2, options || {});
+      } catch (er) {
+        if (options && options.ignoreErrors || er.code === "EACCES") {
+          return false;
+        } else {
+          throw er;
+        }
+      }
+    }
+  }
+});
+
+// node_modules/which/which.js
+var require_which = __commonJS({
+  "node_modules/which/which.js"(exports2, module2) {
+    var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
+    var path2 = require("path");
+    var COLON = isWindows ? ";" : ":";
+    var isexe = require_isexe();
+    var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
+    var getPathInfo = (cmd, opt) => {
+      const colon = opt.colon || COLON;
+      const pathEnv = cmd.match(/\//) || isWindows && cmd.match(/\\/) ? [""] : [
+        // windows always checks the cwd first
+        ...isWindows ? [process.cwd()] : [],
+        ...(opt.path || process.env.PATH || /* istanbul ignore next: very unusual */
+        "").split(colon)
+      ];
+      const pathExtExe = isWindows ? opt.pathExt || process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM" : "";
+      const pathExt = isWindows ? pathExtExe.split(colon) : [""];
+      if (isWindows) {
+        if (cmd.indexOf(".") !== -1 && pathExt[0] !== "")
+          pathExt.unshift("");
+      }
+      return {
+        pathEnv,
+        pathExt,
+        pathExtExe
+      };
+    };
+    var which = (cmd, opt, cb) => {
+      if (typeof opt === "function") {
+        cb = opt;
+        opt = {};
+      }
+      if (!opt)
+        opt = {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      const step = (i) => new Promise((resolve4, reject) => {
+        if (i === pathEnv.length)
+          return opt.all && found.length ? resolve4(found) : reject(getNotFoundError(cmd));
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path2.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        resolve4(subStep(p, i, 0));
+      });
+      const subStep = (p, i, ii2) => new Promise((resolve4, reject) => {
+        if (ii2 === pathExt.length)
+          return resolve4(step(i + 1));
+        const ext2 = pathExt[ii2];
+        isexe(p + ext2, { pathExt: pathExtExe }, (er, is2) => {
+          if (!er && is2) {
+            if (opt.all)
+              found.push(p + ext2);
+            else
+              return resolve4(p + ext2);
+          }
+          return resolve4(subStep(p, i, ii2 + 1));
+        });
+      });
+      return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
+    };
+    var whichSync = (cmd, opt) => {
+      opt = opt || {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      for (let i = 0; i < pathEnv.length; i++) {
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path2.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        for (let j2 = 0; j2 < pathExt.length; j2++) {
+          const cur = p + pathExt[j2];
+          try {
+            const is2 = isexe.sync(cur, { pathExt: pathExtExe });
+            if (is2) {
+              if (opt.all)
+                found.push(cur);
+              else
+                return cur;
+            }
+          } catch (ex) {
+          }
+        }
+      }
+      if (opt.all && found.length)
+        return found;
+      if (opt.nothrow)
+        return null;
+      throw getNotFoundError(cmd);
+    };
+    module2.exports = which;
+    which.sync = whichSync;
+  }
+});
+
+// node_modules/path-key/index.js
+var require_path_key = __commonJS({
+  "node_modules/path-key/index.js"(exports2, module2) {
+    "use strict";
+    var pathKey = (options = {}) => {
+      const environment = options.env || process.env;
+      const platform = options.platform || process.platform;
+      if (platform !== "win32") {
+        return "PATH";
+      }
+      return Object.keys(environment).reverse().find((key) => key.toUpperCase() === "PATH") || "Path";
+    };
+    module2.exports = pathKey;
+    module2.exports.default = pathKey;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/resolveCommand.js
+var require_resolveCommand = __commonJS({
+  "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module2) {
+    "use strict";
+    var path2 = require("path");
+    var which = require_which();
+    var getPathKey = require_path_key();
+    function resolveCommandAttempt(parsed, withoutPathExt) {
+      const env = parsed.options.env || process.env;
+      const cwd = process.cwd();
+      const hasCustomCwd = parsed.options.cwd != null;
+      const shouldSwitchCwd = hasCustomCwd && process.chdir !== void 0 && !process.chdir.disabled;
+      if (shouldSwitchCwd) {
+        try {
+          process.chdir(parsed.options.cwd);
+        } catch (err) {
+        }
+      }
+      let resolved;
+      try {
+        resolved = which.sync(parsed.command, {
+          path: env[getPathKey({ env })],
+          pathExt: withoutPathExt ? path2.delimiter : void 0
+        });
+      } catch (e) {
+      } finally {
+        if (shouldSwitchCwd) {
+          process.chdir(cwd);
+        }
+      }
+      if (resolved) {
+        resolved = path2.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+      }
+      return resolved;
+    }
+    function resolveCommand(parsed) {
+      return resolveCommandAttempt(parsed) || resolveCommandAttempt(parsed, true);
+    }
+    module2.exports = resolveCommand;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/escape.js
+var require_escape = __commonJS({
+  "node_modules/cross-spawn/lib/util/escape.js"(exports2, module2) {
+    "use strict";
+    var metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
+    function escapeCommand(arg) {
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      return arg;
+    }
+    function escapeArgument(arg, doubleEscapeMetaChars) {
+      arg = `${arg}`;
+      arg = arg.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+      arg = arg.replace(/(?=(\\+?)?)\1$/, "$1$1");
+      arg = `"${arg}"`;
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      if (doubleEscapeMetaChars) {
+        arg = arg.replace(metaCharsRegExp, "^$1");
+      }
+      return arg;
+    }
+    module2.exports.command = escapeCommand;
+    module2.exports.argument = escapeArgument;
+  }
+});
+
+// node_modules/shebang-regex/index.js
+var require_shebang_regex = __commonJS({
+  "node_modules/shebang-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = /^#!(.*)/;
+  }
+});
+
+// node_modules/shebang-command/index.js
+var require_shebang_command = __commonJS({
+  "node_modules/shebang-command/index.js"(exports2, module2) {
+    "use strict";
+    var shebangRegex = require_shebang_regex();
+    module2.exports = (string = "") => {
+      const match2 = string.match(shebangRegex);
+      if (!match2) {
+        return null;
+      }
+      const [path2, argument] = match2[0].replace(/#! ?/, "").split(" ");
+      const binary2 = path2.split("/").pop();
+      if (binary2 === "env") {
+        return argument;
+      }
+      return argument ? `${binary2} ${argument}` : binary2;
+    };
+  }
+});
+
+// node_modules/cross-spawn/lib/util/readShebang.js
+var require_readShebang = __commonJS({
+  "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
+    "use strict";
+    var fs2 = require("fs");
+    var shebangCommand = require_shebang_command();
+    function readShebang(command) {
+      const size = 150;
+      const buffer = Buffer.alloc(size);
+      let fd;
+      try {
+        fd = fs2.openSync(command, "r");
+        fs2.readSync(fd, buffer, 0, size, 0);
+        fs2.closeSync(fd);
+      } catch (e) {
+      }
+      return shebangCommand(buffer.toString());
+    }
+    module2.exports = readShebang;
+  }
+});
+
+// node_modules/cross-spawn/lib/parse.js
+var require_parse = __commonJS({
+  "node_modules/cross-spawn/lib/parse.js"(exports2, module2) {
+    "use strict";
+    var path2 = require("path");
+    var resolveCommand = require_resolveCommand();
+    var escape2 = require_escape();
+    var readShebang = require_readShebang();
+    var isWin = process.platform === "win32";
+    var isExecutableRegExp = /\.(?:com|exe)$/i;
+    var isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
+    function detectShebang(parsed) {
+      parsed.file = resolveCommand(parsed);
+      const shebang = parsed.file && readShebang(parsed.file);
+      if (shebang) {
+        parsed.args.unshift(parsed.file);
+        parsed.command = shebang;
+        return resolveCommand(parsed);
+      }
+      return parsed.file;
+    }
+    function parseNonShell(parsed) {
+      if (!isWin) {
+        return parsed;
+      }
+      const commandFile = detectShebang(parsed);
+      const needsShell = !isExecutableRegExp.test(commandFile);
+      if (parsed.options.forceShell || needsShell) {
+        const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
+        parsed.command = path2.normalize(parsed.command);
+        parsed.command = escape2.command(parsed.command);
+        parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
+        const shellCommand = [parsed.command].concat(parsed.args).join(" ");
+        parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
+        parsed.command = process.env.comspec || "cmd.exe";
+        parsed.options.windowsVerbatimArguments = true;
+      }
+      return parsed;
+    }
+    function parse(command, args, options) {
+      if (args && !Array.isArray(args)) {
+        options = args;
+        args = null;
+      }
+      args = args ? args.slice(0) : [];
+      options = Object.assign({}, options);
+      const parsed = {
+        command,
+        args,
+        options,
+        file: void 0,
+        original: {
+          command,
+          args
+        }
+      };
+      return options.shell ? parsed : parseNonShell(parsed);
+    }
+    module2.exports = parse;
+  }
+});
+
+// node_modules/cross-spawn/lib/enoent.js
+var require_enoent = __commonJS({
+  "node_modules/cross-spawn/lib/enoent.js"(exports2, module2) {
+    "use strict";
+    var isWin = process.platform === "win32";
+    function notFoundError(original, syscall) {
+      return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
+        code: "ENOENT",
+        errno: "ENOENT",
+        syscall: `${syscall} ${original.command}`,
+        path: original.command,
+        spawnargs: original.args
+      });
+    }
+    function hookChildProcess(cp, parsed) {
+      if (!isWin) {
+        return;
+      }
+      const originalEmit = cp.emit;
+      cp.emit = function(name, arg1) {
+        if (name === "exit") {
+          const err = verifyENOENT(arg1, parsed);
+          if (err) {
+            return originalEmit.call(cp, "error", err);
+          }
+        }
+        return originalEmit.apply(cp, arguments);
+      };
+    }
+    function verifyENOENT(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawn");
+      }
+      return null;
+    }
+    function verifyENOENTSync(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawnSync");
+      }
+      return null;
+    }
+    module2.exports = {
+      hookChildProcess,
+      verifyENOENT,
+      verifyENOENTSync,
+      notFoundError
+    };
+  }
+});
+
+// node_modules/cross-spawn/index.js
+var require_cross_spawn = __commonJS({
+  "node_modules/cross-spawn/index.js"(exports2, module2) {
+    "use strict";
+    var cp = require("child_process");
+    var parse = require_parse();
+    var enoent = require_enoent();
+    function spawn(command, args, options) {
+      const parsed = parse(command, args, options);
+      const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
+      enoent.hookChildProcess(spawned, parsed);
+      return spawned;
+    }
+    function spawnSync2(command, args, options) {
+      const parsed = parse(command, args, options);
+      const result = cp.spawnSync(parsed.command, parsed.args, parsed.options);
+      result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
+      return result;
+    }
+    module2.exports = spawn;
+    module2.exports.spawn = spawn;
+    module2.exports.sync = spawnSync2;
+    module2.exports._parse = parse;
+    module2.exports._enoent = enoent;
+  }
+});
+
 // compile-test-cds-lib.ts
 var compile_test_cds_lib_exports = {};
 __export(compile_test_cds_lib_exports, {
@@ -35,16 +539,22 @@ __export(compile_test_cds_lib_exports, {
   normalizeCdsJsonLocations: () => normalizeCdsJsonLocations,
   normalizeLocationPathsInFile: () => normalizeLocationPathsInFile,
   readPackageJsonFile: () => readPackageJsonFile,
+  runCdsCompiler: () => runCdsCompiler,
   setSourceRootDirectory: () => setSourceRootDirectory
 });
 module.exports = __toCommonJS(compile_test_cds_lib_exports);
 
-// src/filesystem.ts
-var import_fs = require("fs");
-var import_path = require("path");
+// src/cds/compiler/compile.ts
+var import_crypto = require("crypto");
+var import_fs5 = require("fs");
+var import_path3 = require("path");
+var import_cross_spawn = __toESM(require_cross_spawn());
 
 // src/constants.ts
 var modelCdsJsonFile = "model.cds.json";
+
+// src/filesystem.ts
+var import_fs = require("fs");
 
 // src/logging/cdsExtractorLog.ts
 var sourceRootDirectory;
@@ -136,7 +646,7 @@ function normalizeLocationPathsInFile(filePath) {
 
 // src/cds/parser/functions.ts
 var import_fs4 = require("fs");
-var import_path3 = require("path");
+var import_path2 = require("path");
 
 // node_modules/glob/dist/esm/index.min.js
 var import_node_url = require("node:url");
@@ -3124,7 +3634,7 @@ Ze.glob = Ze;
 
 // src/paths-ignore.ts
 var import_fs3 = require("fs");
-var import_path2 = require("path");
+var import_path = require("path");
 
 // node_modules/js-yaml/dist/js-yaml.mjs
 function getDefaultExportFromCjs(x2) {
@@ -8048,10 +8558,10 @@ var patternsCache = /* @__PURE__ */ new Map();
 function findCodeqlConfigFile(sourceRoot) {
   const envConfigPath = process.env.CODEQL_CONFIG_PATH;
   if (envConfigPath) {
-    const resolvedRoot = (0, import_path2.resolve)(sourceRoot);
-    const fullPath = (0, import_path2.resolve)(resolvedRoot, envConfigPath);
-    const rel = (0, import_path2.relative)(resolvedRoot, fullPath);
-    if (rel.startsWith("..") || (0, import_path2.resolve)(resolvedRoot, rel) !== fullPath) {
+    const resolvedRoot = (0, import_path.resolve)(sourceRoot);
+    const fullPath = (0, import_path.resolve)(resolvedRoot, envConfigPath);
+    const rel = (0, import_path.relative)(resolvedRoot, fullPath);
+    if (rel.startsWith("..") || (0, import_path.resolve)(resolvedRoot, rel) !== fullPath) {
       cdsExtractorLog(
         "warn",
         `CODEQL_CONFIG_PATH '${envConfigPath}' resolves outside the source root. Ignoring.`
@@ -8069,7 +8579,7 @@ function findCodeqlConfigFile(sourceRoot) {
     return void 0;
   }
   for (const configPath of DEFAULT_CONFIG_RELATIVE_PATHS) {
-    const fullPath = (0, import_path2.join)(sourceRoot, configPath);
+    const fullPath = (0, import_path.join)(sourceRoot, configPath);
     if ((0, import_fs3.existsSync)(fullPath)) {
       return fullPath;
     }
@@ -8081,16 +8591,32 @@ function getPathsIgnorePatterns(sourceRoot) {
   if (cached !== void 0) {
     return cached;
   }
+  const filters = process.env.LGTM_INDEX_FILTERS;
+  const patterns = filters ? filters.split(/\r?\n/).flatMap((line) => {
+    const filter2 = /^(include|exclude):\s*(.*?)\s*$/.exec(line);
+    return filter2?.[2] ? [filter2[1] === "include" ? { include: filter2[2] } : filter2[2]] : [];
+  }) : readConfigPatterns(sourceRoot);
+  if (filters && patterns.length > 0 && patterns.every((p) => typeof p !== "string" && !isSourcePathInclude(p))) {
+    patterns.push(...readConfigPatterns(sourceRoot));
+  }
+  patternsCache.set(sourceRoot, patterns);
+  return patterns;
+}
+function isSourcePathInclude(pattern) {
+  return typeof pattern !== "string" && !/^(?:\*\*\/)?\*\.[^/]+$/.test(normalizePathSeparators(pattern.include));
+}
+function normalizePathSeparators(filePath) {
+  return filePath.split(import_path.sep).join("/");
+}
+function readConfigPatterns(sourceRoot) {
   const configPath = findCodeqlConfigFile(sourceRoot);
   if (!configPath) {
-    patternsCache.set(sourceRoot, []);
     return [];
   }
   try {
     const content = (0, import_fs3.readFileSync)(configPath, "utf8");
     const config = load(content);
     if (!config || !Array.isArray(config["paths-ignore"])) {
-      patternsCache.set(sourceRoot, []);
       return [];
     }
     const patterns = config["paths-ignore"].filter(
@@ -8102,13 +8628,46 @@ function getPathsIgnorePatterns(sourceRoot) {
         `Found ${patterns.length} paths-ignore pattern(s) in ${configPath}: ${patterns.join(", ")}`
       );
     }
-    patternsCache.set(sourceRoot, patterns);
     return patterns;
   } catch (error) {
     cdsExtractorLog("warn", `Failed to read CodeQL config file at ${configPath}: ${String(error)}`);
-    patternsCache.set(sourceRoot, []);
     return [];
   }
+}
+function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedSourcePaths = []) {
+  const matchOptions = {
+    dot: true,
+    nocomment: true,
+    nonegate: true,
+    platform: import_path.sep === "\\" ? "win32" : "linux",
+    windowsPathsNoEscape: import_path.sep === "\\"
+  };
+  const normalizedPath = normalizePathSeparators(relativePath);
+  const includePaths = [normalizedPath, ...includedSourcePaths.map(normalizePathSeparators)];
+  const matches = (raw, include = false) => {
+    const pattern = normalizePathSeparators(raw).replace(/\\/g, "\\\\").replace(/\/+$/, "");
+    return include && isDirectory && normalizedPath === "." || (include ? includePaths : [normalizedPath]).some(
+      (candidate) => minimatch(candidate, pattern, { ...matchOptions, partial: include && isDirectory }) || minimatch(candidate, `${pattern}/**`, matchOptions)
+    );
+  };
+  const sourceIncludes = patterns.filter((p) => typeof p !== "string").filter(isSourcePathInclude).map((p) => p.include);
+  if (sourceIncludes.length > 0 && !sourceIncludes.some((p) => matches(p, true))) {
+    return true;
+  }
+  let ignored = false;
+  for (const raw of patterns) {
+    const include = typeof raw !== "string";
+    if (matches(include ? raw.include : raw, include)) {
+      ignored = !include;
+    }
+  }
+  return ignored;
+}
+function filterIgnoredPaths(relativePaths, patterns) {
+  if (patterns.length === 0) {
+    return relativePaths;
+  }
+  return relativePaths.filter((p) => !shouldIgnorePath(p, patterns));
 }
 
 // src/cds/parser/functions.ts
@@ -8126,50 +8685,176 @@ function readPackageJsonFile(filePath) {
   }
 }
 function determineCdsFilesToCompile(sourceRootDir, project) {
-  if (!project.cdsFiles || project.cdsFiles.length === 0) {
-    return {
-      compilationTargets: [],
-      expectedOutputFile: (0, import_path3.join)(project.projectDir, modelCdsJsonFile)
-    };
+  const patterns = getPathsIgnorePatterns(sourceRootDir);
+  const absoluteProjectDir = (0, import_path2.join)(sourceRootDir, project.projectDir);
+  const childProjectDirs = (project.childProjectDirs ?? []).map((dir) => (0, import_path2.resolve)(sourceRootDir, dir));
+  const isOwned = (file) => {
+    const absoluteFile = (0, import_path2.resolve)(file);
+    return !childProjectDirs.some(
+      (dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path2.sep)
+    );
+  };
+  const relativeFiles = filterIgnoredPaths(project.cdsFiles ?? [], patterns).filter((file) => isOwned((0, import_path2.resolve)(sourceRootDir, file))).map((file) => (0, import_path2.relative)(absoluteProjectDir, (0, import_path2.join)(sourceRootDir, file)));
+  const modelFiles = Ui((0, import_path2.join)(absoluteProjectDir, "**/{*.cds,*.csn,csn.json}"), {
+    nodir: true,
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
+  }).filter(isOwned).map((file) => (0, import_path2.relative)(absoluteProjectDir, file));
+  const csnFiles = modelFiles.filter(
+    (file) => !file.endsWith(".cds") && !shouldIgnorePath((0, import_path2.join)(project.projectDir, file), patterns)
+  );
+  const selectedFiles = [...relativeFiles, ...csnFiles];
+  const selected = new Set(selectedFiles);
+  const plan = (compilationTargets, selectedCsnFiles2) => ({
+    compilationTargets,
+    csnFiles: selectedCsnFiles2.map((file) => (0, import_path2.join)(project.projectDir, file)),
+    expectedOutputFile: (0, import_path2.join)(project.projectDir, modelCdsJsonFile)
+  });
+  if (selected.has("index.cds")) {
+    return plan(
+      modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
+      csnFiles
+    );
   }
-  const absoluteProjectDir = (0, import_path3.join)(sourceRootDir, project.projectDir);
   const capDirectories = ["db", "srv", "app"];
-  let existingCapDirs = capDirectories.filter((dir) => (0, import_fs4.existsSync)((0, import_path3.join)(absoluteProjectDir, dir)));
-  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
-    const norm = (p) => p.replace(/\\/g, "/");
-    const before = existingCapDirs.length;
-    existingCapDirs = existingCapDirs.filter((dir) => {
-      const dirPrefix = norm((0, import_path3.join)(project.projectDir, dir)) + "/";
-      return project.cdsFiles.some((file) => norm(file).startsWith(dirPrefix));
-    });
-    const skipped = before - existingCapDirs.length;
-    if (skipped > 0) {
-      cdsExtractorLog(
-        "info",
-        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || "."}`
-      );
+  const hasSourceIncludes = patterns.some(isSourcePathInclude);
+  const isExtraModelFile = (file) => file.includes(import_path2.sep) && !capDirectories.some((dir) => file.startsWith(dir + import_path2.sep)) && (file.startsWith("fts" + import_path2.sep) || hasSourceIncludes);
+  const extraFiles = relativeFiles.filter(isExtraModelFile);
+  const rootCdsFiles = relativeFiles.filter((file) => (0, import_path2.dirname)(file) === ".");
+  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs4.existsSync)((0, import_path2.join)(absoluteProjectDir, dir)));
+  const capEntryPoints = /* @__PURE__ */ new Set();
+  const capTargets = [];
+  const nestedCapDirs = /* @__PURE__ */ new Set();
+  const selectedCsnFiles = [];
+  let skipped = 0;
+  for (const dir of existingCapDirs) {
+    const entry = getCdsDirectoryEntryPoint(absoluteProjectDir, dir);
+    const allFiles = modelFiles.filter((file) => file.startsWith(dir + import_path2.sep));
+    if (entry && isOwned((0, import_path2.join)(absoluteProjectDir, entry))) {
+      capEntryPoints.add(entry);
+      allFiles.push(entry);
+    }
+    const directoryFiles = selectedFiles.filter(
+      (file) => file.startsWith(dir + import_path2.sep) || file === entry
+    );
+    if (directoryFiles.length === 0) {
+      skipped++;
+      continue;
+    }
+    selectedCsnFiles.push(...directoryFiles.filter((file) => !file.endsWith(".cds")));
+    const complete = allFiles.every((file) => selected.has(file));
+    capTargets.push(
+      ...complete ? [dir] : directoryFiles.filter((file) => (0, import_path2.dirname)(file) === dir || file === entry)
+    );
+    if (!complete || !entry) {
+      nestedCapDirs.add(dir);
     }
   }
-  if (existingCapDirs.length > 0) {
-    return {
-      compilationTargets: existingCapDirs,
-      expectedOutputFile: (0, import_path3.join)(project.projectDir, modelCdsJsonFile)
-    };
+  if (skipped > 0) {
+    cdsExtractorLog(
+      "info",
+      `Skipped ${skipped} CAP directory(ies) without selected models in project ${project.projectDir || "."}`
+    );
   }
-  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path3.dirname)((0, import_path3.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path3.basename)(file));
-  if (rootCdsFiles.length > 0) {
-    return {
-      compilationTargets: rootCdsFiles,
-      expectedOutputFile: (0, import_path3.join)(project.projectDir, modelCdsJsonFile)
-    };
+  if (existingCapDirs.length > skipped) {
+    const extraCsnFiles = csnFiles.filter(
+      (file) => !capEntryPoints.has(file) && (hasSourceIncludes && (0, import_path2.dirname)(file) === "." || isExtraModelFile(file))
+    ).sort();
+    const nestedFiles = [...relativeFiles, ...selectedCsnFiles].filter((file) => {
+      const segments = file.split(import_path2.sep);
+      return segments.length > 2 && nestedCapDirs.has(segments[0]);
+    });
+    return plan(
+      [
+        ...capTargets,
+        ...hasSourceIncludes ? rootCdsFiles.filter((file) => !capEntryPoints.has(file)) : [],
+        ...extraFiles,
+        ...extraCsnFiles,
+        ...nestedFiles
+      ],
+      [...selectedCsnFiles, ...extraCsnFiles]
+    );
   }
-  const compilationTargets = project.cdsFiles.map(
-    (file) => (0, import_path3.relative)(absoluteProjectDir, (0, import_path3.join)(sourceRootDir, file))
+  const fallbackCsnFiles = csnFiles.filter((file) => rootCdsFiles.length === 0 || (0, import_path2.dirname)(file) === "." || isExtraModelFile(file)).sort();
+  return plan(
+    [
+      ...rootCdsFiles.length > 0 ? [...rootCdsFiles, ...extraFiles] : relativeFiles,
+      ...fallbackCsnFiles
+    ],
+    fallbackCsnFiles
   );
-  return {
-    compilationTargets,
-    expectedOutputFile: (0, import_path3.join)(project.projectDir, modelCdsJsonFile)
+}
+function getCdsDirectoryEntryPoint(projectDir, directory) {
+  return [".csn", ".cds", `${import_path2.sep}index.csn`, `${import_path2.sep}index.cds`, `${import_path2.sep}csn.json`].map((suffix) => directory + suffix).find((file) => (0, import_fs4.existsSync)((0, import_path2.join)(projectDir, file)));
+}
+
+// src/cds/compiler/compile.ts
+function getImportTargets(projectDir, targets) {
+  return [
+    ...new Set(
+      targets.flatMap((target) => {
+        if (/\.(cds|csn|json)$/.test(target)) return [target];
+        const entry = getCdsDirectoryEntryPoint(projectDir, target);
+        if (entry) return [entry];
+        const files = (0, import_fs5.readdirSync)((0, import_path3.join)(projectDir, target));
+        const csnFiles = files.filter((file) => file.endsWith(".csn"));
+        const csnNames = new Set(csnFiles.map((file) => file.slice(0, -4)));
+        return [
+          ...csnFiles,
+          ...files.filter((file) => file.endsWith(".cds") && !csnNames.has(file.slice(0, -4)))
+        ].map((file) => (0, import_path3.join)(target, file));
+      })
+    )
+  ];
+}
+function runCdsCompiler(projectDir, targets, command, options = {}) {
+  const [executable, ...baseArgs] = command;
+  const compile = (selected) => {
+    const args = [
+      ...baseArgs,
+      "compile",
+      ...selected,
+      "--to",
+      "json",
+      "--dest",
+      modelCdsJsonFile,
+      "--locations",
+      "--log-level",
+      "warn"
+    ];
+    cdsExtractorLog("info", `Running CDS compiler '${executable}' with ${JSON.stringify(args)}`);
+    return (0, import_cross_spawn.sync)(executable, args, {
+      ...options,
+      cwd: projectDir,
+      shell: false,
+      stdio: "pipe"
+    });
   };
+  if (targets.join(" ").length <= 1024) return compile(targets);
+  const imports = getImportTargets(projectDir, targets);
+  const invalidTarget = imports.find((target) => /[\r\n]/.test(target));
+  if (invalidTarget) {
+    throw new Error(
+      `Cannot import a CDS compilation target containing a line break: ${JSON.stringify(invalidTarget)}`
+    );
+  }
+  const name = `.codeql-cds-${(0, import_crypto.randomUUID)()}.cds`;
+  const entry = (0, import_path3.join)(projectDir, name);
+  const fd = (0, import_fs5.openSync)(entry, "wx", 384);
+  try {
+    try {
+      (0, import_fs5.writeFileSync)(
+        fd,
+        imports.map((target) => `using from './${target.split(import_path3.sep).join("/").replace(/'/g, "''")}';`).join("\n"),
+        "utf8"
+      );
+    } finally {
+      (0, import_fs5.closeSync)(fd);
+    }
+    return compile([name]);
+  } finally {
+    (0, import_fs5.unlinkSync)(entry);
+  }
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
@@ -8178,6 +8863,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   normalizeCdsJsonLocations,
   normalizeLocationPathsInFile,
   readPackageJsonFile,
+  runCdsCompiler,
   setSourceRootDirectory
 });
 //# sourceMappingURL=compile-test-cds-lib.cjs.map

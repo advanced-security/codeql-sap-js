@@ -2,8 +2,12 @@
 import { execFileSync } from 'child_process';
 import * as fs from 'fs';
 import * as os from 'os';
-import * as path from 'path';
+import path from 'path';
 
+import { sync as globSync } from 'glob';
+
+import type { CdsDependencyGraph } from '../../src/cds/parser/types';
+import { cdsExtractorMarkerFileName } from '../../src/constants';
 import {
   getPlatformInfo,
   npmExecutable,
@@ -13,13 +17,16 @@ import {
   setupJavaScriptExtractorEnv,
   getAutobuildScriptPath,
   configureLgtmIndexFilters,
-  applyPathsIgnoreToLgtmFilters,
   setupAndValidateEnvironment,
 } from '../../src/environment';
 import * as pathsIgnore from '../../src/paths-ignore';
 
 jest.mock('../../src/paths-ignore', () => ({
+  ...jest.requireActual('../../src/paths-ignore'),
   getPathsIgnorePatterns: jest.fn().mockReturnValue([]),
+}));
+jest.mock('glob', () => ({
+  sync: jest.fn(),
 }));
 
 // Mock modules
@@ -78,6 +85,8 @@ describe('environment', () => {
     // Default path mocks
     (path.resolve as jest.Mock).mockImplementation((p: string) => p);
     (path.join as jest.Mock).mockImplementation((...args: string[]) => args.join('/'));
+    jest.mocked(globSync).mockReturnValue([]);
+    jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue([]);
 
     // Reset the fs.existsSync mock to its default implementation in the mock declaration
     (fs.existsSync as jest.Mock).mockImplementation((path: string) => {
@@ -97,6 +106,7 @@ describe('environment', () => {
     consoleSpy.log.mockRestore();
     consoleSpy.warn.mockRestore();
     consoleSpy.error.mockRestore();
+    jest.restoreAllMocks();
   });
 
   describe('getPlatformInfo', () => {
@@ -431,59 +441,242 @@ describe('environment', () => {
   });
 
   describe('configureLgtmIndexFilters', () => {
+    it.each([
+      ['darwin', 16384],
+      ['win32', 4096],
+    ] as const)('should bound the environment size on %s', (platform, limit) => {
+      jest.mocked(os.platform).mockReturnValue(platform);
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue([{ include: 'app' }]);
+      const files = Array.from(
+        { length: 3000 },
+        (_, i) => `app/${'\u00e9'.repeat(20)}-${i}.cds.json`,
+      );
+      jest.mocked(globSync).mockReturnValue(files);
+
+      const batches = configureLgtmIndexFilters('/source');
+
+      expect(batches.length).toBeGreaterThan(1);
+      for (const batch of batches) {
+        expect(Buffer.byteLength(batch)).toBeLessThanOrEqual(limit);
+        expect(batch).toContain(`include:${cdsExtractorMarkerFileName}`);
+      }
+      expect(process.env.LGTM_INDEX_FILTERS).toBe(batches[0]);
+      expect(
+        batches.flatMap(batch => batch.split('\n').filter(p => p.startsWith('include:app/'))),
+      ).toEqual(files.sort().map(file => `include:${file}`));
+    });
+
     it('should set up index filters with standard patterns when no existing filters are set', () => {
       delete process.env.LGTM_INDEX_FILTERS;
-      configureLgtmIndexFilters();
-      expect(process.env.LGTM_INDEX_FILTERS).toBeDefined();
+      const [filters] = configureLgtmIndexFilters('/source');
+      expect(filters.split('\n')).toEqual([
+        'exclude:**/*.*',
+        'include:**/*.cds',
+        'include:**/*.cds.json',
+        'exclude:**/node_modules/**/*.*',
+        `include:${cdsExtractorMarkerFileName}`,
+      ]);
       expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
       expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
     });
 
-    it('should preserve existing exclusion filters except for generic exclusions', () => {
-      process.env.LGTM_INDEX_FILTERS = [
-        'exclude:**/*.*', // generic pattern
-        'exclude:specific/path/**/*', // specific pattern
-      ].join('\n');
-      configureLgtmIndexFilters();
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('include:**/*.cds.json');
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:specific/path/**/*');
-      expect(process.env.LGTM_INDEX_TYPESCRIPT).toBe('NONE');
-      expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
-    });
-  });
+    it('should preserve literal Unix backslashes in concrete source and output paths', () => {
+      jest.replaceProperty(path, 'sep', '/');
+      jest.mocked(os.platform).mockReturnValue('linux');
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['vendor']);
+      jest.mocked(globSync).mockReturnValue(['srv/Main\\Panel.cds', 'srv/Main\\Panel.cds.json']);
 
-  describe('applyPathsIgnoreToLgtmFilters', () => {
-    beforeEach(() => {
-      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue([]);
-    });
+      const [filters] = configureLgtmIndexFilters('/source');
 
-    it('should append exclude lines to LGTM_INDEX_FILTERS when patterns exist', () => {
-      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue(['vendor', '**/*.test.js']);
-      process.env.LGTM_INDEX_FILTERS = 'include:**/*.cds.json';
-
-      applyPathsIgnoreToLgtmFilters('/source');
-
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:vendor');
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:**/*.test.js');
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('include:**/*.cds.json');
+      expect(filters.split('\n')).toEqual([
+        'exclude:**/*.*',
+        'include:srv/Main\\Panel.cds',
+        'include:srv/Main\\Panel.cds.json',
+        'exclude:**/node_modules/**/*.*',
+        `include:${cdsExtractorMarkerFileName}`,
+      ]);
     });
 
-    it('should not modify LGTM_INDEX_FILTERS when no patterns exist', () => {
-      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue([]);
-      process.env.LGTM_INDEX_FILTERS = 'include:**/*.cds.json';
+    it.each(['/', '\\'] as const)(
+      'should preserve source-to-output mappings using %s separators',
+      separator => {
+        jest.replaceProperty(path, 'sep', separator);
+        jest.mocked(os.platform).mockReturnValue(separator === '\\' ? 'win32' : 'linux');
+        const source = `srv${separator}Source\\Model.cds`;
+        const csnSource = `srv${separator}Source\\Model.csn`;
+        const output = `srv${separator}Main\\Panel.cds.json`;
+        const normalize = (file: string): string => file.split(separator).join('/');
+        jest
+          .mocked(pathsIgnore.getPathsIgnorePatterns)
+          .mockReturnValue([{ include: source }, { include: csnSource }]);
+        jest.mocked(globSync).mockReturnValue([output, `${output}${separator}nested.cds.json`]);
+        const graph: CdsDependencyGraph = {
+          config: {
+            compilationTimeoutMs: 30000,
+            enableDetailedLogging: false,
+            generateDebugOutput: false,
+            maxRetryAttempts: 3,
+          },
+          currentPhase: 'extracting',
+          debugInfo: {
+            compiler: {
+              availableCommands: [],
+              cacheDirectories: [],
+              cacheInitialized: false,
+              selectedCommand: 'cds compile',
+            },
+            extractor: {
+              environment: {
+                argv: [],
+                cwd: '/source',
+                nodeVersion: process.version,
+                platform: process.platform,
+              },
+              runMode: 'test',
+              sourceRootDir: '/source',
+              startTime: new Date(0),
+            },
+            parser: {
+              cdsFilesFound: 1,
+              dependencyResolutionSuccess: true,
+              parsingErrors: [],
+              parsingWarnings: [],
+              projectsDetected: 1,
+            },
+          },
+          errors: { critical: [], warnings: [] },
+          id: 'test-graph',
+          projects: new Map([
+            [
+              '.',
+              {
+                cdsFiles: [source],
+                compilationTargets: [source, csnSource],
+                compilationTasks: [],
+                csnFiles: [csnSource],
+                expectedOutputFile: output,
+                id: 'test-project',
+                projectDir: '.',
+                status: 'completed',
+                timestamps: { discovered: new Date(0) },
+              },
+            ],
+          ]),
+          retryStatus: {
+            projectsRequiringFullDependencies: new Set(),
+            projectsWithFullDependencies: new Set(),
+            totalRetryAttempts: 0,
+            totalTasksRequiringRetry: 0,
+            totalTasksSuccessfullyRetried: 0,
+          },
+          sourceRootDir: '/source',
+          statusSummary: {
+            criticalErrors: [],
+            failedCompilations: 0,
+            jsonFilesGenerated: 1,
+            overallSuccess: true,
+            performance: {
+              compilationDurationMs: 0,
+              extractionDurationMs: 0,
+              parsingDurationMs: 0,
+              totalDurationMs: 0,
+            },
+            skippedCompilations: 0,
+            successfulCompilations: 1,
+            totalCdsFiles: 1,
+            totalCompilationTasks: 1,
+            totalProjects: 1,
+            warnings: [],
+          },
+        };
 
-      applyPathsIgnoreToLgtmFilters('/source');
+        const [filters] = configureLgtmIndexFilters('/source', graph);
 
-      expect(process.env.LGTM_INDEX_FILTERS).toBe('include:**/*.cds.json');
+        expect(filters.split('\n')).toEqual([
+          'exclude:**/*.*',
+          ...[source, csnSource, output, `${output}${separator}nested.cds.json`]
+            .map(normalize)
+            .sort()
+            .map(file => `include:${file}`),
+          'exclude:**/node_modules/**/*.*',
+          `include:${cdsExtractorMarkerFileName}`,
+        ]);
+      },
+    );
+
+    it('should reject concrete wildcard paths, including fallback-looking names', () => {
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['**/*-private.cds']);
+      jest
+        .mocked(globSync)
+        .mockReturnValue([
+          '**/*.cds',
+          '**/*.cds.json',
+          'srv/service*.cds',
+          'srv/service-private.cds',
+          'srv/service.cds',
+          'srv/model.cds.json',
+        ]);
+
+      const batches = configureLgtmIndexFilters('/source');
+
+      expect(batches).toEqual([
+        [
+          'exclude:**/*.*',
+          'include:srv/model.cds.json',
+          'include:srv/service.cds',
+          'exclude:**/node_modules/**/*.*',
+          `include:${cdsExtractorMarkerFileName}`,
+        ].join('\n'),
+      ]);
     });
 
-    it('should handle missing LGTM_INDEX_FILTERS env var', () => {
-      (pathsIgnore.getPathsIgnorePatterns as jest.Mock).mockReturnValue(['vendor']);
-      delete process.env.LGTM_INDEX_FILTERS;
+    it.each(['\n', '\r', '\r\n'])(
+      'should reject line breaks in concrete source and output filter paths: %j',
+      separator => {
+        jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['vendor']);
+        jest
+          .mocked(globSync)
+          .mockReturnValue([
+            `srv/model.cds${separator}include:private.js${separator}include:tail.cds`,
+            `srv/model.cds.json${separator}include:private.js${separator}include:tail.cds.json`,
+            'srv/service.cds',
+            'srv/model.cds.json',
+          ]);
 
-      applyPathsIgnoreToLgtmFilters('/source');
+        const batches = configureLgtmIndexFilters('/source');
 
-      expect(process.env.LGTM_INDEX_FILTERS).toContain('exclude:vendor');
+        expect(batches).toEqual([
+          [
+            'exclude:**/*.*',
+            'include:srv/model.cds.json',
+            'include:srv/service.cds',
+            'exclude:**/node_modules/**/*.*',
+            `include:${cdsExtractorMarkerFileName}`,
+          ].join('\n'),
+        ]);
+      },
+    );
+
+    it('should fail when one concrete filter cannot fit in a Windows batch', () => {
+      jest.mocked(os.platform).mockReturnValue('win32');
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['vendor']);
+      jest.mocked(globSync).mockReturnValue([`${'nested-directory/'.repeat(300)}model.cds.json`]);
+
+      expect(() => configureLgtmIndexFilters('/source')).toThrow(
+        'Extraction filter exceeds 4096 bytes',
+      );
+    });
+
+    it('should retain the marker when source filters exclude everything', () => {
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['**/*.*']);
+
+      configureLgtmIndexFilters('/source');
+
+      expect(process.env.LGTM_INDEX_FILTERS?.split('\n')).toEqual([
+        'exclude:**/*.*',
+        'exclude:**/node_modules/**/*.*',
+        `include:${cdsExtractorMarkerFileName}`,
+      ]);
     });
   });
 

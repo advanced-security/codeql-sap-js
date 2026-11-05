@@ -6,6 +6,13 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __commonJS = (cb, mod) => function __require() {
+  try {
+    return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+  } catch (e) {
+    throw mod = 0, e;
+  }
+};
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
@@ -23,8 +30,505 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
+// node_modules/isexe/windows.js
+var require_windows = __commonJS({
+  "node_modules/isexe/windows.js"(exports2, module2) {
+    module2.exports = isexe;
+    isexe.sync = sync;
+    var fs2 = require("fs");
+    function checkPathExt(path2, options) {
+      var pathext = options.pathExt !== void 0 ? options.pathExt : process.env.PATHEXT;
+      if (!pathext) {
+        return true;
+      }
+      pathext = pathext.split(";");
+      if (pathext.indexOf("") !== -1) {
+        return true;
+      }
+      for (var i = 0; i < pathext.length; i++) {
+        var p = pathext[i].toLowerCase();
+        if (p && path2.substr(-p.length).toLowerCase() === p) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function checkStat(stat, path2, options) {
+      if (!stat.isSymbolicLink() && !stat.isFile()) {
+        return false;
+      }
+      return checkPathExt(path2, options);
+    }
+    function isexe(path2, options, cb) {
+      fs2.stat(path2, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, path2, options));
+      });
+    }
+    function sync(path2, options) {
+      return checkStat(fs2.statSync(path2), path2, options);
+    }
+  }
+});
+
+// node_modules/isexe/mode.js
+var require_mode = __commonJS({
+  "node_modules/isexe/mode.js"(exports2, module2) {
+    module2.exports = isexe;
+    isexe.sync = sync;
+    var fs2 = require("fs");
+    function isexe(path2, options, cb) {
+      fs2.stat(path2, function(er, stat) {
+        cb(er, er ? false : checkStat(stat, options));
+      });
+    }
+    function sync(path2, options) {
+      return checkStat(fs2.statSync(path2), options);
+    }
+    function checkStat(stat, options) {
+      return stat.isFile() && checkMode(stat, options);
+    }
+    function checkMode(stat, options) {
+      var mod = stat.mode;
+      var uid = stat.uid;
+      var gid = stat.gid;
+      var myUid = options.uid !== void 0 ? options.uid : process.getuid && process.getuid();
+      var myGid = options.gid !== void 0 ? options.gid : process.getgid && process.getgid();
+      var u = parseInt("100", 8);
+      var g = parseInt("010", 8);
+      var o = parseInt("001", 8);
+      var ug = u | g;
+      var ret = mod & o || mod & g && gid === myGid || mod & u && uid === myUid || mod & ug && myUid === 0;
+      return ret;
+    }
+  }
+});
+
+// node_modules/isexe/index.js
+var require_isexe = __commonJS({
+  "node_modules/isexe/index.js"(exports2, module2) {
+    var fs2 = require("fs");
+    var core2;
+    if (process.platform === "win32" || global.TESTING_WINDOWS) {
+      core2 = require_windows();
+    } else {
+      core2 = require_mode();
+    }
+    module2.exports = isexe;
+    isexe.sync = sync;
+    function isexe(path2, options, cb) {
+      if (typeof options === "function") {
+        cb = options;
+        options = {};
+      }
+      if (!cb) {
+        if (typeof Promise !== "function") {
+          throw new TypeError("callback not provided");
+        }
+        return new Promise(function(resolve10, reject) {
+          isexe(path2, options || {}, function(er, is2) {
+            if (er) {
+              reject(er);
+            } else {
+              resolve10(is2);
+            }
+          });
+        });
+      }
+      core2(path2, options || {}, function(er, is2) {
+        if (er) {
+          if (er.code === "EACCES" || options && options.ignoreErrors) {
+            er = null;
+            is2 = false;
+          }
+        }
+        cb(er, is2);
+      });
+    }
+    function sync(path2, options) {
+      try {
+        return core2.sync(path2, options || {});
+      } catch (er) {
+        if (options && options.ignoreErrors || er.code === "EACCES") {
+          return false;
+        } else {
+          throw er;
+        }
+      }
+    }
+  }
+});
+
+// node_modules/which/which.js
+var require_which = __commonJS({
+  "node_modules/which/which.js"(exports2, module2) {
+    var isWindows = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
+    var path2 = require("path");
+    var COLON = isWindows ? ";" : ":";
+    var isexe = require_isexe();
+    var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
+    var getPathInfo = (cmd, opt) => {
+      const colon = opt.colon || COLON;
+      const pathEnv = cmd.match(/\//) || isWindows && cmd.match(/\\/) ? [""] : [
+        // windows always checks the cwd first
+        ...isWindows ? [process.cwd()] : [],
+        ...(opt.path || process.env.PATH || /* istanbul ignore next: very unusual */
+        "").split(colon)
+      ];
+      const pathExtExe = isWindows ? opt.pathExt || process.env.PATHEXT || ".EXE;.CMD;.BAT;.COM" : "";
+      const pathExt = isWindows ? pathExtExe.split(colon) : [""];
+      if (isWindows) {
+        if (cmd.indexOf(".") !== -1 && pathExt[0] !== "")
+          pathExt.unshift("");
+      }
+      return {
+        pathEnv,
+        pathExt,
+        pathExtExe
+      };
+    };
+    var which = (cmd, opt, cb) => {
+      if (typeof opt === "function") {
+        cb = opt;
+        opt = {};
+      }
+      if (!opt)
+        opt = {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      const step = (i) => new Promise((resolve10, reject) => {
+        if (i === pathEnv.length)
+          return opt.all && found.length ? resolve10(found) : reject(getNotFoundError(cmd));
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path2.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        resolve10(subStep(p, i, 0));
+      });
+      const subStep = (p, i, ii2) => new Promise((resolve10, reject) => {
+        if (ii2 === pathExt.length)
+          return resolve10(step(i + 1));
+        const ext2 = pathExt[ii2];
+        isexe(p + ext2, { pathExt: pathExtExe }, (er, is2) => {
+          if (!er && is2) {
+            if (opt.all)
+              found.push(p + ext2);
+            else
+              return resolve10(p + ext2);
+          }
+          return resolve10(subStep(p, i, ii2 + 1));
+        });
+      });
+      return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
+    };
+    var whichSync = (cmd, opt) => {
+      opt = opt || {};
+      const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
+      const found = [];
+      for (let i = 0; i < pathEnv.length; i++) {
+        const ppRaw = pathEnv[i];
+        const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
+        const pCmd = path2.join(pathPart, cmd);
+        const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
+        for (let j2 = 0; j2 < pathExt.length; j2++) {
+          const cur = p + pathExt[j2];
+          try {
+            const is2 = isexe.sync(cur, { pathExt: pathExtExe });
+            if (is2) {
+              if (opt.all)
+                found.push(cur);
+              else
+                return cur;
+            }
+          } catch (ex) {
+          }
+        }
+      }
+      if (opt.all && found.length)
+        return found;
+      if (opt.nothrow)
+        return null;
+      throw getNotFoundError(cmd);
+    };
+    module2.exports = which;
+    which.sync = whichSync;
+  }
+});
+
+// node_modules/path-key/index.js
+var require_path_key = __commonJS({
+  "node_modules/path-key/index.js"(exports2, module2) {
+    "use strict";
+    var pathKey = (options = {}) => {
+      const environment = options.env || process.env;
+      const platform2 = options.platform || process.platform;
+      if (platform2 !== "win32") {
+        return "PATH";
+      }
+      return Object.keys(environment).reverse().find((key) => key.toUpperCase() === "PATH") || "Path";
+    };
+    module2.exports = pathKey;
+    module2.exports.default = pathKey;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/resolveCommand.js
+var require_resolveCommand = __commonJS({
+  "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module2) {
+    "use strict";
+    var path2 = require("path");
+    var which = require_which();
+    var getPathKey = require_path_key();
+    function resolveCommandAttempt(parsed, withoutPathExt) {
+      const env = parsed.options.env || process.env;
+      const cwd = process.cwd();
+      const hasCustomCwd = parsed.options.cwd != null;
+      const shouldSwitchCwd = hasCustomCwd && process.chdir !== void 0 && !process.chdir.disabled;
+      if (shouldSwitchCwd) {
+        try {
+          process.chdir(parsed.options.cwd);
+        } catch (err) {
+        }
+      }
+      let resolved;
+      try {
+        resolved = which.sync(parsed.command, {
+          path: env[getPathKey({ env })],
+          pathExt: withoutPathExt ? path2.delimiter : void 0
+        });
+      } catch (e) {
+      } finally {
+        if (shouldSwitchCwd) {
+          process.chdir(cwd);
+        }
+      }
+      if (resolved) {
+        resolved = path2.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+      }
+      return resolved;
+    }
+    function resolveCommand(parsed) {
+      return resolveCommandAttempt(parsed) || resolveCommandAttempt(parsed, true);
+    }
+    module2.exports = resolveCommand;
+  }
+});
+
+// node_modules/cross-spawn/lib/util/escape.js
+var require_escape = __commonJS({
+  "node_modules/cross-spawn/lib/util/escape.js"(exports2, module2) {
+    "use strict";
+    var metaCharsRegExp = /([()\][%!^"`<>&|;, *?])/g;
+    function escapeCommand(arg) {
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      return arg;
+    }
+    function escapeArgument(arg, doubleEscapeMetaChars) {
+      arg = `${arg}`;
+      arg = arg.replace(/(?=(\\+?)?)\1"/g, '$1$1\\"');
+      arg = arg.replace(/(?=(\\+?)?)\1$/, "$1$1");
+      arg = `"${arg}"`;
+      arg = arg.replace(metaCharsRegExp, "^$1");
+      if (doubleEscapeMetaChars) {
+        arg = arg.replace(metaCharsRegExp, "^$1");
+      }
+      return arg;
+    }
+    module2.exports.command = escapeCommand;
+    module2.exports.argument = escapeArgument;
+  }
+});
+
+// node_modules/shebang-regex/index.js
+var require_shebang_regex = __commonJS({
+  "node_modules/shebang-regex/index.js"(exports2, module2) {
+    "use strict";
+    module2.exports = /^#!(.*)/;
+  }
+});
+
+// node_modules/shebang-command/index.js
+var require_shebang_command = __commonJS({
+  "node_modules/shebang-command/index.js"(exports2, module2) {
+    "use strict";
+    var shebangRegex = require_shebang_regex();
+    module2.exports = (string = "") => {
+      const match2 = string.match(shebangRegex);
+      if (!match2) {
+        return null;
+      }
+      const [path2, argument] = match2[0].replace(/#! ?/, "").split(" ");
+      const binary2 = path2.split("/").pop();
+      if (binary2 === "env") {
+        return argument;
+      }
+      return argument ? `${binary2} ${argument}` : binary2;
+    };
+  }
+});
+
+// node_modules/cross-spawn/lib/util/readShebang.js
+var require_readShebang = __commonJS({
+  "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
+    "use strict";
+    var fs2 = require("fs");
+    var shebangCommand = require_shebang_command();
+    function readShebang(command) {
+      const size = 150;
+      const buffer = Buffer.alloc(size);
+      let fd;
+      try {
+        fd = fs2.openSync(command, "r");
+        fs2.readSync(fd, buffer, 0, size, 0);
+        fs2.closeSync(fd);
+      } catch (e) {
+      }
+      return shebangCommand(buffer.toString());
+    }
+    module2.exports = readShebang;
+  }
+});
+
+// node_modules/cross-spawn/lib/parse.js
+var require_parse = __commonJS({
+  "node_modules/cross-spawn/lib/parse.js"(exports2, module2) {
+    "use strict";
+    var path2 = require("path");
+    var resolveCommand = require_resolveCommand();
+    var escape2 = require_escape();
+    var readShebang = require_readShebang();
+    var isWin = process.platform === "win32";
+    var isExecutableRegExp = /\.(?:com|exe)$/i;
+    var isCmdShimRegExp = /node_modules[\\/].bin[\\/][^\\/]+\.cmd$/i;
+    function detectShebang(parsed) {
+      parsed.file = resolveCommand(parsed);
+      const shebang = parsed.file && readShebang(parsed.file);
+      if (shebang) {
+        parsed.args.unshift(parsed.file);
+        parsed.command = shebang;
+        return resolveCommand(parsed);
+      }
+      return parsed.file;
+    }
+    function parseNonShell(parsed) {
+      if (!isWin) {
+        return parsed;
+      }
+      const commandFile = detectShebang(parsed);
+      const needsShell = !isExecutableRegExp.test(commandFile);
+      if (parsed.options.forceShell || needsShell) {
+        const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
+        parsed.command = path2.normalize(parsed.command);
+        parsed.command = escape2.command(parsed.command);
+        parsed.args = parsed.args.map((arg) => escape2.argument(arg, needsDoubleEscapeMetaChars));
+        const shellCommand = [parsed.command].concat(parsed.args).join(" ");
+        parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
+        parsed.command = process.env.comspec || "cmd.exe";
+        parsed.options.windowsVerbatimArguments = true;
+      }
+      return parsed;
+    }
+    function parse2(command, args, options) {
+      if (args && !Array.isArray(args)) {
+        options = args;
+        args = null;
+      }
+      args = args ? args.slice(0) : [];
+      options = Object.assign({}, options);
+      const parsed = {
+        command,
+        args,
+        options,
+        file: void 0,
+        original: {
+          command,
+          args
+        }
+      };
+      return options.shell ? parsed : parseNonShell(parsed);
+    }
+    module2.exports = parse2;
+  }
+});
+
+// node_modules/cross-spawn/lib/enoent.js
+var require_enoent = __commonJS({
+  "node_modules/cross-spawn/lib/enoent.js"(exports2, module2) {
+    "use strict";
+    var isWin = process.platform === "win32";
+    function notFoundError(original, syscall) {
+      return Object.assign(new Error(`${syscall} ${original.command} ENOENT`), {
+        code: "ENOENT",
+        errno: "ENOENT",
+        syscall: `${syscall} ${original.command}`,
+        path: original.command,
+        spawnargs: original.args
+      });
+    }
+    function hookChildProcess(cp, parsed) {
+      if (!isWin) {
+        return;
+      }
+      const originalEmit = cp.emit;
+      cp.emit = function(name, arg1) {
+        if (name === "exit") {
+          const err = verifyENOENT(arg1, parsed);
+          if (err) {
+            return originalEmit.call(cp, "error", err);
+          }
+        }
+        return originalEmit.apply(cp, arguments);
+      };
+    }
+    function verifyENOENT(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawn");
+      }
+      return null;
+    }
+    function verifyENOENTSync(status, parsed) {
+      if (isWin && status === 1 && !parsed.file) {
+        return notFoundError(parsed.original, "spawnSync");
+      }
+      return null;
+    }
+    module2.exports = {
+      hookChildProcess,
+      verifyENOENT,
+      verifyENOENTSync,
+      notFoundError
+    };
+  }
+});
+
+// node_modules/cross-spawn/index.js
+var require_cross_spawn = __commonJS({
+  "node_modules/cross-spawn/index.js"(exports2, module2) {
+    "use strict";
+    var cp = require("child_process");
+    var parse2 = require_parse();
+    var enoent = require_enoent();
+    function spawn(command, args, options) {
+      const parsed = parse2(command, args, options);
+      const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
+      enoent.hookChildProcess(spawned, parsed);
+      return spawned;
+    }
+    function spawnSync5(command, args, options) {
+      const parsed = parse2(command, args, options);
+      const result = cp.spawnSync(parsed.command, parsed.args, parsed.options);
+      result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
+      return result;
+    }
+    module2.exports = spawn;
+    module2.exports.spawn = spawn;
+    module2.exports.sync = spawnSync5;
+    module2.exports._parse = parse2;
+    module2.exports._enoent = enoent;
+  }
+});
+
 // cds-extractor.ts
-var import_path17 = require("path");
+var import_path16 = require("path");
 
 // node_modules/glob/dist/esm/index.min.js
 var import_node_url = require("node:url");
@@ -8241,16 +8745,32 @@ function getPathsIgnorePatterns(sourceRoot2) {
   if (cached !== void 0) {
     return cached;
   }
+  const filters = process.env.LGTM_INDEX_FILTERS;
+  const patterns = filters ? filters.split(/\r?\n/).flatMap((line) => {
+    const filter2 = /^(include|exclude):\s*(.*?)\s*$/.exec(line);
+    return filter2?.[2] ? [filter2[1] === "include" ? { include: filter2[2] } : filter2[2]] : [];
+  }) : readConfigPatterns(sourceRoot2);
+  if (filters && patterns.length > 0 && patterns.every((p) => typeof p !== "string" && !isSourcePathInclude(p))) {
+    patterns.push(...readConfigPatterns(sourceRoot2));
+  }
+  patternsCache.set(sourceRoot2, patterns);
+  return patterns;
+}
+function isSourcePathInclude(pattern) {
+  return typeof pattern !== "string" && !/^(?:\*\*\/)?\*\.[^/]+$/.test(normalizePathSeparators(pattern.include));
+}
+function normalizePathSeparators(filePath) {
+  return filePath.split(import_path2.sep).join("/");
+}
+function readConfigPatterns(sourceRoot2) {
   const configPath = findCodeqlConfigFile(sourceRoot2);
   if (!configPath) {
-    patternsCache.set(sourceRoot2, []);
     return [];
   }
   try {
     const content = (0, import_fs3.readFileSync)(configPath, "utf8");
     const config = load(content);
     if (!config || !Array.isArray(config["paths-ignore"])) {
-      patternsCache.set(sourceRoot2, []);
       return [];
     }
     const patterns = config["paths-ignore"].filter(
@@ -8262,26 +8782,40 @@ function getPathsIgnorePatterns(sourceRoot2) {
         `Found ${patterns.length} paths-ignore pattern(s) in ${configPath}: ${patterns.join(", ")}`
       );
     }
-    patternsCache.set(sourceRoot2, patterns);
     return patterns;
   } catch (error) {
     cdsExtractorLog("warn", `Failed to read CodeQL config file at ${configPath}: ${String(error)}`);
-    patternsCache.set(sourceRoot2, []);
     return [];
   }
 }
-function shouldIgnorePath(relativePath, patterns) {
-  const matchOptions = { dot: true, windowsPathsNoEscape: true };
+function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedSourcePaths = []) {
+  const matchOptions = {
+    dot: true,
+    nocomment: true,
+    nonegate: true,
+    platform: import_path2.sep === "\\" ? "win32" : "linux",
+    windowsPathsNoEscape: import_path2.sep === "\\"
+  };
+  const normalizedPath = normalizePathSeparators(relativePath);
+  const includePaths = [normalizedPath, ...includedSourcePaths.map(normalizePathSeparators)];
+  const matches = (raw, include = false) => {
+    const pattern = normalizePathSeparators(raw).replace(/\\/g, "\\\\").replace(/\/+$/, "");
+    return include && isDirectory && normalizedPath === "." || (include ? includePaths : [normalizedPath]).some(
+      (candidate) => minimatch(candidate, pattern, { ...matchOptions, partial: include && isDirectory }) || minimatch(candidate, `${pattern}/**`, matchOptions)
+    );
+  };
+  const sourceIncludes = patterns.filter((p) => typeof p !== "string").filter(isSourcePathInclude).map((p) => p.include);
+  if (sourceIncludes.length > 0 && !sourceIncludes.some((p) => matches(p, true))) {
+    return true;
+  }
+  let ignored = false;
   for (const raw of patterns) {
-    const pattern = raw.replace(/\/+$/, "");
-    if (minimatch(relativePath, pattern, matchOptions)) {
-      return true;
-    }
-    if (minimatch(relativePath, `${pattern}/**`, matchOptions)) {
-      return true;
+    const include = typeof raw !== "string";
+    if (matches(include ? raw.include : raw, include)) {
+      ignored = !include;
     }
   }
-  return false;
+  return ignored;
 }
 function filterIgnoredPaths(relativePaths, patterns) {
   if (patterns.length === 0) {
@@ -8432,42 +8966,74 @@ function getAutobuildScriptPath(jsExtractorRoot) {
   const autobuildScriptName = platformInfo2.isWindows ? "autobuild.cmd" : "autobuild.sh";
   return (0, import_path3.resolve)((0, import_path3.join)(jsExtractorRoot, "tools", autobuildScriptName));
 }
-function configureLgtmIndexFilters() {
-  let excludeFilters = "";
-  if (process.env.LGTM_INDEX_FILTERS) {
-    cdsExtractorLog(
-      "info",
-      `Found $LGTM_INDEX_FILTERS already set to:
-${process.env.LGTM_INDEX_FILTERS}`
-    );
-    const allowedExcludePatterns = ["exclude:**/*", "exclude:**/*.*"];
-    excludeFilters = "\n" + process.env.LGTM_INDEX_FILTERS.split("\n").filter(
-      (line) => line.startsWith("exclude") && !allowedExcludePatterns.some((pattern) => line.includes(pattern))
-    ).join("\n");
+function configureLgtmIndexFilters(sourceRoot2, dependencyGraph2) {
+  const patterns = getPathsIgnorePatterns(sourceRoot2);
+  const projects = [...dependencyGraph2?.projects.values() ?? []];
+  const outputSources = new Map(
+    projects.map((project) => [
+      normalizePathSeparators(project.expectedOutputFile),
+      [...project.cdsFiles, ...project.csnFiles ?? []].map(normalizePathSeparators)
+    ])
+  );
+  const includes = new Set(
+    patterns.length === 0 ? ["**/*.cds.json", "**/*.cds"] : [...outputSources.values()].flat()
+  );
+  if (patterns.length > 0) {
+    const filePatterns = dependencyGraph2 ? "**/*.cds.json" : ["**/*.cds", "**/*.cds.json"];
+    for (const candidate of Ui(filePatterns, {
+      cwd: sourceRoot2,
+      dot: true,
+      ignore: ["**/node_modules/**"],
+      nodir: true,
+      windowsPathsNoEscape: true
+    })) {
+      const file = normalizePathSeparators(candidate);
+      let ancestor = file;
+      while (!outputSources.has(ancestor) && ancestor.includes("/")) {
+        ancestor = ancestor.slice(0, ancestor.lastIndexOf("/"));
+      }
+      if (!shouldIgnorePath(file, patterns, false, outputSources.get(ancestor))) {
+        includes.add(file);
+      }
+    }
   }
-  const lgtmIndexFiltersPatterns = [
-    "exclude:**/*.*",
-    "include:**/*.cds.json",
-    "include:**/*.cds",
-    `include:**/${cdsExtractorMarkerFileName}`,
-    "exclude:**/node_modules/**/*.*"
-  ].join("\n");
-  process.env.LGTM_INDEX_FILTERS = lgtmIndexFiltersPatterns + excludeFilters;
+  const suffix = "\n" + ["exclude:**/node_modules/**/*.*", `include:${cdsExtractorMarkerFileName}`].join("\n");
+  const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
+  const batches = ["exclude:**/*.*"];
+  for (const pattern of [...includes].sort()) {
+    if (/[\r\n]/.test(pattern)) {
+      cdsExtractorLog(
+        "warn",
+        `Skipping ${JSON.stringify(pattern)} from extraction filters: line breaks cannot be matched literally.`
+      );
+      continue;
+    }
+    if (patterns.length > 0 && pattern.includes("*")) {
+      cdsExtractorLog(
+        "warn",
+        `Skipping '${pattern}' from extraction filters: '*' cannot be matched literally.`
+      );
+      continue;
+    }
+    const line = `
+include:${pattern}`;
+    if (Buffer.byteLength(`exclude:**/*.*${line}${suffix}`) > maxFilterBytes) {
+      throw new Error(`Extraction filter exceeds ${maxFilterBytes} bytes: ${pattern}`);
+    }
+    if (Buffer.byteLength(batches[batches.length - 1] + line + suffix) > maxFilterBytes) {
+      batches.push("exclude:**/*.*");
+    }
+    batches[batches.length - 1] += line;
+  }
+  const filters = batches.map((batch) => batch + suffix);
+  process.env.LGTM_INDEX_FILTERS = filters[0];
   process.env.LGTM_INDEX_TYPESCRIPT = "NONE";
   process.env.LGTM_INDEX_FILETYPES = ".cds:JSON";
-}
-function applyPathsIgnoreToLgtmFilters(sourceRoot2) {
-  const patterns = getPathsIgnorePatterns(sourceRoot2);
-  if (patterns.length === 0) {
-    return;
-  }
-  const excludeLines = patterns.map((p) => `exclude:${p}`).join("\n");
-  const current = process.env.LGTM_INDEX_FILTERS ?? "";
-  process.env.LGTM_INDEX_FILTERS = current + "\n" + excludeLines;
   cdsExtractorLog(
     "info",
-    `Applied ${patterns.length} paths-ignore pattern(s) to LGTM_INDEX_FILTERS`
+    `Configured JavaScript extraction with ${patterns.length} source filter(s).`
   );
+  return filters;
 }
 function setupAndValidateEnvironment(sourceRoot2) {
   const errorMessages2 = [];
@@ -8822,8 +9388,10 @@ function testCdsCommand(validatedCommand, sourceRoot2, silent = false) {
 }
 
 // src/cds/compiler/compile.ts
-var import_child_process4 = require("child_process");
-var import_path6 = require("path");
+var import_crypto = require("crypto");
+var import_fs7 = require("fs");
+var import_path7 = require("path");
+var import_cross_spawn = __toESM(require_cross_spawn());
 
 // src/cds/compiler/version.ts
 var import_child_process3 = require("child_process");
@@ -8859,78 +9427,397 @@ function getCdsVersion(cdsCommand, cacheDir) {
   }
 }
 
+// src/cds/parser/functions.ts
+var import_fs6 = require("fs");
+var import_path6 = require("path");
+function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
+  if (!sourceRootDir || !projectDir) {
+    throw new Error(
+      `Unable to determine CDS files for project dir '${projectDir}'; both sourceRootDir and projectDir must be provided.`
+    );
+  }
+  const normalizedSourceRoot = sourceRootDir.replace(/[/\\]+$/, "");
+  const normalizedProjectDir = projectDir.replace(/[/\\]+$/, "");
+  if (!normalizedProjectDir.startsWith(normalizedSourceRoot) && normalizedProjectDir !== normalizedSourceRoot) {
+    throw new Error(
+      "projectDir must be a subdirectory of sourceRootDir or equal to sourceRootDir."
+    );
+  }
+  try {
+    const cdsFiles = Ui((0, import_path6.join)(projectDir, "**/*.cds"), {
+      nodir: true,
+      ignore: ["**/node_modules/**", "**/*.testproj/**"],
+      windowsPathsNoEscape: true
+    });
+    const relativePaths = cdsFiles.map((file) => (0, import_path6.relative)(sourceRootDir, file));
+    const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
+    if (pathsIgnorePatterns.length > 0) {
+      const filtered = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
+      const ignoredCount = relativePaths.length - filtered.length;
+      if (ignoredCount > 0) {
+        cdsExtractorLog(
+          "info",
+          `Filtered ${ignoredCount} CDS file(s) matching paths-ignore patterns in project ${(0, import_path6.relative)(sourceRootDir, projectDir) || "."}`
+        );
+      }
+      return filtered;
+    }
+    return relativePaths;
+  } catch (error) {
+    cdsExtractorLog("error", `Error finding CDS files in ${projectDir}: ${String(error)}`);
+    return [];
+  }
+}
+function determineCdsProjectsUnderSourceDir(sourceRootDir) {
+  if (!sourceRootDir || !(0, import_fs6.existsSync)(sourceRootDir)) {
+    throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
+  }
+  const foundProjects = /* @__PURE__ */ new Set();
+  const projectFiles = Ui((0, import_path6.join)(sourceRootDir, "**/{package.json,pom.xml}"), {
+    nodir: true,
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
+  });
+  const cdsFiles = Ui((0, import_path6.join)(sourceRootDir, "**/*.cds"), {
+    nodir: true,
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
+  });
+  const candidateDirectories = /* @__PURE__ */ new Set();
+  for (const projectFile of projectFiles) {
+    candidateDirectories.add((0, import_path6.dirname)(projectFile));
+  }
+  for (const cdsFile of cdsFiles) {
+    const cdsDir = (0, import_path6.dirname)(cdsFile);
+    const projectRoot = findProjectRootFromCdsFile(cdsDir, sourceRootDir);
+    if (projectRoot) {
+      candidateDirectories.add(projectRoot);
+    } else {
+      candidateDirectories.add(cdsDir);
+    }
+  }
+  for (const dir of candidateDirectories) {
+    if (isLikelyCdsProject(dir)) {
+      const relativePath = (0, import_path6.relative)(sourceRootDir, dir);
+      const projectDir = relativePath || ".";
+      let shouldAdd = true;
+      const existingProjects = Array.from(foundProjects);
+      for (const existingProject of existingProjects) {
+        const existingAbsPath = (0, import_path6.join)(sourceRootDir, existingProject);
+        if (dir.startsWith(existingAbsPath + import_path6.sep)) {
+          const parentPackageJsonPath = (0, import_path6.join)(existingAbsPath, "package.json");
+          const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
+          const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
+          if (isParentMonorepo && ((0, import_fs6.existsSync)((0, import_path6.join)(dir, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(dir, "pom.xml"))) && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
+            shouldAdd = true;
+          } else {
+            shouldAdd = false;
+          }
+          break;
+        }
+        if (existingAbsPath.startsWith(dir + import_path6.sep)) {
+          const currentPackageJsonPath = (0, import_path6.join)(dir, "package.json");
+          const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
+          const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
+          if (!(isCurrentMonorepo && ((0, import_fs6.existsSync)((0, import_path6.join)(existingAbsPath, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(existingAbsPath, "pom.xml"))) && isLikelyCdsProject(existingAbsPath))) {
+            foundProjects.delete(existingProject);
+          }
+        }
+      }
+      if (shouldAdd) {
+        foundProjects.add(projectDir);
+      }
+    }
+  }
+  return Array.from(foundProjects).sort();
+}
+function extractCdsImports(filePath) {
+  if (!(0, import_fs6.existsSync)(filePath)) {
+    throw new Error(`File does not exist: ${filePath}`);
+  }
+  const content = (0, import_fs6.readFileSync)(filePath, "utf8");
+  const imports = [];
+  const usingRegex = /using\s+(?:{[^}]+}|[\w.]+(?:\s+as\s+[\w.]+)?)\s+from\s+['"`]([^'"`]+)['"`]\s*;/g;
+  let match2;
+  while ((match2 = usingRegex.exec(content)) !== null) {
+    const path2 = match2[1];
+    imports.push({
+      statement: match2[0],
+      path: path2,
+      isRelative: path2.startsWith("./") || path2.startsWith("../"),
+      isModule: !path2.startsWith("./") && !path2.startsWith("../") && !path2.startsWith("/")
+    });
+  }
+  return imports;
+}
+function findProjectRootFromCdsFile(cdsFileDir, sourceRootDir) {
+  if (cdsFileDir.includes("node_modules") || cdsFileDir.includes(".testproj")) {
+    return null;
+  }
+  let currentDir = cdsFileDir;
+  while (currentDir.startsWith(sourceRootDir)) {
+    if (isLikelyCdsProject(currentDir)) {
+      const currentDirName = (0, import_path6.basename)(currentDir);
+      const isStandardSubdir = ["srv", "db", "app"].includes(currentDirName);
+      if (isStandardSubdir) {
+        const parentDir3 = (0, import_path6.dirname)(currentDir);
+        if (parentDir3 !== currentDir && parentDir3.startsWith(sourceRootDir) && !parentDir3.includes("node_modules") && !parentDir3.includes(".testproj") && isLikelyCdsProject(parentDir3)) {
+          return parentDir3;
+        }
+      }
+      const parentDir2 = (0, import_path6.dirname)(currentDir);
+      if (parentDir2 !== currentDir && parentDir2.startsWith(sourceRootDir) && !parentDir2.includes("node_modules") && !parentDir2.includes(".testproj")) {
+        const hasDbDir2 = (0, import_fs6.existsSync)((0, import_path6.join)(parentDir2, "db")) && (0, import_fs6.statSync)((0, import_path6.join)(parentDir2, "db")).isDirectory();
+        const hasSrvDir2 = (0, import_fs6.existsSync)((0, import_path6.join)(parentDir2, "srv")) && (0, import_fs6.statSync)((0, import_path6.join)(parentDir2, "srv")).isDirectory();
+        const hasAppDir2 = (0, import_fs6.existsSync)((0, import_path6.join)(parentDir2, "app")) && (0, import_fs6.statSync)((0, import_path6.join)(parentDir2, "app")).isDirectory();
+        if (hasDbDir2 && hasSrvDir2 || hasSrvDir2 && hasAppDir2) {
+          return parentDir2;
+        }
+      }
+      return currentDir;
+    }
+    const hasDbDir = (0, import_fs6.existsSync)((0, import_path6.join)(currentDir, "db")) && (0, import_fs6.statSync)((0, import_path6.join)(currentDir, "db")).isDirectory();
+    const hasSrvDir = (0, import_fs6.existsSync)((0, import_path6.join)(currentDir, "srv")) && (0, import_fs6.statSync)((0, import_path6.join)(currentDir, "srv")).isDirectory();
+    const hasAppDir = (0, import_fs6.existsSync)((0, import_path6.join)(currentDir, "app")) && (0, import_fs6.statSync)((0, import_path6.join)(currentDir, "app")).isDirectory();
+    if (hasDbDir && hasSrvDir || hasSrvDir && hasAppDir) {
+      return currentDir;
+    }
+    const parentDir = (0, import_path6.dirname)(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
+    currentDir = parentDir;
+  }
+  return cdsFileDir;
+}
+function isLikelyCdsProject(dir) {
+  try {
+    if (dir.includes("node_modules") || dir.includes(".testproj")) {
+      return false;
+    }
+    const hasStandardCdsDirectories = hasStandardCdsContent(dir);
+    const hasDirectCdsFiles = hasDirectCdsContent(dir);
+    const hasCdsFiles = hasStandardCdsDirectories || hasDirectCdsFiles;
+    const hasCapDependencies = hasPackageJsonWithCapDeps(dir);
+    if (hasCapDependencies) {
+      if (!hasCdsFiles) {
+        return false;
+      }
+      const packageJsonPath = (0, import_path6.join)(dir, "package.json");
+      const packageJson = readPackageJsonFile(packageJsonPath);
+      if (packageJson?.workspaces && Array.isArray(packageJson.workspaces) && packageJson.workspaces.length > 0) {
+        if (!hasCdsFiles) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return hasCdsFiles;
+  } catch (error) {
+    cdsExtractorLog("error", `Error checking directory ${dir}: ${String(error)}`);
+    return false;
+  }
+}
+function hasStandardCdsContent(dir) {
+  const standardLocations = [(0, import_path6.join)(dir, "db"), (0, import_path6.join)(dir, "srv"), (0, import_path6.join)(dir, "app")];
+  for (const location of standardLocations) {
+    if ((0, import_fs6.existsSync)(location) && (0, import_fs6.statSync)(location).isDirectory()) {
+      const cdsFiles = Ui((0, import_path6.join)(location, "**/*.cds"), {
+        nodir: true,
+        windowsPathsNoEscape: true
+      });
+      if (cdsFiles.length > 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function hasDirectCdsContent(dir) {
+  const directCdsFiles = Ui((0, import_path6.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
+  return directCdsFiles.length > 0;
+}
+function readPackageJsonFile(filePath) {
+  if (!(0, import_fs6.existsSync)(filePath)) {
+    return void 0;
+  }
+  try {
+    const content = (0, import_fs6.readFileSync)(filePath, "utf8");
+    const packageJson = JSON.parse(content);
+    return packageJson;
+  } catch (error) {
+    cdsExtractorLog("warn", `Error parsing package.json at ${filePath}: ${String(error)}`);
+    return void 0;
+  }
+}
+function determineCdsFilesToCompile(sourceRootDir, project) {
+  const patterns = getPathsIgnorePatterns(sourceRootDir);
+  const absoluteProjectDir = (0, import_path6.join)(sourceRootDir, project.projectDir);
+  const childProjectDirs = (project.childProjectDirs ?? []).map((dir) => (0, import_path6.resolve)(sourceRootDir, dir));
+  const isOwned = (file) => {
+    const absoluteFile = (0, import_path6.resolve)(file);
+    return !childProjectDirs.some(
+      (dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path6.sep)
+    );
+  };
+  const relativeFiles = filterIgnoredPaths(project.cdsFiles ?? [], patterns).filter((file) => isOwned((0, import_path6.resolve)(sourceRootDir, file))).map((file) => (0, import_path6.relative)(absoluteProjectDir, (0, import_path6.join)(sourceRootDir, file)));
+  const modelFiles = Ui((0, import_path6.join)(absoluteProjectDir, "**/{*.cds,*.csn,csn.json}"), {
+    nodir: true,
+    ignore: ["**/node_modules/**", "**/*.testproj/**"],
+    windowsPathsNoEscape: true
+  }).filter(isOwned).map((file) => (0, import_path6.relative)(absoluteProjectDir, file));
+  const csnFiles = modelFiles.filter(
+    (file) => !file.endsWith(".cds") && !shouldIgnorePath((0, import_path6.join)(project.projectDir, file), patterns)
+  );
+  const selectedFiles = [...relativeFiles, ...csnFiles];
+  const selected = new Set(selectedFiles);
+  const plan = (compilationTargets, selectedCsnFiles2) => ({
+    compilationTargets,
+    csnFiles: selectedCsnFiles2.map((file) => (0, import_path6.join)(project.projectDir, file)),
+    expectedOutputFile: (0, import_path6.join)(project.projectDir, modelCdsJsonFile)
+  });
+  if (selected.has("index.cds")) {
+    return plan(
+      modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
+      csnFiles
+    );
+  }
+  const capDirectories = ["db", "srv", "app"];
+  const hasSourceIncludes = patterns.some(isSourcePathInclude);
+  const isExtraModelFile = (file) => file.includes(import_path6.sep) && !capDirectories.some((dir) => file.startsWith(dir + import_path6.sep)) && (file.startsWith("fts" + import_path6.sep) || hasSourceIncludes);
+  const extraFiles = relativeFiles.filter(isExtraModelFile);
+  const rootCdsFiles = relativeFiles.filter((file) => (0, import_path6.dirname)(file) === ".");
+  const existingCapDirs = capDirectories.filter((dir) => (0, import_fs6.existsSync)((0, import_path6.join)(absoluteProjectDir, dir)));
+  const capEntryPoints = /* @__PURE__ */ new Set();
+  const capTargets = [];
+  const nestedCapDirs = /* @__PURE__ */ new Set();
+  const selectedCsnFiles = [];
+  let skipped = 0;
+  for (const dir of existingCapDirs) {
+    const entry = getCdsDirectoryEntryPoint(absoluteProjectDir, dir);
+    const allFiles = modelFiles.filter((file) => file.startsWith(dir + import_path6.sep));
+    if (entry && isOwned((0, import_path6.join)(absoluteProjectDir, entry))) {
+      capEntryPoints.add(entry);
+      allFiles.push(entry);
+    }
+    const directoryFiles = selectedFiles.filter(
+      (file) => file.startsWith(dir + import_path6.sep) || file === entry
+    );
+    if (directoryFiles.length === 0) {
+      skipped++;
+      continue;
+    }
+    selectedCsnFiles.push(...directoryFiles.filter((file) => !file.endsWith(".cds")));
+    const complete = allFiles.every((file) => selected.has(file));
+    capTargets.push(
+      ...complete ? [dir] : directoryFiles.filter((file) => (0, import_path6.dirname)(file) === dir || file === entry)
+    );
+    if (!complete || !entry) {
+      nestedCapDirs.add(dir);
+    }
+  }
+  if (skipped > 0) {
+    cdsExtractorLog(
+      "info",
+      `Skipped ${skipped} CAP directory(ies) without selected models in project ${project.projectDir || "."}`
+    );
+  }
+  if (existingCapDirs.length > skipped) {
+    const extraCsnFiles = csnFiles.filter(
+      (file) => !capEntryPoints.has(file) && (hasSourceIncludes && (0, import_path6.dirname)(file) === "." || isExtraModelFile(file))
+    ).sort();
+    const nestedFiles = [...relativeFiles, ...selectedCsnFiles].filter((file) => {
+      const segments = file.split(import_path6.sep);
+      return segments.length > 2 && nestedCapDirs.has(segments[0]);
+    });
+    return plan(
+      [
+        ...capTargets,
+        ...hasSourceIncludes ? rootCdsFiles.filter((file) => !capEntryPoints.has(file)) : [],
+        ...extraFiles,
+        ...extraCsnFiles,
+        ...nestedFiles
+      ],
+      [...selectedCsnFiles, ...extraCsnFiles]
+    );
+  }
+  const fallbackCsnFiles = csnFiles.filter((file) => rootCdsFiles.length === 0 || (0, import_path6.dirname)(file) === "." || isExtraModelFile(file)).sort();
+  return plan(
+    [
+      ...rootCdsFiles.length > 0 ? [...rootCdsFiles, ...extraFiles] : relativeFiles,
+      ...fallbackCsnFiles
+    ],
+    fallbackCsnFiles
+  );
+}
+function getCdsDirectoryEntryPoint(projectDir, directory) {
+  return [".csn", ".cds", `${import_path6.sep}index.csn`, `${import_path6.sep}index.cds`, `${import_path6.sep}csn.json`].map((suffix) => directory + suffix).find((file) => (0, import_fs6.existsSync)((0, import_path6.join)(projectDir, file)));
+}
+function hasPackageJsonWithCapDeps(dir) {
+  try {
+    const packageJsonPath = (0, import_path6.join)(dir, "package.json");
+    const packageJson = readPackageJsonFile(packageJsonPath);
+    if (packageJson) {
+      const dependencies = {
+        ...packageJson.dependencies ?? {},
+        ...packageJson.devDependencies ?? {}
+      };
+      return !!(dependencies["@sap/cds"] || dependencies["@sap/cds-dk"]);
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 // src/cds/compiler/compile.ts
 function parseCommandForSpawn(commandString) {
-  const parts = commandString.trim().split(/\s+/);
+  const command = commandString.trim();
+  const parts = (0, import_path7.isAbsolute)(command) || import_path7.win32.isAbsolute(command) ? [command] : command.split(/\s+/);
   const executable = parts[0];
   const baseArgs = parts.slice(1);
   return { executable, baseArgs };
 }
-function determineCompilationTargets(project, sourceRoot2) {
-  const projectAbsolutePath = (0, import_path6.join)(sourceRoot2, project.projectDir);
-  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path6.dirname)((0, import_path6.join)(sourceRoot2, file)) === projectAbsolutePath).map((file) => (0, import_path6.basename)(file));
-  if (rootCdsFiles.includes("index.cds")) {
-    return ["index.cds"];
-  }
-  const capDirectories = ["db", "srv", "app"];
-  const existingCapDirs = capDirectories.filter((dir) => dirExists((0, import_path6.join)(projectAbsolutePath, dir)));
-  if (existingCapDirs.length > 0) {
-    return existingCapDirs;
-  }
-  if (rootCdsFiles.length > 0) {
-    return rootCdsFiles;
-  }
-  return project.cdsFiles.map((file) => (0, import_path6.relative)(projectAbsolutePath, (0, import_path6.join)(sourceRoot2, file)));
-}
 function compileCdsToJson(cdsFilePath, sourceRoot2, cdsCommand, cacheDir, projectMap, projectDir) {
   try {
-    const resolvedCdsFilePath = (0, import_path6.resolve)(cdsFilePath);
-    if (!fileExists(resolvedCdsFilePath)) {
-      throw new Error(`Expected CDS file '${resolvedCdsFilePath}' does not exist.`);
+    if (cdsFilePath !== void 0) {
+      const resolvedCdsFilePath = (0, import_path7.resolve)(cdsFilePath);
+      if (!fileExists(resolvedCdsFilePath)) {
+        throw new Error(`Expected CDS file '${resolvedCdsFilePath}' does not exist.`);
+      }
     }
     const cdsVersion = getCdsVersion(cdsCommand, cacheDir);
     const versionInfo = cdsVersion ? `with CDS v${cdsVersion}` : "";
-    const projectBaseDir = (0, import_path6.join)(sourceRoot2, projectDir);
-    const spawnOptions = createSpawnOptions(projectBaseDir, cdsCommand, cacheDir);
+    const projectBaseDir = (0, import_path7.join)(sourceRoot2, projectDir);
+    const environment = createCompilerEnvironment(projectBaseDir, cdsCommand, cacheDir);
     if (!projectMap || !projectDir || !projectMap.has(projectDir)) {
       throw new Error(
         `Project directory '${projectDir}' not found in projectMap. Ensure the project is properly initialized.`
       );
     }
     const project = projectMap.get(projectDir);
-    return compileProject(sourceRoot2, projectDir, cdsCommand, spawnOptions, versionInfo, project);
+    return compileProject(sourceRoot2, projectDir, cdsCommand, environment, versionInfo, project);
   } catch (error) {
     return { success: false, message: String(error) };
   }
 }
-function compileProject(sourceRoot2, projectDir, cdsCommand, spawnOptions, versionInfo, project) {
+function compileProject(sourceRoot2, projectDir, cdsCommand, environment, versionInfo, project) {
   cdsExtractorLog("info", `Compiling CDS project '${projectDir}' using ${versionInfo}...`);
-  const compilationTargets = determineCompilationTargets(project, sourceRoot2);
+  const { compilationTargets } = determineCdsFilesToCompile(sourceRoot2, project);
   if (compilationTargets.length === 0) {
     throw new Error(
-      `Project directory '${projectDir}' does not contain any CDS files and cannot be compiled`
+      `Project directory '${projectDir}' does not contain any selected CDS or CSN models and cannot be compiled`
     );
   }
-  const projectJsonOutPath = (0, import_path6.join)(sourceRoot2, projectDir, modelCdsJsonFile);
-  const compileArgs = [
-    "compile",
-    ...compilationTargets,
-    "--to",
-    "json",
-    "--dest",
-    modelCdsJsonFile,
-    "--locations",
-    "--log-level",
-    "warn"
-  ];
+  const projectJsonOutPath = (0, import_path7.join)(sourceRoot2, projectDir, modelCdsJsonFile);
   cdsExtractorLog("info", `Compiling CDS project targets: ${compilationTargets.join(", ")}`);
-  cdsExtractorLog(
-    "info",
-    `Running compilation task for CDS project '${projectDir}': command='${cdsCommand}' args='${JSON.stringify(compileArgs)}'`
-  );
   const { executable, baseArgs } = parseCommandForSpawn(cdsCommand);
-  const allArgs = [...baseArgs, ...compileArgs];
-  const result = (0, import_child_process4.spawnSync)(executable, allArgs, spawnOptions);
+  const result = runCdsCompiler(
+    (0, import_path7.join)(sourceRoot2, projectDir),
+    compilationTargets,
+    [executable, ...baseArgs],
+    { env: environment }
+  );
   if (result.error) {
     cdsExtractorLog("error", `SpawnSync error: ${result.error.message}`);
     throw new Error(`Error executing CDS compiler: ${result.error.message}`);
@@ -8942,7 +9829,7 @@ function compileProject(sourceRoot2, projectDir, cdsCommand, spawnOptions, versi
     cdsExtractorLog("error", `CDS command failed with status ${result.status}`);
     cdsExtractorLog(
       "error",
-      `Command: ${cdsCommand} ${compileArgs.map((arg) => arg.includes(" ") ? `"${arg}"` : arg).join(" ")}`
+      `Command: ${cdsCommand}; targets: ${JSON.stringify(compilationTargets)}`
     );
     cdsExtractorLog("error", `Stdout: ${result.stdout?.toString() || "No stdout"}`);
     cdsExtractorLog("error", `Stderr: ${result.stderr?.toString() || "No stderr"}`);
@@ -8976,50 +9863,104 @@ ${result.stderr?.toString() || "Unknown error"}
     message: "Project was compiled using project-aware compilation"
   };
 }
-function createSpawnOptions(projectBaseDir, cdsCommand, cacheDir) {
-  const binPathNative = `node_modules${import_path6.sep}.bin${import_path6.sep}`;
-  const binPathPosix = "node_modules/.bin/";
-  const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
-  const useShell = getPlatformInfo().isWindows || !isDirectBinary;
-  const spawnOptions = {
-    cwd: projectBaseDir,
-    // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: useShell,
-    stdio: "pipe",
-    env: { ...process.env }
-  };
-  const projectNodeModules = (0, import_path6.join)(projectBaseDir, "node_modules");
+function createCompilerEnvironment(projectBaseDir, cdsCommand, cacheDir) {
+  const isDirectBinary = /node_modules[/\\]\.bin[/\\]/.test(cdsCommand);
+  const projectNodeModules = (0, import_path7.join)(projectBaseDir, "node_modules");
   if (cacheDir && !isDirectBinary) {
-    const nodePath = (0, import_path6.join)(cacheDir, "node_modules");
-    spawnOptions.env = {
+    const nodePath = (0, import_path7.join)(cacheDir, "node_modules");
+    return {
       ...process.env,
-      NODE_PATH: [nodePath, projectNodeModules, process.env.NODE_PATH ?? ""].filter(Boolean).join(import_path6.delimiter),
-      PATH: `${(0, import_path6.join)(nodePath, ".bin")}${import_path6.delimiter}${process.env.PATH}`,
-      // Add NPM configuration to ensure dependencies are resolved from the cache directory
+      NODE_PATH: [nodePath, projectNodeModules, process.env.NODE_PATH ?? ""].filter(Boolean).join(import_path7.delimiter),
+      PATH: `${(0, import_path7.join)(nodePath, ".bin")}${import_path7.delimiter}${process.env.PATH}`,
       npm_config_prefix: cacheDir,
-      // Ensure we don't pick up global CDS installations that might conflict
       npm_config_global: "false",
-      // Clear any existing CDS environment variables that might interfere
       CDS_HOME: cacheDir
     };
-  } else if (isDirectBinary) {
-    const cleanEnv = { ...process.env };
-    delete cleanEnv.NODE_PATH;
-    delete cleanEnv.npm_config_prefix;
-    delete cleanEnv.npm_config_global;
-    delete cleanEnv.CDS_HOME;
-    cleanEnv.NODE_PATH = projectNodeModules;
-    spawnOptions.env = cleanEnv;
   }
-  return spawnOptions;
+  const environment = { ...process.env };
+  if (isDirectBinary) {
+    delete environment.NODE_PATH;
+    delete environment.npm_config_prefix;
+    delete environment.npm_config_global;
+    delete environment.CDS_HOME;
+    environment.NODE_PATH = projectNodeModules;
+  }
+  return environment;
+}
+function getImportTargets(projectDir, targets) {
+  return [
+    ...new Set(
+      targets.flatMap((target) => {
+        if (/\.(cds|csn|json)$/.test(target)) return [target];
+        const entry = getCdsDirectoryEntryPoint(projectDir, target);
+        if (entry) return [entry];
+        const files = (0, import_fs7.readdirSync)((0, import_path7.join)(projectDir, target));
+        const csnFiles = files.filter((file) => file.endsWith(".csn"));
+        const csnNames = new Set(csnFiles.map((file) => file.slice(0, -4)));
+        return [
+          ...csnFiles,
+          ...files.filter((file) => file.endsWith(".cds") && !csnNames.has(file.slice(0, -4)))
+        ].map((file) => (0, import_path7.join)(target, file));
+      })
+    )
+  ];
+}
+function runCdsCompiler(projectDir, targets, command, options = {}) {
+  const [executable, ...baseArgs] = command;
+  const compile = (selected) => {
+    const args = [
+      ...baseArgs,
+      "compile",
+      ...selected,
+      "--to",
+      "json",
+      "--dest",
+      modelCdsJsonFile,
+      "--locations",
+      "--log-level",
+      "warn"
+    ];
+    cdsExtractorLog("info", `Running CDS compiler '${executable}' with ${JSON.stringify(args)}`);
+    return (0, import_cross_spawn.sync)(executable, args, {
+      ...options,
+      cwd: projectDir,
+      shell: false,
+      stdio: "pipe"
+    });
+  };
+  if (targets.join(" ").length <= 1024) return compile(targets);
+  const imports = getImportTargets(projectDir, targets);
+  const invalidTarget = imports.find((target) => /[\r\n]/.test(target));
+  if (invalidTarget) {
+    throw new Error(
+      `Cannot import a CDS compilation target containing a line break: ${JSON.stringify(invalidTarget)}`
+    );
+  }
+  const name = `.codeql-cds-${(0, import_crypto.randomUUID)()}.cds`;
+  const entry = (0, import_path7.join)(projectDir, name);
+  const fd = (0, import_fs7.openSync)(entry, "wx", 384);
+  try {
+    try {
+      (0, import_fs7.writeFileSync)(
+        fd,
+        imports.map((target) => `using from './${target.split(import_path7.sep).join("/").replace(/'/g, "''")}';`).join("\n"),
+        "utf8"
+      );
+    } finally {
+      (0, import_fs7.closeSync)(fd);
+    }
+    return compile([name]);
+  } finally {
+    (0, import_fs7.unlinkSync)(entry);
+  }
 }
 
 // src/cds/compiler/retry.ts
-var import_path11 = require("path");
+var import_path12 = require("path");
 
 // src/cds/compiler/validator.ts
-var import_fs6 = require("fs");
-var import_path7 = require("path");
+var import_fs8 = require("fs");
+var import_path8 = require("path");
 function identifyTasksRequiringRetry(dependencyGraph2) {
   const tasksRequiringRetry = /* @__PURE__ */ new Map();
   for (const [projectDir, project] of dependencyGraph2.projects.entries()) {
@@ -9104,7 +10045,7 @@ function validateOutputFile(filePath) {
   result.exists = true;
   if (filePath.endsWith(".cds.json") || filePath.endsWith(".json")) {
     try {
-      const content = (0, import_fs6.readFileSync)(filePath, "utf8");
+      const content = (0, import_fs8.readFileSync)(filePath, "utf8");
       if (!content.trim()) {
         result.error = "File is empty";
         return result;
@@ -9128,7 +10069,7 @@ function validateOutputFile(filePath) {
 function validateTaskOutputs(task, sourceRoot2) {
   const fileResults = [];
   const expectedOutput = task.expectedOutputFile;
-  const absolutePath = (0, import_path7.isAbsolute)(expectedOutput) ? expectedOutput : (0, import_path7.join)(sourceRoot2, expectedOutput);
+  const absolutePath = (0, import_path8.isAbsolute)(expectedOutput) ? expectedOutput : (0, import_path8.join)(sourceRoot2, expectedOutput);
   const fileResult = validateOutputFile(absolutePath);
   fileResults.push(fileResult);
   const validFileCount = fileResults.filter((r) => r.isValid).length;
@@ -9144,19 +10085,19 @@ function validateTaskOutputs(task, sourceRoot2) {
 }
 
 // src/diagnostics.ts
-var import_child_process5 = require("child_process");
-var import_path8 = require("path");
+var import_child_process4 = require("child_process");
+var import_path9 = require("path");
 function convertToRelativePath(filePath, sourceRoot2) {
   if (!filePath || typeof filePath !== "string" || !sourceRoot2 || typeof sourceRoot2 !== "string") {
     return ".";
   }
   try {
-    const resolvedSourceRoot = (0, import_path8.resolve)(sourceRoot2);
-    const resolvedFilePath = (0, import_path8.isAbsolute)(filePath) ? (0, import_path8.resolve)(filePath) : (0, import_path8.resolve)(resolvedSourceRoot, filePath);
+    const resolvedSourceRoot = (0, import_path9.resolve)(sourceRoot2);
+    const resolvedFilePath = (0, import_path9.isAbsolute)(filePath) ? (0, import_path9.resolve)(filePath) : (0, import_path9.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath === resolvedSourceRoot) {
       return ".";
     }
-    const relativePath = (0, import_path8.relative)(resolvedSourceRoot, resolvedFilePath);
+    const relativePath = (0, import_path9.relative)(resolvedSourceRoot, resolvedFilePath);
     if (relativePath.startsWith("..")) {
       return ".";
     }
@@ -9166,11 +10107,11 @@ function convertToRelativePath(filePath, sourceRoot2) {
   }
 }
 function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, severity, logPrefix, sourceRoot2) {
-  const finalFilePath = sourceRoot2 ? convertToRelativePath(filePath, sourceRoot2) : (0, import_path8.resolve)(filePath);
+  const finalFilePath = sourceRoot2 ? convertToRelativePath(filePath, sourceRoot2) : (0, import_path9.resolve)(filePath);
   let finalMessage = message;
   if (sourceRoot2 && finalFilePath === "." && filePath !== sourceRoot2) {
-    const resolvedSourceRoot = (0, import_path8.resolve)(sourceRoot2);
-    const resolvedFilePath = (0, import_path8.isAbsolute)(filePath) ? (0, import_path8.resolve)(filePath) : (0, import_path8.resolve)(resolvedSourceRoot, filePath);
+    const resolvedSourceRoot = (0, import_path9.resolve)(sourceRoot2);
+    const resolvedFilePath = (0, import_path9.isAbsolute)(filePath) ? (0, import_path9.resolve)(filePath) : (0, import_path9.resolve)(resolvedSourceRoot, filePath);
     if (resolvedFilePath !== resolvedSourceRoot) {
       finalMessage = `${message}
 
@@ -9178,7 +10119,7 @@ function addDiagnostic(filePath, message, codeqlExePath2, sourceId, sourceName, 
     }
   }
   try {
-    (0, import_child_process5.execFileSync)(codeqlExePath2, [
+    (0, import_child_process4.execFileSync)(codeqlExePath2, [
       "database",
       "add-diagnostic",
       "--extractor-name=cds",
@@ -9237,18 +10178,6 @@ function addDependencyGraphDiagnostic(sourceRoot2, errorMessage, codeqlExePath2)
     sourceRoot2
   );
 }
-function addDependencyInstallationDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
-  return addDiagnostic(
-    sourceRoot2,
-    errorMessage,
-    codeqlExePath2,
-    "cds/dependency-installation-failure",
-    "CDS dependency installation failure",
-    "error" /* Error */,
-    "source root",
-    sourceRoot2
-  );
-}
 function addEnvironmentSetupDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
   const contextFile = sourceRoot2;
   return addDiagnostic(
@@ -9288,13 +10217,13 @@ function addNoCdsProjectsDiagnostic(sourceRoot2, message, codeqlExePath2) {
 }
 
 // src/packageManager/cacheInstaller.ts
-var import_child_process7 = require("child_process");
-var import_crypto = require("crypto");
-var import_fs7 = require("fs");
-var import_path9 = require("path");
+var import_child_process6 = require("child_process");
+var import_crypto2 = require("crypto");
+var import_fs9 = require("fs");
+var import_path10 = require("path");
 
 // src/packageManager/versionResolver.ts
-var import_child_process6 = require("child_process");
+var import_child_process5 = require("child_process");
 var availableVersionsCache = /* @__PURE__ */ new Map();
 var cacheStats = {
   hits: 0,
@@ -9363,7 +10292,7 @@ function getAvailableVersions(packageName) {
   }
   cacheStats.misses++;
   try {
-    const output = (0, import_child_process6.execSync)(`npm view ${packageName} versions --json`, {
+    const output = (0, import_child_process5.execSync)(`npm view ${packageName} versions --json`, {
       encoding: "utf8",
       timeout: 12e4
       // 120 second timeout
@@ -9473,7 +10402,7 @@ function satisfiesRange(version, range2) {
 var cacheSubDirName = ".cds-extractor-cache";
 function addDependencyVersionWarning(packageJsonPath, warningMessage, codeqlExePath2) {
   try {
-    (0, import_child_process7.execFileSync)(codeqlExePath2, [
+    (0, import_child_process6.execFileSync)(codeqlExePath2, [
       "database",
       "add-diagnostic",
       "--extractor-name=cds",
@@ -9482,7 +10411,7 @@ function addDependencyVersionWarning(packageJsonPath, warningMessage, codeqlExeP
       "--source-name=Using fallback versions for SAP CAP CDS dependencies",
       `--severity=${"warning" /* Warning */}`,
       `--markdown-message=${warningMessage}`,
-      `--file-path=${(0, import_path9.resolve)(packageJsonPath)}`,
+      `--file-path=${(0, import_path10.resolve)(packageJsonPath)}`,
       "--",
       `${process.env.CODEQL_EXTRACTOR_CDS_WIP_DATABASE ?? ""}`
     ]);
@@ -9497,13 +10426,13 @@ function addDependencyVersionWarning(packageJsonPath, warningMessage, codeqlExeP
   }
 }
 function findNearestNpmrc(startDir) {
-  let current = (0, import_path9.resolve)(startDir);
+  let current = (0, import_path10.resolve)(startDir);
   while (true) {
-    const candidate = (0, import_path9.join)(current, ".npmrc");
-    if ((0, import_fs7.existsSync)(candidate)) {
+    const candidate = (0, import_path10.join)(current, ".npmrc");
+    if ((0, import_fs9.existsSync)(candidate)) {
       return candidate;
     }
-    const parent = (0, import_path9.dirname)(current);
+    const parent = (0, import_path10.dirname)(current);
     if (parent === current) {
       return void 0;
     }
@@ -9515,9 +10444,9 @@ function copyNpmrcToCache(cacheDir, projectDir) {
   if (!npmrcPath) {
     return;
   }
-  const dest = (0, import_path9.join)(cacheDir, ".npmrc");
+  const dest = (0, import_path10.join)(cacheDir, ".npmrc");
   try {
-    (0, import_fs7.copyFileSync)(npmrcPath, dest);
+    (0, import_fs9.copyFileSync)(npmrcPath, dest);
     cdsExtractorLog("info", `Copied .npmrc from '${npmrcPath}' to cache directory '${cacheDir}'`);
   } catch (err) {
     cdsExtractorLog(
@@ -9535,10 +10464,14 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
     );
     return /* @__PURE__ */ new Map();
   }
-  const dependencyCombinations = extractUniqueDependencyCombinations(dependencyGraph2.projects);
+  const lockfiles = /* @__PURE__ */ new Map();
+  const projectVersions = new Map(
+    [...dependencyGraph2.projects.values()].filter((project) => project.packageJson).map((project) => [project.projectDir, getProjectCdsVersions(project, sourceRoot2, lockfiles)])
+  );
+  const dependencyCombinations = extractUniqueDependencyCombinations(projectVersions);
   if (dependencyCombinations.length === 0) {
     cdsExtractorLog(
-      "error",
+      "warn",
       "No CDS dependencies found in any project. This means projects were detected but lack proper @sap/cds dependencies."
     );
     cdsExtractorLog(
@@ -9562,14 +10495,14 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
       `Dependency combination ${hash.substring(0, 8)}: @sap/cds@${actualCdsVersion}, @sap/cds-dk@${actualCdsDkVersion}${indexerNote}${fallbackNote}`
     );
   }
-  const cacheRootDir = (0, import_path9.join)(sourceRoot2, cacheSubDirName);
+  const cacheRootDir = (0, import_path10.join)(sourceRoot2, cacheSubDirName);
   cdsExtractorLog(
     "info",
     `Using cache directory '${cacheSubDirName}' within source root directory '${cacheRootDir}'`
   );
-  if (!(0, import_fs7.existsSync)(cacheRootDir)) {
+  if (!(0, import_fs9.existsSync)(cacheRootDir)) {
     try {
-      (0, import_fs7.mkdirSync)(cacheRootDir, { recursive: true });
+      (0, import_fs9.mkdirSync)(cacheRootDir, { recursive: true });
       cdsExtractorLog("info", `Created cache directory: ${cacheRootDir}`);
     } catch (err) {
       cdsExtractorLog(
@@ -9588,14 +10521,14 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
     const { cdsVersion, cdsDkVersion, hash } = combination;
     const { resolvedCdsVersion, resolvedCdsDkVersion } = combination;
     const cacheDirName = `cds-${hash}`;
-    const cacheDir = (0, import_path9.join)(cacheRootDir, cacheDirName);
+    const cacheDir = (0, import_path10.join)(cacheRootDir, cacheDirName);
     cdsExtractorLog(
       "info",
       `Processing dependency combination ${hash.substring(0, 8)} in cache directory: ${cacheDirName}`
     );
-    if (!(0, import_fs7.existsSync)(cacheDir)) {
+    if (!(0, import_fs9.existsSync)(cacheDir)) {
       try {
-        (0, import_fs7.mkdirSync)(cacheDir, { recursive: true });
+        (0, import_fs9.mkdirSync)(cacheDir, { recursive: true });
         cdsExtractorLog("info", `Created cache subdirectory: ${cacheDirName}`);
       } catch (err) {
         cdsExtractorLog(
@@ -9624,7 +10557,7 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
         dependencies: cacheDeps
       };
       try {
-        (0, import_fs7.writeFileSync)((0, import_path9.join)(cacheDir, "package.json"), JSON.stringify(packageJson, null, 2));
+        (0, import_fs9.writeFileSync)((0, import_path10.join)(cacheDir, "package.json"), JSON.stringify(packageJson, null, 2));
         cdsExtractorLog("info", `Created package.json in cache subdirectory: ${cacheDirName}`);
       } catch (err) {
         cdsExtractorLog(
@@ -9634,14 +10567,14 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
         continue;
       }
     }
-    const npmrcProjectDir = Array.from(dependencyGraph2.projects.values()).map((project) => project.projectDir).find((projectDir) => projectDir && (0, import_fs7.existsSync)((0, import_path9.join)(sourceRoot2, projectDir, ".npmrc")));
+    const npmrcProjectDir = Array.from(dependencyGraph2.projects.values()).map((project) => project.projectDir).find((projectDir) => projectDir && (0, import_fs9.existsSync)((0, import_path10.join)(sourceRoot2, projectDir, ".npmrc")));
     if (npmrcProjectDir) {
-      copyNpmrcToCache(cacheDir, (0, import_path9.join)(sourceRoot2, npmrcProjectDir));
+      copyNpmrcToCache(cacheDir, (0, import_path10.join)(sourceRoot2, npmrcProjectDir));
     }
     const samplePackageJsonPath = Array.from(dependencyGraph2.projects.values()).find(
       (project) => project.packageJson
     )?.projectDir;
-    const packageJsonPath = samplePackageJsonPath ? (0, import_path9.join)(sourceRoot2, samplePackageJsonPath, "package.json") : void 0;
+    const packageJsonPath = samplePackageJsonPath ? (0, import_path10.join)(sourceRoot2, samplePackageJsonPath, "package.json") : void 0;
     const installSuccess = installDependenciesInCache(
       cacheDir,
       combination,
@@ -9657,13 +10590,12 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
       continue;
     }
     successfulInstallations++;
-    for (const [projectDir, project] of Array.from(dependencyGraph2.projects.entries())) {
-      if (!project.packageJson) {
-        continue;
-      }
-      const p_cdsVersion = project.packageJson.dependencies?.["@sap/cds"] ?? "latest";
-      const p_cdsDkVersion = project.packageJson.devDependencies?.["@sap/cds-dk"] ?? p_cdsVersion;
-      const p_cdsIndexerVersion = project.packageJson.dependencies?.["@sap/cds-indexer"] ?? project.packageJson.devDependencies?.["@sap/cds-indexer"] ?? void 0;
+    for (const [projectDir, versions] of projectVersions) {
+      const {
+        cdsVersion: p_cdsVersion,
+        cdsDkVersion: p_cdsDkVersion,
+        cdsIndexerVersion: p_cdsIndexerVersion
+      } = versions;
       const projectResolvedVersions = resolveCdsVersions2(p_cdsVersion, p_cdsDkVersion);
       const projectActualCdsVersion = projectResolvedVersions.resolvedCdsVersion ?? p_cdsVersion;
       const projectActualCdsDkVersion = projectResolvedVersions.resolvedCdsDkVersion ?? p_cdsDkVersion;
@@ -9693,7 +10625,7 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
   if (projectCacheDirMap2.size > 0) {
     cdsExtractorLog("info", `Project to cache directory mappings:`);
     for (const [projectDir, cacheDir] of Array.from(projectCacheDirMap2.entries())) {
-      const cacheDirName = (0, import_path9.join)(cacheDir).split("/").pop() ?? "unknown";
+      const cacheDirName = (0, import_path10.join)(cacheDir).split("/").pop() ?? "unknown";
       cdsExtractorLog("info", `  ${projectDir} \u2192 ${cacheDirName}`);
     }
   } else {
@@ -9704,18 +10636,67 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
   }
   return projectCacheDirMap2;
 }
-function extractUniqueDependencyCombinations(projects) {
-  const combinations = /* @__PURE__ */ new Map();
-  for (const project of Array.from(projects.values())) {
-    if (!project.packageJson) {
-      continue;
+function* ancestorDirectories(dir) {
+  dir = import_path10.posix.normalize(process.platform === "win32" ? dir.replace(/\\/g, "/") : dir);
+  while (true) {
+    yield dir;
+    const parent = import_path10.posix.dirname(dir);
+    if (parent === dir) return;
+    dir = parent;
+  }
+}
+function readLockedVersion(projectDir, sourceRoot2, packageName, lockfiles) {
+  for (const dir of ancestorDirectories(projectDir)) {
+    const lockPath = (0, import_path10.join)(sourceRoot2, dir, "package-lock.json");
+    if (!lockfiles.has(lockPath)) {
+      try {
+        const lock2 = (0, import_fs9.existsSync)(lockPath) ? JSON.parse((0, import_fs9.readFileSync)(lockPath, "utf8")) : void 0;
+        if (lock2 !== void 0 && (!lock2 || typeof lock2 !== "object" || Array.isArray(lock2))) {
+          throw new Error("Package lockfile must contain an object");
+        }
+        lockfiles.set(lockPath, lock2);
+      } catch (error) {
+        cdsExtractorLog(
+          "warn",
+          `Failed to read dependency versions from ${lockPath}: ${String(error)}. Trying other lockfiles or package.json ranges.`
+        );
+        lockfiles.set(lockPath, void 0);
+      }
     }
-    const cdsVersion = project.packageJson.dependencies?.["@sap/cds"] ?? "latest";
-    const cdsDkVersion = project.packageJson.devDependencies?.["@sap/cds-dk"] ?? cdsVersion;
-    const cdsIndexerVersion = project.packageJson.dependencies?.["@sap/cds-indexer"] ?? project.packageJson.devDependencies?.["@sap/cds-indexer"] ?? void 0;
+    const lock = lockfiles.get(lockPath);
+    if (lock) {
+      for (const dependencyDir of ancestorDirectories(
+        (0, import_path10.relative)((0, import_path10.join)(sourceRoot2, dir), (0, import_path10.join)(sourceRoot2, projectDir))
+      )) {
+        const version2 = lock.packages?.[import_path10.posix.join(dependencyDir, "node_modules", packageName)]?.version;
+        if (version2) {
+          return version2;
+        }
+      }
+      const version = lock.dependencies?.[packageName]?.version;
+      if (version) {
+        return version;
+      }
+    }
+  }
+  return void 0;
+}
+function getProjectCdsVersions(project, sourceRoot2, lockfiles) {
+  const deps = project.packageJson?.dependencies;
+  const devDeps = project.packageJson?.devDependencies;
+  const cdsRange = deps?.["@sap/cds"] ?? "latest";
+  return {
+    cdsVersion: readLockedVersion(project.projectDir, sourceRoot2, "@sap/cds", lockfiles) ?? cdsRange,
+    cdsDkVersion: readLockedVersion(project.projectDir, sourceRoot2, "@sap/cds-dk", lockfiles) ?? devDeps?.["@sap/cds-dk"] ?? cdsRange,
+    cdsIndexerVersion: deps?.["@sap/cds-indexer"] ?? devDeps?.["@sap/cds-indexer"]
+  };
+}
+function extractUniqueDependencyCombinations(projectVersions) {
+  const combinations = /* @__PURE__ */ new Map();
+  for (const [projectDir, { cdsVersion, cdsDkVersion, cdsIndexerVersion }] of projectVersions) {
     cdsExtractorLog(
       "info",
-      `Resolving available dependency versions for project '${project.projectDir}' with dependencies: [@sap/cds@${cdsVersion}, @sap/cds-dk@${cdsDkVersion}]`
+      `Resolving available dependency versions for project '${projectDir}' with dependencies: [@sap/cds@${cdsVersion}, @sap/cds-dk@${cdsDkVersion}]`
     );
     const resolvedVersions = resolveCdsVersions2(cdsVersion, cdsDkVersion);
     const { resolvedCdsVersion, resolvedCdsDkVersion, ...rest } = resolvedVersions;
@@ -9741,7 +10722,7 @@ function extractUniqueDependencyCombinations(projects) {
     const actualCdsVersion = resolvedCdsVersion ?? cdsVersion;
     const actualCdsDkVersion = resolvedCdsDkVersion ?? cdsDkVersion;
     const hashInput = cdsIndexerVersion ? `${actualCdsVersion}|${actualCdsDkVersion}|${cdsIndexerVersion}` : `${actualCdsVersion}|${actualCdsDkVersion}`;
-    const hash = (0, import_crypto.createHash)("sha256").update(hashInput).digest("hex");
+    const hash = (0, import_crypto2.createHash)("sha256").update(hashInput).digest("hex");
     if (!combinations.has(hash)) {
       combinations.set(hash, {
         cdsVersion,
@@ -9758,7 +10739,7 @@ function extractUniqueDependencyCombinations(projects) {
 }
 function installDependenciesInCache(cacheDir, combination, cacheDirName, packageJsonPath, codeqlExePath2) {
   const { resolvedCdsVersion, resolvedCdsDkVersion, isFallback, warning } = combination;
-  const nodeModulesExists = (0, import_fs7.existsSync)((0, import_path9.join)(cacheDir, "node_modules", "@sap", "cds")) && (0, import_fs7.existsSync)((0, import_path9.join)(cacheDir, "node_modules", "@sap", "cds-dk"));
+  const nodeModulesExists = (0, import_fs9.existsSync)((0, import_path10.join)(cacheDir, "node_modules", "@sap", "cds")) && (0, import_fs9.existsSync)((0, import_path10.join)(cacheDir, "node_modules", "@sap", "cds-dk"));
   if (nodeModulesExists) {
     cdsExtractorLog(
       "info",
@@ -9781,7 +10762,7 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
     cdsExtractorLog("warn", warning);
   }
   try {
-    (0, import_child_process7.execFileSync)(
+    (0, import_child_process6.execFileSync)(
       npmExecutable(),
       // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
       // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
@@ -9807,9 +10788,9 @@ function installDependenciesInCache(cacheDir, combination, cacheDirName, package
 }
 
 // src/packageManager/projectInstaller.ts
-var import_child_process8 = require("child_process");
-var import_fs8 = require("fs");
-var import_path10 = require("path");
+var import_child_process7 = require("child_process");
+var import_fs10 = require("fs");
+var import_path11 = require("path");
 function needsFullDependencyInstallation(project) {
   if (project.retryStatus?.fullDependenciesInstalled) {
     return false;
@@ -9821,7 +10802,7 @@ function needsFullDependencyInstallation(project) {
 }
 function projectInstallDependencies(project, sourceRoot2) {
   const startTime = Date.now();
-  const projectPath = (0, import_path10.join)(sourceRoot2, project.projectDir);
+  const projectPath = (0, import_path11.join)(sourceRoot2, project.projectDir);
   const result = {
     success: false,
     projectDir: projectPath,
@@ -9834,14 +10815,14 @@ function projectInstallDependencies(project, sourceRoot2) {
       result.error = "No package.json found for project";
       return result;
     }
-    const hasLockfile = (0, import_fs8.existsSync)((0, import_path10.join)(projectPath, "package-lock.json"));
+    const hasLockfile = (0, import_fs10.existsSync)((0, import_path11.join)(projectPath, "package-lock.json"));
     const installSubcommand = hasLockfile ? "ci" : "install";
     cdsExtractorLog(
       "info",
       `Installing full dependencies for project ${project.projectDir} via 'npm ${installSubcommand}' in project's node_modules`
     );
     try {
-      (0, import_child_process8.execFileSync)(
+      (0, import_child_process7.execFileSync)(
         npmExecutable(),
         // --engine-strict=false: transitive deps occasionally pin obsolete Node ranges
         // (e.g. engines.node ^18) which would otherwise abort the install on newer Node.
@@ -9890,7 +10871,7 @@ function addCompilationDiagnosticsForFailedTasks(dependencyGraph2, codeqlExePath
       if (task.status === "failed") {
         const shouldAddDiagnostic = task.retryInfo?.hasBeenRetried ?? !task.retryInfo;
         if (shouldAddDiagnostic) {
-          const diagnosticPath = project.packageJson ? (0, import_path11.join)(project.projectDir, "package.json") : project.projectDir;
+          const diagnosticPath = project.packageJson ? (0, import_path12.join)(project.projectDir, "package.json") : project.projectDir;
           const fileCount = task.sourceFiles.length;
           const fileWord = fileCount === 1 ? "file" : "files";
           const baseMessage = task.errorSummary ?? "Compilation failed";
@@ -10048,21 +11029,7 @@ function retryCompilationTask(task, retryCommand, projectDir, dependencyGraph2) 
       dependencyGraph2.sourceRootDir,
       cdsCommandString,
       projectDir,
-      // Convert CDS projects to BasicCdsProject format expected by compileCdsToJson
-      new Map(
-        Array.from(dependencyGraph2.projects.entries()).map(([key, value]) => [
-          key,
-          {
-            cdsFiles: value.cdsFiles,
-            compilationTargets: value.compilationTargets,
-            expectedOutputFile: value.expectedOutputFile,
-            projectDir: value.projectDir,
-            dependencies: value.dependencies,
-            imports: value.imports,
-            packageJson: value.packageJson
-          }
-        ])
-      ),
+      dependencyGraph2.projects,
       task.projectDir
     );
     attempt.result = {
@@ -10161,22 +11128,7 @@ function attemptCompilation(task, cdsCommand, cacheDir, dependencyGraph2) {
       dependencyGraph2.sourceRootDir,
       cdsCommand,
       cacheDir,
-      // Convert CDS projects to BasicCdsProject format expected by compileCdsToJson
-      new Map(
-        Array.from(dependencyGraph2.projects.entries()).map(([key, value]) => [
-          key,
-          {
-            cdsFiles: value.cdsFiles,
-            compilationTargets: value.compilationTargets,
-            expectedOutputFile: value.expectedOutputFile,
-            projectDir: value.projectDir,
-            dependencies: value.dependencies,
-            imports: value.imports,
-            packageJson: value.packageJson,
-            compilationConfig: value.compilationConfig
-          }
-        ])
-      ),
+      dependencyGraph2.projects,
       task.projectDir
     );
     const endTime = /* @__PURE__ */ new Date();
@@ -10388,11 +11340,8 @@ function planCompilationTasks(dependencyGraph2, projectCacheDirMap2) {
   cdsExtractorLog("info", `Compilation planning completed. Total tasks: ${totalTasks}`);
 }
 
-// src/cds/compiler/project.ts
-var import_path12 = require("path");
-
 // src/cds/indexer.ts
-var import_child_process9 = require("child_process");
+var import_child_process8 = require("child_process");
 var import_path13 = require("path");
 var CDS_INDEXER_TIMEOUT_MS = 6e5;
 var CDS_INDEXER_PACKAGE = "@sap/cds-indexer";
@@ -10427,7 +11376,7 @@ function runCdsIndexer(project, sourceRoot2, cacheDir) {
       "info",
       `Running ${CDS_INDEXER_PACKAGE} for project '${project.projectDir}'...`
     );
-    const spawnResult = (0, import_child_process9.spawnSync)(npxExecutable(), ["--yes", CDS_INDEXER_PACKAGE], {
+    const spawnResult = (0, import_child_process8.spawnSync)(npxExecutable(), ["--yes", CDS_INDEXER_PACKAGE], {
       cwd: projectAbsPath,
       env,
       stdio: "pipe",
@@ -10529,295 +11478,7 @@ function orchestrateCdsIndexer(dependencyGraph2, sourceRoot2, projectCacheDirMap
 }
 
 // src/cds/parser/graph.ts
-var import_path15 = require("path");
-
-// src/cds/parser/functions.ts
-var import_fs9 = require("fs");
 var import_path14 = require("path");
-function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
-  if (!sourceRootDir || !projectDir) {
-    throw new Error(
-      `Unable to determine CDS files for project dir '${projectDir}'; both sourceRootDir and projectDir must be provided.`
-    );
-  }
-  const normalizedSourceRoot = sourceRootDir.replace(/[/\\]+$/, "");
-  const normalizedProjectDir = projectDir.replace(/[/\\]+$/, "");
-  if (!normalizedProjectDir.startsWith(normalizedSourceRoot) && normalizedProjectDir !== normalizedSourceRoot) {
-    throw new Error(
-      "projectDir must be a subdirectory of sourceRootDir or equal to sourceRootDir."
-    );
-  }
-  try {
-    const cdsFiles = Ui((0, import_path14.join)(projectDir, "**/*.cds"), {
-      nodir: true,
-      ignore: ["**/node_modules/**", "**/*.testproj/**"],
-      windowsPathsNoEscape: true
-    });
-    const relativePaths = cdsFiles.map((file) => (0, import_path14.relative)(sourceRootDir, file));
-    const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
-    if (pathsIgnorePatterns.length > 0) {
-      const filtered = filterIgnoredPaths(relativePaths, pathsIgnorePatterns);
-      const ignoredCount = relativePaths.length - filtered.length;
-      if (ignoredCount > 0) {
-        cdsExtractorLog(
-          "info",
-          `Filtered ${ignoredCount} CDS file(s) matching paths-ignore patterns in project ${(0, import_path14.relative)(sourceRootDir, projectDir) || "."}`
-        );
-      }
-      return filtered;
-    }
-    return relativePaths;
-  } catch (error) {
-    cdsExtractorLog("error", `Error finding CDS files in ${projectDir}: ${String(error)}`);
-    return [];
-  }
-}
-function determineCdsProjectsUnderSourceDir(sourceRootDir) {
-  if (!sourceRootDir || !(0, import_fs9.existsSync)(sourceRootDir)) {
-    throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
-  }
-  const foundProjects = /* @__PURE__ */ new Set();
-  const packageJsonFiles = Ui((0, import_path14.join)(sourceRootDir, "**/package.json"), {
-    nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"],
-    windowsPathsNoEscape: true
-  });
-  const cdsFiles = Ui((0, import_path14.join)(sourceRootDir, "**/*.cds"), {
-    nodir: true,
-    ignore: ["**/node_modules/**", "**/*.testproj/**"],
-    windowsPathsNoEscape: true
-  });
-  const candidateDirectories = /* @__PURE__ */ new Set();
-  for (const packageJsonFile of packageJsonFiles) {
-    candidateDirectories.add((0, import_path14.dirname)(packageJsonFile));
-  }
-  for (const cdsFile of cdsFiles) {
-    const cdsDir = (0, import_path14.dirname)(cdsFile);
-    const projectRoot = findProjectRootFromCdsFile(cdsDir, sourceRootDir);
-    if (projectRoot) {
-      candidateDirectories.add(projectRoot);
-    } else {
-      candidateDirectories.add(cdsDir);
-    }
-  }
-  for (const dir of candidateDirectories) {
-    if (isLikelyCdsProject(dir)) {
-      const relativePath = (0, import_path14.relative)(sourceRootDir, dir);
-      const projectDir = relativePath || ".";
-      let shouldAdd = true;
-      const existingProjects = Array.from(foundProjects);
-      for (const existingProject of existingProjects) {
-        const existingAbsPath = (0, import_path14.join)(sourceRootDir, existingProject);
-        if (dir.startsWith(existingAbsPath + import_path14.sep)) {
-          const parentPackageJsonPath = (0, import_path14.join)(existingAbsPath, "package.json");
-          const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
-          const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
-          if (isParentMonorepo && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
-            shouldAdd = true;
-          } else {
-            shouldAdd = false;
-          }
-          break;
-        }
-        if (existingAbsPath.startsWith(dir + import_path14.sep)) {
-          const currentPackageJsonPath = (0, import_path14.join)(dir, "package.json");
-          const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
-          const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
-          if (!(isCurrentMonorepo && isLikelyCdsProject(existingAbsPath))) {
-            foundProjects.delete(existingProject);
-          }
-        }
-      }
-      if (shouldAdd) {
-        foundProjects.add(projectDir);
-      }
-    }
-  }
-  return Array.from(foundProjects).sort();
-}
-function extractCdsImports(filePath) {
-  if (!(0, import_fs9.existsSync)(filePath)) {
-    throw new Error(`File does not exist: ${filePath}`);
-  }
-  const content = (0, import_fs9.readFileSync)(filePath, "utf8");
-  const imports = [];
-  const usingRegex = /using\s+(?:{[^}]+}|[\w.]+(?:\s+as\s+[\w.]+)?)\s+from\s+['"`]([^'"`]+)['"`]\s*;/g;
-  let match2;
-  while ((match2 = usingRegex.exec(content)) !== null) {
-    const path2 = match2[1];
-    imports.push({
-      statement: match2[0],
-      path: path2,
-      isRelative: path2.startsWith("./") || path2.startsWith("../"),
-      isModule: !path2.startsWith("./") && !path2.startsWith("../") && !path2.startsWith("/")
-    });
-  }
-  return imports;
-}
-function findProjectRootFromCdsFile(cdsFileDir, sourceRootDir) {
-  if (cdsFileDir.includes("node_modules") || cdsFileDir.includes(".testproj")) {
-    return null;
-  }
-  let currentDir = cdsFileDir;
-  while (currentDir.startsWith(sourceRootDir)) {
-    if (isLikelyCdsProject(currentDir)) {
-      const currentDirName = (0, import_path14.basename)(currentDir);
-      const isStandardSubdir = ["srv", "db", "app"].includes(currentDirName);
-      if (isStandardSubdir) {
-        const parentDir3 = (0, import_path14.dirname)(currentDir);
-        if (parentDir3 !== currentDir && parentDir3.startsWith(sourceRootDir) && !parentDir3.includes("node_modules") && !parentDir3.includes(".testproj") && isLikelyCdsProject(parentDir3)) {
-          return parentDir3;
-        }
-      }
-      const parentDir2 = (0, import_path14.dirname)(currentDir);
-      if (parentDir2 !== currentDir && parentDir2.startsWith(sourceRootDir) && !parentDir2.includes("node_modules") && !parentDir2.includes(".testproj")) {
-        const hasDbDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "db")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "db")).isDirectory();
-        const hasSrvDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "srv")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "srv")).isDirectory();
-        const hasAppDir2 = (0, import_fs9.existsSync)((0, import_path14.join)(parentDir2, "app")) && (0, import_fs9.statSync)((0, import_path14.join)(parentDir2, "app")).isDirectory();
-        if (hasDbDir2 && hasSrvDir2 || hasSrvDir2 && hasAppDir2) {
-          return parentDir2;
-        }
-      }
-      return currentDir;
-    }
-    const hasDbDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "db")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "db")).isDirectory();
-    const hasSrvDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "srv")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "srv")).isDirectory();
-    const hasAppDir = (0, import_fs9.existsSync)((0, import_path14.join)(currentDir, "app")) && (0, import_fs9.statSync)((0, import_path14.join)(currentDir, "app")).isDirectory();
-    if (hasDbDir && hasSrvDir || hasSrvDir && hasAppDir) {
-      return currentDir;
-    }
-    const parentDir = (0, import_path14.dirname)(currentDir);
-    if (parentDir === currentDir) {
-      break;
-    }
-    currentDir = parentDir;
-  }
-  return cdsFileDir;
-}
-function isLikelyCdsProject(dir) {
-  try {
-    if (dir.includes("node_modules") || dir.includes(".testproj")) {
-      return false;
-    }
-    const hasStandardCdsDirectories = hasStandardCdsContent(dir);
-    const hasDirectCdsFiles = hasDirectCdsContent(dir);
-    const hasCdsFiles = hasStandardCdsDirectories || hasDirectCdsFiles;
-    const hasCapDependencies = hasPackageJsonWithCapDeps(dir);
-    if (hasCapDependencies) {
-      if (!hasCdsFiles) {
-        return false;
-      }
-      const packageJsonPath = (0, import_path14.join)(dir, "package.json");
-      const packageJson = readPackageJsonFile(packageJsonPath);
-      if (packageJson?.workspaces && Array.isArray(packageJson.workspaces) && packageJson.workspaces.length > 0) {
-        if (!hasCdsFiles) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return hasCdsFiles;
-  } catch (error) {
-    cdsExtractorLog("error", `Error checking directory ${dir}: ${String(error)}`);
-    return false;
-  }
-}
-function hasStandardCdsContent(dir) {
-  const standardLocations = [(0, import_path14.join)(dir, "db"), (0, import_path14.join)(dir, "srv"), (0, import_path14.join)(dir, "app")];
-  for (const location of standardLocations) {
-    if ((0, import_fs9.existsSync)(location) && (0, import_fs9.statSync)(location).isDirectory()) {
-      const cdsFiles = Ui((0, import_path14.join)(location, "**/*.cds"), {
-        nodir: true,
-        windowsPathsNoEscape: true
-      });
-      if (cdsFiles.length > 0) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-function hasDirectCdsContent(dir) {
-  const directCdsFiles = Ui((0, import_path14.join)(dir, "*.cds"), { windowsPathsNoEscape: true });
-  return directCdsFiles.length > 0;
-}
-function readPackageJsonFile(filePath) {
-  if (!(0, import_fs9.existsSync)(filePath)) {
-    return void 0;
-  }
-  try {
-    const content = (0, import_fs9.readFileSync)(filePath, "utf8");
-    const packageJson = JSON.parse(content);
-    return packageJson;
-  } catch (error) {
-    cdsExtractorLog("warn", `Error parsing package.json at ${filePath}: ${String(error)}`);
-    return void 0;
-  }
-}
-function determineCdsFilesToCompile(sourceRootDir, project) {
-  if (!project.cdsFiles || project.cdsFiles.length === 0) {
-    return {
-      compilationTargets: [],
-      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
-    };
-  }
-  const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, project.projectDir);
-  const capDirectories = ["db", "srv", "app"];
-  let existingCapDirs = capDirectories.filter((dir) => (0, import_fs9.existsSync)((0, import_path14.join)(absoluteProjectDir, dir)));
-  if (existingCapDirs.length > 0 && getPathsIgnorePatterns(sourceRootDir).length > 0) {
-    const norm = (p) => p.replace(/\\/g, "/");
-    const before = existingCapDirs.length;
-    existingCapDirs = existingCapDirs.filter((dir) => {
-      const dirPrefix = norm((0, import_path14.join)(project.projectDir, dir)) + "/";
-      return project.cdsFiles.some((file) => norm(file).startsWith(dirPrefix));
-    });
-    const skipped = before - existingCapDirs.length;
-    if (skipped > 0) {
-      cdsExtractorLog(
-        "info",
-        `Skipped ${skipped} CAP directory(ies) fully covered by paths-ignore in project ${project.projectDir || "."}`
-      );
-    }
-  }
-  if (existingCapDirs.length > 0) {
-    return {
-      compilationTargets: existingCapDirs,
-      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
-    };
-  }
-  const rootCdsFiles = project.cdsFiles.filter((file) => (0, import_path14.dirname)((0, import_path14.join)(sourceRootDir, file)) === absoluteProjectDir).map((file) => (0, import_path14.basename)(file));
-  if (rootCdsFiles.length > 0) {
-    return {
-      compilationTargets: rootCdsFiles,
-      expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
-    };
-  }
-  const compilationTargets = project.cdsFiles.map(
-    (file) => (0, import_path14.relative)(absoluteProjectDir, (0, import_path14.join)(sourceRootDir, file))
-  );
-  return {
-    compilationTargets,
-    expectedOutputFile: (0, import_path14.join)(project.projectDir, modelCdsJsonFile)
-  };
-}
-function hasPackageJsonWithCapDeps(dir) {
-  try {
-    const packageJsonPath = (0, import_path14.join)(dir, "package.json");
-    const packageJson = readPackageJsonFile(packageJsonPath);
-    if (packageJson) {
-      const dependencies = {
-        ...packageJson.dependencies ?? {},
-        ...packageJson.devDependencies ?? {}
-      };
-      return !!(dependencies["@sap/cds"] || dependencies["@sap/cds-dk"]);
-    }
-    return false;
-  } catch {
-    return false;
-  }
-}
-
-// src/cds/parser/graph.ts
 function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   cdsExtractorLog("info", "Detecting CDS projects...");
   const projectDirs = determineCdsProjectsUnderSourceDir(sourceRootDir);
@@ -10829,27 +11490,26 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   const pathsIgnorePatterns = getPathsIgnorePatterns(sourceRootDir);
   const projectMap = /* @__PURE__ */ new Map();
   for (const projectDir of projectDirs) {
-    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns)) {
+    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns, true)) {
       cdsExtractorLog("info", `Skipping project '${projectDir}' \u2014 matches paths-ignore pattern`);
       continue;
     }
-    const absoluteProjectDir = (0, import_path15.join)(sourceRootDir, projectDir);
-    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
-    if (cdsFiles.length === 0) {
-      cdsExtractorLog(
-        "info",
-        `Skipping project '${projectDir}' \u2014 no CDS files remain after paths-ignore filtering`
-      );
-      continue;
-    }
-    const packageJsonPath = (0, import_path15.join)(absoluteProjectDir, "package.json");
+    const absoluteProjectDir = (0, import_path14.join)(sourceRootDir, projectDir);
+    const childProjectDirs = projectDirs.filter(
+      (dir) => dir !== projectDir && (projectDir === "." || dir.startsWith(projectDir + import_path14.sep))
+    );
+    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir).filter(
+      (file) => !childProjectDirs.some((dir) => file.startsWith(dir + import_path14.sep))
+    );
+    const packageJsonPath = (0, import_path14.join)(absoluteProjectDir, "package.json");
     const packageJson = readPackageJsonFile(packageJsonPath);
     projectMap.set(projectDir, {
       projectDir,
       cdsFiles,
+      childProjectDirs,
       compilationTargets: [],
       // Will be populated in the third pass
-      expectedOutputFile: (0, import_path15.join)(projectDir, modelCdsJsonFile),
+      expectedOutputFile: (0, import_path14.join)(projectDir, modelCdsJsonFile),
       packageJson,
       dependencies: [],
       imports: /* @__PURE__ */ new Map()
@@ -10858,18 +11518,18 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
   cdsExtractorLog("info", "Analyzing dependencies between CDS projects...");
   for (const [projectDir, project] of projectMap.entries()) {
     for (const relativeFilePath of project.cdsFiles) {
-      const absoluteFilePath = (0, import_path15.join)(sourceRootDir, relativeFilePath);
+      const absoluteFilePath = (0, import_path14.join)(sourceRootDir, relativeFilePath);
       try {
         const imports = extractCdsImports(absoluteFilePath);
         const enrichedImports = [];
         for (const importInfo of imports) {
           const enrichedImport = { ...importInfo };
           if (importInfo.isRelative) {
-            const importedFilePath = (0, import_path15.resolve)((0, import_path15.dirname)(absoluteFilePath), importInfo.path);
+            const importedFilePath = (0, import_path14.resolve)((0, import_path14.dirname)(absoluteFilePath), importInfo.path);
             const normalizedImportedPath = importedFilePath.endsWith(".cds") ? importedFilePath : `${importedFilePath}.cds`;
             try {
-              const relativeToDirPath = (0, import_path15.dirname)(relativeFilePath);
-              const resolvedPath = (0, import_path15.resolve)((0, import_path15.join)(sourceRootDir, relativeToDirPath), importInfo.path);
+              const relativeToDirPath = (0, import_path14.dirname)(relativeFilePath);
+              const resolvedPath = (0, import_path14.resolve)((0, import_path14.join)(sourceRootDir, relativeToDirPath), importInfo.path);
               const normalizedResolvedPath = resolvedPath.endsWith(".cds") ? resolvedPath : `${resolvedPath}.cds`;
               if (normalizedResolvedPath.startsWith(sourceRootDir)) {
                 enrichedImport.resolvedPath = normalizedResolvedPath.substring(sourceRootDir.length).replace(/^[/\\]/, "");
@@ -10882,10 +11542,10 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
             }
             for (const [otherProjectDir, otherProject] of projectMap.entries()) {
               if (otherProjectDir === projectDir) continue;
-              const otherProjectAbsoluteDir = (0, import_path15.join)(sourceRootDir, otherProjectDir);
+              const otherProjectAbsoluteDir = (0, import_path14.join)(sourceRootDir, otherProjectDir);
               const isInOtherProject = otherProject.cdsFiles.some((otherFile) => {
-                const otherAbsolutePath = (0, import_path15.join)(sourceRootDir, otherFile);
-                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path15.sep);
+                const otherAbsolutePath = (0, import_path14.join)(sourceRootDir, otherFile);
+                return otherAbsolutePath === normalizedImportedPath || normalizedImportedPath.startsWith(otherProjectAbsoluteDir + import_path14.sep);
               });
               if (isInOtherProject) {
                 project.dependencies ??= [];
@@ -10918,18 +11578,27 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir) {
     "info",
     "Determining CDS files to compile and expected output files for each project..."
   );
-  for (const [, project] of projectMap.entries()) {
+  for (const [projectDir, project] of projectMap.entries()) {
     try {
       const projectPlan = determineCdsFilesToCompile(sourceRootDir, project);
+      if (projectPlan.compilationTargets.length === 0) {
+        cdsExtractorLog(
+          "info",
+          `Skipping project '${projectDir}' \u2014 no selected CDS or CSN models remain`
+        );
+        projectMap.delete(projectDir);
+        continue;
+      }
       project.compilationTargets = projectPlan.compilationTargets;
+      project.csnFiles = projectPlan.csnFiles ?? [];
       project.expectedOutputFile = projectPlan.expectedOutputFile;
     } catch (error) {
       cdsExtractorLog(
         "warn",
         `Error determining files to compile for project ${project.projectDir}: ${String(error)}`
       );
-      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path15.basename)(file));
-      project.expectedOutputFile = (0, import_path15.join)(project.projectDir, modelCdsJsonFile);
+      project.compilationTargets = project.cdsFiles.map((file) => (0, import_path14.basename)(file));
+      project.expectedOutputFile = (0, import_path14.join)(project.projectDir, modelCdsJsonFile);
     }
   }
   return projectMap;
@@ -11058,14 +11727,14 @@ function buildCdsProjectDependencyGraph(sourceRootDir) {
 }
 
 // src/codeql.ts
-var import_child_process10 = require("child_process");
+var import_child_process9 = require("child_process");
 function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2) {
   cdsExtractorLog(
     "info",
     `Extracting the .cds.json files by running the 'javascript' extractor autobuild script:
         ${autobuildScriptPath2}`
   );
-  const result = (0, import_child_process10.spawnSync)(autobuildScriptPath2, {
+  const result = (0, import_child_process9.spawnSync)(autobuildScriptPath2, {
     cwd: sourceRoot2,
     env: process.env,
     shell: true,
@@ -11094,13 +11763,25 @@ function runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath
   return { success: true };
 }
 function runJavaScriptExtractionWithMarker(sourceRoot2, autobuildScriptPath2, codeqlExePath2, dependencyGraph2) {
-  configureLgtmIndexFilters();
-  applyPathsIgnoreToLgtmFilters(sourceRoot2);
+  let filterBatches;
+  try {
+    filterBatches = configureLgtmIndexFilters(sourceRoot2, dependencyGraph2);
+  } catch (error) {
+    const message = `Failed to configure JavaScript extraction filters: ${String(error)}`;
+    cdsExtractorLog("error", message);
+    addJavaScriptExtractorDiagnostic(sourceRoot2, message, codeqlExePath2, sourceRoot2);
+    return false;
+  }
   const markerFilePath = createMarkerFile(sourceRoot2);
   try {
     logPerformanceTrackingStart("JavaScript Extraction");
     const extractionStartTime = Date.now();
-    const extractorResult = runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2);
+    let extractorResult = runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2);
+    for (const filters of filterBatches.slice(1)) {
+      if (!extractorResult.success) break;
+      process.env.LGTM_INDEX_FILTERS = filters;
+      extractorResult = runJavaScriptExtractor(sourceRoot2, autobuildScriptPath2, codeqlExePath2);
+    }
     const extractionEndTime = Date.now();
     logPerformanceTrackingStop("JavaScript Extraction");
     if (dependencyGraph2) {
@@ -11137,13 +11818,13 @@ function handleEarlyExit(sourceRoot2, autobuildScriptPath2, codeqlExePath2, skip
 }
 
 // src/utils.ts
-var import_path16 = require("path");
+var import_path15 = require("path");
 var USAGE_MESSAGE = `	Usage: node <script> <source-root>`;
 function resolveSourceRoot(sourceRoot2) {
   if (!sourceRoot2 || typeof sourceRoot2 !== "string") {
     throw new Error("Source root must be a non-empty string");
   }
-  const normalizedPath = (0, import_path16.resolve)(sourceRoot2);
+  const normalizedPath = (0, import_path15.resolve)(sourceRoot2);
   if (!normalizedPath || normalizedPath === "/") {
     throw new Error("Source root must point to a valid directory");
   }
@@ -11236,7 +11917,7 @@ try {
     try {
       const allCdsFiles = Array.from(
         /* @__PURE__ */ new Set([
-          ...Ui((0, import_path17.join)(sourceRoot, "**/*.cds"), {
+          ...Ui((0, import_path16.join)(sourceRoot, "**/*.cds"), {
             ignore: ["**/node_modules/**", "**/.git/**"],
             windowsPathsNoEscape: true
           })
@@ -11310,25 +11991,10 @@ try {
 logPerformanceTrackingStart("Dependency Installation");
 var projectCacheDirMap = cacheInstallDependencies(dependencyGraph, sourceRoot, codeqlExePath);
 logPerformanceTrackingStop("Dependency Installation");
-if (projectCacheDirMap.size === 0) {
-  cdsExtractorLog(
-    "error",
-    "No project cache directory mappings were created. This indicates that dependency installation failed for all discovered projects."
-  );
-  if (dependencyGraph.projects.size > 0) {
-    const errorMessage = `Found ${dependencyGraph.projects.size} CDS projects but failed to install dependencies for any of them. Cannot proceed with compilation.`;
-    cdsExtractorLog("error", errorMessage);
-    if (codeqlExePath) {
-      addDependencyInstallationDiagnostic(sourceRoot, errorMessage, codeqlExePath);
-    }
-    logExtractorStop(
-      false,
-      "Warning: Dependency installation failed for all projects, continuing with limited functionality"
-    );
-  }
+if (projectCacheDirMap.size === 0 && dependencyGraph.projects.size > 0) {
   cdsExtractorLog(
     "warn",
-    "No projects and no cache mappings - this should have been detected earlier."
+    `No cached CDS dependencies are available for the ${dependencyGraph.projects.size} detected CDS project(s); compilation will use a global or npx-provided 'cds' command.`
   );
 }
 logPerformanceTrackingStart("CDS Indexer");

@@ -63,7 +63,7 @@ node dist/cds-extractor.js /path/to/source/root
 
 ## Development
 
-> **⚠️ IMPORTANT NOTE**: Any changes to the CDS extractor's compilation task behavior (including how and where `cds compile` commands are executed, project detection logic, or output file generation patterns) **MUST** be reflected in the `extractors/cds/tools/test/cds-compilation-for-actions.test.sh` script. The `.github/workflows/run-codeql-unit-tests-javascript.yml` workflow executes this script during the "Compile CAP CDS files" step to simulate the CDS extractor's compilation process for unit tests. If the script and extractor implementations diverge, the `CodeQL - Run Unit Tests (javascript)` workflow will fail on PRs, causing status check failures. Always review and update the test script when modifying compilation behavior to maintain consistency between local testing and CI/CD environments.
+> **⚠️ IMPORTANT NOTE**: Any changes to the CDS extractor's compilation task behavior (including how and where `cds compile` commands are executed, project detection logic, or output file generation patterns) **MUST** be reflected in the `extractors/cds/tools/workflow/compile-test-cds.mjs` script. The `.github/workflows/run-codeql-unit-tests-javascript.yml` workflow executes this script during the "Compile CAP CDS files" step to simulate the CDS extractor's compilation process for unit tests. If the script and extractor implementations diverge, the `CodeQL - Run Unit Tests (javascript)` workflow will fail on PRs, causing status check failures. Always review and update the test script when modifying compilation behavior to maintain consistency between local testing and CI/CD environments.
 
 ### Project Structure
 
@@ -152,6 +152,21 @@ The extractor uses a sophisticated compilation approach:
 3. **Error Recovery**: Handles compilation failures gracefully
 4. **Performance Tracking**: Monitors compilation times and resource usage
 
+Model selection uses one owned-model inventory per project:
+
+- Full selections preserve root `index.cds` and CAP directory entry-point precedence,
+  including CSN-only directories and sibling `.cds`/`.csn` entry points. Partial selections
+  pass selected files explicitly. Child-workspace models never affect the parent's plan.
+- Outside CAP directories, only `fts/` feature models and explicit source-path selections
+  are added. Selected root models do not duplicate effective CAP entry points. Exclusions
+  and extension-only includes do not opt unrelated descendants into compilation.
+- Owned CSN inputs remain eligible even without selected CDS sources, including in flat
+  projects. They retain compilation targets and extraction metadata; generated file and
+  directory outputs respect explicit output exclusions.
+- Initial compilation, retries, and the test workflow share target-selection and bounded
+  compiler invocation logic. Native Windows separators are normalized; literal Unix
+  backslashes in source and output paths are preserved.
+
 ## Performance Features
 
 ### Optimized Dependency Management
@@ -178,24 +193,15 @@ The extractor uses a sophisticated compilation approach:
 
 #### Installation of `@sap/cds` and `@sap/cds-dk`
 
-The CDS extractor attempts to optimize performance for most projects by caching the installation of the unique combinations of resolved CDS dependencies across all projects under a given source root.
+The extractor caches installations by resolved dependency combination:
 
-The "unique combinations of resolved CDS dependencies" means that we resolve the **latest** available version **within the semantic version range** for each `@sap/cds` and `@sap/cds-dk` dependency specified in the `package.json` file for a given CAP project.
-
-In practice, this means that if "project-a" requires `@sap/cds@^6.0.0` and "project-b" requires `@sap/cds@^7.0.0` while the latest available version is `@sap/cds@9.0.0` (as a trivial example), the extractor will install `@sap/cds@9.0.0` once and reuse it for both projects.
-
-This is much faster than installing all dependencies for every project individually, especially for large projects with many CDS files. However, this approach has some limitations and trade-offs:
-
-- This latest-first approach is more likely to choose the same version for multiple projects, which can reduce analysis time and can improve consistency in analysis between projects.
-- This approach does not read (or respect) the `package-lock.json` file, which means that we are more likely to use a `cds` version that is different from the one most recently tested/used by the project developers.
-- We are more likely to encounter incompatibility issues where a particular project hasn't been tested with the latest version of `@sap/cds` or `@sap/cds-dk`.
-
-We can mitigate some of these issues through a (to be implemented) compilation retry mechanism for projects where some CDS compilation task(s) fail to produce the expected `.cds.json` output file(s).
-The proposed retry mechanism would install the full set of dependencies for the affected project(s) while respecting the `package-lock.json` file, and then re-run the compilation for the affected project(s).
-
-```text
-TODO: retry mechanism expected before next release of the CDS extractor
-```
+- Prefer `@sap/cds` and `@sap/cds-dk` versions from the nearest project or workspace
+  `package-lock.json`, including workspace-local and hoisted entries.
+- If no locked version is available, resolve the declared `package.json` requirements,
+  using the existing default versions where needed.
+- Share a cache only between projects with matching resolved dependency combinations.
+- If no cache is available, attempt compilation with a global or npx-provided compiler.
+  Final compilation failures are reported after retries.
 
 #### Installation of Additional Project-Specific Dependencies
 
