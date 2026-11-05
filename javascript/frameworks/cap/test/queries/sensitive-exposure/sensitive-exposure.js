@@ -22,23 +22,23 @@ class SampleVulnService extends cds.ApplicationService {
             const projectedComplex = await SELECT.one.from(Authors).columns('lower(email) as lowerEmail')
             const authors = await SELECT.from(Authors)
 
-            LOG.info('author:', author)
-            console.log(`email=${author.email}`)
-            LOG.info('author ID:', author.ID)
-            LOG.info('projected sensitive:', projectedSensitive.contactEmail)
-            LOG.info('projected safe ID:', projectedSafe.ID)
-            LOG.info('projected tagged:', projectedTagged)
-            LOG.info('local author:', localAuthor)
-            LOG.info('run author:', runAuthor)
-            LOG.info('projected wildcard:', projectedWildcard)
-            LOG.info('projected object:', projectedObject.objectEmail)
-            LOG.info('projected complex:', projectedComplex.lowerEmail)
-            console.log(authors[0].email)
-            console.log(authors[0].ID)
+            LOG.info('author:', author) // CAP log exposure alert
+            console.log(`email=${author.email}`) // CAP log exposure alert
+            LOG.info('author ID:', author.ID) // NO CAP log exposure alert - ID is not sensitive
+            LOG.info('projected sensitive:', projectedSensitive.contactEmail) // CAP log exposure alert
+            LOG.info('projected safe ID:', projectedSafe.ID) // NO CAP log exposure alert - ID is not sensitive
+            LOG.info('projected tagged:', projectedTagged) // CAP log exposure alert
+            LOG.info('local author:', localAuthor) // CAP log exposure alert
+            LOG.info('run author:', runAuthor) // CAP log exposure alert
+            LOG.info('projected wildcard:', projectedWildcard) // CAP log exposure alert
+            LOG.info('projected object:', projectedObject.objectEmail) // CAP log exposure alert
+            LOG.info('projected complex:', projectedComplex.lowerEmail) // CAP log exposure alert
+            console.log(authors[0].email) // CAP log exposure alert
+            console.log(authors[0].ID) // NO CAP log exposure alert - ID is not sensitive
             const projectedSensitiveOverSafe = await SELECT.one.from(Authors).columns('lower(email) as ID')
-            LOG.info('projected sensitive over safe:', projectedSensitiveOverSafe.ID)
+            LOG.info('projected sensitive over safe:', projectedSensitiveOverSafe.ID) // CAP log exposure alert - email remains sensitive when aliased to ID
             const projectedSafeOverSensitive = await SELECT.one.from(Authors).columns('emailVerified as email')
-            LOG.info('projected safe over sensitive:', projectedSafeOverSensitive.email)
+            LOG.info('projected safe over sensitive:', projectedSafeOverSensitive.email) // NO CAP log exposure alert - emailVerified is not sensitive
         })
     }
 
