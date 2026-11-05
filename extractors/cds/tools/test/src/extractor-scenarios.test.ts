@@ -231,6 +231,37 @@ fs.writeFileSync('model.cds.json', '{}');
   });
 
   describe('source filters through JavaScript extraction', () => {
+    it.each(['db/csn.json', 'db/schema.csn'])(
+      'retains selected CSN source %s during unfiltered extraction',
+      model => {
+        writeTree(root, {
+          'package.json': capPackageJson('^8'),
+          'srv/service.cds': 'service Current {}',
+          [model]: '{}',
+          'model.cds.json': '{}',
+        });
+
+        const graph = buildCdsProjectDependencyGraph(root);
+        const success = runJavaScriptExtractionWithMarker(
+          root,
+          '/mock/autobuild.sh',
+          '/mock/codeql',
+          graph,
+        );
+
+        expect(success).toBe(true);
+        expect(graph.projects.get('.')?.csnFiles).toContain(model);
+        expect(process.env.LGTM_INDEX_FILTERS?.split('\n')).toEqual([
+          'exclude:**/*.*',
+          'include:**/*.cds',
+          'include:**/*.cds.json',
+          `include:${model}`,
+          'exclude:**/node_modules/**/*.*',
+          `include:${cdsExtractorMarkerFileName}`,
+        ]);
+      },
+    );
+
     it.each([
       {
         exclusions: '',

@@ -441,6 +441,92 @@ describe('environment', () => {
   });
 
   describe('configureLgtmIndexFilters', () => {
+    function createGraph(
+      cdsFiles: string[],
+      csnFiles: string[],
+      expectedOutputFile: string,
+    ): CdsDependencyGraph {
+      return {
+        config: {
+          compilationTimeoutMs: 30000,
+          enableDetailedLogging: false,
+          generateDebugOutput: false,
+          maxRetryAttempts: 3,
+        },
+        currentPhase: 'extracting',
+        debugInfo: {
+          compiler: {
+            availableCommands: [],
+            cacheDirectories: [],
+            cacheInitialized: false,
+            selectedCommand: 'cds compile',
+          },
+          extractor: {
+            environment: {
+              argv: [],
+              cwd: '/source',
+              nodeVersion: process.version,
+              platform: process.platform,
+            },
+            runMode: 'test',
+            sourceRootDir: '/source',
+            startTime: new Date(0),
+          },
+          parser: {
+            cdsFilesFound: cdsFiles.length,
+            dependencyResolutionSuccess: true,
+            parsingErrors: [],
+            parsingWarnings: [],
+            projectsDetected: 1,
+          },
+        },
+        errors: { critical: [], warnings: [] },
+        id: 'test-graph',
+        projects: new Map([
+          [
+            '.',
+            {
+              cdsFiles,
+              compilationTargets: [...cdsFiles, ...csnFiles],
+              compilationTasks: [],
+              csnFiles,
+              expectedOutputFile,
+              id: 'test-project',
+              projectDir: '.',
+              status: 'completed',
+              timestamps: { discovered: new Date(0) },
+            },
+          ],
+        ]),
+        retryStatus: {
+          projectsRequiringFullDependencies: new Set(),
+          projectsWithFullDependencies: new Set(),
+          totalRetryAttempts: 0,
+          totalTasksRequiringRetry: 0,
+          totalTasksSuccessfullyRetried: 0,
+        },
+        sourceRootDir: '/source',
+        statusSummary: {
+          criticalErrors: [],
+          failedCompilations: 0,
+          jsonFilesGenerated: 1,
+          overallSuccess: true,
+          performance: {
+            compilationDurationMs: 0,
+            extractionDurationMs: 0,
+            parsingDurationMs: 0,
+            totalDurationMs: 0,
+          },
+          skippedCompilations: 0,
+          successfulCompilations: 1,
+          totalCdsFiles: cdsFiles.length,
+          totalCompilationTasks: 1,
+          totalProjects: 1,
+          warnings: [],
+        },
+      };
+    }
+
     it.each([
       ['darwin', 16384],
       ['win32', 4096],
@@ -480,6 +566,75 @@ describe('environment', () => {
       expect(process.env.LGTM_INDEX_FILETYPES).toBe('.cds:JSON');
     });
 
+    it.each(['db/csn.json', 'db/schema.csn', 'flat.csn'])(
+      'should include selected CSN input %s without source filters',
+      csnSource => {
+        const graph = createGraph([], [csnSource], 'model.cds.json');
+
+        const [filters] = configureLgtmIndexFilters('/source', graph);
+
+        expect(filters.split('\n')).toEqual([
+          'exclude:**/*.*',
+          'include:**/*.cds',
+          'include:**/*.cds.json',
+          `include:${csnSource}`,
+          'exclude:**/node_modules/**/*.*',
+          `include:${cdsExtractorMarkerFileName}`,
+        ]);
+      },
+    );
+
+    it.each([
+      'db/*.csn',
+      'db/*/csn.json',
+      'db/line\nmodel.csn',
+      'db/line\rmodel.csn',
+      'db/line\r\nmodel.csn',
+    ])('should reject unrepresentable CSN input %j without source filters', csnSource => {
+      const graph = createGraph([], [csnSource], 'model.cds.json');
+
+      const [filters] = configureLgtmIndexFilters('/source', graph);
+
+      expect(filters.split('\n')).toEqual([
+        'exclude:**/*.*',
+        'include:**/*.cds',
+        'include:**/*.cds.json',
+        'exclude:**/node_modules/**/*.*',
+        `include:${cdsExtractorMarkerFileName}`,
+      ]);
+    });
+
+    it.each([
+      ['darwin', 16384],
+      ['win32', 4096],
+    ] as const)('should bound default CSN source batches on %s', (platform, limit) => {
+      jest.mocked(os.platform).mockReturnValue(platform);
+      const csnFiles = Array.from({ length: 3000 }, (_, i) => `db/${'\u00e9'.repeat(20)}-${i}.csn`);
+      const graph = createGraph([], csnFiles, 'model.cds.json');
+
+      const batches = configureLgtmIndexFilters('/source', graph);
+
+      expect(batches.length).toBeGreaterThan(1);
+      expect(batches[0]).toContain('include:**/*.cds\ninclude:**/*.cds.json');
+      for (const batch of batches) {
+        expect(Buffer.byteLength(batch)).toBeLessThanOrEqual(limit);
+        expect(batch).toContain(`include:${cdsExtractorMarkerFileName}`);
+      }
+      expect(
+        batches.flatMap(batch => batch.split('\n').filter(line => line.startsWith('include:db/'))),
+      ).toEqual(csnFiles.sort().map(file => `include:${file}`));
+    });
+
+    it('should reject a default CSN source that cannot fit in a Windows batch', () => {
+      jest.mocked(os.platform).mockReturnValue('win32');
+      const csnSource = `${'nested-directory/'.repeat(300)}csn.json`;
+      const graph = createGraph([], [csnSource], 'model.cds.json');
+
+      expect(() => configureLgtmIndexFilters('/source', graph)).toThrow(
+        'Extraction filter exceeds 4096 bytes',
+      );
+    });
+
     it('should preserve literal Unix backslashes in concrete source and output paths', () => {
       jest.replaceProperty(path, 'sep', '/');
       jest.mocked(os.platform).mockReturnValue('linux');
@@ -510,85 +665,7 @@ describe('environment', () => {
           .mocked(pathsIgnore.getPathsIgnorePatterns)
           .mockReturnValue([{ include: source }, { include: csnSource }]);
         jest.mocked(globSync).mockReturnValue([output, `${output}${separator}nested.cds.json`]);
-        const graph: CdsDependencyGraph = {
-          config: {
-            compilationTimeoutMs: 30000,
-            enableDetailedLogging: false,
-            generateDebugOutput: false,
-            maxRetryAttempts: 3,
-          },
-          currentPhase: 'extracting',
-          debugInfo: {
-            compiler: {
-              availableCommands: [],
-              cacheDirectories: [],
-              cacheInitialized: false,
-              selectedCommand: 'cds compile',
-            },
-            extractor: {
-              environment: {
-                argv: [],
-                cwd: '/source',
-                nodeVersion: process.version,
-                platform: process.platform,
-              },
-              runMode: 'test',
-              sourceRootDir: '/source',
-              startTime: new Date(0),
-            },
-            parser: {
-              cdsFilesFound: 1,
-              dependencyResolutionSuccess: true,
-              parsingErrors: [],
-              parsingWarnings: [],
-              projectsDetected: 1,
-            },
-          },
-          errors: { critical: [], warnings: [] },
-          id: 'test-graph',
-          projects: new Map([
-            [
-              '.',
-              {
-                cdsFiles: [source],
-                compilationTargets: [source, csnSource],
-                compilationTasks: [],
-                csnFiles: [csnSource],
-                expectedOutputFile: output,
-                id: 'test-project',
-                projectDir: '.',
-                status: 'completed',
-                timestamps: { discovered: new Date(0) },
-              },
-            ],
-          ]),
-          retryStatus: {
-            projectsRequiringFullDependencies: new Set(),
-            projectsWithFullDependencies: new Set(),
-            totalRetryAttempts: 0,
-            totalTasksRequiringRetry: 0,
-            totalTasksSuccessfullyRetried: 0,
-          },
-          sourceRootDir: '/source',
-          statusSummary: {
-            criticalErrors: [],
-            failedCompilations: 0,
-            jsonFilesGenerated: 1,
-            overallSuccess: true,
-            performance: {
-              compilationDurationMs: 0,
-              extractionDurationMs: 0,
-              parsingDurationMs: 0,
-              totalDurationMs: 0,
-            },
-            skippedCompilations: 0,
-            successfulCompilations: 1,
-            totalCdsFiles: 1,
-            totalCompilationTasks: 1,
-            totalProjects: 1,
-            warnings: [],
-          },
-        };
+        const graph = createGraph([source], [csnSource], output);
 
         const [filters] = configureLgtmIndexFilters('/source', graph);
 

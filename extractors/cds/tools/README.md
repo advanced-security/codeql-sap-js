@@ -161,8 +161,9 @@ Model selection uses one owned-model inventory per project:
   are added. Selected root models do not duplicate effective CAP entry points. Exclusions
   and extension-only includes do not opt unrelated descendants into compilation.
 - Owned CSN inputs remain eligible even without selected CDS sources, including in flat
-  projects. They retain compilation targets and extraction metadata; generated file and
-  directory outputs respect explicit output exclusions.
+  projects. They retain compilation targets and extraction metadata. Selected CSN source
+  paths are included with or without source filters, subject to literal-filename safeguards;
+  generated file and directory outputs respect explicit output exclusions.
 - Initial compilation, retries, and the test workflow share target-selection and bounded
   compiler invocation logic. Native Windows separators are normalized; literal Unix
   backslashes in source and output paths are preserved.

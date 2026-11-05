@@ -256,7 +256,9 @@ export function configureLgtmIndexFilters(
     ]),
   );
   const includes = new Set(
-    patterns.length === 0 ? ['**/*.cds.json', '**/*.cds'] : [...outputSources.values()].flat(),
+    patterns.length === 0
+      ? projects.flatMap(project => (project.csnFiles ?? []).map(normalizePathSeparators))
+      : [...outputSources.values()].flat(),
   );
 
   if (patterns.length > 0) {
@@ -285,7 +287,13 @@ export function configureLgtmIndexFilters(
     '\n' + ['exclude:**/node_modules/**/*.*', `include:${cdsExtractorMarkerFileName}`].join('\n');
   // Leave room for other environment variables on all supported platforms.
   const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
-  const batches = ['exclude:**/*.*'];
+  // Keep trusted default globs separate from the concrete paths validated below.
+  const batches = [
+    [
+      'exclude:**/*.*',
+      ...(patterns.length === 0 ? ['include:**/*.cds', 'include:**/*.cds.json'] : []),
+    ].join('\n'),
+  ];
   for (const pattern of [...includes].sort()) {
     if (/[\r\n]/.test(pattern)) {
       cdsExtractorLog(
@@ -296,7 +304,7 @@ export function configureLgtmIndexFilters(
     }
     // The JavaScript extractor's filter syntax has no escape for `*`, so a concrete
     // path containing it would also match unselected siblings; skip it instead.
-    if (patterns.length > 0 && pattern.includes('*')) {
+    if (pattern.includes('*')) {
       cdsExtractorLog(
         'warn',
         `Skipping '${pattern}' from extraction filters: '*' cannot be matched literally.`,

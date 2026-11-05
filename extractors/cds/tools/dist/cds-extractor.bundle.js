@@ -8976,7 +8976,7 @@ function configureLgtmIndexFilters(sourceRoot2, dependencyGraph2) {
     ])
   );
   const includes = new Set(
-    patterns.length === 0 ? ["**/*.cds.json", "**/*.cds"] : [...outputSources.values()].flat()
+    patterns.length === 0 ? projects.flatMap((project) => (project.csnFiles ?? []).map(normalizePathSeparators)) : [...outputSources.values()].flat()
   );
   if (patterns.length > 0) {
     const filePatterns = dependencyGraph2 ? "**/*.cds.json" : ["**/*.cds", "**/*.cds.json"];
@@ -8999,7 +8999,12 @@ function configureLgtmIndexFilters(sourceRoot2, dependencyGraph2) {
   }
   const suffix = "\n" + ["exclude:**/node_modules/**/*.*", `include:${cdsExtractorMarkerFileName}`].join("\n");
   const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
-  const batches = ["exclude:**/*.*"];
+  const batches = [
+    [
+      "exclude:**/*.*",
+      ...patterns.length === 0 ? ["include:**/*.cds", "include:**/*.cds.json"] : []
+    ].join("\n")
+  ];
   for (const pattern of [...includes].sort()) {
     if (/[\r\n]/.test(pattern)) {
       cdsExtractorLog(
@@ -9008,7 +9013,7 @@ function configureLgtmIndexFilters(sourceRoot2, dependencyGraph2) {
       );
       continue;
     }
-    if (patterns.length > 0 && pattern.includes("*")) {
+    if (pattern.includes("*")) {
       cdsExtractorLog(
         "warn",
         `Skipping '${pattern}' from extraction filters: '*' cannot be matched literally.`
