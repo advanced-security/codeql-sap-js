@@ -1,3 +1,5 @@
+import mockFs from 'mock-fs';
+
 import {
   determineCdsCommand,
   determineVersionAwareCdsCommands,
@@ -6,6 +8,7 @@ import {
 import { compileCdsToJson } from '../../../../src/cds/compiler/compile';
 import { orchestrateRetryAttempts } from '../../../../src/cds/compiler/retry';
 import * as validator from '../../../../src/cds/compiler/validator';
+import { determineCdsFilesToCompile } from '../../../../src/cds/parser/functions';
 import { CdsDependencyGraph, CdsProject } from '../../../../src/cds/parser/types';
 import { addCompilationDiagnostic } from '../../../../src/diagnostics';
 
@@ -185,6 +188,7 @@ describe('graph.ts', () => {
   });
 
   afterEach(() => {
+    mockFs.restore();
     jest.restoreAllMocks();
   });
 
@@ -263,6 +267,36 @@ describe('graph.ts', () => {
         '/test/project/model.cds',
         '/test/project/service.cds',
       ]);
+    });
+
+    it('should preserve ownership boundaries when compilation recomputes targets', () => {
+      mockFs({
+        '/test/source/app/archived/old.cds': 'invalid archived CDS',
+        '/test/source/app/index.cds': "using from './schema';",
+        '/test/source/app/schema.cds': 'entity Current {}',
+        '/test/source/app/ui-a/srv/service.cds': 'service Child {}',
+      });
+      const project = createMockProject(
+        '.',
+        ['app/index.cds', 'app/schema.cds', 'app/archived/old.cds'],
+        {
+          childProjectDirs: ['app/ui-a'],
+          compilationTargets: ['app'],
+        },
+      );
+      mockDependencyGraph.projects.set('.', project);
+
+      orchestrateCompilation(mockDependencyGraph, projectCacheDirMap, '/path/to/codeql');
+
+      expect(mockCompileCdsToJson).toHaveBeenCalledTimes(1);
+      const projectMap = mockCompileCdsToJson.mock.calls[0][4];
+      const compilerProject = projectMap.get('.');
+      if (!compilerProject) throw new Error('Expected the parent compiler project');
+      expect(
+        determineCdsFilesToCompile(mockDependencyGraph.sourceRootDir, compilerProject)
+          .compilationTargets,
+      ).toEqual(['app']);
+      expect(projectMap).toBe(mockDependencyGraph.projects);
     });
 
     it('should handle compilation failure', () => {

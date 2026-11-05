@@ -22,15 +22,7 @@ if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
 
 echo Running database index-files for UI5 (.view.xml and .fragment.xml) files ...
 
-type NUL && "%CODEQL_DIST%\codeql.exe" database index-files ^
-    --include-extension=.view.xml ^
-    --include-extension=.fragment.xml ^
-    --language xml ^
-    --prune **\node_modules\**\* ^
-    --prune **\.eslint\**\* ^
-    --total-size-limit=10m ^
-    -- ^
-    "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
+node "%~dp0index-ui5.js"
 
 if %ERRORLEVEL% neq 0 (
     echo database index-files for UI5 ^(.view.xml and .fragment.xml^) files failed with exit code %ERRORLEVEL%.

@@ -2,11 +2,14 @@
 
 import { join } from 'path';
 
+import mockFs from 'mock-fs';
+
 import * as compile from '../../../../src/cds/compiler/compile';
 import { orchestrateRetryAttempts } from '../../../../src/cds/compiler/retry';
 import type { CompilationTask } from '../../../../src/cds/compiler/types';
 import * as validator from '../../../../src/cds/compiler/validator';
 import type { CdsDependencyGraph, CdsProject } from '../../../../src/cds/parser';
+import { determineCdsFilesToCompile } from '../../../../src/cds/parser/functions';
 import * as diagnostics from '../../../../src/diagnostics';
 import * as logging from '../../../../src/logging';
 import * as packageManager from '../../../../src/packageManager';
@@ -199,6 +202,10 @@ describe('retry.ts', () => {
     mockDiagnostics.addCompilationDiagnostic.mockImplementation(() => true);
   });
 
+  afterEach(() => {
+    mockFs.restore();
+  });
+
   describe('orchestrateRetryAttempts', () => {
     it('should return early when no tasks require retry', () => {
       // Setup: No tasks requiring retry
@@ -226,6 +233,42 @@ describe('retry.ts', () => {
         'info',
         'No tasks require retry - all compilations successful',
       );
+    });
+
+    it('should preserve ownership boundaries when retries recompute targets', () => {
+      mockFs({
+        '/test/test-project/app/archived/old.cds': 'invalid archived CDS',
+        '/test/test-project/app/index.cds': "using from './schema';",
+        '/test/test-project/app/schema.cds': 'entity Current {}',
+        '/test/test-project/app/ui-a/srv/service.cds': 'service Child {}',
+      });
+      mockProject.cdsFiles = [
+        'test-project/app/index.cds',
+        'test-project/app/schema.cds',
+        'test-project/app/archived/old.cds',
+      ];
+      mockProject.childProjectDirs = ['test-project/app/ui-a'];
+      mockProject.compilationTargets = ['app'];
+      mockFailedTask.sourceFiles = ['/test/test-project/app/index.cds'];
+      mockValidator.identifyTasksRequiringRetry.mockReturnValue(
+        new Map([['test-project', [mockFailedTask]]]),
+      );
+      mockCompile.compileCdsToJson.mockReturnValue({
+        success: true,
+        outputPath: '/test/test-project/model.cds.json',
+      });
+
+      orchestrateRetryAttempts(mockDependencyGraph, codeqlExePath);
+
+      expect(mockCompile.compileCdsToJson).toHaveBeenCalledTimes(1);
+      const projectMap = mockCompile.compileCdsToJson.mock.calls[0][4];
+      const compilerProject = projectMap.get('test-project');
+      if (!compilerProject) throw new Error('Expected the parent compiler project');
+      expect(
+        determineCdsFilesToCompile(mockDependencyGraph.sourceRootDir, compilerProject)
+          .compilationTargets,
+      ).toEqual(['app']);
+      expect(projectMap).toBe(mockDependencyGraph.projects);
     });
 
     it('should update retry counts when dependency installation is required', () => {
