@@ -9,6 +9,9 @@ entity Authors {
   key ID        : Integer;
   email         : String @PersonalData.IsPotentiallySensitive;
   emailVerified : Boolean;
+  responsiblePerson : Association to Users @PersonalData.FieldSemantics: 'DataSubjectID';
+  workflow      : Association to WorkflowInstances;
+  coManagerPartner : Association to Authors;
 }
 
 // annotations for Data Privacy
@@ -21,3 +24,11 @@ annotate Sample with
 
 annotate Authors with
 @PersonalData : { DataSubjectRole : 'Author', EntitySemantics : 'DataSubject' };
+
+entity Users {
+  key userId : String @PersonalData.FieldSemantics: 'DataSubjectID';
+}
+
+entity WorkflowInstances {
+  key ID : UUID;
+}
