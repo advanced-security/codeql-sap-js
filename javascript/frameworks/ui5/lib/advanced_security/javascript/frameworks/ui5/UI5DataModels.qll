@@ -509,12 +509,16 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  /** Gets the JSON object loaded from the URI in the first constructor argument. */
+  pragma[noinline]
+  private JsonObject getADirectConstructorJsonObject() {
+    result =
+      resolveDirectPath(this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue())
+  }
+
   bindingset[propName]
   string getPathStringPropName(string propName) {
-    exists(JsonObject jsonObject |
-      jsonObject =
-        resolveDirectPath(this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue())
-    |
+    exists(JsonObject jsonObject | jsonObject = this.getADirectConstructorJsonObject() |
       constructPathStringJson(jsonObject, propName) = result
     )
   }
@@ -806,6 +810,18 @@ private MethodCallNode getNearestSetModelCall(UI5BindingPath bindingPath) {
   not exists(getViewSetModelCall(bindingPath))
 }
 
+/** Gets the node representing JSON-file model content selected by `bindingPath`. */
+pragma[noinline]
+private DataFlow::Node getJsonFileModelNode(UI5BindingPath bindingPath) {
+  exists(string propName, JsonModel model |
+    model = bindingPath.getModel() and
+    result = model.getArgument(0).getALocalSource() and
+    bindingPath.getPath() = model.getPathStringPropName(propName) and
+    exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
+    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
+  )
+}
+
 /**
  * Gets the data-flow node that represents the model content selected by `bindingPath`.
  */
@@ -817,13 +833,7 @@ DataFlow::Node getModelNode(UI5BindingPath bindingPath) {
     inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
   )
   or
-  exists(string propName, JsonModel model |
-    model = bindingPath.getModel() and
-    result = model.getArgument(0).getALocalSource() and
-    bindingPath.getPath() = model.getPathStringPropName(propName) and
-    exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
-    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
-  )
+  result = getJsonFileModelNode(bindingPath)
   or
   result = getNonStaticJsonModelNode(bindingPath)
   or

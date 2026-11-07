@@ -47,6 +47,53 @@ class SensitiveExposureFieldSource extends SensitiveExposureSource instanceof Pr
   }
 }
 
+/**
+ * A managed-association key with a single referenced field.
+ *
+ * For example, this CSN key on an `author` association:
+ * ```json
+ * { "ref": ["ID"], "as": "identifier" }
+ * ```
+ * refers to `ID` and produces the property `author_identifier`.
+ * Omitting `as` produces `author_ID`.
+ */
+private class ForeignKey extends JsonObject {
+  CdlAttribute association;
+  string referencedName;
+
+  ForeignKey() {
+    association.getType() = "cds.Association" and
+    this = association.getPropValue("keys").(JsonArray).getElementValue(_) and
+    referencedName = this.getPropValue("ref").(JsonArray).getElementStringValue(0) and
+    not exists(this.getPropValue("ref").(JsonArray).getElementValue(1))
+  }
+
+  CdlAttribute getAssociation() { result = association }
+
+  string getPropertyName() {
+    exists(string columnName |
+      (
+        if exists(this.getPropValue("as"))
+        then columnName = this.getPropStringValue("as")
+        else columnName = referencedName
+      ) and
+      result = association.getName() + "_" + columnName
+    )
+  }
+}
+
+/** Resolves a field or the association represented by a managed foreign key. */
+private CdlAttribute getCdsPropertyAttribute(CdlEntity entity, string propertyName) {
+  result = entity.getAttribute(propertyName)
+  or
+  exists(ForeignKey key |
+    result = key.getAssociation() and
+    result = entity.getAttribute(result.getName()) and
+    propertyName = key.getPropertyName() and
+    not exists(entity.getAttribute(propertyName))
+  )
+}
+
 /** Gets a clause such as `columns('ID')` from a fluent query. */
 private CqlClause getAClause(CqlClause query, string name) {
   (result = query or result = query.getADescendantCqlClause()) and
@@ -152,24 +199,21 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
   }
 
   predicate isSensitiveProperty(string propertyName) {
-    exists(SensitiveAnnotatedAttribute attribute |
+    getCdsPropertyAttribute(cdlEntity.(CdlEntity), propertyName) instanceof
+      SensitiveAnnotatedAttribute and
+    not hasProjectedAlias(propertyName)
+    or
+    exists(SensitiveAnnotatedAttribute attribute, CqlClause columns, Expr argument |
       attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName()) and
-      (
-        propertyName = attribute.getName() and
-        not hasProjectedAlias(propertyName)
-        or
-        exists(CqlClause columns, Expr argument |
-          columns = getAClause(cqlClause, "columns") and
-          argument = columns.getArgument() and
-          getAProjectedColumn(argument) = attribute.getName() and
-          propertyName = getAProjectedAlias(argument)
-        )
-      )
+      columns = getAClause(cqlClause, "columns") and
+      argument = columns.getArgument() and
+      getAProjectedColumn(argument) = attribute.getName() and
+      propertyName = getAProjectedAlias(argument)
     )
   }
 
   predicate isKnownProperty(string propertyName) {
-    exists(cdlEntity.(CdlEntity).getAttribute(propertyName)) and
+    exists(getCdsPropertyAttribute(cdlEntity.(CdlEntity), propertyName)) and
     not hasProjectedAlias(propertyName)
     or
     exists(CqlClause columns, Expr argument, string source |
@@ -182,17 +226,30 @@ class SensitiveQueryResultSource extends SensitiveExposureSource {
   }
 }
 
+private SensitiveQueryResultSource getQueryResultFor(DataFlow::Node node) {
+  result = node.getALocalSource().(SensitiveQueryResultSource)
+  or
+  result = node.getALocalSource().(PropertyReadOfSensitiveQueryResult).getQueryResult()
+  or
+  exists(DataFlow::MethodCallNode call |
+    call.getMethodName() = ["map", "forEach", "find"] and
+    node.getALocalSource() = call.getCallback(0).getParameter(0) and
+    result = getQueryResultFor(call.getReceiver())
+  )
+  or
+  exists(DataFlow::MethodCallNode call |
+    call.getMethodName() = "find" and
+    node.getALocalSource() = call and
+    result = getQueryResultFor(call.getReceiver())
+  )
+}
+
 /** A field read from a sensitive result, such as `author.email`. */
 class PropertyReadOfSensitiveQueryResult extends DataFlow::Node instanceof PropRead {
   SensitiveQueryResultSource queryResult;
 
   PropertyReadOfSensitiveQueryResult() {
-    this.(DataFlow::PropRead).getBase().getALocalSource() = queryResult
-    or
-    exists(PropertyReadOfSensitiveQueryResult baseRead |
-      this.(DataFlow::PropRead).getBase().getALocalSource() = baseRead and
-      queryResult = baseRead.getQueryResult()
-    )
+    queryResult = getQueryResultFor(this.(DataFlow::PropRead).getBase())
   }
 
   SensitiveQueryResultSource getQueryResult() { result = queryResult }

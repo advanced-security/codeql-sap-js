@@ -39,6 +39,15 @@ class SampleVulnService extends cds.ApplicationService {
             LOG.info('projected sensitive over safe:', projectedSensitiveOverSafe.ID)
             const projectedSafeOverSensitive = await SELECT.one.from(Authors).columns('emailVerified as email')
             LOG.info('projected safe over sensitive:', projectedSafeOverSensitive.email)
+
+            LOG.info('responsible user:', author.responsiblePerson_userId)
+            LOG.info('workflow:', author.workflow_ID)
+            LOG.info('co-manager:', author.coManagerPartner_ID)
+            authors.map(row => LOG.info('callback ID:', row.ID))
+            authors.forEach(row => LOG.info('foreach ID:', row.ID))
+            const found = authors.find(row => row.ID === req.data.ID)
+            LOG.info('found ID:', found.ID)
+            LOG.info('found co-manager:', found.coManagerPartner_ID)
         })
     }
 
