@@ -1,0 +1,13 @@
+| webapp/controller/app.controller.js:14:13:14:51 | this.ge ... fault1) |
+| webapp/controller/app.controller.js:15:13:15:59 | this.ge ... odel1") |
+| webapp/controller/app.controller.js:16:13:16:59 | this.ge ... odel2") |
+| webapp/controller/app.controller.js:23:13:23:46 | oContro ... fault2) |
+| webapp/controller/app.controller.js:24:13:24:57 | oContro ... odel1") |
+| webapp/controller/app.controller.js:25:13:25:57 | oContro ... odel2") |
+| webapp/controller/app.controller.js:32:13:32:46 | oContro ... fault3) |
+| webapp/controller/app.controller.js:33:13:33:60 | oContro ... odel1") |
+| webapp/controller/app.controller.js:34:13:34:60 | oContro ... odel2") |
+| webapp/controller/app.controller.js:42:13:42:61 | oContro ... odel1") |
+| webapp/controller/app.controller.js:43:13:43:61 | oContro ... odel2") |
+| webapp/controller/app.controller.js:46:13:46:54 | oContro ... odel2") |
+| webapp/controller/local.controller.js:8:9:8:79 | this.by ... Model") |
