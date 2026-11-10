@@ -107,7 +107,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   # Step 2: Update version, test, and create PR
   #
-  # Updates all version-bearing files (qlt.conf.json, qlpack.yml files),
+  # Updates all version-bearing files (qlt.conf.json, .codeql-version, qlpack.yml files),
   # installs CodeQL, aligns JavaScript dependency and model target ranges with
   # the selected standard-library release, upgrades pack lock files, compiles
   # CDS files, runs unit tests, and creates a pull request with the changes.
@@ -214,6 +214,7 @@ jobs:
 
             **Changes made:**
             - Updated `qlt.conf.json` (CodeQLCLI, CodeQLStandardLibrary, CodeQLCLIBundle) to `${{ needs.detect-update.outputs.latest_version }}`
+            - Updated `.codeql-version` to `v${{ needs.detect-update.outputs.latest_version }}`
             - Updated all version-bearing qlpack.yml files to `${{ needs.detect-update.outputs.latest_version }}`
             - Upgraded CodeQL pack lock files
             - Compiled CAP CDS files
@@ -237,6 +238,7 @@ jobs:
           echo "| Property | Old Value | New Value |" >> $GITHUB_STEP_SUMMARY
           echo "| -------- | --------- | --------- |" >> $GITHUB_STEP_SUMMARY
           echo "| qlt.conf.json CodeQLCLI | ${CURRENT} | ${LATEST} |" >> $GITHUB_STEP_SUMMARY
+          echo "| .codeql-version | v${CURRENT} | v${LATEST} |" >> $GITHUB_STEP_SUMMARY
           echo "| qlpack.yml versions | ${CURRENT} | ${LATEST} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "A pull request has been created with these changes." >> $GITHUB_STEP_SUMMARY
