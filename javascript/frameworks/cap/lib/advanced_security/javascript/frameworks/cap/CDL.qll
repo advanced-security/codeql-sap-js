@@ -229,6 +229,13 @@ class CdlService extends CdlElement {
 class CdlEntity extends CdlElement {
   CdlEntity() { kind = CdlEntityKind(this.getPropStringValue("kind")) }
 
+  /** Gets the association generating an otherwise undeclared managed foreign-key property. */
+  CdlAttribute getForeignKeyAssociation(string propertyName) {
+    not exists(this.getAttribute(propertyName)) and
+    result = this.getAttribute(result.getName()) and
+    exists(result.getForeignKeyTarget(propertyName))
+  }
+
   predicate isSelectFrom(CdlEntity otherEntity) {
     otherEntity.getName() =
       this.getPropValue("query")
@@ -313,6 +320,30 @@ class CdlAttribute extends CdlObject {
   int getLength() { result = this.getPropValue("length").(JsonPrimitiveValue).getIntValue() }
 
   string getName() { result = name }
+
+  /** Gets the target entity of this association or composition in the same model. */
+  CdlEntity getTargetEntity() {
+    result.getName() = this.getPropStringValue("target") and
+    result.getJsonFile() = this.getJsonFile()
+  }
+
+  /** Gets the target attribute represented by a single-field managed foreign key. */
+  CdlAttribute getForeignKeyTarget(string propertyName) {
+    this.getType() = "cds.Association" and
+    exists(JsonObject key, CdlEntity target, string referencedName, string suffix |
+      key = this.getPropValue("keys").(JsonArray).getElementValue(_) and
+      referencedName = key.getPropValue("ref").(JsonArray).getElementStringValue(0) and
+      not exists(key.getPropValue("ref").(JsonArray).getElementValue(1)) and
+      (
+        suffix = key.getPropStringValue("as")
+        or
+        not exists(key.getPropValue("as")) and suffix = referencedName
+      ) and
+      propertyName = this.getName() + "_" + suffix and
+      target = this.getTargetEntity() and
+      result = target.getAttribute(referencedName)
+    )
+  }
 }
 
 /**
@@ -343,7 +374,9 @@ class SensitiveAnnotatedEntity extends SensitiveAnnotatedElement instanceof CdlE
 
 class SensitiveAnnotatedAttribute extends SensitiveAnnotatedElement instanceof CdlAttribute {
   SensitiveAnnotatedAttribute() {
-    exists(PersonalDataAnnotation a | a.getQualifiedElement() = this)
+    exists(PersonalDataAnnotation a |
+      a.getQualifiedElement() = this and a.isPotentiallyPersonalOrSensitive()
+    )
   }
 
   override string getName() { result = this.(CdlAttribute).getName() }
@@ -354,6 +387,11 @@ class SensitiveAnnotatedAttribute extends SensitiveAnnotatedElement instanceof C
  */
 class PersonalDataAnnotation extends CdlAnnotation {
   PersonalDataAnnotation() { this.getName().matches("PersonalData%") }
+
+  predicate isPotentiallyPersonalOrSensitive() {
+    this.getName() = ["PersonalData.IsPotentiallyPersonal", "PersonalData.IsPotentiallySensitive"] and
+    this.getBooleanValue() = true
+  }
 }
 
 /**
