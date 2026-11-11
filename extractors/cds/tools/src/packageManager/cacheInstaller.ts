@@ -1,7 +1,7 @@
 import { execFileSync } from 'child_process';
 import { createHash } from 'crypto';
-import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'fs';
-import { dirname, join, resolve } from 'path';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { dirname, join, posix, relative, resolve } from 'path';
 
 import type { CdsDependencyCombination } from './types';
 import { CdsDependencyGraph, CdsProject } from '../cds/parser/types';
@@ -11,6 +11,11 @@ import { cdsExtractorLog } from '../logging';
 import { resolveCdsVersions } from './versionResolver';
 
 const cacheSubDirName = '.cds-extractor-cache';
+type CdsVersions = ReturnType<typeof getProjectCdsVersions>;
+interface PackageLock {
+  packages?: Record<string, { version?: string }>;
+  dependencies?: Record<string, { version?: string }>;
+}
 
 /**
  * Add a warning diagnostic for dependency version fallback
@@ -127,11 +132,17 @@ export function cacheInstallDependencies(
   }
 
   // Extract unique dependency combinations from all projects with version resolution
-  const dependencyCombinations = extractUniqueDependencyCombinations(dependencyGraph.projects);
+  const lockfiles = new Map<string, PackageLock | undefined>();
+  const projectVersions = new Map(
+    [...dependencyGraph.projects.values()]
+      .filter(project => project.packageJson)
+      .map(project => [project.projectDir, getProjectCdsVersions(project, sourceRoot, lockfiles)]),
+  );
+  const dependencyCombinations = extractUniqueDependencyCombinations(projectVersions);
 
   if (dependencyCombinations.length === 0) {
     cdsExtractorLog(
-      'error',
+      'warn',
       'No CDS dependencies found in any project. This means projects were detected but lack proper @sap/cds dependencies.',
     );
     cdsExtractorLog(
@@ -298,16 +309,12 @@ export function cacheInstallDependencies(
     successfulInstallations++;
 
     // Associate projects with this dependency combination
-    for (const [projectDir, project] of Array.from(dependencyGraph.projects.entries())) {
-      if (!project.packageJson) {
-        continue;
-      }
-      const p_cdsVersion = project.packageJson.dependencies?.['@sap/cds'] ?? 'latest';
-      const p_cdsDkVersion = project.packageJson.devDependencies?.['@sap/cds-dk'] ?? p_cdsVersion;
-      const p_cdsIndexerVersion =
-        project.packageJson.dependencies?.['@sap/cds-indexer'] ??
-        project.packageJson.devDependencies?.['@sap/cds-indexer'] ??
-        undefined;
+    for (const [projectDir, versions] of projectVersions) {
+      const {
+        cdsVersion: p_cdsVersion,
+        cdsDkVersion: p_cdsDkVersion,
+        cdsIndexerVersion: p_cdsIndexerVersion,
+      } = versions;
 
       // Resolve the project's versions to match against the combination's resolved versions
       const projectResolvedVersions = resolveCdsVersions(p_cdsVersion, p_cdsDkVersion);
@@ -365,34 +372,98 @@ export function cacheInstallDependencies(
   return projectCacheDirMap;
 }
 
+function* ancestorDirectories(dir: string): Iterable<string> {
+  dir = posix.normalize(process.platform === 'win32' ? dir.replace(/\\/g, '/') : dir);
+  while (true) {
+    yield dir;
+    const parent = posix.dirname(dir);
+    if (parent === dir) return;
+    dir = parent;
+  }
+}
+
+/** Reads the nearest locked version, respecting workspace-local and hoisted entries. */
+function readLockedVersion(
+  projectDir: string,
+  sourceRoot: string,
+  packageName: string,
+  lockfiles: Map<string, PackageLock | undefined>,
+): string | undefined {
+  for (const dir of ancestorDirectories(projectDir)) {
+    const lockPath = join(sourceRoot, dir, 'package-lock.json');
+    if (!lockfiles.has(lockPath)) {
+      try {
+        const lock = existsSync(lockPath)
+          ? (JSON.parse(readFileSync(lockPath, 'utf8')) as PackageLock)
+          : undefined;
+        if (lock !== undefined && (!lock || typeof lock !== 'object' || Array.isArray(lock))) {
+          throw new Error('Package lockfile must contain an object');
+        }
+        lockfiles.set(lockPath, lock);
+      } catch (error) {
+        cdsExtractorLog(
+          'warn',
+          `Failed to read dependency versions from ${lockPath}: ${String(error)}. Trying other lockfiles or package.json ranges.`,
+        );
+        lockfiles.set(lockPath, undefined);
+      }
+    }
+    const lock = lockfiles.get(lockPath);
+    if (lock) {
+      for (const dependencyDir of ancestorDirectories(
+        relative(join(sourceRoot, dir), join(sourceRoot, projectDir)),
+      )) {
+        const version =
+          lock.packages?.[posix.join(dependencyDir, 'node_modules', packageName)]?.version;
+        if (version) {
+          return version;
+        }
+      }
+
+      const version = lock.dependencies?.[packageName]?.version;
+      if (version) {
+        return version;
+      }
+    }
+  }
+  return undefined;
+}
+
+/** Prefer lockfile versions over package.json ranges for cached compiler dependencies. */
+function getProjectCdsVersions(
+  project: CdsProject,
+  sourceRoot: string,
+  lockfiles: Map<string, PackageLock | undefined>,
+): { cdsVersion: string; cdsDkVersion: string; cdsIndexerVersion?: string } {
+  const deps = project.packageJson?.dependencies;
+  const devDeps = project.packageJson?.devDependencies;
+  const cdsRange = deps?.['@sap/cds'] ?? 'latest';
+  return {
+    cdsVersion:
+      readLockedVersion(project.projectDir, sourceRoot, '@sap/cds', lockfiles) ?? cdsRange,
+    cdsDkVersion:
+      readLockedVersion(project.projectDir, sourceRoot, '@sap/cds-dk', lockfiles) ??
+      devDeps?.['@sap/cds-dk'] ??
+      cdsRange,
+    cdsIndexerVersion: deps?.['@sap/cds-indexer'] ?? devDeps?.['@sap/cds-indexer'],
+  };
+}
+
 /**
  * Extracts unique dependency combinations from the dependency graph.
- * @param projects A map of projects from the dependency graph.
+ * @param projectVersions Locked or declared versions for each project.
  * @returns An array of unique dependency combinations.
  */
 function extractUniqueDependencyCombinations(
-  projects: Map<string, CdsProject>,
+  projectVersions: Map<string, CdsVersions>,
 ): CdsDependencyCombination[] {
   const combinations = new Map<string, CdsDependencyCombination>();
 
-  for (const project of Array.from(projects.values())) {
-    if (!project.packageJson) {
-      continue;
-    }
-
-    const cdsVersion = project.packageJson.dependencies?.['@sap/cds'] ?? 'latest';
-    const cdsDkVersion = project.packageJson.devDependencies?.['@sap/cds-dk'] ?? cdsVersion;
-
-    // Detect optional @sap/cds-indexer dependency
-    const cdsIndexerVersion =
-      project.packageJson.dependencies?.['@sap/cds-indexer'] ??
-      project.packageJson.devDependencies?.['@sap/cds-indexer'] ??
-      undefined;
-
+  for (const [projectDir, { cdsVersion, cdsDkVersion, cdsIndexerVersion }] of projectVersions) {
     // Resolve versions first to ensure we cache based on actual resolved versions
     cdsExtractorLog(
       'info',
-      `Resolving available dependency versions for project '${project.projectDir}' with dependencies: [@sap/cds@${cdsVersion}, @sap/cds-dk@${cdsDkVersion}]`,
+      `Resolving available dependency versions for project '${projectDir}' with dependencies: [@sap/cds@${cdsVersion}, @sap/cds-dk@${cdsDkVersion}]`,
     );
     const resolvedVersions = resolveCdsVersions(cdsVersion, cdsDkVersion);
     const { resolvedCdsVersion, resolvedCdsDkVersion, ...rest } = resolvedVersions;

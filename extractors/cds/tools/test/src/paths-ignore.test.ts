@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'fs';
+import path from 'path';
 
 import { load as yamlLoad } from 'js-yaml';
 
@@ -7,6 +8,7 @@ import {
   filterIgnoredPaths,
   findCodeqlConfigFile,
   getPathsIgnorePatterns,
+  isSourcePathInclude,
   shouldIgnorePath,
 } from '../../src/paths-ignore';
 
@@ -19,11 +21,13 @@ jest.mock('js-yaml');
 
 describe('paths-ignore', () => {
   const savedCodeqlConfigPath = process.env.CODEQL_CONFIG_PATH;
+  const savedFilters = process.env.LGTM_INDEX_FILTERS;
 
   beforeEach(() => {
     jest.resetAllMocks();
     clearPathsIgnoreCache();
     delete process.env.CODEQL_CONFIG_PATH;
+    delete process.env.LGTM_INDEX_FILTERS;
     jest.spyOn(console, 'log').mockImplementation(() => {});
     jest.spyOn(console, 'warn').mockImplementation(() => {});
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -35,6 +39,11 @@ describe('paths-ignore', () => {
       process.env.CODEQL_CONFIG_PATH = savedCodeqlConfigPath;
     } else {
       delete process.env.CODEQL_CONFIG_PATH;
+    }
+    if (savedFilters === undefined) {
+      delete process.env.LGTM_INDEX_FILTERS;
+    } else {
+      process.env.LGTM_INDEX_FILTERS = savedFilters;
     }
   });
 
@@ -128,6 +137,85 @@ describe('paths-ignore', () => {
   });
 
   describe('getPathsIgnorePatterns', () => {
+    it.each([
+      ['exclude:!private.cds', '!private.cds', true],
+      ['exclude:!private.cds', 'private.cds', false],
+      ['exclude:!private.cds', 'other.cds', false],
+      ['exclude:!!private.cds', '!!private.cds', true],
+      ['exclude:!!private.cds', '!private.cds', false],
+      ['exclude:!private', '!private/srv/model.cds', true],
+      ['exclude:!private', 'private/srv/model.cds', false],
+      ['include:!private.cds', '!private.cds', false],
+      ['include:!private.cds', 'private.cds', true],
+      ['include:!private.cds', 'other.cds', true],
+      ['include:!app', '!app/srv/model.cds', false],
+      ['include:!app', 'app/srv/model.cds', true],
+      ['include:**/*.cds\nexclude:!private.cds', '!private.cds', true],
+      ['include:**/*.cds\nexclude:!private.cds', 'other.cds', false],
+      ['exclude:!private.cds\ninclude:!private.cds', '!private.cds', false],
+      ['include:!private.cds\nexclude:!private.cds', '!private.cds', true],
+      ['exclude:#private.cds', '#private.cds', true],
+      ['exclude:#private.cds', 'private.cds', false],
+      ['include:#private.cds', '#private.cds', false],
+      ['include:#private.cds', 'private.cds', true],
+      ['include:#app', '#app/srv/model.cds', false],
+      ['include:#app', 'app/srv/model.cds', true],
+      ['exclude:#private.cds\ninclude:#private.cds', '#private.cds', false],
+      ['include:#private.cds\nexclude:#private.cds', '#private.cds', true],
+    ])(
+      'should preserve literal leading filter characters: %s, %s',
+      (filters, filename, ignored) => {
+        process.env.LGTM_INDEX_FILTERS = filters;
+
+        const patterns = getPathsIgnorePatterns('/source');
+
+        expect(shouldIgnorePath(filename, patterns)).toBe(ignored);
+      },
+    );
+
+    it('should preserve literal leading exclamation marks in config exclusions', () => {
+      jest.mocked(existsSync).mockReturnValue(true);
+      jest.mocked(readFileSync).mockReturnValue('yaml-content');
+      jest.mocked(yamlLoad).mockReturnValue({ 'paths-ignore': ['!private.cds'] });
+
+      const patterns = getPathsIgnorePatterns('/source');
+
+      expect(shouldIgnorePath('!private.cds', patterns)).toBe(true);
+      expect(shouldIgnorePath('private.cds', patterns)).toBe(false);
+      expect(shouldIgnorePath('other.cds', patterns)).toBe(false);
+    });
+
+    it.each([
+      ['include:**/*.json', false],
+      ['include:*.json', false],
+      ['exclude:**/*.*\ninclude:**/*.cds', false],
+      ['include:**/*.cds\nexclude:app-a', true],
+      ['exclude:app-a\ninclude:**', false],
+      ['exclude:app-a\ninclude:**/*', false],
+      ['include:app-b\ninclude:**', false],
+      ['include:app-b\ninclude:**/*', false],
+      ['include:app-b\ninclude:**/*.cds', true],
+    ])('should preserve ordered source filtering for %s', (filters, ignored) => {
+      process.env.LGTM_INDEX_FILTERS = filters;
+      expect(shouldIgnorePath('app-a/srv/service.cds', getPathsIgnorePatterns('/source'))).toBe(
+        ignored,
+      );
+    });
+
+    it('should apply config paths-ignore when LGTM_INDEX_FILTERS only opts in extensions', () => {
+      process.env.LGTM_INDEX_FILTERS = 'include:**/*.json';
+      (existsSync as jest.Mock).mockImplementation(
+        (p: string) => p === '/source/.github/codeql/codeql-config.yml',
+      );
+      (readFileSync as jest.Mock).mockReturnValue('yaml-content');
+      (yamlLoad as jest.Mock).mockReturnValue({ 'paths-ignore': ['vendor'] });
+
+      const patterns = getPathsIgnorePatterns('/source');
+      expect(shouldIgnorePath('vendor/srv/model.cds.json', patterns)).toBe(true);
+      expect(shouldIgnorePath('vendor/srv/service.cds', patterns)).toBe(true);
+      expect(shouldIgnorePath('app/srv/model.cds.json', patterns)).toBe(false);
+    });
+
     it('should return patterns from a config file with paths-ignore list', () => {
       (existsSync as jest.Mock).mockImplementation(
         (p: string) => p === '/source/.github/codeql/codeql-config.yml',
@@ -271,6 +359,21 @@ describe('paths-ignore', () => {
     });
   });
 
+  describe('isSourcePathInclude', () => {
+    it.each([
+      { expected: true, pattern: { include: '**' } },
+      { expected: true, pattern: { include: 'archive' } },
+      { expected: true, pattern: { include: 'archive/**' } },
+      { expected: true, pattern: { include: 'archive/old.cds' } },
+      { expected: false, pattern: { include: '*.cds' } },
+      { expected: false, pattern: { include: '**/*.cds' } },
+      { expected: false, pattern: { include: '**/*.cds.json' } },
+      { expected: false, pattern: 'archive/**' },
+    ])('classifies $pattern as an explicit source include: $expected', ({ expected, pattern }) => {
+      expect(isSourcePathInclude(pattern)).toBe(expected);
+    });
+  });
+
   describe('shouldIgnorePath', () => {
     it('should match exact directory path', () => {
       expect(shouldIgnorePath('vendor/lib/foo.cds', ['vendor'])).toBe(true);
@@ -302,6 +405,84 @@ describe('paths-ignore', () => {
 
     it('should return false when no patterns are given', () => {
       expect(shouldIgnorePath('anything.cds', [])).toBe(false);
+    });
+
+    it.each(['/', '\\'] as const)(
+      'should normalize only native separators in extension opt-ins using %s',
+      separator => {
+        jest.replaceProperty(path, 'sep', separator);
+        const patterns = [{ include: ['**', '*.cds'].join(separator) }];
+
+        expect(isSourcePathInclude(patterns[0])).toBe(false);
+        expect(isSourcePathInclude({ include: '**\\*.cds' })).toBe(separator !== '\\');
+        expect(shouldIgnorePath(['srv', 'service.csn'].join(separator), patterns)).toBe(false);
+      },
+    );
+
+    it('should keep only paths inside, or ancestors of, included paths', () => {
+      const patterns = [{ include: 'srv/cds' }, 'srv/cds/test'];
+      expect(shouldIgnorePath('srv/cds/api/service.cds', patterns)).toBe(false);
+      expect(shouldIgnorePath('.', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('srv', patterns, true)).toBe(false);
+      expect(shouldIgnorePath('db/schema.cds', patterns)).toBe(true);
+      expect(shouldIgnorePath('srv/cds/test/data.cds', patterns)).toBe(true);
+    });
+
+    it.each(['/', '\\'] as const)(
+      'should match glob ancestors but require full file matches using %s separators',
+      separator => {
+        jest.replaceProperty(path, 'sep', separator);
+        const patterns = [{ include: 'app-*/srv/*.cds' }];
+        const directory = ['app-a', 'srv'].join(separator);
+        const file = ['app-a', 'srv', 'service.cds'].join(separator);
+
+        expect(shouldIgnorePath('app-a', patterns, true)).toBe(false);
+        expect(shouldIgnorePath(directory, patterns, true)).toBe(false);
+        expect(shouldIgnorePath('app-a/db', patterns, true)).toBe(true);
+        expect(shouldIgnorePath('app-a/srv/service.json', patterns)).toBe(true);
+        expect(shouldIgnorePath(file, patterns)).toBe(false);
+        expect(
+          shouldIgnorePath(file, [{ include: ['app-*', 'srv', '*.cds'].join(separator) }]),
+        ).toBe(false);
+      },
+    );
+
+    it('should distinguish literal Unix backslashes from directory separators in filters', () => {
+      jest.replaceProperty(path, 'sep', '/');
+      const literal = 'srv/Main\\Panel.cds';
+      const nested = 'srv/Main/Panel.cds';
+
+      expect(shouldIgnorePath(literal, [literal])).toBe(true);
+      expect(shouldIgnorePath(literal, [nested])).toBe(false);
+      expect(shouldIgnorePath(nested, [literal])).toBe(false);
+      expect(shouldIgnorePath(literal, [{ include: literal }])).toBe(false);
+      expect(shouldIgnorePath(nested, [{ include: literal }])).toBe(true);
+      expect(shouldIgnorePath(literal, [{ include: 'srv/*Panel.cds' }])).toBe(false);
+      expect(shouldIgnorePath(nested, [{ include: 'srv/*Panel.cds' }])).toBe(true);
+    });
+
+    it('should preserve literal Unix backslashes in generated-file source aliases', () => {
+      jest.replaceProperty(path, 'sep', '/');
+      const literal = 'srv/Main\\Panel.cds';
+      const nested = 'srv/Main/Panel.cds';
+      const patterns = ['srv', { include: literal }];
+
+      expect(shouldIgnorePath('model.cds.json', patterns, false, [literal])).toBe(false);
+      expect(shouldIgnorePath('model.cds.json', patterns, false, [nested])).toBe(true);
+      expect(
+        shouldIgnorePath('model.cds.json', ['srv', { include: nested }], false, [literal]),
+      ).toBe(true);
+    });
+
+    it('should retain generated files when their sources are re-included', () => {
+      const patterns = ['app-a', { include: 'app-a/srv/*.cds' }];
+      const sources = ['app-a/srv/service.cds'];
+
+      expect(shouldIgnorePath('app-a/model.cds.json', patterns, false, sources)).toBe(false);
+      expect(shouldIgnorePath('app-b/model.cds.json', patterns)).toBe(true);
+      expect(
+        shouldIgnorePath('app-a/model.cds.json', [...patterns, '**/*.cds.json'], false, sources),
+      ).toBe(true);
     });
 
     it('should match multiple patterns (any match returns true)', () => {

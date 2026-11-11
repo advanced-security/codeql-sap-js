@@ -9,7 +9,6 @@ import { handleEarlyExit, runJavaScriptExtractionWithMarker } from './src/codeql
 import {
   addCompilationDiagnostic,
   addDependencyGraphDiagnostic,
-  addDependencyInstallationDiagnostic,
   addEnvironmentSetupDiagnostic,
   addNoCdsProjectsDiagnostic,
 } from './src/diagnostics';
@@ -198,29 +197,11 @@ logPerformanceTrackingStart('Dependency Installation');
 const projectCacheDirMap = cacheInstallDependencies(dependencyGraph, sourceRoot, codeqlExePath);
 logPerformanceTrackingStop('Dependency Installation');
 
-if (projectCacheDirMap.size === 0) {
-  cdsExtractorLog(
-    'error',
-    'No project cache directory mappings were created. This indicates that dependency installation failed for all discovered projects.',
-  );
-
-  if (dependencyGraph.projects.size > 0) {
-    const errorMessage = `Found ${dependencyGraph.projects.size} CDS projects but failed to install dependencies for any of them. Cannot proceed with compilation.`;
-    cdsExtractorLog('error', errorMessage);
-
-    if (codeqlExePath) {
-      addDependencyInstallationDiagnostic(sourceRoot, errorMessage, codeqlExePath);
-    }
-
-    logExtractorStop(
-      false,
-      'Warning: Dependency installation failed for all projects, continuing with limited functionality',
-    );
-  }
-
+// Without a cache, compilation falls back to a global/npx `cds`; failures are reported after retries.
+if (projectCacheDirMap.size === 0 && dependencyGraph.projects.size > 0) {
   cdsExtractorLog(
     'warn',
-    'No projects and no cache mappings - this should have been detected earlier.',
+    `No cached CDS dependencies are available for the ${dependencyGraph.projects.size} detected CDS project(s); compilation will use a global or npx-provided 'cds' command.`,
   );
 }
 

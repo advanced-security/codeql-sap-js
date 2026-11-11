@@ -1,10 +1,13 @@
-import { spawnSync, SpawnSyncOptions } from 'child_process';
-import { basename, delimiter, dirname, join, relative, resolve, sep } from 'path';
+import type { SpawnSyncOptions, SpawnSyncReturns } from 'child_process';
+import { randomUUID } from 'crypto';
+import { closeSync, openSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
+import { delimiter, isAbsolute, join, resolve, sep, win32 } from 'path';
+
+import { sync as spawnSync } from 'cross-spawn';
 
 import { CdsCompilationResult } from './types';
 import { getCdsVersion } from './version';
 import { modelCdsJsonFile } from '../../constants';
-import { getPlatformInfo } from '../../environment';
 import {
   fileExists,
   dirExists,
@@ -12,6 +15,7 @@ import {
   normalizeLocationPathsInFile,
 } from '../../filesystem';
 import { cdsExtractorLog } from '../../logging';
+import { determineCdsFilesToCompile, getCdsDirectoryEntryPoint } from '../parser/functions';
 import { BasicCdsProject } from '../parser/types';
 
 /**
@@ -20,47 +24,11 @@ import { BasicCdsProject } from '../parser/types';
  * @returns Object with executable and args arrays for spawnSync
  */
 function parseCommandForSpawn(commandString: string): { executable: string; baseArgs: string[] } {
-  const parts = commandString.trim().split(/\s+/);
+  const command = commandString.trim();
+  const parts = isAbsolute(command) || win32.isAbsolute(command) ? [command] : command.split(/\s+/);
   const executable = parts[0];
   const baseArgs = parts.slice(1);
   return { executable, baseArgs };
-}
-
-/**
- * Determines compilation targets for a CDS project according to the new project-only compilation approach.
- * @param project The CDS project
- * @param sourceRoot The source root directory
- * @returns Array of compilation targets (directories or files relative to project base)
- */
-function determineCompilationTargets(project: BasicCdsProject, sourceRoot: string): string[] {
-  const projectAbsolutePath = join(sourceRoot, project.projectDir);
-
-  // Check for index.cds in the project root first, which takes precedence over CAP directories.
-  const rootCdsFiles = project.cdsFiles
-    .filter(file => dirname(join(sourceRoot, file)) === projectAbsolutePath)
-    .map(file => basename(file));
-
-  if (rootCdsFiles.includes('index.cds')) {
-    // Use only index.cds when it exists in the project root
-    return ['index.cds'];
-  }
-
-  // Check for standard CAP directories
-  const capDirectories = ['db', 'srv', 'app'];
-  const existingCapDirs = capDirectories.filter(dir => dirExists(join(projectAbsolutePath, dir)));
-
-  if (existingCapDirs.length > 0) {
-    // Use standard CAP directories
-    return existingCapDirs;
-  }
-
-  if (rootCdsFiles.length > 0) {
-    // Use other root-level files
-    return rootCdsFiles;
-  }
-
-  // Use all CDS files with their relative paths
-  return project.cdsFiles.map(file => relative(projectAbsolutePath, join(sourceRoot, file)));
 }
 
 /**
@@ -70,7 +38,7 @@ function determineCompilationTargets(project: BasicCdsProject, sourceRoot: strin
  * to a single {@link modelCdsJsonFile} file per project.
  *
  *
- * @param cdsFilePath The path to the CDS file to compile, relative to the `sourceRoot`.
+ * @param cdsFilePath A representative CDS source to validate, or undefined for CSN-only selections.
  * @param sourceRoot The source root directory scanned by the CDS extractor.
  * CRITICAL: All spawned processes will use the project base directory as their `cwd` to
  * ensure that paths in generated JSON are relative to the project base directory.
@@ -83,7 +51,7 @@ function determineCompilationTargets(project: BasicCdsProject, sourceRoot: strin
  * @returns The {@link CdsCompilationResult} of the compilation attempt.
  */
 export function compileCdsToJson(
-  cdsFilePath: string,
+  cdsFilePath: string | undefined,
   sourceRoot: string,
   cdsCommand: string,
   cacheDir: string | undefined,
@@ -91,9 +59,11 @@ export function compileCdsToJson(
   projectDir: string,
 ): CdsCompilationResult {
   try {
-    const resolvedCdsFilePath = resolve(cdsFilePath);
-    if (!fileExists(resolvedCdsFilePath)) {
-      throw new Error(`Expected CDS file '${resolvedCdsFilePath}' does not exist.`);
+    if (cdsFilePath !== undefined) {
+      const resolvedCdsFilePath = resolve(cdsFilePath);
+      if (!fileExists(resolvedCdsFilePath)) {
+        throw new Error(`Expected CDS file '${resolvedCdsFilePath}' does not exist.`);
+      }
     }
 
     // Get and log the CDS version
@@ -103,8 +73,7 @@ export function compileCdsToJson(
     // Calculate project base directory for consistent working directory
     const projectBaseDir = join(sourceRoot, projectDir);
 
-    // Create spawn options with project base directory as cwd.
-    const spawnOptions = createSpawnOptions(projectBaseDir, cdsCommand, cacheDir);
+    const environment = createCompilerEnvironment(projectBaseDir, cdsCommand, cacheDir);
 
     // Throw an error if projectDir cannot be found in the projectMap.
     if (!projectMap || !projectDir || !projectMap.has(projectDir)) {
@@ -116,7 +85,7 @@ export function compileCdsToJson(
     const project = projectMap.get(projectDir);
 
     // Always use project-level compilation
-    return compileProject(sourceRoot, projectDir, cdsCommand, spawnOptions, versionInfo, project!);
+    return compileProject(sourceRoot, projectDir, cdsCommand, environment, versionInfo, project!);
   } catch (error) {
     return { success: false, message: String(error) };
   }
@@ -129,7 +98,7 @@ export function compileCdsToJson(
  * @param sourceRoot The source root directory
  * @param projectDir The project directory (relative to sourceRoot)
  * @param cdsCommand The CDS command to use
- * @param spawnOptions Pre-configured spawn options with project base directory as cwd
+ * @param environment Environment for the selected compiler
  * @param versionInfo Version information for logging
  * @param project The CDS project instance
  * @returns Compilation result
@@ -138,46 +107,32 @@ function compileProject(
   sourceRoot: string,
   projectDir: string,
   cdsCommand: string,
-  spawnOptions: SpawnSyncOptions,
+  environment: NodeJS.ProcessEnv,
   versionInfo: string,
   project: BasicCdsProject,
 ): CdsCompilationResult {
   cdsExtractorLog('info', `Compiling CDS project '${projectDir}' using ${versionInfo}...`);
 
   // Determine compilation targets using the new centralized logic
-  const compilationTargets = determineCompilationTargets(project, sourceRoot);
+  const { compilationTargets } = determineCdsFilesToCompile(sourceRoot, project);
 
   if (compilationTargets.length === 0) {
     throw new Error(
-      `Project directory '${projectDir}' does not contain any CDS files and cannot be compiled`,
+      `Project directory '${projectDir}' does not contain any selected CDS or CSN models and cannot be compiled`,
     );
   }
 
   const projectJsonOutPath = join(sourceRoot, projectDir, modelCdsJsonFile);
 
-  const compileArgs = [
-    'compile',
-    ...compilationTargets,
-    '--to',
-    'json',
-    '--dest',
-    modelCdsJsonFile,
-    '--locations',
-    '--log-level',
-    'warn',
-  ];
-
   cdsExtractorLog('info', `Compiling CDS project targets: ${compilationTargets.join(', ')}`);
-  cdsExtractorLog(
-    'info',
-    `Running compilation task for CDS project '${projectDir}': command='${cdsCommand}' args='${JSON.stringify(compileArgs)}'`,
-  );
 
-  // Parse command for proper spawnSync execution
   const { executable, baseArgs } = parseCommandForSpawn(cdsCommand);
-  const allArgs = [...baseArgs, ...compileArgs];
-
-  const result = spawnSync(executable, allArgs, spawnOptions);
+  const result = runCdsCompiler(
+    join(sourceRoot, projectDir),
+    compilationTargets,
+    [executable, ...baseArgs],
+    { env: environment },
+  );
 
   if (result.error) {
     cdsExtractorLog('error', `SpawnSync error: ${result.error.message}`);
@@ -193,7 +148,7 @@ function compileProject(
     cdsExtractorLog('error', `CDS command failed with status ${result.status}`);
     cdsExtractorLog(
       'error',
-      `Command: ${cdsCommand} ${compileArgs.map(arg => (arg.includes(' ') ? `"${arg}"` : arg)).join(' ')}`,
+      `Command: ${cdsCommand}; targets: ${JSON.stringify(compilationTargets)}`,
     );
     cdsExtractorLog('error', `Stdout: ${result.stdout?.toString() || 'No stdout'}`);
     cdsExtractorLog('error', `Stderr: ${result.stderr?.toString() || 'No stderr'}`);
@@ -235,83 +190,116 @@ function compileProject(
   };
 }
 
-/**
- * Creates spawn options for CDS compilation processes.
- * CRITICAL: Always sets cwd to project base directory to ensure generated JSON paths are relative to project base directory.
- *
- * @param projectBaseDir The project base directory (where package.json is located) - used as cwd for all spawned processes
- * @param cdsCommand The CDS command to determine if we need Node.js environment setup
- * @param cacheDir Optional cache directory for dependencies
- * @returns Spawn options configured for CDS compilation
- */
-function createSpawnOptions(
+/** Makes cached dependencies and project-local CDS plugins visible to the compiler. */
+function createCompilerEnvironment(
   projectBaseDir: string,
   cdsCommand: string,
   cacheDir?: string,
-): SpawnSyncOptions {
-  // Check if we're using a direct binary path (contains node_modules/.bin/ or node_modules\.bin\) or npx-style command
-  // Check both platform-native separator and forward slash for cross-platform compatibility
-  const binPathNative = `node_modules${sep}.bin${sep}`;
-  const binPathPosix = 'node_modules/.bin/';
-  const isDirectBinary = cdsCommand.includes(binPathNative) || cdsCommand.includes(binPathPosix);
-
-  // On Windows we always need shell: true so spawnSync can execute .cmd shims —
-  // both the npx.cmd entry point AND the cds.cmd shim under node_modules/.bin/.
-  // Node 20.12.2+ (CVE-2024-27980) refuses to spawn .cmd/.bat files without a shell.
-  // On non-Windows, only npx-style commands need shell to resolve the executable on PATH.
-  const useShell = getPlatformInfo().isWindows || !isDirectBinary;
-
-  const spawnOptions: SpawnSyncOptions = {
-    cwd: projectBaseDir, // CRITICAL: Always use project base directory as cwd to ensure correct path generation
-    shell: useShell,
-    stdio: 'pipe',
-    env: { ...process.env },
-  };
-
-  // Always make the project's own node_modules visible to the spawned cds
-  // process via NODE_PATH. The cds CLI's plugin loader (`require('@cap-js/...')`)
-  // walks up node_modules from inside the cds-dk install location — when cds-dk
-  // lives in a cache directory outside the project, that walk never reaches the
-  // project's node_modules. Adding the project node_modules to NODE_PATH gives
-  // Node's resolver an explicit fallback so installed plugins are found.
+): NodeJS.ProcessEnv {
+  const isDirectBinary = /node_modules[/\\]\.bin[/\\]/.test(cdsCommand);
   const projectNodeModules = join(projectBaseDir, 'node_modules');
 
-  // Only set up Node.js environment for npx-style commands, not for direct binary execution
   if (cacheDir && !isDirectBinary) {
     const nodePath = join(cacheDir, 'node_modules');
-
-    // Set up environment to use the cached dependencies, with the project's
-    // node_modules appended so locally-installed cds plugins remain resolvable.
-    spawnOptions.env = {
+    return {
       ...process.env,
       NODE_PATH: [nodePath, projectNodeModules, process.env.NODE_PATH ?? '']
         .filter(Boolean)
         .join(delimiter),
       PATH: `${join(nodePath, '.bin')}${delimiter}${process.env.PATH}`,
-      // Add NPM configuration to ensure dependencies are resolved from the cache directory
       npm_config_prefix: cacheDir,
-      // Ensure we don't pick up global CDS installations that might conflict
       npm_config_global: 'false',
-      // Clear any existing CDS environment variables that might interfere
       CDS_HOME: cacheDir,
     };
-  } else if (isDirectBinary) {
-    // For direct binary execution, use minimal environment to avoid conflicts
-    // Remove Node.js-specific environment variables that might interfere
-    const cleanEnv = { ...process.env };
-    delete cleanEnv.NODE_PATH;
-    delete cleanEnv.npm_config_prefix;
-    delete cleanEnv.npm_config_global;
-    delete cleanEnv.CDS_HOME;
-
-    // Re-add the project's node_modules to NODE_PATH so the cds plugin loader
-    // can resolve packages the project itself installed (e.g. @cap-js/telemetry).
-    // Without this, the cache binary fails on any project that uses cds-plugin
-    // packages declared in its package.json.
-    cleanEnv.NODE_PATH = projectNodeModules;
-
-    spawnOptions.env = cleanEnv;
   }
 
-  return spawnOptions;
+  const environment = { ...process.env };
+  if (isDirectBinary) {
+    delete environment.NODE_PATH;
+    delete environment.npm_config_prefix;
+    delete environment.npm_config_global;
+    delete environment.CDS_HOME;
+    environment.NODE_PATH = projectNodeModules;
+  }
+  return environment;
+}
+
+function getImportTargets(projectDir: string, targets: string[]): string[] {
+  return [
+    ...new Set(
+      targets.flatMap(target => {
+        if (/\.(cds|csn|json)$/.test(target)) return [target];
+        // A directory CLI target is not equivalent to a CDS directory import.
+        const entry = getCdsDirectoryEntryPoint(projectDir, target);
+        if (entry) return [entry];
+        const files = readdirSync(join(projectDir, target));
+        const csnFiles = files.filter(file => file.endsWith('.csn'));
+        const csnNames = new Set(csnFiles.map(file => file.slice(0, -4)));
+        return [
+          ...csnFiles,
+          ...files.filter(file => file.endsWith('.cds') && !csnNames.has(file.slice(0, -4))),
+        ].map(file => join(target, file));
+      }),
+    ),
+  ];
+}
+
+/** Runs the same shell-safe, bounded project compilation in extraction and test workflows. */
+export function runCdsCompiler(
+  projectDir: string,
+  targets: string[],
+  command: readonly [string, ...string[]],
+  options: SpawnSyncOptions = {},
+): SpawnSyncReturns<string | Buffer> {
+  const [executable, ...baseArgs] = command;
+  const compile = (selected: string[]): SpawnSyncReturns<string | Buffer> => {
+    const args = [
+      ...baseArgs,
+      'compile',
+      ...selected,
+      '--to',
+      'json',
+      '--dest',
+      modelCdsJsonFile,
+      '--locations',
+      '--log-level',
+      'warn',
+    ];
+    cdsExtractorLog('info', `Running CDS compiler '${executable}' with ${JSON.stringify(args)}`);
+    return spawnSync(executable, args, {
+      ...options,
+      cwd: projectDir,
+      shell: false,
+      stdio: 'pipe',
+    });
+  };
+  // Leave room for command options and Windows npm-shim escaping.
+  if (targets.join(' ').length <= 1024) return compile(targets);
+
+  const imports = getImportTargets(projectDir, targets);
+  const invalidTarget = imports.find(target => /[\r\n]/.test(target));
+  if (invalidTarget) {
+    throw new Error(
+      `Cannot import a CDS compilation target containing a line break: ${JSON.stringify(invalidTarget)}`,
+    );
+  }
+  const name = `.codeql-cds-${randomUUID()}.cds`;
+  const entry = join(projectDir, name);
+  const fd = openSync(entry, 'wx', 0o600);
+  try {
+    try {
+      writeFileSync(
+        fd,
+        imports
+          .map(target => `using from './${target.split(sep).join('/').replace(/'/g, "''")}';`)
+          .join('\n'),
+        'utf8',
+      );
+    } finally {
+      closeSync(fd);
+    }
+    return compile([name]);
+  } finally {
+    unlinkSync(entry);
+  }
 }

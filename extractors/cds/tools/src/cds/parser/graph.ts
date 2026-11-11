@@ -39,22 +39,18 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir: string): Map<string,
   // First pass: create CdsProject objects for each project directory
   for (const projectDir of projectDirs) {
     // Skip projects whose directory matches a paths-ignore pattern
-    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns)) {
+    if (pathsIgnorePatterns.length > 0 && shouldIgnorePath(projectDir, pathsIgnorePatterns, true)) {
       cdsExtractorLog('info', `Skipping project '${projectDir}' — matches paths-ignore pattern`);
       continue;
     }
 
     const absoluteProjectDir = join(sourceRootDir, projectDir);
-    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir);
-
-    // Skip projects with no CDS files remaining after paths-ignore filtering
-    if (cdsFiles.length === 0) {
-      cdsExtractorLog(
-        'info',
-        `Skipping project '${projectDir}' — no CDS files remain after paths-ignore filtering`,
-      );
-      continue;
-    }
+    const childProjectDirs = projectDirs.filter(
+      dir => dir !== projectDir && (projectDir === '.' || dir.startsWith(projectDir + sep)),
+    );
+    const cdsFiles = determineCdsFilesForProjectDir(sourceRootDir, absoluteProjectDir).filter(
+      file => !childProjectDirs.some(dir => file.startsWith(dir + sep)),
+    );
 
     // Try to load package.json if it exists
     const packageJsonPath = join(absoluteProjectDir, 'package.json');
@@ -63,6 +59,7 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir: string): Map<string,
     projectMap.set(projectDir, {
       projectDir,
       cdsFiles,
+      childProjectDirs,
       compilationTargets: [], // Will be populated in the third pass
       expectedOutputFile: join(projectDir, modelCdsJsonFile),
       packageJson,
@@ -176,12 +173,22 @@ function buildBasicCdsProjectDependencyGraph(sourceRootDir: string): Map<string,
     'info',
     'Determining CDS files to compile and expected output files for each project...',
   );
-  for (const [, project] of projectMap.entries()) {
+  for (const [projectDir, project] of projectMap.entries()) {
     try {
       const projectPlan = determineCdsFilesToCompile(sourceRootDir, project);
 
+      if (projectPlan.compilationTargets.length === 0) {
+        cdsExtractorLog(
+          'info',
+          `Skipping project '${projectDir}' — no selected CDS or CSN models remain`,
+        );
+        projectMap.delete(projectDir);
+        continue;
+      }
+
       // Assign the calculated values back to the project
       project.compilationTargets = projectPlan.compilationTargets;
+      project.csnFiles = projectPlan.csnFiles ?? [];
       project.expectedOutputFile = projectPlan.expectedOutputFile;
     } catch (error) {
       cdsExtractorLog(
