@@ -27,6 +27,7 @@ set -euo pipefail
 ##     that reference other packs in this repository (e.g., ^X.Y.Z constraints).
 ##   - qlt.conf.json (CodeQLCLI, CodeQLStandardLibrary, CodeQLCLIBundle)
 ##     using the base version (X.Y.Z) derived by stripping any pre-release suffix.
+##   - .codeql-version (vX.Y.Z) using the same base version.
 ##
 ## Usage:
 ##   ./scripts/update-release-version.sh <new-version>
@@ -166,14 +167,15 @@ check_versions() {
     fi
   done <<< "${version_output}"
 
+  ## Derive expected base version: strip pre-release suffix from first_version or expected_version
+  local check_base="${expected_version:-${first_version}}"
+  check_base="${check_base%%-*}"
+
   ## Also check qlt.conf.json consistency
   local qlt_config="${REPO_ROOT}/qlt.conf.json"
   if [[ -f "${qlt_config}" ]]; then
     local cli_version
     cli_version=$(grep -o '"CodeQLCLI":[[:space:]]*"[^"]*"' "${qlt_config}" | grep -o '"[^"]*"$' | tr -d '"')
-    ## Derive expected base version: strip pre-release suffix from first_version or expected_version
-    local check_base="${expected_version:-${first_version}}"
-    check_base="${check_base%%-*}"
     if [[ "${cli_version}" == "${check_base}" ]]; then
       echo "  ✅ qlt.conf.json: CodeQLCLI ${cli_version}"
     else
@@ -182,8 +184,21 @@ check_versions() {
     fi
   fi
 
+  ## Also check .codeql-version consistency (older release tags predate this file)
+  local codeql_version_file="${REPO_ROOT}/.codeql-version"
+  if [[ -f "${codeql_version_file}" ]]; then
+    local pinned_version
+    pinned_version=$(head -n 1 "${codeql_version_file}" | tr -d '[:space:]')
+    if [[ "${pinned_version}" == "v${check_base}" ]]; then
+      echo "  ✅ .codeql-version: ${pinned_version}"
+    else
+      echo "  ❌ .codeql-version: ${pinned_version} (expected v${check_base})"
+      all_consistent=false
+    fi
+  fi
+
   echo ""
-  echo "Checked ${file_count} version-bearing files + qlt.conf.json."
+  echo "Checked ${file_count} version-bearing files + qlt.conf.json + .codeql-version."
 
   if [[ "${all_consistent}" == true ]]; then
     if [[ -n "${expected_version}" ]]; then
@@ -255,6 +270,28 @@ update_qlt_config() {
     mv "${tmp_file}" "${qlt_config}"
   fi
   echo "  ✅ qlt.conf.json: CodeQLCLI -> ${base_version}"
+}
+
+## Update .codeql-version with the base version (suffix stripped)
+## e.g., 2.4.0-alpha -> v2.4.0
+update_codeql_version_file() {
+  local new_version="$1"
+  local dry_run="${2:-false}"
+  local codeql_version_file="${REPO_ROOT}/.codeql-version"
+  local base_version="${new_version%%-*}"
+
+  if [[ ! -f "${codeql_version_file}" ]]; then
+    echo "WARNING: .codeql-version not found, skipping" >&2
+    return 0
+  fi
+
+  if [[ "${dry_run}" == true ]]; then
+    echo "  [DRY RUN] .codeql-version -> v${base_version}"
+    return 0
+  fi
+
+  printf 'v%s\n' "${base_version}" > "${codeql_version_file}"
+  echo "  ✅ .codeql-version -> v${base_version}"
 }
 
 ## Update internal dependency references in a qlpack.yml file
@@ -332,14 +369,15 @@ update_versions() {
     fi
   done
 
-  ## Update qlt.conf.json
+  ## Update CodeQL CLI version pins
   update_qlt_config "${new_version}" "${dry_run}"
+  update_codeql_version_file "${new_version}" "${dry_run}"
 
   echo ""
   if [[ "${dry_run}" == true ]]; then
-    echo "Would update ${updated_count} qlpack files + qlt.conf.json. (Dry run — no files modified)"
+    echo "Would update ${updated_count} qlpack files + qlt.conf.json + .codeql-version. (Dry run — no files modified)"
   else
-    echo "Updated ${updated_count} qlpack files + qlt.conf.json to version ${new_version}."
+    echo "Updated ${updated_count} qlpack files + qlt.conf.json + .codeql-version to version ${new_version}."
     echo ""
     echo "Next steps:"
     echo "  1. Run 'codeql pack upgrade' on all packs to update lock files"

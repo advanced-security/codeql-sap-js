@@ -107,9 +107,10 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────────
   # Step 2: Update version, test, and create PR
   #
-  # Updates all version-bearing files (qlt.conf.json, qlpack.yml files),
-  # installs CodeQL, upgrades pack lock files, compiles CDS files, runs unit
-  # tests, and creates a pull request with the changes.
+  # Updates all version-bearing files (qlt.conf.json, .codeql-version, qlpack.yml files),
+  # installs CodeQL, aligns JavaScript dependency and model target ranges with
+  # the selected standard-library release, upgrades pack lock files, compiles
+  # CDS files, runs unit tests, and creates a pull request with the changes.
   #
   # This does NOT trigger the release pipeline. Merging the PR and creating a
   # release tag is a separate, human-initiated step via release.yml.
@@ -150,6 +151,34 @@ jobs:
           export PATH="${STUB_DIR}:${PATH}"
           echo "CodeQL version: $(codeql version --format=terse)"
 
+      - name: Update - Align JavaScript library versions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CODEQL_VERSION: ${{ needs.detect-update.outputs.latest_version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          library_manifest=$(gh api \
+            "repos/github/codeql/contents/javascript/ql/lib/qlpack.yml?ref=codeql-cli/v${CODEQL_VERSION}" \
+            -H "Accept: application/vnd.github.raw+json")
+          javascript_all_version=$(awk '/^version:/ { print $2 }' <<< "${library_manifest}")
+          if [[ ! "${javascript_all_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Could not determine codeql/javascript-all version for CodeQL ${CODEQL_VERSION}"
+            exit 1
+          fi
+
+          if ! manifests=$(git grep -l -E '^[[:space:]]*"?codeql/javascript-all"?:' -- '**/qlpack.yml'); then
+            echo "::error::No codeql/javascript-all dependencies or extension targets found"
+            exit 1
+          fi
+          echo "Updating codeql/javascript-all dependencies and extension targets to ^${javascript_all_version}"
+          while IFS= read -r manifest; do
+            sed -i.bak -E \
+              "s|^([[:space:]]*\"?codeql/javascript-all\"?:).*|\1 \"^${javascript_all_version}\"|" \
+              "${manifest}"
+            rm "${manifest}.bak"
+          done <<< "${manifests}"
+
       - name: Update - Upgrade CodeQL pack lock files
         run: ./scripts/upgrade-packs.sh
 
@@ -185,6 +214,7 @@ jobs:
 
             **Changes made:**
             - Updated `qlt.conf.json` (CodeQLCLI, CodeQLStandardLibrary, CodeQLCLIBundle) to `${{ needs.detect-update.outputs.latest_version }}`
+            - Updated `.codeql-version` to `v${{ needs.detect-update.outputs.latest_version }}`
             - Updated all version-bearing qlpack.yml files to `${{ needs.detect-update.outputs.latest_version }}`
             - Upgraded CodeQL pack lock files
             - Compiled CAP CDS files
@@ -208,6 +238,7 @@ jobs:
           echo "| Property | Old Value | New Value |" >> $GITHUB_STEP_SUMMARY
           echo "| -------- | --------- | --------- |" >> $GITHUB_STEP_SUMMARY
           echo "| qlt.conf.json CodeQLCLI | ${CURRENT} | ${LATEST} |" >> $GITHUB_STEP_SUMMARY
+          echo "| .codeql-version | v${CURRENT} | v${LATEST} |" >> $GITHUB_STEP_SUMMARY
           echo "| qlpack.yml versions | ${CURRENT} | ${LATEST} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "A pull request has been created with these changes." >> $GITHUB_STEP_SUMMARY
