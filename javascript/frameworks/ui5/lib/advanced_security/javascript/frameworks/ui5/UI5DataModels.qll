@@ -12,6 +12,11 @@ import advanced_security.javascript.frameworks.ui5.UI5Control
 import advanced_security.javascript.frameworks.ui5.UI5View
 private import semmle.javascript.frameworks.data.internal.ApiGraphModelsExtensions as ApiGraphModelsExtensions
 
+/** A method call to `setModel`. */
+class SetModelCall extends MethodCallNode {
+  SetModelCall() { this.getMethodName() = "setModel" }
+}
+
 /**
  * A reference to a model obtained by a method call to `getModel`.
  *
@@ -48,8 +53,7 @@ class ModelReference extends MethodCallNode {
   /**
    * Gets the matching `setModel` method call of this `ModelReference`.
    */
-  MethodCallNode getAMatchingSetModelCall() {
-    result.getMethodName() = "setModel" and
+  SetModelCall getAMatchingSetModelCall() {
     modelNamesMatch(this, result) and
     (
       modelControlOwnersMatch(this, result)
@@ -74,7 +78,7 @@ class ModelReference extends MethodCallNode {
   }
 }
 
-private predicate modelNamesMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+private predicate modelNamesMatch(ModelReference getModelCall, SetModelCall setModelCall) {
   if getModelCall.isDefaultModelReference()
   then setModelCall.getNumArgument() = 1
   else (
@@ -83,7 +87,7 @@ private predicate modelNamesMatch(ModelReference getModelCall, MethodCallNode se
   )
 }
 
-private predicate modelViewOwnersMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+private predicate modelViewOwnersMatch(ModelReference getModelCall, SetModelCall setModelCall) {
   exists(ViewReference getModelView, ViewReference setModelView |
     getModelCall.getReceiver().getALocalSource() = getModelView and
     setModelCall.getReceiver().getALocalSource() = setModelView and
@@ -91,7 +95,7 @@ private predicate modelViewOwnersMatch(ModelReference getModelCall, MethodCallNo
   )
 }
 
-private predicate modelControlOwnersMatch(ModelReference getModelCall, MethodCallNode setModelCall) {
+private predicate modelControlOwnersMatch(ModelReference getModelCall, SetModelCall setModelCall) {
   exists(ControlReference getModelControl, ControlReference setModelControl |
     getModelCall.getReceiver().getALocalSource() = getModelControl and
     setModelCall.getReceiver().getALocalSource() = setModelControl and
@@ -509,12 +513,16 @@ class JsonModel extends UI5InternalModel {
     )
   }
 
+  /** Gets the JSON object loaded from the URI in the first constructor argument. */
+  pragma[noinline]
+  private JsonObject getADirectConstructorJsonObject() {
+    result =
+      resolveDirectPath(this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue())
+  }
+
   bindingset[propName]
   string getPathStringPropName(string propName) {
-    exists(JsonObject jsonObject |
-      jsonObject =
-        resolveDirectPath(this.getArgument(0).getALocalSource().asExpr().(StringLiteral).getValue())
-    |
+    exists(JsonObject jsonObject | jsonObject = this.getADirectConstructorJsonObject() |
       constructPathStringJson(jsonObject, propName) = result
     )
   }
@@ -706,6 +714,8 @@ UI5Model resolveModel(UI5BindingPath bindingPath) {
   result = getDefaultManifestXmlModel(bindingPath)
 }
 
+/** Keep caller receiver constraints visible for better performance. */
+pragma[inline]
 private predicate modelNameMatchesBindingPath(
   MethodCallNode setModelCall, UI5BindingPath bindingPath
 ) {
@@ -716,17 +726,16 @@ private predicate modelNameMatchesBindingPath(
   else not exists(setModelCall.getArgument(1))
 }
 
-private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath, UI5Control control) {
+private SetModelCall getControlSetModelCall(UI5BindingPath bindingPath, UI5Control control) {
   exists(ControlReference reference |
     reference = control.getAReference() and
     controlReferenceBelongsToBindingView(reference, bindingPath) and
     reference.flowsTo(result.getReceiver())
   ) and
-  result.getMethodName() = "setModel" and
   modelNameMatchesBindingPath(result, bindingPath)
 }
 
-private MethodCallNode getControlSetModelCall(UI5BindingPath bindingPath) {
+private SetModelCall getControlSetModelCall(UI5BindingPath bindingPath) {
   exists(UI5Control control |
     control = getAControlInBindingHierarchy(bindingPath) and
     result = getControlSetModelCall(bindingPath, control) and
@@ -756,8 +765,7 @@ predicate hasDefaultModelOverrideBetween(
   UI5Control ancestor, UI5Control descendant, CustomController controller
 ) {
   exists(
-    UI5Control overrideControl, ControlReference reference, MethodCallNode setModelCall,
-    UI5View view
+    UI5Control overrideControl, ControlReference reference, SetModelCall setModelCall, UI5View view
   |
     ancestor.strictlyContains(overrideControl) and
     overrideControl.contains(descendant) and
@@ -766,13 +774,11 @@ predicate hasDefaultModelOverrideBetween(
     reference = overrideControl.getAReference() and
     controlReferenceBelongsToView(reference, view) and
     reference.flowsTo(setModelCall.getReceiver()) and
-    setModelCall.getMethodName() = "setModel" and
     setModelCall.getNumArgument() = 1
   )
 }
 
-private MethodCallNode getViewSetModelCall(UI5BindingPath bindingPath) {
-  result.getMethodName() = "setModel" and
+private SetModelCall getViewSetModelCall(UI5BindingPath bindingPath) {
   bindingPath.getView().getController().getAViewReference().flowsTo(result.getReceiver()) and
   modelNameMatchesBindingPath(result, bindingPath)
 }
@@ -806,6 +812,18 @@ private MethodCallNode getNearestSetModelCall(UI5BindingPath bindingPath) {
   not exists(getViewSetModelCall(bindingPath))
 }
 
+/** Gets the node representing JSON-file model content selected by `bindingPath`. */
+pragma[noinline]
+private DataFlow::Node getJsonFileModelNode(UI5BindingPath bindingPath) {
+  exists(string propName, JsonModel model |
+    model = bindingPath.getModel() and
+    result = model.getArgument(0).getALocalSource() and
+    bindingPath.getPath() = model.getPathStringPropName(propName) and
+    exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
+    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
+  )
+}
+
 /**
  * Gets the data-flow node that represents the model content selected by `bindingPath`.
  */
@@ -817,13 +835,7 @@ DataFlow::Node getModelNode(UI5BindingPath bindingPath) {
     inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
   )
   or
-  exists(string propName, JsonModel model |
-    model = bindingPath.getModel() and
-    result = model.getArgument(0).getALocalSource() and
-    bindingPath.getPath() = model.getPathStringPropName(propName) and
-    exists(JsonObject obj, JsonValue val | val = obj.getPropValue(propName)) and
-    inSameWebApp(bindingPath.getLocation().getFile(), result.getFile())
-  )
+  result = getJsonFileModelNode(bindingPath)
   or
   result = getNonStaticJsonModelNode(bindingPath)
   or
@@ -964,8 +976,7 @@ private UI5Control getAControlInBindingHierarchy(UI5BindingPath bindingPath) {
 pragma[nomagic]
 private DefaultODataServiceModel getDefaultODataModel(UI5BindingPath bindingPath) {
   bindingPath.getLocation().getFile().getBaseName().matches("%.fragment.xml") and
-  not exists(MethodCallNode viewSetModelCall |
-    viewSetModelCall.getMethodName() = "setModel" and
+  not exists(SetModelCall viewSetModelCall |
     inSameWebApp(bindingPath.getLocation().getFile(), viewSetModelCall.getFile())
   ) and
   exists(FragmentLoad load |
