@@ -287,6 +287,16 @@ class CqlClause extends TCqlClause {
     )
   }
 
+  /** Gets an await of this query, either directly or through `cds.run`. */
+  AwaitExpr getAnAwait() {
+    this.flow().getALocalSource() = result.getOperand().flow().getALocalSource()
+    or
+    exists(CqlRunMethodCall run |
+      result.getOperand() = run.asExpr() and
+      this.flow().getALocalSource() = run.getArgument(0).getALocalSource()
+    )
+  }
+
   /**
    * Matches the given `CqlClause` to its method/property name, nested at arbitrary depth.
    */
@@ -337,8 +347,261 @@ class CqlSelectClause extends CqlClause {
 
   override CqlSelectClause getEntityAccessingClause() {
     (result = this or result = this.getADescendantCqlClause()) and
+    getRootReceiver(result.asExpr()) = getRootReceiver(this.asExpr()) and
     result.asDotExpr().getPropertyName() = "from"
   }
+}
+
+/** Gets an explicit projection, including the `SELECT(columns)` shorthand. */
+private CqlClause getAColumnsClause(CqlClause query) {
+  (result = query or result = query.getADescendantCqlClause()) and
+  getRootReceiver(result.asExpr()) = getRootReceiver(query.asExpr()) and
+  (
+    result.asDotExpr().getPropertyName() = "columns"
+    or
+    result.asShortcutCall() instanceof CqlSelectBaseCall
+    or
+    result.asTaggedTemplate().getTag() instanceof CqlSelectBase
+    or
+    result.asMethodCall().getReceiver() instanceof CqlSelectBase and
+    result.asDotExpr().getPropertyName() = ["one", "distinct"]
+  )
+}
+
+/**
+ * Gets the projection of `SELECT.from(entity, key, columns)` or `SELECT.from(entity, columns)`.
+ *
+ * With a third argument, the second is always a key. Without one, CAP only treats an array or a
+ * callback in the second position as columns and any other value as a key.
+ */
+private Expr getAFromColumnArgument(CqlSelectClause query) {
+  exists(MethodCallExpr fromCall | fromCall = query.getEntityAccessingClause().asMethodCall() |
+    result = fromCall.getArgument(2)
+    or
+    not exists(fromCall.getArgument(2)) and
+    result = fromCall.getArgument(1) and
+    exists(Expr source | source = result.flow().getALocalSource().asExpr() |
+      source instanceof ArrayExpr or source instanceof FunctionExpr
+    )
+  )
+}
+
+private Expr getAColumnArgument(CqlSelectClause query) {
+  result = getAColumnsClause(query).getArgument()
+  or
+  result = getAFromColumnArgument(query)
+}
+
+/** Holds when the query specifies columns, even if they cannot be resolved statically. */
+predicate hasProjection(CqlSelectClause query) {
+  exists(getAColumnsClause(query)) or exists(getAColumnArgument(query))
+}
+
+/** Gets the expression that defines `expr` when it is a local variable, else `expr` itself. */
+private Expr getLocalDefinition(Expr expr) {
+  result = expr.flow().getALocalSource().asExpr()
+  or
+  not exists(expr.flow().getALocalSource().asExpr()) and result = expr
+}
+
+/** Gets a projection argument, following local variables and flattening array-form column lists. */
+Expr getAProjectionArgument(CqlSelectClause query) {
+  exists(Expr definition | definition = getLocalDefinition(getAColumnArgument(query)) |
+    result = definition and not definition instanceof ArrayExpr
+    or
+    result = getLocalDefinition(definition.(ArrayExpr).getAnElement())
+  )
+}
+
+/** Gets the regular expression for an identifier, such as `email`. */
+private string identifier() { result = "[A-Za-z_$][A-Za-z0-9_$]*" }
+
+/** Gets the regular expression for an identifier or a dotted path, such as `author.name`. */
+private string path() { result = identifier() + "(\\." + identifier() + ")*" }
+
+/** Gets the regular expression for a column with an alias, capturing expression and alias. */
+private string aliasedColumn() { result = "(?i)(.*) as (" + identifier() + ")" }
+
+/** Gets the last segment of a dotted path, such as `name` for `author.name`. */
+bindingset[path]
+string getLastSegment(string path) { result = path.splitAt(".", count(path.indexOf("."))) }
+
+/** Holds if `position` in `columns` is outside of every single-quoted string literal. */
+bindingset[columns, position]
+private predicate isOutsideLiteral(string columns, int position) {
+  // A quote inside a literal is escaped by doubling it, which keeps the parity correct.
+  count(int quote | quote = columns.indexOf("'") and quote < position) % 2 = 0
+}
+
+/**
+ * Gets the index of a comma in `columns` that is not inside parentheses, braces, or a string
+ * literal.
+ */
+bindingset[columns]
+private int getATopLevelComma(string columns) {
+  result = columns.indexOf(",") and
+  isOutsideLiteral(columns, result) and
+  count(int open |
+    open = columns.indexOf(["(", "{"]) and open < result and isOutsideLiteral(columns, open)
+  ) =
+    count(int close |
+      close = columns.indexOf([")", "}"]) and close < result and isOutsideLiteral(columns, close)
+    )
+}
+
+/**
+ * Gets a column of a projection string, keeping function arguments and nested blocks intact.
+ * A nested block, such as `manager { userId }`, is one column that no result property is derived
+ * from, so that its fields are not mistaken for columns of the result.
+ */
+bindingset[projection]
+private string getAProjectionItem(string projection) {
+  exists(string columns |
+    columns = projection.trim().regexpCapture("(?s)^\\{(.*)\\}$", 1)
+    or
+    not exists(projection.trim().regexpCapture("(?s)^\\{(.*)\\}$", 1)) and columns = projection
+  |
+    exists(int start, int end |
+      (start = 0 or start = getATopLevelComma(columns) + 1) and
+      end = min(int stop | stop = [getATopLevelComma(columns), columns.length()] and stop >= start) and
+      result = columns.substring(start, end).trim().regexpReplaceAll("\\s+", " ")
+    )
+  )
+}
+
+/** Gets the alias of a column, such as `lowerEmail` for `lower(email) as lowerEmail`. */
+bindingset[item]
+private string getAlias(string item) { result = item.regexpCapture(aliasedColumn(), 2) }
+
+/** Gets the expression of a column without its alias, such as `lower(email)`. */
+bindingset[item]
+private string getExpression(string item) {
+  result = item.regexpCapture(aliasedColumn(), 1)
+  or
+  not exists(getAlias(item)) and result = item
+}
+
+/** Gets the result property of a column: its alias, else its last path segment or function name. */
+bindingset[item]
+private string getStringColumnName(string item) {
+  result = getAlias(item)
+  or
+  not exists(getAlias(item)) and
+  (
+    item.regexpMatch("\\*|" + path()) and result = getLastSegment(item)
+    or
+    result = item.regexpCapture("(" + identifier() + ")\\(.*", 1)
+  )
+}
+
+/** Gets a path that a column reads, skipping literals and function names. */
+bindingset[item]
+private string getAStringColumnPath(string item) {
+  getExpression(item) = "*" and result = "*"
+  or
+  // Literals and function names are matched too, so that they are not mistaken for columns.
+  result = getExpression(item).regexpFind("'[^']*'|" + path() + "\\(?", _, _) and
+  result.regexpMatch(path())
+}
+
+private DataFlow::Node getAnArrayElement(DataFlow::ObjectLiteralNode object, string property) {
+  result = object.getAPropertyWrite(property).getRhs().(DataFlow::ArrayLiteralNode).getAnElement()
+}
+
+private string getObjectReferencePath(DataFlow::ObjectLiteralNode projection) {
+  exists(DataFlow::ArrayLiteralNode reference |
+    reference = projection.getAPropertyWrite("ref").getRhs() and
+    exists(reference.getAnElement()) and
+    forall(DataFlow::Node element | element = reference.getAnElement() |
+      exists(element.getStringValue())
+    ) and
+    result =
+      concat(int index, string part |
+        part = reference.getElement(index).getStringValue()
+      |
+        part, "." order by index
+      )
+  )
+}
+
+/** Gets the path of a column that a CQN expression reads, including nested arguments. */
+private string getAnExpressionReferencePath(DataFlow::ObjectLiteralNode expression) {
+  result = getObjectReferencePath(expression)
+  or
+  result = getAnExpressionReferencePath(getAnArrayElement(expression, ["args", "list", "xpr"]))
+}
+
+/** Gets the result property of a CQN column: its alias, else its function or last path segment. */
+private string getObjectColumnName(DataFlow::ObjectLiteralNode column) {
+  result = column.getAPropertyWrite("as").getRhs().getStringValue()
+  or
+  not exists(column.getAPropertyWrite("as")) and
+  (
+    result = column.getAPropertyWrite("func").getRhs().getStringValue()
+    or
+    result = getLastSegment(getObjectReferencePath(column))
+  )
+}
+
+/**
+ * Holds if `argument` is a column of a projection, or an element of an `expand` or `inline` list.
+ * Only these strings are parsed as column lists.
+ */
+private predicate isProjectionColumn(Expr argument) {
+  argument = getAProjectionArgument(_)
+  or
+  argument = getAnArrayElement(_, ["expand", "inline"]).asExpr()
+}
+
+/** Relates a result property to its CDS path, including inline and expanded fields. */
+predicate getAProjectedProperty(Expr argument, string propertyName, string path) {
+  exists(string item |
+    isProjectionColumn(argument) and item = getAProjectionItem(argument.getStringValue())
+  |
+    propertyName = getStringColumnName(item) and path = getAStringColumnPath(item)
+  )
+  or
+  exists(DataFlow::ObjectLiteralNode column | column = argument.flow() |
+    not exists(column.getAPropertyWrite(["expand", "inline"])) and
+    propertyName = getObjectColumnName(column) and
+    path = getAnExpressionReferencePath(column)
+    or
+    exists(string kind, string childName, string childPath |
+      getAProjectedProperty(getAnArrayElement(column, kind).asExpr(), childName, childPath) and
+      path = getObjectReferencePath(column) + "." + childPath
+    |
+      kind = "expand" and propertyName = getObjectColumnName(column) + "." + childName
+      or
+      kind = "inline" and propertyName = getObjectColumnName(column) + "_" + childName
+    )
+  )
+}
+
+private CdlEntity getProjectedPathEntity(CdlEntity entity, string path) {
+  // Bound recursive navigation to suffixes of paths present in projections.
+  exists(CqlSelectClause query, string projectedPath |
+    getAProjectedProperty(getAProjectionArgument(query), _, projectedPath) and
+    (
+      path = projectedPath or
+      path = projectedPath.substring(projectedPath.indexOf(".") + 1, projectedPath.length())
+    )
+  ) and
+  (
+    not path.matches("%.%") and
+    result = entity
+    or
+    exists(string rest |
+      rest = path.regexpCapture("^[^.]+\\.(.+)$", 1) and
+      result =
+        getProjectedPathEntity(entity.getAttribute(path.splitAt(".", 0)).getTargetEntity(), rest)
+    )
+  )
+}
+
+/** Resolves a projected path to its containing entity and final property name. */
+predicate resolveProjectedPath(CdlEntity root, string path, CdlEntity entity, string propertyName) {
+  entity = getProjectedPathEntity(root, path) and
+  propertyName = getLastSegment(path)
 }
 
 class CqlInsertClause extends CqlClause {

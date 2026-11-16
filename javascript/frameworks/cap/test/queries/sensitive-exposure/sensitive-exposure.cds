@@ -1,23 +1,19 @@
 namespace advanced_security.log_exposure.sample_entities;
 
-entity Sample {
-    name         : String(111);
-    dateOfBirth  : Date;
-}
-
 entity Authors {
-  key ID        : Integer;
-  email         : String @PersonalData.IsPotentiallySensitive;
-  emailVerified : Boolean;
+  key ID : Integer @PersonalData.FieldSemantics: 'DataSubjectID';
+  email : String @PersonalData.IsPotentiallyPersonal: false;
+  profile : Association to Users { userId as selected } @PersonalData.IsPotentiallySensitive;
+  disabled : String @PersonalData.IsPotentiallyPersonal: false @PersonalData.IsPotentiallySensitive: false;
+  userId : Integer;
+  manager : Association to Users;
 }
 
-// annotations for Data Privacy
-annotate Sample with
-@PersonalData : { DataSubjectRole : 'Sample', EntitySemantics : 'DataSubject' }
-{
-  name  @PersonalData.IsPotentiallySensitive;
-  dateOfBirth     @PersonalData.IsPotentiallyPersonal; 
+entity Users {
+  key userId : String @PersonalData.IsPotentiallyPersonal @PersonalData.IsPotentiallySensitive: false;
+  key publicId : String;
 }
 
-annotate Authors with
-@PersonalData : { DataSubjectRole : 'Author', EntitySemantics : 'DataSubject' };
+annotate Authors with {
+  email @PersonalData.IsPotentiallySensitive;
+};
