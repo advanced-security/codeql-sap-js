@@ -241,6 +241,10 @@ describe('diagnostics', () => {
 
         expect(result).toBe(true);
         expectRelativePathInCall('.');
+        expect(childProcess.execFileSync).toHaveBeenCalledWith(
+          codeqlExePath,
+          expect.arrayContaining(['--severity=warning']),
+        );
         restoreMockEnvironment(originalEnv);
       });
     });

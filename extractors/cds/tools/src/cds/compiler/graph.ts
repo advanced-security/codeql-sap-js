@@ -42,22 +42,7 @@ function attemptCompilation(
       dependencyGraph.sourceRootDir,
       cdsCommand,
       cacheDir,
-      // Convert CDS projects to BasicCdsProject format expected by compileCdsToJson
-      new Map(
-        Array.from(dependencyGraph.projects.entries()).map(([key, value]) => [
-          key,
-          {
-            cdsFiles: value.cdsFiles,
-            compilationTargets: value.compilationTargets,
-            expectedOutputFile: value.expectedOutputFile,
-            projectDir: value.projectDir,
-            dependencies: value.dependencies,
-            imports: value.imports,
-            packageJson: value.packageJson,
-            compilationConfig: value.compilationConfig,
-          },
-        ]),
-      ),
+      dependencyGraph.projects,
       task.projectDir,
     );
 

@@ -14,12 +14,10 @@
  * project root (auto-detected from this script's location).
  */
 
-import { spawnSync } from 'child_process';
 import { createRequire } from 'module';
 import {
   existsSync,
   readdirSync,
-  statSync,
   unlinkSync,
 } from 'fs';
 import { dirname, join, resolve } from 'path';
@@ -36,6 +34,7 @@ const {
   normalizeLocationPathsInFile,
   readPackageJsonFile,
   modelCdsJsonFile, // "model.cds.json"
+  runCdsCompiler,
   setSourceRootDirectory,
 } = lib;
 
@@ -91,19 +90,6 @@ function findTestDirs(baseDir) {
   return [...dirs].sort();
 }
 
-function hasCdsFiles(dir) {
-  try {
-    if (readdirSync(dir).some(e => e.endsWith('.cds') && statSync(join(dir, e)).isFile())) return true;
-    for (const sub of ['app', 'db', 'srv']) {
-      const subDir = join(dir, sub);
-      if (existsSync(subDir) && statSync(subDir).isDirectory()) {
-        if (readdirSync(subDir).some(e => e.endsWith('.cds'))) return true;
-      }
-    }
-  } catch { /* skip */ }
-  return false;
-}
-
 function cleanupExistingFiles(baseDir) {
   let count = 0;
   function walk(dir) {
@@ -140,27 +126,6 @@ function getCdsFilesForProject(projectDir) {
   }
   collectCds(projectDir, '');
   return cdsFiles;
-}
-
-function compileProject(projectDir, targets, cdsDkVersion) {
-  const args = [
-    '--yes', '--package', `@sap/cds-dk@${cdsDkVersion}`,
-    'cds', 'compile', ...targets,
-    '--locations', '--to', 'json', '--dest', modelCdsJsonFile, '--log-level', 'warn',
-  ];
-
-  const result = spawnSync('npx', args, {
-    cwd: projectDir,
-    shell: true,
-    stdio: 'pipe',
-    timeout: 300_000,
-  });
-
-  return {
-    success: result.status === 0,
-    stderr: result.stderr?.toString() || '',
-    exitCode: result.status,
-  };
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -202,17 +167,12 @@ for (const testDir of testDirs) {
   const relDir = testDir.replace(PROJECT_ROOT, '').replace(/^[/\\]/, '');
   console.log(`Processing: ${relDir}`);
 
-  if (!hasCdsFiles(testDir)) {
-    console.log('  Skipping (no .cds files)');
-    console.log('');
-    continue;
-  }
-
   // Resolve version using extractor's readPackageJsonFile
   const cdsDkVersion = resolvePreferredCdsDkVersion(testDir);
   console.log(`  CDS-DK version: ${cdsDkVersion}`);
 
-  // Determine targets using extractor's determineCdsFilesToCompile
+  // Share production's entry-point precedence and owned CSN selection,
+  // including flat projects and selected models outside CAP directories.
   const cdsFiles = getCdsFilesForProject(testDir);
   const { compilationTargets } = determineCdsFilesToCompile(testDir, {
     cdsFiles,
@@ -228,19 +188,25 @@ for (const testDir of testDirs) {
 
   // Compile
   console.log('  Compiling...');
-  const result = compileProject(testDir, compilationTargets, cdsDkVersion);
+  const result = runCdsCompiler(
+    testDir,
+    compilationTargets,
+    ['npx', '--yes', '--package', `@sap/cds-dk@${cdsDkVersion}`, 'cds'],
+    { timeout: 300_000 },
+  );
   const outputPath = join(testDir, modelCdsJsonFile);
 
-  if (result.success && existsSync(outputPath)) {
+  if (result.status === 0 && existsSync(outputPath)) {
     // Normalize paths using extractor's normalizeLocationPathsInFile
     normalizeLocationPathsInFile(outputPath);
     console.log(`  ✓ Generated ${modelCdsJsonFile}`);
     generated++;
     processed.add(testDir);
   } else {
-    console.log(`  ✗ Failed (exit ${result.exitCode})`);
-    if (result.stderr) {
-      const msg = result.stderr.split('\n').find(l => l.trim() && !l.includes('npm warn'));
+    console.log(`  ✗ Failed (exit ${result.status})`);
+    const stderr = result.error?.message || result.stderr?.toString();
+    if (stderr) {
+      const msg = stderr.split('\n').find(l => l.trim() && !l.includes('npm warn'));
       if (msg) console.log(`    ${msg.trim()}`);
     }
   }

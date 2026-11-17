@@ -170,6 +170,12 @@ jobs:
           cache: "npm"
           cache-dependency-path: "extractors/cds/tools/package-lock.json"
 
+      - name: Smoke-test Windows JavaScript launcher
+        if: matrix.test_suite == 'ui5-models'
+        timeout-minutes: 5
+        shell: pwsh
+        run: node --test --test-name-pattern="Windows launcher smoke" extractors/cds/tools/test/extractor-integration.test.mjs
+
       - name: Verify Node.js and npm tools
         shell: pwsh
         run: |

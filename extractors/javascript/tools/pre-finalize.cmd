@@ -22,16 +22,26 @@ if not defined CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION (
 
 echo Running database index-files for UI5 (.view.xml and .fragment.xml) files ...
 
+where node >nul 2>nul
+if errorlevel 1 goto ui5_legacy
+if not exist "%~dp0index-ui5.js" goto ui5_legacy
+
+node "%~dp0index-ui5.js"
+goto ui5_status
+
+:ui5_legacy
+echo Warning: Node.js or index-ui5.js is unavailable; using legacy UI5 indexing without source-path filters. 1>&2
 type NUL && "%CODEQL_DIST%\codeql.exe" database index-files ^
     --include-extension=.view.xml ^
     --include-extension=.fragment.xml ^
-    --language xml ^
+    --language=xml ^
     --prune **\node_modules\**\* ^
     --prune **\.eslint\**\* ^
     --total-size-limit=10m ^
     -- ^
     "%CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE%"
 
+:ui5_status
 if %ERRORLEVEL% neq 0 (
     echo database index-files for UI5 ^(.view.xml and .fragment.xml^) files failed with exit code %ERRORLEVEL%.
     exit /b %ERRORLEVEL%

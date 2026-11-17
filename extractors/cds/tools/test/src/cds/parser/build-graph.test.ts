@@ -23,10 +23,12 @@ function validateSafePath(basePath: string, ...pathSegments: string[]): string {
 }
 
 describe('buildCdsProjectDependencyGraph - Comprehensive Test Suite', () => {
+  const savedFilters = process.env.LGTM_INDEX_FILTERS;
   let tempDir: string;
   let tmpCleanup: (() => void) | undefined;
 
   beforeEach(() => {
+    delete process.env.LGTM_INDEX_FILTERS;
     // Create a secure temporary directory for each test
     const tmpObj = tmp.dirSync({ unsafeCleanup: true });
     tempDir = tmpObj.name;
@@ -34,11 +36,125 @@ describe('buildCdsProjectDependencyGraph - Comprehensive Test Suite', () => {
   });
 
   afterEach(() => {
+    if (savedFilters === undefined) delete process.env.LGTM_INDEX_FILTERS;
+    else process.env.LGTM_INDEX_FILTERS = savedFilters;
     // Clean up temporary directory using tmp library's cleanup function
     if (tmpCleanup) {
       tmpCleanup();
     }
   });
+
+  it.each([
+    { filters: 'include:db/**', model: 'csn.json', targets: ['db'] },
+    { filters: 'include:db/**', model: 'index.csn', targets: ['db'] },
+    { filters: 'include:db/**', model: 'schema.csn', targets: ['db'] },
+    { filters: 'include:db/**\nexclude:db/**', model: 'csn.json', targets: undefined },
+    { filters: 'include:missing/**', model: 'csn.json', targets: undefined },
+  ])(
+    'retains projects only for selected CSN models ($model, $filters)',
+    ({ filters, model, targets }) => {
+      mkdirSync(validateSafePath(tempDir, 'db'));
+      mkdirSync(validateSafePath(tempDir, 'srv'));
+      writeFileSync(
+        validateSafePath(tempDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@sap/cds': '^8.0.0' } }),
+      );
+      writeFileSync(validateSafePath(tempDir, `db/${model}`), '{}');
+      writeFileSync(validateSafePath(tempDir, 'srv/service.cds'), 'service Current {}');
+      process.env.LGTM_INDEX_FILTERS = filters;
+
+      const dependencyGraph = buildCdsProjectDependencyGraph(tempDir);
+      const project = dependencyGraph.projects.get('.');
+
+      expect(dependencyGraph.projects.size).toBe(targets ? 1 : 0);
+      expect(project?.cdsFiles).toEqual(targets ? [] : undefined);
+      expect(project?.compilationTargets).toEqual(targets);
+      expect(project?.csnFiles).toEqual(targets ? [`db/${model}`] : undefined);
+      expect(project?.expectedOutputFile).toBe(targets ? 'model.cds.json' : undefined);
+      expect(dependencyGraph.statusSummary.totalCdsFiles).toBe(0);
+    },
+  );
+
+  it.each([
+    { filters: 'include:csn.json', model: 'csn.json', projectDir: '.', selected: true },
+    { filters: 'include:index.csn', model: 'index.csn', projectDir: '.', selected: true },
+    { filters: 'include:schema.csn', model: 'schema.csn', projectDir: '.', selected: true },
+    { filters: 'exclude:**/*.cds', model: 'schema.csn', projectDir: '.', selected: true },
+    {
+      filters: 'include:flat/schema.csn',
+      model: 'schema.csn',
+      projectDir: 'flat',
+      selected: true,
+    },
+    {
+      filters: 'include:schema.csn\nexclude:schema.csn',
+      model: 'schema.csn',
+      projectDir: '.',
+      selected: false,
+    },
+    { filters: 'include:missing.csn', model: 'schema.csn', projectDir: '.', selected: false },
+  ])(
+    'retains flat projects only for selected CSN inputs ($projectDir, $filters)',
+    ({ filters, model, projectDir, selected }) => {
+      const prefix = projectDir === '.' ? '' : `${projectDir}/`;
+      mkdirSync(validateSafePath(tempDir, projectDir), { recursive: true });
+      writeFileSync(
+        validateSafePath(tempDir, projectDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@sap/cds': '^8.0.0' } }),
+      );
+      writeFileSync(validateSafePath(tempDir, projectDir, 'service.cds'), 'service Current {}');
+      writeFileSync(validateSafePath(tempDir, projectDir, model), '{}');
+      process.env.LGTM_INDEX_FILTERS = filters;
+
+      const dependencyGraph = buildCdsProjectDependencyGraph(tempDir);
+      const project = dependencyGraph.projects.get(projectDir);
+
+      expect(dependencyGraph.projects.size).toBe(selected ? 1 : 0);
+      expect(project?.cdsFiles).toEqual(selected ? [] : undefined);
+      expect(project?.compilationTargets).toEqual(selected ? [model] : undefined);
+      expect(project?.csnFiles?.map(file => file.replace(/\\/g, '/'))).toEqual(
+        selected ? [`${prefix}${model}`] : undefined,
+      );
+      expect(project?.expectedOutputFile.replace(/\\/g, '/')).toBe(
+        selected ? `${prefix}model.cds.json` : undefined,
+      );
+      expect(dependencyGraph.statusSummary.totalCdsFiles).toBe(0);
+    },
+  );
+
+  it.each(['.', 'cap'])(
+    'retains external CSN compilation and extraction inputs for CAP project %s',
+    projectDir => {
+      const prefix = projectDir === '.' ? '' : `${projectDir}/`;
+      mkdirSync(validateSafePath(tempDir, projectDir, 'db'), { recursive: true });
+      mkdirSync(validateSafePath(tempDir, projectDir, 'fts'));
+      writeFileSync(
+        validateSafePath(tempDir, projectDir, 'package.json'),
+        JSON.stringify({ dependencies: { '@sap/cds': '^8.0.0' } }),
+      );
+      writeFileSync(validateSafePath(tempDir, projectDir, 'db/schema.cds'), 'entity Current {}');
+      writeFileSync(validateSafePath(tempDir, projectDir, 'extra.csn'), '{}');
+      writeFileSync(validateSafePath(tempDir, projectDir, 'fts/feature.csn'), '{}');
+      process.env.LGTM_INDEX_FILTERS = `include:${prefix}db/schema.cds\ninclude:${prefix}extra.csn\ninclude:${prefix}fts/feature.csn`;
+
+      const dependencyGraph = buildCdsProjectDependencyGraph(tempDir);
+      const project = dependencyGraph.projects.get(projectDir);
+
+      expect(dependencyGraph.projects.size).toBe(1);
+      expect(project?.cdsFiles?.map(file => file.replace(/\\/g, '/'))).toEqual([
+        `${prefix}db/schema.cds`,
+      ]);
+      expect(project?.compilationTargets?.map(file => file.replace(/\\/g, '/'))).toEqual([
+        'db',
+        'extra.csn',
+        'fts/feature.csn',
+      ]);
+      expect(project?.csnFiles?.map(file => file.replace(/\\/g, '/'))).toEqual([
+        `${prefix}extra.csn`,
+        `${prefix}fts/feature.csn`,
+      ]);
+    },
+  );
 
   describe('Multiple Nested Projects with Various Import Types', () => {
     it('should handle complex multi-project structure with cross-project dependencies', () => {
