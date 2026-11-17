@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'fs';
 import { join, relative, resolve, sep } from 'path';
 
 import { load as yamlLoad } from 'js-yaml';
-import { minimatch, type MinimatchOptions } from 'minimatch';
+import { escape, minimatch, type MinimatchOptions } from 'minimatch';
 
 import { cdsExtractorLog } from './logging';
 
@@ -163,6 +163,7 @@ function readConfigPatterns(sourceRoot: string): string[] {
  *  - A bare directory name `vendor` matches anything under `vendor/`
  *  - `**` matches across directory boundaries
  *  - `*` matches within a single path segment
+ *  - Other glob metacharacters match literally
  *
  * Source-path includes restrict the search scope; extension-only opt-ins do
  * not. Within that scope, the last matching directive wins.
@@ -182,7 +183,9 @@ export function shouldIgnorePath(
 ): boolean {
   const matchOptions: MinimatchOptions = {
     dot: true,
+    nobrace: true,
     nocomment: true,
+    noext: true,
     nonegate: true,
     platform: sep === '\\' ? 'win32' : 'linux',
     windowsPathsNoEscape: sep === '\\',
@@ -190,8 +193,11 @@ export function shouldIgnorePath(
   const normalizedPath = normalizePathSeparators(relativePath);
   const includePaths = [normalizedPath, ...includedSourcePaths.map(normalizePathSeparators)];
   const matches = (raw: string, include = false): boolean => {
-    // Escape literal Unix backslashes before minimatch parses the glob.
-    const pattern = normalizePathSeparators(raw).replace(/\\/g, '\\\\').replace(/\/+$/, '');
+    const pattern = normalizePathSeparators(raw)
+      .replace(/\/+$/, '')
+      .split('*')
+      .map(part => escape(part, matchOptions))
+      .join('*');
     return (
       (include && isDirectory && normalizedPath === '.') ||
       (include ? includePaths : [normalizedPath]).some(

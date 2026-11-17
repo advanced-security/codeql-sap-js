@@ -110,6 +110,9 @@ npm run test:coverage
 
 # Run tests in watch mode
 npm run test:watch
+
+# Run integration tests with cds and codeql on PATH
+npm run build && node --test test/extractor-integration.test.mjs
 ```
 
 ### Code Quality
@@ -139,8 +142,8 @@ The extractor respects several CodeQL environment variables:
 
 Projects are detected based on:
 
-- Presence of `package.json` files
-- CDS files (`.cds`) in the project directory tree
+- Presence of `package.json` or `pom.xml` files
+- CDS files (`.cds`) or explicitly marked CSN-only projects (`.csn`, `csn.json`)
 - Valid CDS dependencies (`@sap/cds`, `@sap/cds-dk`) in package.json
 
 ### Compilation Strategy
@@ -152,22 +155,8 @@ The extractor uses a sophisticated compilation approach:
 3. **Error Recovery**: Handles compilation failures gracefully
 4. **Performance Tracking**: Monitors compilation times and resource usage
 
-Model selection uses one owned-model inventory per project:
-
-- Full selections preserve root `index.cds` and CAP directory entry-point precedence,
-  including CSN-only directories and sibling `.cds`/`.csn` entry points. Partial selections
-  pass selected files explicitly. Child-workspace models never affect the parent's plan.
-- Outside CAP directories, only `fts/` feature models and explicit source-path selections
-  are added. Selected root models do not duplicate effective CAP entry points. Exclusions
-  and extension-only includes do not opt unrelated descendants into compilation.
-- Owned CSN inputs remain eligible even without selected CDS sources, including in flat
-  projects. They retain compilation targets and extraction metadata. Selected CSN source
-  paths are included with or without source filters, subject to literal-filename safeguards;
-  `.csn` inputs are registered with the JavaScript extractor's JSON parser. Generated file
-  and directory outputs respect explicit output exclusions.
-- Initial compilation, retries, and the test workflow share target-selection and bounded
-  compiler invocation logic. Native Windows separators are normalized; literal Unix
-  backslashes in source and output paths are preserved.
+Compilation respects source filters and selected CAP entry points, keeps child projects separate,
+and excludes generated `gen/`, `target/`, and `src/main/resources/edmx/` outputs.
 
 ## Performance Features
 
@@ -195,15 +184,12 @@ Model selection uses one owned-model inventory per project:
 
 #### Installation of `@sap/cds` and `@sap/cds-dk`
 
-The extractor caches installations by resolved dependency combination:
+The CDS extractor attempts to optimize performance for most projects by caching the installation of the unique combinations of resolved CDS dependencies across all projects under a given source root.
 
-- Prefer `@sap/cds` and `@sap/cds-dk` versions from the nearest project or workspace
-  `package-lock.json`, including workspace-local and hoisted entries.
-- If no locked version is available, resolve the declared `package.json` requirements,
-  using the existing default versions where needed.
-- Share a cache only between projects with matching resolved dependency combinations.
-- If no cache is available, attempt compilation with a global or npx-provided compiler.
-  Final compilation failures are reported after retries.
+Versions come from the nearest project or workspace `package-lock.json`, falling back to
+declared `package.json` ranges. Only matching resolved dependency combinations share a cache.
+If no cache is available, compilation uses global/npx CDS; failed installations emit a warning
+and compilation failures are reported after retries.
 
 #### Installation of Additional Project-Specific Dependencies
 

@@ -198,7 +198,7 @@ export function addDependencyGraphDiagnostic(
 }
 
 /**
- * Add a diagnostic error to the CodeQL database for dependency installation failure
+ * Add a diagnostic warning to the CodeQL database for dependency installation failure
  * @param sourceRoot Source root directory to use as file context
  * @param errorMessage The error message from dependency installation
  * @param codeqlExePath Path to the CodeQL executable
@@ -215,7 +215,7 @@ export function addDependencyInstallationDiagnostic(
     codeqlExePath,
     'cds/dependency-installation-failure',
     'CDS dependency installation failure',
-    DiagnosticSeverity.Error,
+    DiagnosticSeverity.Warning,
     'source root',
     sourceRoot,
   );

@@ -209,6 +209,32 @@ describe('filesystem', () => {
   });
 
   describe('normalizeCdsJsonLocations', () => {
+    it('removes only the synthetic entry location while preserving source locations', () => {
+      const entry = '.codeql-cds-00000000-0000-4000-8000-000000000000.cds';
+      const data: Record<string, unknown> = {
+        $location: { file: entry, line: 1 },
+        definitions: {
+          Service: { $location: { file: 'srv\\service.cds', line: 3 } },
+        },
+      };
+
+      normalizeCdsJsonLocations(data, entry);
+
+      expect(data).toEqual({
+        definitions: {
+          Service: { $location: { file: 'srv/service.cds', line: 3 } },
+        },
+      });
+    });
+
+    it('retains a real top-level location when normalizing a synthetic-entry compilation', () => {
+      const data = { $location: { file: 'db\\schema.cds', line: 2 } };
+
+      normalizeCdsJsonLocations(data, '.codeql-cds-test.cds');
+
+      expect(data.$location).toEqual({ file: 'db/schema.cds', line: 2 });
+    });
+
     it('should normalize backslashes in top-level $location.file', () => {
       const data = {
         $location: { file: 'db\\schema.cds' },

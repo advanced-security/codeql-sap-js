@@ -104,16 +104,26 @@ export function removeMarkerFile(markerFilePath: string): void {
  * POSIX forward slashes. The CDS compiler on Windows produces backslash paths
  * (e.g. `"srv\\service1.cds"`), but the CodeQL libraries expect forward slashes
  * (e.g. `"srv/service1.cds"`).
+ * A synthetic compilation entry has no source location after its removal.
  *
  * Mutates the object in place and returns it for convenience.
  */
-export function normalizeCdsJsonLocations(data: Record<string, unknown>): Record<string, unknown> {
+export function normalizeCdsJsonLocations(
+  data: Record<string, unknown>,
+  syntheticEntryFile?: string,
+): Record<string, unknown> {
   if (typeof data !== 'object' || data === null) return data;
 
   // Normalize top-level $location.file
   const topLoc = data['$location'] as Record<string, unknown> | undefined;
   if (topLoc?.file && typeof topLoc.file === 'string') {
     topLoc.file = topLoc.file.split('\\').join('/');
+    if (
+      syntheticEntryFile !== undefined &&
+      (topLoc.file === syntheticEntryFile || topLoc.file === `./${syntheticEntryFile}`)
+    ) {
+      delete data['$location'];
+    }
   }
 
   // Normalize $location.file in all definitions (and their nested elements/params)
@@ -155,13 +165,14 @@ function normalizeLocationsRecursive(obj: unknown): void {
  * forward slashes, and write it back. No-op if the file doesn't change.
  *
  * @param filePath Absolute path to the `.cds.json` file
+ * @param syntheticEntryFile Temporary compilation entry whose top-level location should be removed
  */
-export function normalizeLocationPathsInFile(filePath: string): void {
+export function normalizeLocationPathsInFile(filePath: string, syntheticEntryFile?: string): void {
   if (!fileExists(filePath)) return;
 
   const raw = readFileSync(filePath, 'utf8');
   const data = JSON.parse(raw) as Record<string, unknown>;
-  normalizeCdsJsonLocations(data);
+  normalizeCdsJsonLocations(data, syntheticEntryFile);
   const normalized = JSON.stringify(data, null, 2) + '\n';
 
   if (normalized !== raw) {

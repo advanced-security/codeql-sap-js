@@ -298,7 +298,11 @@ export function runCdsCompiler(
     } finally {
       closeSync(fd);
     }
-    return compile([name]);
+    const result = compile([name]);
+    if (result.status === 0) {
+      normalizeLocationPathsInFile(join(projectDir, modelCdsJsonFile), name);
+    }
+    return result;
   } finally {
     unlinkSync(entry);
   }

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { CdsDependencyGraph, CdsProject } from '../../../src/cds/parser/types';
+import { addDependencyInstallationDiagnostic } from '../../../src/diagnostics';
 import { cdsExtractorLog } from '../../../src/logging';
 import {
   cacheInstallDependencies,
@@ -38,6 +39,7 @@ jest.mock('child_process', () => ({
 
 jest.mock('../../../src/diagnostics', () => ({
   addDependencyDiagnostic: jest.fn(),
+  addDependencyInstallationDiagnostic: jest.fn(),
   addPackageJsonParsingDiagnostic: jest.fn(),
   DiagnosticSeverity: {
     Warning: 'warning',
@@ -367,6 +369,12 @@ describe('installer', () => {
 
       // Should skip failed combinations
       expect(result.size).toBe(0);
+      expect(addDependencyInstallationDiagnostic).toHaveBeenCalledTimes(1);
+      expect(addDependencyInstallationDiagnostic).toHaveBeenCalledWith(
+        '/source',
+        expect.stringMatching(/install.*global or npx/i),
+        '/codeql',
+      );
     });
 
     it('should handle empty dependency graph', () => {
@@ -374,6 +382,7 @@ describe('installer', () => {
       const result = cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
 
       expect(result.size).toBe(0);
+      expect(addDependencyInstallationDiagnostic).not.toHaveBeenCalled();
     });
 
     it('should reuse cache for projects with different version specs but same resolved versions', () => {

@@ -3744,11 +3744,14 @@ function removeMarkerFile(markerFilePath) {
     }
   }
 }
-function normalizeCdsJsonLocations(data) {
+function normalizeCdsJsonLocations(data, syntheticEntryFile) {
   if (typeof data !== "object" || data === null) return data;
   const topLoc = data["$location"];
   if (topLoc?.file && typeof topLoc.file === "string") {
     topLoc.file = topLoc.file.split("\\").join("/");
+    if (syntheticEntryFile !== void 0 && (topLoc.file === syntheticEntryFile || topLoc.file === `./${syntheticEntryFile}`)) {
+      delete data["$location"];
+    }
   }
   const definitions = data["definitions"];
   if (definitions) {
@@ -3774,11 +3777,11 @@ function normalizeLocationsRecursive(obj) {
     }
   }
 }
-function normalizeLocationPathsInFile(filePath) {
+function normalizeLocationPathsInFile(filePath, syntheticEntryFile) {
   if (!fileExists(filePath)) return;
   const raw = (0, import_fs2.readFileSync)(filePath, "utf8");
   const data = JSON.parse(raw);
-  normalizeCdsJsonLocations(data);
+  normalizeCdsJsonLocations(data, syntheticEntryFile);
   const normalized = JSON.stringify(data, null, 2) + "\n";
   if (normalized !== raw) {
     (0, import_fs2.writeFileSync)(filePath, normalized, "utf8");
@@ -8791,7 +8794,9 @@ function readConfigPatterns(sourceRoot2) {
 function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedSourcePaths = []) {
   const matchOptions = {
     dot: true,
+    nobrace: true,
     nocomment: true,
+    noext: true,
     nonegate: true,
     platform: import_path2.sep === "\\" ? "win32" : "linux",
     windowsPathsNoEscape: import_path2.sep === "\\"
@@ -8799,7 +8804,7 @@ function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedS
   const normalizedPath = normalizePathSeparators(relativePath);
   const includePaths = [normalizedPath, ...includedSourcePaths.map(normalizePathSeparators)];
   const matches = (raw, include = false) => {
-    const pattern = normalizePathSeparators(raw).replace(/\\/g, "\\\\").replace(/\/+$/, "");
+    const pattern = normalizePathSeparators(raw).replace(/\/+$/, "").split("*").map((part) => escape(part, matchOptions)).join("*");
     return include && isDirectory && normalizedPath === "." || (include ? includePaths : [normalizedPath]).some(
       (candidate) => minimatch(candidate, pattern, { ...matchOptions, partial: include && isDirectory }) || minimatch(candidate, `${pattern}/**`, matchOptions)
     );
@@ -8998,7 +9003,7 @@ function configureLgtmIndexFilters(sourceRoot2, dependencyGraph2) {
     }
   }
   const suffix = "\n" + ["exclude:**/node_modules/**/*.*", `include:${cdsExtractorMarkerFileName}`].join("\n");
-  const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
+  const maxFilterBytes = getPlatformInfo().isWindows ? 24 * 1024 : 16 * 1024;
   const batches = [
     [
       "exclude:**/*.*",
@@ -9435,6 +9440,7 @@ function getCdsVersion(cdsCommand, cacheDir) {
 // src/cds/parser/functions.ts
 var import_fs6 = require("fs");
 var import_path6 = require("path");
+var buildOutputs = ["**/gen/**", "**/src/main/resources/edmx/**", "**/target/**"];
 function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
   if (!sourceRootDir || !projectDir) {
     throw new Error(
@@ -9473,6 +9479,10 @@ function determineCdsFilesForProjectDir(sourceRootDir, projectDir) {
     return [];
   }
 }
+function hasIndependentProjectMarker(dir) {
+  const isMavenModule = ["app", "db", "srv"].includes((0, import_path6.basename)(dir)) && (0, import_fs6.existsSync)((0, import_path6.join)((0, import_path6.dirname)(dir), "pom.xml"));
+  return (0, import_fs6.existsSync)((0, import_path6.join)(dir, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(dir, "pom.xml")) && !isMavenModule;
+}
 function determineCdsProjectsUnderSourceDir(sourceRootDir) {
   if (!sourceRootDir || !(0, import_fs6.existsSync)(sourceRootDir)) {
     throw new Error(`Source root directory '${sourceRootDir}' does not exist.`);
@@ -9502,18 +9512,21 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
     }
   }
   for (const dir of candidateDirectories) {
+    if (shouldIgnorePath((0, import_path6.relative)(sourceRootDir, dir), buildOutputs)) continue;
     if (isLikelyCdsProject(dir)) {
       const relativePath = (0, import_path6.relative)(sourceRootDir, dir);
       const projectDir = relativePath || ".";
       let shouldAdd = true;
-      const existingProjects = Array.from(foundProjects);
+      const existingProjects = Array.from(foundProjects).sort(
+        (a, b) => (0, import_path6.join)(sourceRootDir, b).length - (0, import_path6.join)(sourceRootDir, a).length
+      );
       for (const existingProject of existingProjects) {
         const existingAbsPath = (0, import_path6.join)(sourceRootDir, existingProject);
         if (dir.startsWith(existingAbsPath + import_path6.sep)) {
           const parentPackageJsonPath = (0, import_path6.join)(existingAbsPath, "package.json");
           const parentPackageJson = readPackageJsonFile(parentPackageJsonPath);
           const isParentMonorepo = parentPackageJson?.workspaces && Array.isArray(parentPackageJson.workspaces) && parentPackageJson.workspaces.length > 0;
-          if (isParentMonorepo && ((0, import_fs6.existsSync)((0, import_path6.join)(dir, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(dir, "pom.xml"))) && (hasStandardCdsContent(existingAbsPath) || hasDirectCdsContent(existingAbsPath))) {
+          if (isParentMonorepo && hasIndependentProjectMarker(dir) && isLikelyCdsProject(existingAbsPath)) {
             shouldAdd = true;
           } else {
             shouldAdd = false;
@@ -9524,7 +9537,7 @@ function determineCdsProjectsUnderSourceDir(sourceRootDir) {
           const currentPackageJsonPath = (0, import_path6.join)(dir, "package.json");
           const currentPackageJson = readPackageJsonFile(currentPackageJsonPath);
           const isCurrentMonorepo = currentPackageJson?.workspaces && Array.isArray(currentPackageJson.workspaces) && currentPackageJson.workspaces.length > 0;
-          if (!(isCurrentMonorepo && ((0, import_fs6.existsSync)((0, import_path6.join)(existingAbsPath, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(existingAbsPath, "pom.xml"))) && isLikelyCdsProject(existingAbsPath))) {
+          if (!(isCurrentMonorepo && hasIndependentProjectMarker(existingAbsPath) && isLikelyCdsProject(existingAbsPath))) {
             foundProjects.delete(existingProject);
           }
         }
@@ -9603,6 +9616,14 @@ function isLikelyCdsProject(dir) {
     const hasStandardCdsDirectories = hasStandardCdsContent(dir);
     const hasDirectCdsFiles = hasDirectCdsContent(dir);
     const hasCdsFiles = hasStandardCdsDirectories || hasDirectCdsFiles;
+    if (!hasCdsFiles && ((0, import_fs6.existsSync)((0, import_path6.join)(dir, "package.json")) || (0, import_fs6.existsSync)((0, import_path6.join)(dir, "pom.xml"))) && Ui(["{*.csn,csn.json}", "{app,db,srv}/**/{*.csn,csn.json}"], {
+      cwd: dir,
+      ignore: ["**/node_modules/**", "**/*.testproj/**", ...buildOutputs],
+      nodir: true,
+      windowsPathsNoEscape: true
+    }).length > 0) {
+      return true;
+    }
     const hasCapDependencies = hasPackageJsonWithCapDeps(dir);
     if (hasCapDependencies) {
       if (!hasCdsFiles) {
@@ -9661,9 +9682,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   const childProjectDirs = (project.childProjectDirs ?? []).map((dir) => (0, import_path6.resolve)(sourceRootDir, dir));
   const isOwned = (file) => {
     const absoluteFile = (0, import_path6.resolve)(file);
-    return !childProjectDirs.some(
-      (dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path6.sep)
-    );
+    return !childProjectDirs.some((dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path6.sep)) && !shouldIgnorePath((0, import_path6.relative)(absoluteProjectDir, absoluteFile), buildOutputs);
   };
   const relativeFiles = filterIgnoredPaths(project.cdsFiles ?? [], patterns).filter((file) => isOwned((0, import_path6.resolve)(sourceRootDir, file))).map((file) => (0, import_path6.relative)(absoluteProjectDir, (0, import_path6.join)(sourceRootDir, file)));
   const modelFiles = Ui((0, import_path6.join)(absoluteProjectDir, "**/{*.cds,*.csn,csn.json}"), {
@@ -9676,6 +9695,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   );
   const selectedFiles = [...relativeFiles, ...csnFiles];
   const selected = new Set(selectedFiles);
+  const hasSourceIncludes = patterns.some(isSourcePathInclude);
   const plan = (compilationTargets, selectedCsnFiles2) => ({
     compilationTargets,
     csnFiles: selectedCsnFiles2.map((file) => (0, import_path6.join)(project.projectDir, file)),
@@ -9683,12 +9703,11 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   });
   if (selected.has("index.cds")) {
     return plan(
-      modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
+      !hasSourceIncludes || modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
       csnFiles
     );
   }
   const capDirectories = ["db", "srv", "app"];
-  const hasSourceIncludes = patterns.some(isSourcePathInclude);
   const isExtraModelFile = (file) => file.includes(import_path6.sep) && !capDirectories.some((dir) => file.startsWith(dir + import_path6.sep)) && (file.startsWith("fts" + import_path6.sep) || hasSourceIncludes);
   const extraFiles = relativeFiles.filter(isExtraModelFile);
   const rootCdsFiles = relativeFiles.filter((file) => (0, import_path6.dirname)(file) === ".");
@@ -9700,7 +9719,9 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   let skipped = 0;
   for (const dir of existingCapDirs) {
     const entry = getCdsDirectoryEntryPoint(absoluteProjectDir, dir);
-    const allFiles = modelFiles.filter((file) => file.startsWith(dir + import_path6.sep));
+    const allFiles = modelFiles.filter(
+      (file) => file.startsWith(dir + import_path6.sep) && (hasSourceIncludes || (0, import_path6.dirname)(file) === dir)
+    );
     if (entry && isOwned((0, import_path6.join)(absoluteProjectDir, entry))) {
       capEntryPoints.add(entry);
       allFiles.push(entry);
@@ -9713,11 +9734,11 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
       continue;
     }
     selectedCsnFiles.push(...directoryFiles.filter((file) => !file.endsWith(".cds")));
-    const complete = allFiles.every((file) => selected.has(file));
+    const complete = !hasSourceIncludes && entry !== void 0 && selected.has(entry) || allFiles.every((file) => selected.has(file));
     capTargets.push(
       ...complete ? [dir] : directoryFiles.filter((file) => (0, import_path6.dirname)(file) === dir || file === entry)
     );
-    if (!complete || !entry) {
+    if (hasSourceIncludes && (!complete || !entry) || !hasSourceIncludes && !entry && allFiles.length === 0) {
       nestedCapDirs.add(dir);
     }
   }
@@ -9954,7 +9975,11 @@ function runCdsCompiler(projectDir, targets, command, options = {}) {
     } finally {
       (0, import_fs7.closeSync)(fd);
     }
-    return compile([name]);
+    const result = compile([name]);
+    if (result.status === 0) {
+      normalizeLocationPathsInFile((0, import_path7.join)(projectDir, modelCdsJsonFile), name);
+    }
+    return result;
   } finally {
     (0, import_fs7.unlinkSync)(entry);
   }
@@ -10179,6 +10204,18 @@ function addDependencyGraphDiagnostic(sourceRoot2, errorMessage, codeqlExePath2)
     "cds/dependency-graph-failure",
     "CDS project dependency graph build failure",
     "error" /* Error */,
+    "source root",
+    sourceRoot2
+  );
+}
+function addDependencyInstallationDiagnostic(sourceRoot2, errorMessage, codeqlExePath2) {
+  return addDiagnostic(
+    sourceRoot2,
+    errorMessage,
+    codeqlExePath2,
+    "cds/dependency-installation-failure",
+    "CDS dependency installation failure",
+    "warning" /* Warning */,
     "source root",
     sourceRoot2
   );
@@ -10618,6 +10655,13 @@ function cacheInstallDependencies(dependencyGraph2, sourceRoot2, codeqlExePath2)
         "error",
         `All ${dependencyCombinations.length} dependency combination(s) failed to install. This will likely cause compilation failures.`
       );
+      if (codeqlExePath2) {
+        addDependencyInstallationDiagnostic(
+          sourceRoot2,
+          `Failed to install all ${dependencyCombinations.length} CDS dependency combination(s); compilation will use a global or npx-provided 'cds' command. Check the dependency installation logs for registry or npm configuration errors.`,
+          codeqlExePath2
+        );
+      }
     }
   } else if (successfulInstallations < dependencyCombinations.length) {
     cdsExtractorLog(

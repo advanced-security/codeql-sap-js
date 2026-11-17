@@ -95,7 +95,7 @@ fs.writeFileSync('model.cds.json', '{}');
           encoding: 'utf8',
           env: {
             ...process.env,
-            LGTM_INDEX_FILTERS: '',
+            LGTM_INDEX_FILTERS: 'include:db/**',
             PATH: `${join(root, 'bin')}${delimiter}${process.env.PATH ?? ''}`,
           },
         },
@@ -132,6 +132,29 @@ fs.writeFileSync('model.cds.json', '{}');
       filters: '',
       name: 'root index precedence',
       targets: ['index.cds'],
+    },
+    {
+      files: {
+        'db/schema.cds': 'entity Current {}',
+        'index.cds': "using from './db/schema';",
+        'srv/unimported.cds': 'invalid unimported CDS',
+        'test/fixture.cds': 'invalid test fixture',
+      },
+      filters: 'exclude:test',
+      name: 'root-index precedence with excluded fixtures',
+      targets: ['index.cds'],
+    },
+    {
+      files: {
+        'db/schema.cds': 'entity Current {}',
+        'srv/service.cds': 'service Current {}',
+        'srv/src/main/resources/edmx/csn.json': '{}',
+        'srv/target/classes/edmx/csn.json': '{}',
+        'gen/srv/srv/csn.json': '{}',
+      },
+      filters: 'include:**',
+      name: 'source models without generated build outputs',
+      targets: ['db', 'srv'],
     },
     {
       files: {
@@ -172,6 +195,12 @@ fs.writeFileSync('model.cds.json', '{}');
       filters: '',
       name: 'CSN-only directories',
       targets: ['db', 'srv'],
+    },
+    {
+      files: { 'db/schema.csn': '{}' },
+      filters: '',
+      name: 'CSN-only projects without physical CDS sources',
+      targets: ['db'],
     },
     {
       files: {
@@ -545,6 +574,77 @@ if (args[0] === 'resolve') {
   });
 
   describe('CAP Java backend with JS UI workspaces in one repository', () => {
+    it.each([
+      { model: 'db/schema.csn', parentModel: 'db/root.cds', marker: 'package.json', filters: '' },
+      {
+        model: 'db/csn.json',
+        parentModel: 'db/root.cds',
+        marker: 'package.json',
+        filters: 'include:**',
+      },
+      { model: 'schema.csn', parentModel: 'db/root.cds', marker: 'pom.xml', filters: '' },
+      { model: 'csn.json', parentModel: 'db/root.csn', marker: 'package.json', filters: '' },
+    ])(
+      'isolates a CSN-only child ($model, $marker, parent: $parentModel, $filters)',
+      ({ filters, marker, model, parentModel }) => {
+        writeTree(root, {
+          'package.json': JSON.stringify({ workspaces: ['app/*'] }),
+          [parentModel]: parentModel.endsWith('.cds') ? 'entity Root {}' : '{}',
+          [`app/ui-a/${marker}`]: marker === 'pom.xml' ? '<project/>' : '{}',
+          [`app/ui-a/${model}`]: '{}',
+        });
+        process.env.LGTM_INDEX_FILTERS = filters;
+
+        const graph = buildCdsProjectDependencyGraph(root);
+        const parent = graph.projects.get('.');
+        const child = graph.projects.get(join('app', 'ui-a'));
+        const normalize = (file: string): string => file.replace(/\\/g, '/');
+
+        expect([...graph.projects.keys()].map(normalize)).toEqual(['.', 'app/ui-a']);
+        expect(parent?.childProjectDirs?.map(normalize)).toEqual(['app/ui-a']);
+        expect(parent?.compilationTargets).toEqual(['db']);
+        expect(parent?.csnFiles?.map(normalize)).toEqual(
+          parentModel.endsWith('.csn') ? [parentModel] : [],
+        );
+        expect(child?.cdsFiles).toEqual([]);
+        expect(child?.compilationTargets).toEqual(model.startsWith('db/') ? ['db'] : [model]);
+        expect(child?.csnFiles?.map(normalize)).toEqual([`app/ui-a/${model}`]);
+        expect(child?.expectedOutputFile.replace(/\\/g, '/')).toBe('app/ui-a/model.cds.json');
+      },
+    );
+
+    it.each([
+      'srv/src/main/resources/edmx/csn.json',
+      'srv/target/classes/edmx/csn.json',
+      'gen/srv/srv/csn.json',
+    ])('does not create a child boundary from generated %s alone', model => {
+      writeTree(root, {
+        'package.json': JSON.stringify({ workspaces: ['app/*'] }),
+        'db/root.cds': 'entity Root {}',
+        'app/ui-a/package.json': '{}',
+        [`app/ui-a/${model}`]: '{}',
+      });
+
+      const graph = buildCdsProjectDependencyGraph(root);
+
+      expect([...graph.projects.keys()]).toEqual(['.']);
+      expect(graph.projects.get('.')?.csnFiles).toEqual([]);
+    });
+
+    it('does not discover generated CSN build projects with copied package markers', () => {
+      writeTree(root, {
+        'package.json': JSON.stringify({ workspaces: ['app/*'] }),
+        'db/root.cds': 'entity Root {}',
+        'gen/srv/package.json': '{}',
+        'gen/srv/srv/csn.json': '{}',
+      });
+
+      const graph = buildCdsProjectDependencyGraph(root);
+
+      expect([...graph.projects.keys()]).toEqual(['.']);
+      expect(graph.projects.get('.')?.csnFiles).toEqual([]);
+    });
+
     it.each(['', 'exclude:app/ui-a'])(
       'keeps parent entry-point precedence independently of child ownership: %s',
       filters => {

@@ -529,7 +529,7 @@ describe('environment', () => {
 
     it.each([
       ['darwin', 16384],
-      ['win32', 4096],
+      ['win32', 24576],
     ] as const)('should bound the environment size on %s', (platform, limit) => {
       jest.mocked(os.platform).mockReturnValue(platform);
       jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue([{ include: 'app' }]);
@@ -550,6 +550,24 @@ describe('environment', () => {
       expect(
         batches.flatMap(batch => batch.split('\n').filter(p => p.startsWith('include:app/'))),
       ).toEqual(files.sort().map(file => `include:${file}`));
+    });
+
+    it('indexes a moderately sized Windows selection in one autobuild batch', () => {
+      jest.mocked(os.platform).mockReturnValue('win32');
+      jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue([{ include: 'app' }]);
+      const files = Array.from(
+        { length: 200 },
+        (_, i) => `app/${'long-name-'.repeat(5)}${i}.cds.json`,
+      );
+      jest.mocked(globSync).mockReturnValue(files);
+
+      const batches = configureLgtmIndexFilters('/source');
+
+      expect(batches).toHaveLength(1);
+      expect(batches[0].length).toBeLessThan(32767);
+      expect(batches[0].split('\n').filter(line => line.startsWith('include:app/'))).toHaveLength(
+        files.length,
+      );
     });
 
     it('should set up index filters with standard patterns when no existing filters are set', () => {
@@ -606,7 +624,7 @@ describe('environment', () => {
 
     it.each([
       ['darwin', 16384],
-      ['win32', 4096],
+      ['win32', 24576],
     ] as const)('should bound default CSN source batches on %s', (platform, limit) => {
       jest.mocked(os.platform).mockReturnValue(platform);
       const csnFiles = Array.from({ length: 3000 }, (_, i) => `db/${'\u00e9'.repeat(20)}-${i}.csn`);
@@ -627,11 +645,11 @@ describe('environment', () => {
 
     it('should reject a default CSN source that cannot fit in a Windows batch', () => {
       jest.mocked(os.platform).mockReturnValue('win32');
-      const csnSource = `${'nested-directory/'.repeat(300)}csn.json`;
+      const csnSource = `${'nested-directory/'.repeat(1500)}csn.json`;
       const graph = createGraph([], [csnSource], 'model.cds.json');
 
       expect(() => configureLgtmIndexFilters('/source', graph)).toThrow(
-        'Extraction filter exceeds 4096 bytes',
+        'Extraction filter exceeds 24576 bytes',
       );
     });
 
@@ -737,10 +755,10 @@ describe('environment', () => {
     it('should fail when one concrete filter cannot fit in a Windows batch', () => {
       jest.mocked(os.platform).mockReturnValue('win32');
       jest.mocked(pathsIgnore.getPathsIgnorePatterns).mockReturnValue(['vendor']);
-      jest.mocked(globSync).mockReturnValue([`${'nested-directory/'.repeat(300)}model.cds.json`]);
+      jest.mocked(globSync).mockReturnValue([`${'nested-directory/'.repeat(1500)}model.cds.json`]);
 
       expect(() => configureLgtmIndexFilters('/source')).toThrow(
-        'Extraction filter exceeds 4096 bytes',
+        'Extraction filter exceeds 24576 bytes',
       );
     });
 

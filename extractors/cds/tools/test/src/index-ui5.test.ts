@@ -36,6 +36,20 @@ describe('UI5 XML include patterns', () => {
       scope: [],
       ordered: ['*.json'],
     },
+    ...['/', '\\'].flatMap(separator =>
+      [
+        {
+          filters: 'include:webapp/Main[1].view.xml',
+          scope: [String.raw`webapp/Main\[1\].view.xml`],
+          ordered: [String.raw`webapp/Main\[1\].view.xml`],
+        },
+        {
+          filters: 'exclude:webapp/Main?.fragment.xml',
+          scope: [],
+          ordered: [String.raw`!webapp/Main\?.fragment.xml`],
+        },
+      ].map(test => ({ ...test, separator })),
+    ),
     {
       separator: '/',
       filters:
@@ -137,6 +151,63 @@ describe('UI5 XML include patterns', () => {
       );
     });
   });
+
+  if (process.platform !== 'win32') {
+    describe('UI5 launcher fallback', () => {
+      it.each(['missing Node.js', 'missing helper'])('indexes XML with %s', reason => {
+        const fs = jest.requireActual<typeof import('fs')>('fs');
+        const os = jest.requireActual<typeof import('os')>('os');
+        const child = jest.requireActual<typeof import('child_process')>('child_process');
+        const directory = fs.mkdtempSync(join(os.tmpdir(), 'ui5-launcher-'));
+        try {
+          const launcher = join(directory, 'pre-finalize.sh');
+          const argsFile = join(directory, 'args.txt');
+          fs.writeFileSync(
+            launcher,
+            fs.readFileSync(join(__dirname, '../../../../javascript/tools/pre-finalize.sh')),
+          );
+          fs.writeFileSync(
+            join(directory, 'codeql'),
+            '#!/bin/sh\nprintf "%s\\n" "$@" > "$TEST_ARGS_FILE"\n',
+            { mode: 0o755 },
+          );
+          if (reason === 'missing Node.js') {
+            fs.writeFileSync(
+              join(directory, 'index-ui5.js'),
+              'throw new Error("Unexpected helper");',
+            );
+          }
+
+          const result = child.spawnSync('/bin/bash', [launcher], {
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              CODEQL_DIST: directory,
+              CODEQL_EXTRACTOR_CDS_SKIP_EXTRACTION: '1',
+              CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE: '/database',
+              PATH: reason === 'missing Node.js' ? directory : process.env.PATH,
+              TEST_ARGS_FILE: argsFile,
+            },
+          });
+
+          expect(result.status).toBe(0);
+          expect(result.stderr).toMatch(/warning:.*legacy/i);
+          expect(fs.readFileSync(argsFile, 'utf8').split('\n')).toEqual(
+            expect.arrayContaining([
+              'database',
+              'index-files',
+              '--include-extension=.view.xml',
+              '--include-extension=.fragment.xml',
+              '--language=xml',
+              '/database',
+            ]),
+          );
+        } finally {
+          fs.rmSync(directory, { recursive: true, force: true });
+        }
+      });
+    });
+  }
 
   it.each([
     ['!Main.view.xml', '\\!Main.view.xml'],

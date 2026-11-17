@@ -26,7 +26,7 @@ const filters = (process.env.LGTM_INDEX_FILTERS || '')
     const pattern = match[2]
       .split(sep)
       .join('/')
-      .replace(/\\/g, '\\\\')
+      .replace(/[\\?\[\]]/g, '\\$&')
       .replace(/^!/, '\\!');
     return [[match[1], pattern]];
   });

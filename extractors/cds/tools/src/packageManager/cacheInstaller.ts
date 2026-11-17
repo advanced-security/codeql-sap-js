@@ -5,7 +5,7 @@ import { dirname, join, posix, relative, resolve } from 'path';
 
 import type { CdsDependencyCombination } from './types';
 import { CdsDependencyGraph, CdsProject } from '../cds/parser/types';
-import { DiagnosticSeverity } from '../diagnostics';
+import { addDependencyInstallationDiagnostic, DiagnosticSeverity } from '../diagnostics';
 import { npmExecutable, getPlatformInfo } from '../environment';
 import { cdsExtractorLog } from '../logging';
 import { resolveCdsVersions } from './versionResolver';
@@ -345,6 +345,13 @@ export function cacheInstallDependencies(
         'error',
         `All ${dependencyCombinations.length} dependency combination(s) failed to install. This will likely cause compilation failures.`,
       );
+      if (codeqlExePath) {
+        addDependencyInstallationDiagnostic(
+          sourceRoot,
+          `Failed to install all ${dependencyCombinations.length} CDS dependency combination(s); compilation will use a global or npx-provided 'cds' command. Check the dependency installation logs for registry or npm configuration errors.`,
+          codeqlExePath,
+        );
+      }
     }
   } else if (successfulInstallations < dependencyCombinations.length) {
     cdsExtractorLog(

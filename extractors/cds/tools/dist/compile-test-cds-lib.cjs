@@ -602,11 +602,14 @@ function setSourceRootDirectory(sourceRoot) {
 function fileExists(filePath) {
   return (0, import_fs.existsSync)(filePath) && (0, import_fs.statSync)(filePath).isFile();
 }
-function normalizeCdsJsonLocations(data) {
+function normalizeCdsJsonLocations(data, syntheticEntryFile) {
   if (typeof data !== "object" || data === null) return data;
   const topLoc = data["$location"];
   if (topLoc?.file && typeof topLoc.file === "string") {
     topLoc.file = topLoc.file.split("\\").join("/");
+    if (syntheticEntryFile !== void 0 && (topLoc.file === syntheticEntryFile || topLoc.file === `./${syntheticEntryFile}`)) {
+      delete data["$location"];
+    }
   }
   const definitions = data["definitions"];
   if (definitions) {
@@ -632,11 +635,11 @@ function normalizeLocationsRecursive(obj) {
     }
   }
 }
-function normalizeLocationPathsInFile(filePath) {
+function normalizeLocationPathsInFile(filePath, syntheticEntryFile) {
   if (!fileExists(filePath)) return;
   const raw = (0, import_fs.readFileSync)(filePath, "utf8");
   const data = JSON.parse(raw);
-  normalizeCdsJsonLocations(data);
+  normalizeCdsJsonLocations(data, syntheticEntryFile);
   const normalized = JSON.stringify(data, null, 2) + "\n";
   if (normalized !== raw) {
     (0, import_fs.writeFileSync)(filePath, normalized, "utf8");
@@ -8637,7 +8640,9 @@ function readConfigPatterns(sourceRoot) {
 function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedSourcePaths = []) {
   const matchOptions = {
     dot: true,
+    nobrace: true,
     nocomment: true,
+    noext: true,
     nonegate: true,
     platform: import_path.sep === "\\" ? "win32" : "linux",
     windowsPathsNoEscape: import_path.sep === "\\"
@@ -8645,7 +8650,7 @@ function shouldIgnorePath(relativePath, patterns, isDirectory = false, includedS
   const normalizedPath = normalizePathSeparators(relativePath);
   const includePaths = [normalizedPath, ...includedSourcePaths.map(normalizePathSeparators)];
   const matches = (raw, include = false) => {
-    const pattern = normalizePathSeparators(raw).replace(/\\/g, "\\\\").replace(/\/+$/, "");
+    const pattern = normalizePathSeparators(raw).replace(/\/+$/, "").split("*").map((part) => escape(part, matchOptions)).join("*");
     return include && isDirectory && normalizedPath === "." || (include ? includePaths : [normalizedPath]).some(
       (candidate) => minimatch(candidate, pattern, { ...matchOptions, partial: include && isDirectory }) || minimatch(candidate, `${pattern}/**`, matchOptions)
     );
@@ -8671,6 +8676,7 @@ function filterIgnoredPaths(relativePaths, patterns) {
 }
 
 // src/cds/parser/functions.ts
+var buildOutputs = ["**/gen/**", "**/src/main/resources/edmx/**", "**/target/**"];
 function readPackageJsonFile(filePath) {
   if (!(0, import_fs4.existsSync)(filePath)) {
     return void 0;
@@ -8690,9 +8696,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   const childProjectDirs = (project.childProjectDirs ?? []).map((dir) => (0, import_path2.resolve)(sourceRootDir, dir));
   const isOwned = (file) => {
     const absoluteFile = (0, import_path2.resolve)(file);
-    return !childProjectDirs.some(
-      (dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path2.sep)
-    );
+    return !childProjectDirs.some((dir) => absoluteFile === dir || absoluteFile.startsWith(dir + import_path2.sep)) && !shouldIgnorePath((0, import_path2.relative)(absoluteProjectDir, absoluteFile), buildOutputs);
   };
   const relativeFiles = filterIgnoredPaths(project.cdsFiles ?? [], patterns).filter((file) => isOwned((0, import_path2.resolve)(sourceRootDir, file))).map((file) => (0, import_path2.relative)(absoluteProjectDir, (0, import_path2.join)(sourceRootDir, file)));
   const modelFiles = Ui((0, import_path2.join)(absoluteProjectDir, "**/{*.cds,*.csn,csn.json}"), {
@@ -8705,6 +8709,7 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   );
   const selectedFiles = [...relativeFiles, ...csnFiles];
   const selected = new Set(selectedFiles);
+  const hasSourceIncludes = patterns.some(isSourcePathInclude);
   const plan = (compilationTargets, selectedCsnFiles2) => ({
     compilationTargets,
     csnFiles: selectedCsnFiles2.map((file) => (0, import_path2.join)(project.projectDir, file)),
@@ -8712,12 +8717,11 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   });
   if (selected.has("index.cds")) {
     return plan(
-      modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
+      !hasSourceIncludes || modelFiles.every((file) => selected.has(file)) ? ["index.cds"] : ["index.cds", ...selectedFiles.filter((file) => file !== "index.cds")],
       csnFiles
     );
   }
   const capDirectories = ["db", "srv", "app"];
-  const hasSourceIncludes = patterns.some(isSourcePathInclude);
   const isExtraModelFile = (file) => file.includes(import_path2.sep) && !capDirectories.some((dir) => file.startsWith(dir + import_path2.sep)) && (file.startsWith("fts" + import_path2.sep) || hasSourceIncludes);
   const extraFiles = relativeFiles.filter(isExtraModelFile);
   const rootCdsFiles = relativeFiles.filter((file) => (0, import_path2.dirname)(file) === ".");
@@ -8729,7 +8733,9 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
   let skipped = 0;
   for (const dir of existingCapDirs) {
     const entry = getCdsDirectoryEntryPoint(absoluteProjectDir, dir);
-    const allFiles = modelFiles.filter((file) => file.startsWith(dir + import_path2.sep));
+    const allFiles = modelFiles.filter(
+      (file) => file.startsWith(dir + import_path2.sep) && (hasSourceIncludes || (0, import_path2.dirname)(file) === dir)
+    );
     if (entry && isOwned((0, import_path2.join)(absoluteProjectDir, entry))) {
       capEntryPoints.add(entry);
       allFiles.push(entry);
@@ -8742,11 +8748,11 @@ function determineCdsFilesToCompile(sourceRootDir, project) {
       continue;
     }
     selectedCsnFiles.push(...directoryFiles.filter((file) => !file.endsWith(".cds")));
-    const complete = allFiles.every((file) => selected.has(file));
+    const complete = !hasSourceIncludes && entry !== void 0 && selected.has(entry) || allFiles.every((file) => selected.has(file));
     capTargets.push(
       ...complete ? [dir] : directoryFiles.filter((file) => (0, import_path2.dirname)(file) === dir || file === entry)
     );
-    if (!complete || !entry) {
+    if (hasSourceIncludes && (!complete || !entry) || !hasSourceIncludes && !entry && allFiles.length === 0) {
       nestedCapDirs.add(dir);
     }
   }
@@ -8851,7 +8857,11 @@ function runCdsCompiler(projectDir, targets, command, options = {}) {
     } finally {
       (0, import_fs5.closeSync)(fd);
     }
-    return compile([name]);
+    const result = compile([name]);
+    if (result.status === 0) {
+      normalizeLocationPathsInFile((0, import_path3.join)(projectDir, modelCdsJsonFile), name);
+    }
+    return result;
   } finally {
     (0, import_fs5.unlinkSync)(entry);
   }

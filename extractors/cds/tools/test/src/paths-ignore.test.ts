@@ -375,6 +375,37 @@ describe('paths-ignore', () => {
   });
 
   describe('shouldIgnorePath', () => {
+    it.each(
+      (['/', '\\'] as const).flatMap(separator =>
+        [
+          ['Model[1].cds', 'Model1.cds'],
+          ['Model?.cds', 'ModelX.cds'],
+          ['Model{a,b}.cds', 'Modela.cds'],
+          ['Model@(a).cds', 'Modela.cds'],
+          ['Model!(a).cds', 'Modelb.cds'],
+        ].map(([filename, sibling]) => ({ filename, separator, sibling })),
+      ),
+    )(
+      'matches only literal $filename using $separator separators',
+      ({ filename, separator, sibling }) => {
+        jest.replaceProperty(path, 'sep', separator);
+        const file = ['srv', filename].join(separator);
+        const other = ['srv', sibling].join(separator);
+        const includes = [{ include: file }];
+
+        expect(shouldIgnorePath(file, includes)).toBe(false);
+        expect(shouldIgnorePath(other, includes)).toBe(true);
+        expect(shouldIgnorePath('srv', includes, true)).toBe(false);
+        expect(shouldIgnorePath(file, [file])).toBe(true);
+        expect(shouldIgnorePath(other, [file])).toBe(false);
+        expect(shouldIgnorePath(file, [{ include: ['srv', 'Model*.cds'].join(separator) }])).toBe(
+          false,
+        );
+        expect(shouldIgnorePath('model.cds.json', includes, false, [file])).toBe(false);
+        expect(shouldIgnorePath('model.cds.json', includes, false, [other])).toBe(true);
+      },
+    );
+
     it('should match exact directory path', () => {
       expect(shouldIgnorePath('vendor/lib/foo.cds', ['vendor'])).toBe(true);
     });

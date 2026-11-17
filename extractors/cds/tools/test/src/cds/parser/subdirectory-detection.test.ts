@@ -358,6 +358,12 @@ describe('CDS Parser - Subdirectory File Detection', () => {
   });
 
   describe('isLikelyCdsProject', () => {
+    it('does not infer an unmarked project from CSN files alone', () => {
+      mockFs({ '/unmarked/db/schema.csn': '{}' });
+
+      expect(isLikelyCdsProject('/unmarked')).toBe(false);
+    });
+
     it('should identify CDS projects correctly', () => {
       mockFs({
         '/cds-with-deps': {

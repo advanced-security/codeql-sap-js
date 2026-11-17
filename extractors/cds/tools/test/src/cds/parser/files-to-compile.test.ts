@@ -66,6 +66,27 @@ describe('determineCdsFilesToCompile', () => {
     expect(result.compilationTargets).toEqual(['service.cds']);
   });
 
+  it.each(
+    [
+      'srv/src/main/resources/edmx/csn.json',
+      'srv/target/classes/edmx/csn.json',
+      'gen/srv/srv/csn.json',
+    ].flatMap(output => ['', 'include:**'].map(filters => ({ filters, output }))),
+  )('does not compile generated CSN output $output ($filters)', ({ filters, output }) => {
+    createModelFiles('db/schema.cds', 'srv/service.cds', output, 'srv/external/imported.csn');
+    process.env.LGTM_INDEX_FILTERS = filters;
+
+    const result = determineCdsFilesToCompile(sourceRoot, {
+      projectDir: '.',
+      cdsFiles: ['db/schema.cds', 'srv/service.cds'],
+    });
+
+    expect(result.compilationTargets.map(file => file.replace(/\\/g, '/'))).not.toContain(output);
+    expect(result.csnFiles?.map(file => file.replace(/\\/g, '/'))).toEqual([
+      'srv/external/imported.csn',
+    ]);
+  });
+
   it.each(['srv/allowed.cds', 'srv/nested/allowed.cds'])(
     'does not compile excluded siblings of %s',
     selected => {
@@ -209,7 +230,7 @@ describe('determineCdsFilesToCompile', () => {
     ]);
   });
 
-  it('retains selected CSN models alongside a partially selected root index', () => {
+  it('preserves root-index precedence when exclusions remove unrelated models', () => {
     createModelFiles(
       'index.cds',
       'db/schema.cds',
@@ -224,11 +245,23 @@ describe('determineCdsFilesToCompile', () => {
       cdsFiles: ['index.cds', 'db/schema.cds', 'archive/old.cds'],
     });
 
-    expect(result.compilationTargets.map(file => file.replace(/\\/g, '/'))).toEqual([
+    expect(result.compilationTargets).toEqual(['index.cds']);
+  });
+
+  it('does not add unimported service variants when a root-index project excludes tests', () => {
+    const cdsFiles = [
       'index.cds',
       'db/schema.cds',
-      'db/model.csn',
-    ]);
+      'srv/service.cds',
+      'srv/service-v2.cds',
+      'test/fixture.cds',
+    ];
+    createModelFiles(...cdsFiles);
+    process.env.LGTM_INDEX_FILTERS = 'exclude:test';
+
+    const result = determineCdsFilesToCompile(sourceRoot, { projectDir: '.', cdsFiles });
+
+    expect(result.compilationTargets).toEqual(['index.cds']);
   });
 
   it.each(
@@ -606,23 +639,24 @@ describe('determineCdsFilesToCompile', () => {
     },
   );
 
-  it('should expand nested sources when there is no effective CAP entry point', () => {
+  it.each([
+    ['', ['srv']],
+    ['include:srv/**', ['srv', 'srv/archived/old.cds']],
+  ])('adds nested CAP sources only when explicitly selected: %s', (filters, expected) => {
     createModelFiles('srv/service.cds', 'srv/archived/old.cds');
+    process.env.LGTM_INDEX_FILTERS = filters;
 
     const result = determineCdsFilesToCompile(sourceRoot, {
       projectDir: '.',
       cdsFiles: ['srv/service.cds', 'srv/archived/old.cds'],
     });
 
-    expect(result.compilationTargets.map(file => file.replace(/\\/g, '/'))).toEqual([
-      'srv',
-      'srv/archived/old.cds',
-    ]);
+    expect(result.compilationTargets.map(file => file.replace(/\\/g, '/'))).toEqual(expected);
   });
 
   it.each([
     ['include:srv/archived/old.cds', ['srv/archived/old.cds']],
-    ['exclude:srv/service.cds', ['srv/index.cds', 'srv/archived/old.cds']],
+    ['exclude:srv/service.cds', ['srv']],
   ])(
     'should retain explicit partial selections despite a CAP entry point: %s',
     (filters, expected) => {

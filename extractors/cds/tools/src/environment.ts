@@ -285,8 +285,8 @@ export function configureLgtmIndexFilters(
   // The marker must survive user filters so the JavaScript extractor can run.
   const suffix =
     '\n' + ['exclude:**/node_modules/**/*.*', `include:${cdsExtractorMarkerFileName}`].join('\n');
-  // Leave room for other environment variables on all supported platforms.
-  const maxFilterBytes = getPlatformInfo().isWindows ? 4 * 1024 : 16 * 1024;
+  // Stay below Windows' 32,767-character per-variable limit and Unix argument limits.
+  const maxFilterBytes = getPlatformInfo().isWindows ? 24 * 1024 : 16 * 1024;
   // Keep trusted default globs separate from the concrete paths validated below.
   const batches = [
     [
