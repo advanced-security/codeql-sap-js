@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, realpathSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 jest.mock('child_process', () => ({
@@ -9,6 +9,7 @@ jest.mock('fs', () => ({
   mkdtempSync: jest.fn(() => '/tmp/codeql-ui5-test'),
   openSync: jest.fn(() => 42),
   readFileSync: jest.fn(),
+  realpathSync: { native: jest.fn() },
   rmSync: jest.fn(),
   writeFileSync: jest.fn(),
 }));
@@ -16,6 +17,7 @@ jest.mock('fs', () => ({
 describe('UI5 XML include patterns', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.mocked(realpathSync.native).mockReturnValue(process.cwd());
     jest.replaceProperty(process, 'env', {
       ...process.env,
       CODEQL_DIST: '/codeql',
@@ -27,6 +29,33 @@ describe('UI5 XML include patterns', () => {
   afterEach(() => {
     jest.dontMock('path');
     jest.restoreAllMocks();
+  });
+
+  it('uses the canonical source root for Windows short-path aliases', () => {
+    const shortRoot = String.raw`C:\Users\RUNNER~1\AppData\Local\Temp\source`;
+    const sourceRoot = String.raw`C:\Users\runneradmin\AppData\Local\Temp\source`;
+    jest.spyOn(process, 'cwd').mockReturnValue(shortRoot);
+    jest.doMock('path', () => jest.requireActual<typeof import('path')>('path').win32);
+    jest.mocked(realpathSync.native).mockReturnValue(sourceRoot);
+    jest
+      .mocked(readFileSync)
+      .mockReturnValue(JSON.stringify([`${sourceRoot}\\webapp\\Main[1].view.xml`]));
+
+    jest.isolateModules(() => {
+      jest.requireActual('../../../../javascript/tools/index-ui5.js');
+    });
+
+    const calls = jest.mocked(writeFileSync).mock.calls;
+    const resolveArgs = calls[0][1];
+    const indexArgs = calls[1][1];
+    if (typeof resolveArgs !== 'string' || typeof indexArgs !== 'string') {
+      throw new Error('Expected CodeQL argument-file text');
+    }
+    expect(resolveArgs.split('\n')).toContain(JSON.stringify(sourceRoot));
+    expect(indexArgs.split('\n')).toContain(
+      JSON.stringify(String.raw`--include=webapp/Main\[1\].view.xml`),
+    );
+    expect(indexArgs).not.toContain('..');
   });
 
   it.each([

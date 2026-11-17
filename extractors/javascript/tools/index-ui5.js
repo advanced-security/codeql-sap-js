@@ -4,6 +4,7 @@ const {
   mkdtempSync,
   openSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } = require('fs');
@@ -18,6 +19,8 @@ const database = process.env.CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE;
 if (!database) {
   throw new Error('CODEQL_EXTRACTOR_JAVASCRIPT_WIP_DATABASE is required');
 }
+// CodeQL expands Windows short-path aliases in its resolved filenames.
+const sourceRoot = realpathSync.native(process.cwd());
 const filters = (process.env.LGTM_INDEX_FILTERS || '')
   .split(/\r?\n/)
   .flatMap((line) => {
@@ -56,7 +59,7 @@ try {
         ...prune,
         ...scope.map(([, pattern]) => `--also-match=${pattern}`),
         '--',
-        process.cwd(),
+        sourceRoot,
       ],
       { stdio: ['ignore', fd, 'inherit'] },
     );
@@ -72,7 +75,7 @@ try {
       ...files.map(
         (file) =>
           '--include=' +
-          relative(process.cwd(), file)
+          relative(sourceRoot, file)
             .split(sep)
             .join('/')
             .replace(/[\\*?\[\]]/g, '\\$&')
