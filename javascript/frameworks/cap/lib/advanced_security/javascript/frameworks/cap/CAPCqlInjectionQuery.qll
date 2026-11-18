@@ -59,12 +59,20 @@ private predicate isSimpleObjectClause(DataFlow::Node queryParameter) {
   )
 }
 
+/**
+ * Gets the alert location for the modeled sink `queryParameter`. If `CqlClause`
+ * recognizes the clause, reports the whole chain (for example,
+ * `SELECT.from(entity).orderBy("name")` for `entity`); otherwise, reports the
+ * call containing the argument. The argument itself remains the taint sink.
+ */
 private DataFlow::Node getModeledCqlQuery(DataFlow::Node queryParameter) {
   exists(CqlClause cqlClause |
     queryParameter = cqlClause.getArgument().flow() and
     result = cqlClause.getFinalClause().flow()
   )
   or
+  // After `const q = SELECT.from("Authors")`, report `q.orderBy(ordering)` for `ordering`.
+  // Only use this fallback when no CqlClause matches, to avoid also reporting an inner call.
   exists(CallExpr call |
     not exists(CqlClause cqlClause | queryParameter = cqlClause.getArgument().flow()) and
     queryParameter = call.getAnArgument().flow() and
@@ -72,7 +80,10 @@ private DataFlow::Node getModeledCqlQuery(DataFlow::Node queryParameter) {
   )
 }
 
-/** A modeled structural argument, such as `SELECT.from(entity).orderBy(ordering)`. */
+/**
+ * A modeled structural argument, such as
+ * `ordering` in `SELECT.from(entity).orderBy(ordering)`.
+ */
 class ModeledCqlStructureParameter extends CqlInjectionSink {
   DataFlow::Node query;
 
