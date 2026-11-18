@@ -1,10 +1,10 @@
-SELECT.from('Authors', 1, 'ID').alias('a').columns('name').where('ID > 0').groupBy('ID').having('count(*) > 0').orderBy('ID').hints('IGNORE_PLAN_CACHE')
-SELECT.one.from('Authors')
-SELECT.distinct.from('Authors')
-SELECT('ID').from('Authors')
-INSERT.into('Books').columns('ID')
-UPSERT.into('Books')
-UPDATE('Books').set('stock = 0').where('ID = 1')
-DELETE.from('Books').where('ID = 1')
-const q = SELECT.from('Authors')
-q.orderBy('name')
+SELECT.from('Authors', 1, 'ID').alias('a').columns('name').where('ID > 0').groupBy('ID').having('count(*) > 0').orderBy('ID').hints('IGNORE_PLAN_CACHE') // COMPLIANT
+SELECT.one.from('Authors') // COMPLIANT
+SELECT.distinct.from('Authors') // COMPLIANT
+SELECT('ID').from('Authors') // COMPLIANT
+INSERT.into('Books').columns('ID') // COMPLIANT
+UPSERT.into('Books') // COMPLIANT
+UPDATE('Books').set('stock = 0').where('ID = 1') // COMPLIANT
+DELETE.from('Books').where('ID = 1') // COMPLIANT
+const q = SELECT.from('Authors') // COMPLIANT
+q.orderBy('name') // COMPLIANT
