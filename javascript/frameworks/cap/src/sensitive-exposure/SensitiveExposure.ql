@@ -17,215 +17,200 @@ import advanced_security.javascript.frameworks.cap.CQL
 import advanced_security.javascript.frameworks.cap.CAPLogInjectionQuery
 import semmle.javascript.frameworks.Logging
 
-EntityReferenceFromEntities entityAccesses(string entityNamespace) {
-  entityNamespace = result.getEntitiesCallNamespace()
-}
-
-abstract class SensitiveExposureSource extends DataFlow::Node {
-  abstract SensitiveAnnotatedElement getCdsElement();
-
-  abstract string getMessage();
-}
-
-/** An annotated CDS field reference, such as `Authors.email`. */
-class SensitiveExposureFieldSource extends SensitiveExposureSource instanceof PropRead {
-  SensitiveAnnotatedAttribute cdlAttribute;
-  SensitiveAnnotatedEntity cdlEntity;
-  string namespace;
-
-  SensitiveExposureFieldSource() {
-    this = entityAccesses(namespace).getAPropertyRead() and
-    this.getPropertyName() = cdlAttribute.getName() and
-    cdlEntity.(CdlEntity).getAttribute(cdlAttribute.getName()) = cdlAttribute and
-    cdlEntity.(NamespacedEntity).getNamespace() = namespace
-  }
-
-  override SensitiveAnnotatedAttribute getCdsElement() { result = cdlAttribute }
-
-  override string getMessage() {
-    result = "Log entry depends on the $@ field which is annotated as potentially sensitive."
-  }
-}
-
-/** Gets a clause such as `columns('ID')` from a fluent query. */
-private CqlClause getAClause(CqlClause query, string name) {
-  (result = query or result = query.getADescendantCqlClause()) and
-  result.asDotExpr().getPropertyName() = name
-}
-
-bindingset[projection]
-private string getAProjectionItem(string projection) {
-  result = projection.replaceAll("{", "").replaceAll("}", "").splitAt(",").trim()
-}
-
-/** Matches `email`, `Authors.email`, and `*`, but not `lower(email)`. */
-bindingset[column]
-private predicate isSimpleColumnReference(string column) {
-  column = "*"
+/** Prefers an annotated association over its foreign-key target. */
+private SensitiveAnnotatedAttribute getPrivacyPropertyAttribute(CdlEntity entity, string name) {
+  result = entity.getAttribute(name)
   or
-  column.regexpMatch("^[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z_$][A-Za-z0-9_$]*)*$")
-}
-
-bindingset[projection]
-private string getAProjectedStringColumn(string projection) {
-  exists(string column |
-    column = getAProjectionItem(projection).splitAt(" ", 0).trim() and
-    isSimpleColumnReference(column) and
-    result = column.splitAt(".", count(column.indexOf(".")))
+  exists(CdlAttribute association |
+    association = entity.getForeignKeyAssociation(name) and
+    if association instanceof SensitiveAnnotatedAttribute
+    then result = association
+    else result = association.getForeignKeyTarget(name)
   )
 }
 
-bindingset[projection]
-private string getAProjectedStringAlias(string projection) {
-  result = getAProjectionItem(projection).splitAt(" as ", 1).trim()
+private SensitiveAnnotatedAttribute getDefaultPrivacyAttribute(CdlEntity entity, string name) {
+  result = getPrivacyPropertyAttribute(entity, name) and
+  not exists(entity.getAttribute(name).getTargetEntity())
 }
 
-private DataFlow::ObjectLiteralNode getAProjectionObject(Expr argument) {
-  result = argument.flow().(DataFlow::ObjectLiteralNode)
-  or
-  result = argument.flow().(DataFlow::ArrayLiteralNode).getAnElement().(DataFlow::ObjectLiteralNode)
-}
+/** A query result with statically resolved selected fields. */
+private class QueryResult extends DataFlow::SourceNode {
+  CqlSelectClause query;
+  CdlEntity entity;
 
-private string getAProjectedColumn(Expr argument) {
-  result = getAProjectedStringColumn(argument.getStringValue())
-  or
-  result =
-    getAProjectionObject(argument)
-        .getAPropertyWrite("ref")
-        .getRhs()
-        .(DataFlow::ArrayLiteralNode)
-        .getAnElement()
-        .getStringValue()
-}
-
-private string getAProjectedAlias(Expr argument) {
-  result = getAProjectedStringAlias(argument.getStringValue())
-  or
-  result = getAProjectionObject(argument).getAPropertyWrite("as").getRhs().getStringValue()
-}
-
-bindingset[argument]
-private predicate isComplexStringProjection(Expr argument) {
-  argument.getStringValue().regexpMatch(".*[^A-Za-z0-9_$., *].*")
-}
-
-/** Holds for `await query` and `await cds.run(query)`. */
-private predicate awaitsQuery(AwaitExpr await, CqlSelectClause query) {
-  query.flow().getALocalSource() = await.getOperand().flow().getALocalSource()
-  or
-  exists(CqlRunMethodCall run |
-    await.getOperand() = run.asExpr() and
-    query.flow().getALocalSource() = run.getArgument(0).getALocalSource()
-  )
-}
-
-/** An awaited sensitive entity result, such as `await SELECT.one.from(Authors)`. */
-class SensitiveQueryResultSource extends SensitiveExposureSource {
-  SensitiveAnnotatedEntity cdlEntity;
-  CqlSelectClause cqlClause;
-
-  SensitiveQueryResultSource() {
-    exists(AwaitExpr await |
-      cqlClause.isFinal() and
-      cdlEntity = cqlClause.getAccessingEntityDefinition() and
-      exists(SensitiveAnnotatedAttribute attribute |
-        attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName())
-      ) and
-      awaitsQuery(await, cqlClause) and
-      this = await.flow()
-    )
+  QueryResult() {
+    query.isFinal() and
+    this = query.getAnAwait().flow() and
+    entity = query.getAccessingEntityDefinition()
   }
 
-  override SensitiveAnnotatedEntity getCdsElement() { result = cdlEntity }
+  /** Holds if the result is the entire entity, with no projection. */
+  predicate selectsWholeEntity() { not hasProjection(query) }
 
-  override string getMessage() {
-    result =
-      "Log entry depends on data from the $@ entity, which contains fields annotated as potentially sensitive."
-  }
-
-  private predicate hasProjectedAlias(string propertyName) {
-    exists(CqlClause columns, Expr argument |
-      columns = getAClause(cqlClause, "columns") and
-      argument = columns.getArgument() and
-      propertyName = getAProjectedAlias(argument)
-    )
-  }
-
-  predicate isSensitiveProperty(string propertyName) {
-    exists(SensitiveAnnotatedAttribute attribute |
-      attribute = cdlEntity.(CdlEntity).getAttribute(attribute.getName()) and
+  SensitiveAnnotatedAttribute getSensitiveProperty(string propertyPath) {
+    this.selectsWholeEntity() and result = getDefaultPrivacyAttribute(entity, propertyPath)
+    or
+    exists(Expr argument, string outputPath, string cdsPath, CdlEntity owner, string name |
+      argument = getAProjectionArgument(query) and
+      getAProjectedProperty(argument, outputPath, cdsPath) and
+      resolveProjectedPath(entity, cdsPath, owner, name) and
       (
-        propertyName = attribute.getName() and
-        not hasProjectedAlias(propertyName)
+        name != "*" and
+        propertyPath = outputPath and
+        result = getPrivacyPropertyAttribute(owner, name)
         or
-        exists(CqlClause columns, Expr argument |
-          columns = getAClause(cqlClause, "columns") and
-          argument = columns.getArgument() and
-          getAProjectedColumn(argument) = attribute.getName() and
-          propertyName = getAProjectedAlias(argument)
+        name = "*" and
+        exists(string field |
+          result = getDefaultPrivacyAttribute(owner, field) and
+          propertyPath = outputPath.substring(0, outputPath.length() - 1) + field and
+          not getAProjectedProperty(getAProjectionArgument(query), propertyPath, _)
         )
       )
     )
   }
+}
 
-  predicate isKnownProperty(string propertyName) {
-    exists(cdlEntity.(CdlEntity).getAttribute(propertyName)) and
-    not hasProjectedAlias(propertyName)
+/** Holds if `read` reads an array element, by numeric index, computed index, or `for..of` loop. */
+private predicate isElementRead(DataFlow::PropRead read) {
+  read.getPropertyName().regexpMatch("^[0-9]+$")
+  or
+  not exists(read.getPropertyName())
+}
+
+/** Holds if the callback of `method` receives an element of its receiver as first parameter. */
+private predicate hasElementCallback(string method) {
+  method = ["map", "forEach", "find", "findLast", "filter", "some", "every", "flatMap"]
+}
+
+/** Holds if `method` returns an element of its receiver, or an array of such elements. */
+private predicate returnsElements(string method) {
+  method =
+    [
+      "at", "pop", "shift", "find", "findLast", "filter", "slice", "splice", "sort", "reverse",
+      "toSorted", "toReversed", "concat", "flat"
+    ]
+}
+
+/** Holds if `path` is the result itself, the sensitive `selectedPath`, or a prefix of it. */
+private predicate isTrackedPath(QueryResult query, string selectedPath, string path) {
+  exists(query.getSensitiveProperty(selectedPath)) and
+  path = ["", selectedPath, selectedPath.prefix(selectedPath.indexOf("."))]
+}
+
+/**
+ * Follows local aliases, array elements, inline callbacks, and selected paths.
+ * Helper and named callback parameters are not followed, because they are shared by all callers.
+ */
+private DataFlow::SourceNode getResultAtPath(QueryResult query, string path) {
+  isTrackedPath(query, _, path) and
+  (
+    path = "" and result = query
     or
-    exists(CqlClause columns, Expr argument, string source |
-      columns = getAClause(cqlClause, "columns") and
-      argument = columns.getArgument() and
-      not isComplexStringProjection(argument) and
-      source = getAProjectedColumn(argument) and
-      propertyName = getAProjectedAlias(argument)
+    exists(string parentPath, string name |
+      path != "" and
+      name = getLastSegment(path) and
+      (
+        not path.matches("%.%") and parentPath = ""
+        or
+        parentPath = path.regexpCapture("^(.*)\\.[^.]+$", 1)
+      ) and
+      result = getResultAtPath(query, parentPath).getAPropertyRead(name)
+    )
+    or
+    exists(DataFlow::PropRead read |
+      read.getBase().getALocalSource() = getResultAtPath(query, path) and
+      isElementRead(read) and
+      result = read
+    )
+    or
+    exists(DataFlow::MethodCallNode call |
+      call.getReceiver().getALocalSource() = getResultAtPath(query, path) and
+      (
+        hasElementCallback(call.getMethodName()) and
+        result = call.getArgument(0).(DataFlow::FunctionNode).getParameter(0)
+        or
+        returnsElements(call.getMethodName()) and result = call
+      )
+    )
+  )
+}
+
+class SensitiveExposureSource extends DataFlow::Node {
+  SensitiveAnnotatedAttribute attribute;
+  string flowState;
+
+  SensitiveExposureSource() {
+    exists(EntityReferenceFromEntities reference |
+      this = reference.getAPropertyRead() and
+      attribute =
+        getPrivacyPropertyAttribute(reference.getCqlDefinition(),
+          this.(DataFlow::PropRead).getPropertyName()) and
+      flowState = "field"
+    )
+    or
+    exists(QueryResult query, string selectedPath, string path |
+      attribute = query.getSensitiveProperty(selectedPath) and
+      isTrackedPath(query, selectedPath, path) and
+      (if path = selectedPath then flowState = "field" else flowState = "record") and
+      this = getResultAtPath(query, path) and
+      (
+        this = query
+        or
+        path != "" and
+        this instanceof DataFlow::PropRead and
+        not isElementRead(this.(DataFlow::PropRead))
+      )
     )
   }
+
+  SensitiveAnnotatedAttribute getCdsField(string state) { result = attribute and state = flowState }
 }
 
-/** A field read from a sensitive result, such as `author.email`. */
-class PropertyReadOfSensitiveQueryResult extends DataFlow::Node instanceof PropRead {
-  SensitiveQueryResultSource queryResult;
+module SensitiveLogExposureConfig implements DataFlow::StateConfigSig {
+  class FlowState extends string {
+    FlowState() { this = ["field", "record"] }
+  }
 
-  PropertyReadOfSensitiveQueryResult() {
-    this.(DataFlow::PropRead).getBase().getALocalSource() = queryResult
-    or
-    exists(PropertyReadOfSensitiveQueryResult baseRead |
-      this.(DataFlow::PropRead).getBase().getALocalSource() = baseRead and
-      queryResult = baseRead.getQueryResult()
+  predicate isSource(DataFlow::Node source, FlowState state) {
+    exists(source.(SensitiveExposureSource).getCdsField(state))
+  }
+
+  predicate isSink(DataFlow::Node sink, FlowState state) {
+    state = ["field", "record"] and
+    (
+      sink instanceof CdsLogSink
+      or
+      exists(LoggerCall log | sink = log.getAMessageComponent())
     )
   }
 
-  SensitiveQueryResultSource getQueryResult() { result = queryResult }
-
-  predicate isSensitive() {
-    queryResult.isSensitiveProperty(this.(DataFlow::PropRead).getPropertyName())
+  predicate isBarrierIn(DataFlow::Node node, FlowState state) {
+    state = "record" and
+    node instanceof DataFlow::PropRead and
+    not isElementRead(node.(DataFlow::PropRead))
   }
 
-  predicate isKnown() { queryResult.isKnownProperty(this.(DataFlow::PropRead).getPropertyName()) }
-}
-
-module SensitiveLogExposureConfig implements DataFlow::ConfigSig {
-  predicate isSource(DataFlow::Node source) { source instanceof SensitiveExposureSource }
-
-  predicate isSink(DataFlow::Node sink) {
-    sink instanceof CdsLogSink
-    or
-    exists(LoggerCall log | sink = log.getAMessageComponent())
-  }
-
-  predicate isBarrier(DataFlow::Node node) {
-    node instanceof PropertyReadOfSensitiveQueryResult and
-    node.(PropertyReadOfSensitiveQueryResult).isKnown() and
-    not node.(PropertyReadOfSensitiveQueryResult).isSensitive()
+  predicate allowImplicitRead(DataFlow::Node node, DataFlow::ContentSet contents) {
+    isSink(node, _) and contents = DataFlow::ContentSet::anyProperty()
   }
 }
 
-module SensitiveLogExposureConfigFlow = TaintTracking::Global<SensitiveLogExposureConfig>;
+module SensitiveLogExposureConfigFlow = TaintTracking::GlobalWithState<SensitiveLogExposureConfig>;
 
 import SensitiveLogExposureConfigFlow::PathGraph
 
-from SensitiveLogExposureConfigFlow::PathNode source, SensitiveLogExposureConfigFlow::PathNode sink
-where SensitiveLogExposureConfigFlow::flowPath(source, sink)
-select sink, source, sink, source.getNode().(SensitiveExposureSource).getMessage(),
-  source.getNode().(SensitiveExposureSource).getCdsElement(),
-  source.getNode().(SensitiveExposureSource).getCdsElement().getName()
+from
+  SensitiveLogExposureConfigFlow::PathNode source, SensitiveLogExposureConfigFlow::PathNode sink,
+  SensitiveAnnotatedAttribute field
+where
+  SensitiveLogExposureConfigFlow::flowPath(source, sink) and
+  // Link one field deterministically when a record contains several sensitive fields.
+  field =
+    min(SensitiveAnnotatedAttribute candidate |
+      candidate = source.getNode().(SensitiveExposureSource).getCdsField(source.getState())
+    |
+      candidate order by candidate.getName(), candidate.getLocation().toString()
+    )
+select sink, source, sink, "Log entry contains data annotated as sensitive from $@.", field,
+  field.getName()

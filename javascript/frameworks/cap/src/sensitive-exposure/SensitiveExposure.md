@@ -2,7 +2,7 @@
 
 If sensitive information is written to a log entry using the CAP Node.js logging API, a malicious user may be able to gain access to user data.
 
-Data annotated as `@PersonalData` should not be logged.
+Data annotated with `@PersonalData.IsPotentiallySensitive: true` or `@PersonalData.IsPotentiallyPersonal: true` should not be logged.
 
 ## Recommendation
 
