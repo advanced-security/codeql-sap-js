@@ -3,11 +3,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { CdsDependencyGraph, CdsProject } from '../../../src/cds/parser/types';
+import { addDependencyInstallationDiagnostic } from '../../../src/diagnostics';
+import { cdsExtractorLog } from '../../../src/logging';
 import {
   cacheInstallDependencies,
   copyNpmrcToCache,
   findNearestNpmrc,
 } from '../../../src/packageManager';
+import { resolveCdsVersions } from '../../../src/packageManager/versionResolver';
 
 // Mock dependencies
 jest.mock('fs', () => ({
@@ -16,6 +19,10 @@ jest.mock('fs', () => ({
   mkdirSync: jest.fn(),
   readFileSync: jest.fn(),
   writeFileSync: jest.fn(),
+}));
+
+jest.mock('glob', () => ({
+  sync: jest.fn().mockReturnValue([]),
 }));
 
 jest.mock('path', () => ({
@@ -32,6 +39,7 @@ jest.mock('child_process', () => ({
 
 jest.mock('../../../src/diagnostics', () => ({
   addDependencyDiagnostic: jest.fn(),
+  addDependencyInstallationDiagnostic: jest.fn(),
   addPackageJsonParsingDiagnostic: jest.fn(),
   DiagnosticSeverity: {
     Warning: 'warning',
@@ -178,6 +186,102 @@ describe('installer', () => {
       expect(result.size).toBe(1);
     });
 
+    it('should resolve workspace dependencies through ancestors and keep distinct caches', () => {
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (file: string) => file === '/source/./package-lock.json',
+      );
+      (fs.readFileSync as jest.Mock).mockReturnValue(
+        JSON.stringify({
+          lockfileVersion: 3,
+          packages: {
+            'node_modules/@sap/cds': { version: '10.0.6' },
+            'node_modules/@sap/cds-dk': { version: '10.0.5' },
+            'packages/node_modules/@sap/cds': { version: '9.1.1' },
+            'packages/node_modules/@sap/cds-dk': { version: '9.1.0' },
+            'packages/backend/node_modules/@sap/cds': { version: '8.6.1' },
+          },
+        }),
+      );
+      jest.mocked(resolveCdsVersions).mockImplementation((cdsVersion, cdsDkVersion) => ({
+        resolvedCdsVersion: cdsVersion,
+        resolvedCdsDkVersion: cdsDkVersion,
+        cdsExactMatch: true,
+        cdsDkExactMatch: true,
+        isFallback: false,
+      }));
+      const dependencyGraph = createMockDependencyGraph(
+        ['.', 'frontend', 'packages/backend', 'packages/backend/services/api'].map(projectDir => ({
+          projectDir,
+          packageJson: { dependencies: { '@sap/cds': '^8' } },
+        })),
+      );
+
+      const result = cacheInstallDependencies(dependencyGraph, '/source');
+
+      expect(result.size).toBe(4);
+      expect(new Set(result.values()).size).toBe(2);
+      expect(result.get('frontend')).toBe(result.get('.'));
+      expect(result.get('packages/backend')).toBe(result.get('packages/backend/services/api'));
+      expect(resolveCdsVersions).toHaveBeenCalledWith('8.6.1', '9.1.0');
+      expect(resolveCdsVersions).toHaveBeenCalledWith('10.0.6', '10.0.5');
+      expect(fs.readFileSync).toHaveBeenCalledTimes(1);
+
+      cacheInstallDependencies(dependencyGraph, '/source');
+      expect(fs.readFileSync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should prefer a nested workspace lockfile over the source root lockfile', () => {
+      (fs.existsSync as jest.Mock).mockImplementation((file: string) =>
+        ['/source/backend/package-lock.json', '/source/./package-lock.json'].includes(file),
+      );
+      (fs.readFileSync as jest.Mock).mockImplementation((file: string) =>
+        JSON.stringify({
+          packages: {
+            'node_modules/@sap/cds': { version: file.includes('/backend/') ? '8.6.1' : '10.0.6' },
+            'node_modules/@sap/cds-dk': {
+              version: file.includes('/backend/') ? '8.6.0' : '10.0.5',
+            },
+          },
+        }),
+      );
+
+      cacheInstallDependencies(
+        createMockDependencyGraph([
+          {
+            projectDir: 'backend/services/api',
+            packageJson: { dependencies: { '@sap/cds': '^8' } },
+          },
+        ]),
+        '/source',
+      );
+
+      expect(resolveCdsVersions).toHaveBeenCalledWith('8.6.1', '8.6.0');
+    });
+
+    it('should warn and use package ranges when a lockfile cannot be parsed', () => {
+      (fs.existsSync as jest.Mock).mockImplementation(
+        (file: string) => file === '/source/./package-lock.json',
+      );
+      (fs.readFileSync as jest.Mock).mockReturnValue('{invalid');
+      const dependencyGraph = createMockDependencyGraph([
+        {
+          projectDir: '.',
+          packageJson: {
+            dependencies: { '@sap/cds': '^8' },
+            devDependencies: { '@sap/cds-dk': '^9' },
+          },
+        },
+      ]);
+
+      cacheInstallDependencies(dependencyGraph, '/source');
+
+      expect(resolveCdsVersions).toHaveBeenCalledWith('^8', '^9');
+      expect(cdsExtractorLog).toHaveBeenCalledWith(
+        'warn',
+        expect.stringContaining('Failed to read dependency versions from'),
+      );
+    });
+
     it('should handle cache directory creation failure', () => {
       (fs.mkdirSync as jest.Mock).mockImplementation(() => {
         throw new Error('Permission denied');
@@ -265,6 +369,12 @@ describe('installer', () => {
 
       // Should skip failed combinations
       expect(result.size).toBe(0);
+      expect(addDependencyInstallationDiagnostic).toHaveBeenCalledTimes(1);
+      expect(addDependencyInstallationDiagnostic).toHaveBeenCalledWith(
+        '/source',
+        expect.stringMatching(/install.*global or npx/i),
+        '/codeql',
+      );
     });
 
     it('should handle empty dependency graph', () => {
@@ -272,6 +382,7 @@ describe('installer', () => {
       const result = cacheInstallDependencies(dependencyGraph, '/source', '/codeql');
 
       expect(result.size).toBe(0);
+      expect(addDependencyInstallationDiagnostic).not.toHaveBeenCalled();
     });
 
     it('should reuse cache for projects with different version specs but same resolved versions', () => {

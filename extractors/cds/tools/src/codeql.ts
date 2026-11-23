@@ -2,7 +2,7 @@ import { spawnSync, SpawnSyncReturns } from 'child_process';
 
 import type { CdsDependencyGraph } from './cds/parser';
 import { addJavaScriptExtractorDiagnostic } from './diagnostics';
-import { applyPathsIgnoreToLgtmFilters, configureLgtmIndexFilters } from './environment';
+import { configureLgtmIndexFilters } from './environment';
 import { createMarkerFile, removeMarkerFile } from './filesystem';
 import {
   cdsExtractorLog,
@@ -89,11 +89,15 @@ export function runJavaScriptExtractionWithMarker(
   codeqlExePath: string,
   dependencyGraph?: CdsDependencyGraph,
 ): boolean {
-  // Configure LGTM index filters
-  configureLgtmIndexFilters();
-
-  // Apply paths-ignore patterns from CodeQL config to LGTM_INDEX_FILTERS
-  applyPathsIgnoreToLgtmFilters(sourceRoot);
+  let filterBatches: string[];
+  try {
+    filterBatches = configureLgtmIndexFilters(sourceRoot, dependencyGraph);
+  } catch (error) {
+    const message = `Failed to configure JavaScript extraction filters: ${String(error)}`;
+    cdsExtractorLog('error', message);
+    addJavaScriptExtractorDiagnostic(sourceRoot, message, codeqlExePath, sourceRoot);
+    return false;
+  }
 
   // Create marker file
   const markerFilePath = createMarkerFile(sourceRoot);
@@ -101,7 +105,12 @@ export function runJavaScriptExtractionWithMarker(
   try {
     logPerformanceTrackingStart('JavaScript Extraction');
     const extractionStartTime = Date.now();
-    const extractorResult = runJavaScriptExtractor(sourceRoot, autobuildScriptPath, codeqlExePath);
+    let extractorResult = runJavaScriptExtractor(sourceRoot, autobuildScriptPath, codeqlExePath);
+    for (const filters of filterBatches.slice(1)) {
+      if (!extractorResult.success) break;
+      process.env.LGTM_INDEX_FILTERS = filters;
+      extractorResult = runJavaScriptExtractor(sourceRoot, autobuildScriptPath, codeqlExePath);
+    }
     const extractionEndTime = Date.now();
     logPerformanceTrackingStop('JavaScript Extraction');
 

@@ -100,6 +100,39 @@ describe('Monorepo Support Tests', () => {
   });
 
   describe('determineCdsProjectsUnderSourceDir - Monorepo Support', () => {
+    it('keeps a standard Maven service module in a reactor that also declares workspaces', () => {
+      mockFs({
+        '/workspace/package.json': JSON.stringify({ workspaces: ['app/*'] }),
+        '/workspace/pom.xml': '<project/>',
+        '/workspace/db/schema.cds': 'entity Root {}',
+        '/workspace/srv/pom.xml': '<project/>',
+        '/workspace/srv/service.cds': 'service RootService {}',
+        '/workspace/app/ui/package.json': '{}',
+      });
+
+      expect(determineCdsProjectsUnderSourceDir('/workspace')).toEqual(['.']);
+    });
+
+    it('does not split a Maven backend at its srv module under a workspace root', () => {
+      mockFs({
+        '/workspace/package.json': JSON.stringify({
+          dependencies: { '@sap/cds': '^9' },
+          workspaces: ['app/*'],
+        }),
+        '/workspace/db/schema.cds': 'entity Root {}',
+        '/workspace/srv/service.cds': 'service RootService {}',
+        '/workspace/app/ui/package.json': '{}',
+        '/workspace/java-backend/pom.xml': '<project/>',
+        '/workspace/java-backend/db/schema.cds': 'entity Backend {}',
+        '/workspace/java-backend/srv/pom.xml': '<project/>',
+        '/workspace/java-backend/srv/service.cds': 'service BackendService {}',
+      });
+
+      const projects = determineCdsProjectsUnderSourceDir('/workspace');
+
+      expect(projects.map(project => project.replace(/\\/g, '/'))).toEqual(['.', 'java-backend']);
+    });
+
     it('should detect individual projects in monorepo but exclude monorepo root when it has no CDS content', () => {
       // Cloud CAP Samples-like structure
       mockFs({

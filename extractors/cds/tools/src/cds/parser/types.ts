@@ -5,6 +5,9 @@ export interface CdsFilesToCompile {
   /** Compilation targets (directories or files relative to project base) */
   compilationTargets: string[];
 
+  /** Selected CSN inputs relative to the source root. */
+  csnFiles?: string[];
+
   /** Always "model.cds.json" relative to project base directory */
   expectedOutputFile: string;
 }
@@ -165,8 +168,14 @@ export interface BasicCdsProject {
   /** All CDS files within this project. */
   cdsFiles: string[];
 
+  /** Child project boundaries relative to the source root, including filtered-out projects. */
+  childProjectDirs?: string[];
+
   /** Compilation targets (directories or files relative to project base). */
   compilationTargets: string[];
+
+  /** Selected, owned CSN inputs relative to the source root. */
+  csnFiles?: string[];
 
   /** Always "model.cds.json" relative to project base directory. */
   expectedOutputFile: string;
