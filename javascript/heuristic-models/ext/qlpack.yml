@@ -2,8 +2,8 @@
 library: true
 warnOnImplicitThis: false
 name: advanced-security/javascript-heuristic-models
-version: 2.27.5
+version: 2.27.6
 extensionTargets:
-  codeql/javascript-all: "^3.0.1"
+  codeql/javascript-all: "^3.0.2"
 dataExtensions:
   - "*.model.yml"
